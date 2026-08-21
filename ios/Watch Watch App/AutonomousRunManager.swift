@@ -1,7 +1,6 @@
 import Combine
 import CoreLocation
 import HealthKit
-import WatchKit
 import SwiftUI
 
 class AutonomousRunManager: NSObject, ObservableObject, CLLocationManagerDelegate {

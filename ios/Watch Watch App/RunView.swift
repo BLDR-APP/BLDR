@@ -1,5 +1,4 @@
 import SwiftUI
-import WatchKit
 
 private let kGold = Color(red: 0.831, green: 0.686, blue: 0.216)
 
@@ -27,6 +26,8 @@ struct RunView: View {
 struct ConnectedRunView: View {
     @ObservedObject var viewModel: WatchViewModel
     @State private var showConfirm = false
+    @State private var hapticPause = false
+    @State private var hapticStop = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -102,7 +103,7 @@ struct ConnectedRunView: View {
             // Controles
             HStack(spacing: 8) {
                 Button {
-                    WKInterfaceDevice.current().play(.click)
+                    hapticPause.toggle()
                     let acao = viewModel.isRunPaused ? "retomar" : "pausar"
                     viewModel.sendAction(["acao_corrida": acao])
                 } label: {
@@ -117,7 +118,7 @@ struct ConnectedRunView: View {
                 .buttonStyle(.plain)
 
                 Button {
-                    WKInterfaceDevice.current().play(.stop)
+                    hapticStop.toggle()
                     showConfirm = true
                 } label: {
                     Image(systemName: "stop.fill")
@@ -135,6 +136,8 @@ struct ConnectedRunView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black)
+        .sensoryFeedback(.impact(weight: .light), trigger: hapticPause)
+        .sensoryFeedback(.warning, trigger: hapticStop)
         .confirmationDialog("Finalizar corrida?", isPresented: $showConfirm) {
             Button("Finalizar", role: .destructive) {
                 viewModel.sendAction(["acao_corrida": "finalizar"])
@@ -149,6 +152,10 @@ struct ConnectedRunView: View {
 struct AutonomousRunView: View {
     @ObservedObject var runManager: AutonomousRunManager
     @State private var showConfirm = false
+    @State private var hapticStart = false
+    @State private var hapticPause = false
+    @State private var hapticStop = false
+    @State private var hapticFinish = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -180,7 +187,7 @@ struct AutonomousRunView: View {
                         .foregroundColor(.white)
 
                     Button {
-                        WKInterfaceDevice.current().play(.start)
+                        hapticStart.toggle()
                         runManager.startRun()
                     } label: {
                         Text("Iniciar")
@@ -277,7 +284,7 @@ struct AutonomousRunView: View {
                 // Controles
                 HStack(spacing: 8) {
                     Button {
-                        WKInterfaceDevice.current().play(.click)
+                        hapticPause.toggle()
                         runManager.isPaused ? runManager.resumeRun() : runManager.pauseRun()
                     } label: {
                         Image(systemName: runManager.isPaused ? "play.fill" : "pause.fill")
@@ -291,7 +298,7 @@ struct AutonomousRunView: View {
                     .buttonStyle(.plain)
 
                     Button {
-                        WKInterfaceDevice.current().play(.stop)
+                        hapticStop.toggle()
                         showConfirm = true
                     } label: {
                         Image(systemName: "stop.fill")
@@ -310,9 +317,13 @@ struct AutonomousRunView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black)
+        .sensoryFeedback(.impact(weight: .medium), trigger: hapticStart)
+        .sensoryFeedback(.impact(weight: .light), trigger: hapticPause)
+        .sensoryFeedback(.warning, trigger: hapticStop)
+        .sensoryFeedback(.success, trigger: hapticFinish)
         .confirmationDialog("Finalizar corrida?", isPresented: $showConfirm) {
             Button("Finalizar", role: .destructive) {
-                WKInterfaceDevice.current().play(.success)
+                hapticFinish.toggle()
                 let _ = runManager.finishRun()
             }
             Button("Cancelar", role: .cancel) {}

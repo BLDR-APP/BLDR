@@ -1,5 +1,4 @@
 import SwiftUI
-import WatchKit
 
 private let kGold = Color(red: 0.831, green: 0.686, blue: 0.216)
 
@@ -71,6 +70,8 @@ struct WorkoutIdleView: View {
 
 struct WorkoutActiveView: View {
     @ObservedObject var viewModel: WatchViewModel
+    @State private var hapticSerie = false
+    @State private var hapticStop = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -125,7 +126,7 @@ struct WorkoutActiveView: View {
             // Botões
             HStack(spacing: 8) {
                 Button {
-                    WKInterfaceDevice.current().play(.click)
+                    hapticSerie.toggle()
                     viewModel.concluirSerie()
                 } label: {
                     Label("Série", systemImage: "checkmark")
@@ -139,7 +140,7 @@ struct WorkoutActiveView: View {
                 .buttonStyle(.plain)
 
                 Button {
-                    WKInterfaceDevice.current().play(.stop)
+                    hapticStop.toggle()
                     viewModel.finalizarTreino()
                 } label: {
                     Image(systemName: "xmark")
@@ -157,6 +158,8 @@ struct WorkoutActiveView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.black)
+        .sensoryFeedback(.impact(weight: .medium), trigger: hapticSerie)
+        .sensoryFeedback(.warning, trigger: hapticStop)
     }
 }
 
