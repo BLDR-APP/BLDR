@@ -670,8 +670,8 @@ Corridas já têm GPS. Mapa com rotas usa dado existente.
 | B3 — `completed_at` salvo sem `.toUtc()` → timestamp 3h errado no banco (BRT) | ✅ corrigido em 8 arquivos |
 | B3 migration — registros históricos com `completed_at < started_at` corrigidos via `+3h` | ✅ |
 | Watch — WatchKit removido (deprecado watchOS 26), hápticos migrados para `.sensoryFeedback()` | ✅ |
-| Watch — `WATCHOS_DEPLOYMENT_TARGET = 10.0`, `WCSessionDelegate @preconcurrency` | ✅ |
-| Watch — `HKLiveWorkoutBuilder` removido (re-anotado watchOS 26+ no Xcode 26 SDK) | ✅ |
+| Watch — `WATCHOS_DEPLOYMENT_TARGET = 26.0`, HKWorkoutSession + HKLiveWorkoutBuilder restaurados (wake lock + FC em tempo real) | ✅ |
+| Watch — `WCSessionDelegate @preconcurrency` (Swift 6 + MainActor isolation) | ✅ |
 | iOS mínimo — `IPHONEOS_DEPLOYMENT_TARGET` atualizado para 17.0 (RunnerTests + Widget Extension) | ✅ |
 | LaunchScreen — `flutter_native_splash` gera assets nativos; SplashScreen sem tagline, sem tela preta | ✅ |
 | Navbar — logo BLDR_CLUB.png substituiu monograma "B" | ✅ |

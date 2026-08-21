@@ -152,8 +152,10 @@ WatchService                           WatchViewModel (WCSession)
 
 Corrida autônoma (Watch sem iPhone):
   AutonomousRunManager                 RunTabView (.autonomous)
-    CLLocationManager (GPS)              AutonomousRunView
-    Timer (elapsed)                      Text(startDate, .timer) ← @Published startDate
+    HKWorkoutSession (wake lock + FC)    AutonomousRunView
+    HKLiveWorkoutBuilder (HR stream)     Text(startDate, .timer) ← @Published startDate
+    CLLocationManager (GPS)
+    Timer (elapsed)
     UserDefaults(group.com.bldr.fitness) ← saveRunDataLocally()
 
 Sincronização pós-corrida:
@@ -173,7 +175,7 @@ LiveActivity (iPhone → Lock Screen / Dynamic Island):
 
 **Entitlements Watch:** `com.apple.developer.healthkit` + App Group `group.com.bldr.fitness`.
 **Info.plist Watch:** gerado via `GENERATE_INFOPLIST_FILE = YES`; usage descriptions em `INFOPLIST_KEY_*` no `project.pbxproj`.
-**Nota watchOS 26 SDK:** `HKLiveWorkoutBuilder` e `HKLiveWorkoutDataSource` foram re-anotados como watchOS 26+ no Xcode 26 SDK. Removidos do `AutonomousRunManager`; wake lock via CLLocationManager. `WATCHOS_DEPLOYMENT_TARGET = 10.0`. Hápticos migrados de `WKInterfaceDevice.current().play()` para `.sensoryFeedback()` (SwiftUI, watchOS 10+).
+**watchOS SDK:** `WATCHOS_DEPLOYMENT_TARGET = 26.0` (Xcode 26). `HKWorkoutSession` e `HKLiveWorkoutBuilder` exigem watchOS 26+ no Xcode 26 SDK — deployment alinhado. Hápticos migrados de `WKInterfaceDevice.current().play()` para `.sensoryFeedback()` (SwiftUI, watchOS 10+). `WCSessionDelegate` marcado com `@preconcurrency` (Swift 6 + `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`).
 
 ## Regra de timezone — timestamps salvos no Supabase (2026-08-21)
 
