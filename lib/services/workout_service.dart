@@ -474,7 +474,7 @@ class WorkoutService {
       final response = await _client
           .from('user_workouts')
           .update({
-        'completed_at': now.toIso8601String(),
+        'completed_at': now.toUtc().toIso8601String(),
         'total_duration_seconds': duration,
         'notes': notes,
         'is_completed': true,
@@ -626,7 +626,7 @@ class WorkoutService {
     try {
       // 1. Cria o mapa de atualização básico
       final Map<String, dynamic> updates = {
-        'completed_at': DateTime.now().toIso8601String(),
+        'completed_at': DateTime.now().toUtc().toIso8601String(),
       };
 
       // 2. Só adiciona carga e reps se eles não forem nulos (para não apagar dados existentes sem querer)

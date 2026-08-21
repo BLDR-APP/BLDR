@@ -171,7 +171,7 @@ class SupabaseClubDatasource {
           'operation_id': operationId,
           'current_value': newValue,
           'completed': completed,
-          if (completed) 'completed_at': DateTime.now().toIso8601String(),
+          if (completed) 'completed_at': DateTime.now().toUtc().toIso8601String(),
         },
         onConflict: 'user_id,operation_id',
       );

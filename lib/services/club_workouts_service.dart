@@ -271,7 +271,7 @@ class ClubWorkoutsService {
       final response = await _client
           .from('club_user_workouts')
           .update({
-        'completed_at': now.toIso8601String(),
+        'completed_at': now.toUtc().toIso8601String(),
         'total_duration_seconds': duration,
         'notes': notes,
         'is_completed': true,
@@ -372,7 +372,7 @@ class ClubWorkoutsService {
   }) async {
     try {
       final Map<String, dynamic> updates = {
-        'completed_at': DateTime.now().toIso8601String(),
+        'completed_at': DateTime.now().toUtc().toIso8601String(),
       };
 
       // Mapeia para as colunas do banco (weight_kg)

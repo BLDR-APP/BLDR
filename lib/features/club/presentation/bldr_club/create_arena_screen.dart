@@ -58,9 +58,9 @@ class _CreateArenaScreenState extends State<CreateArenaScreen> {
         'game_mode': _selectedMode,
         'validation_type': _selectedValidation,
         'share_code': shareCode,
-        'start_date': DateTime.now().toIso8601String(),
+        'start_date': DateTime.now().toUtc().toIso8601String(),
         'end_date':
-            DateTime.now().add(Duration(days: _durationDays)).toIso8601String(),
+            DateTime.now().toUtc().add(Duration(days: _durationDays)).toIso8601String(),
         'is_active': true,
       }, gameMode: _selectedMode);
       final createFailure = createResult.failureOrNull;

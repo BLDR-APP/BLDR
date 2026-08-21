@@ -321,7 +321,7 @@ class PaymentService {
           .from('user_subscriptions')
           .update({
         'status': 'canceled',
-        'canceled_at': DateTime.now().toIso8601String(),
+        'canceled_at': DateTime.now().toUtc().toIso8601String(),
       })
           .eq('user_id', user.id)
           .eq('status', 'active');

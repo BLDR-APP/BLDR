@@ -324,7 +324,7 @@ class ClubWorkoutRepositoryImpl implements ClubWorkoutRepository {
           'sets': sets,
           'intensity': intensity,
           'duration_sec': durationSec,
-          'played_at': DateTime.now().toIso8601String(),
+          'played_at': DateTime.now().toUtc().toIso8601String(),
         });
       });
 

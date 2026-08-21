@@ -164,7 +164,7 @@ class HavokRepositoryImpl implements HavokRepository {
         await _client
             .schema('bldr_club')
             .from('havok_threads')
-            .update({'last_message_at': DateTime.now().toIso8601String()})
+            .update({'last_message_at': DateTime.now().toUtc().toIso8601String()})
             .eq('id', threadId);
         return HavokMessage.fromMap(map);
       });

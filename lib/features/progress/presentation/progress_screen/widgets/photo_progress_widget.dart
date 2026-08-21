@@ -252,7 +252,7 @@ class _PhotoProgressWidgetState extends State<PhotoProgressWidget> {
       final newRecord = await _supabase.from('progress_photos').insert({
         'user_id': userId,
         'photo_url': publicUrl,
-        'taken_at': DateTime.now().toIso8601String(),
+        'taken_at': DateTime.now().toUtc().toIso8601String(),
         'notes': notes,
         'photo_type': 'front',
       }).select().single();
