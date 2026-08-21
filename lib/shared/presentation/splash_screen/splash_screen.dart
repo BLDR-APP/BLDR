@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:sizer/sizer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:bldr_fitness/core/app_export.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
@@ -24,12 +25,10 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _logoAnimationController;
   late AnimationController _pulseAnimationController;
   late AnimationController _fadeAnimationController;
-  late AnimationController _screenFadeInController;
 
   late Animation<double> _logoScaleAnimation;
   late Animation<double> _logoFadeAnimation;
   late Animation<double> _screenFadeAnimation;
-  late Animation<double> _screenFadeInAnimation;
   late Animation<double> _pulseAnimation;
 
   bool _isInitialized = false;
@@ -39,22 +38,14 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FlutterNativeSplash.remove();
+    });
     _setupAnimations();
     _initializeApp();
   }
 
   void _setupAnimations() {
-    // 0. Fade-in da tela inteira (cobre a transição LaunchScreen → Flutter)
-    _screenFadeInController = AnimationController(
-      duration: const Duration(milliseconds: 400),
-      vsync: this,
-    );
-    _screenFadeInAnimation = CurvedAnimation(
-      parent: _screenFadeInController,
-      curve: Curves.easeOut,
-    );
-    _screenFadeInController.forward();
-
     // 1. Entrada da Logo
     _logoAnimationController = AnimationController(
       duration: const Duration(milliseconds: 1200),
@@ -69,7 +60,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     // 3. Saída da Tela
     _fadeAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 400),
       vsync: this,
     );
 
@@ -252,7 +243,6 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   void dispose() {
-    _screenFadeInController.dispose();
     _logoAnimationController.dispose();
     _pulseAnimationController.dispose();
     _fadeAnimationController.dispose();
@@ -269,9 +259,7 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    return FadeTransition(
-      opacity: _screenFadeInAnimation,
-      child: Scaffold(
+    return Scaffold(
       backgroundColor: AppTheme.primaryBlack,
       body: FadeTransition(
         opacity: _screenFadeAnimation,
@@ -307,15 +295,15 @@ class _SplashScreenState extends State<SplashScreen>
                             opacity: _logoFadeAnimation,
                             child: ScaleTransition(
                               scale: _logoScaleAnimation,
-                              child: _buildInternalPulseLogo(), // 👇 Função ajustada
+                              child: _buildInternalPulseLogo(),
                             ),
                           );
                         },
                       ),
-
-                      SizedBox(height: 8.h),
-
-                      _hasError ? _buildErrorState() : SizedBox(height: 6.w),
+                      if (_hasError) ...[
+                        SizedBox(height: 8.h),
+                        _buildErrorState(),
+                      ],
                     ],
                   ),
                 ),
@@ -324,7 +312,7 @@ class _SplashScreenState extends State<SplashScreen>
           ),
         ),
       ),
-    ));
+    );
   }
 
   // 👇 NOVA FUNÇÃO: Pulso Interno Estrito (Sem Blur, Sem Cores Externas)
@@ -336,40 +324,19 @@ class _SplashScreenState extends State<SplashScreen>
     // Isso cria o efeito de "apagar" sem mudar a tonalidade original
     final Color dimmedGold = Color.lerp(brandGold, Colors.black, 0.45)!;
 
-    return Column(
-      children: [
-        AnimatedBuilder(
-          animation: _pulseAnimation,
-          builder: (context, child) {
-            return Text(
-              'BLDR',
-              style: AppTheme.darkTheme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-                letterSpacing: 2.0,
-                // 👇 A MÁGICA: Interpolamos entre o Dourado Escuro e o Dourado da Marca
-                // Quando a animação está em 1.0, a cor é EXATAMENTE #D4AF37
-                color: Color.lerp(dimmedGold, brandGold, _pulseAnimation.value),
-
-                // Removemos sombras externas para garantir que nada "saia" das letras
-                shadows: [],
-              ),
-            );
-          },
-        ),
-
-        SizedBox(height: 3.h),
-
-        Text(
-          AppLocalizations.of(context).splash_tagline,
-          textAlign: TextAlign.center,
-          style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
-            fontSize: 13.sp,
-            color: AppTheme.textSecondary,
-            fontWeight: FontWeight.w300,
-            letterSpacing: 3.0,
+    return AnimatedBuilder(
+      animation: _pulseAnimation,
+      builder: (context, child) {
+        return Text(
+          'BLDR',
+          style: AppTheme.darkTheme.textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: 2.0,
+            color: Color.lerp(dimmedGold, brandGold, _pulseAnimation.value),
+            shadows: [],
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 

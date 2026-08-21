@@ -28,6 +28,7 @@ import 'package:bldr_fitness/features/integrations/data/watch_service.dart';
 import 'package:bldr_fitness/features/integrations/data/widget_data_service.dart';
 import 'package:bldr_fitness/firebase_options.dart';
 import 'package:bldr_fitness/core/providers/locale_provider.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:bldr_fitness/shared/providers/workout_session_provider.dart';
 
 // Handler de background — delegado ao PushNotificationService para evitar duplicação
@@ -36,8 +37,9 @@ late final Map<String, dynamic> appConfig;
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
-  // 1. Binding obrigatoriamente primeiro.
-  WidgetsFlutterBinding.ensureInitialized();
+  // 1. Binding obrigatoriamente primeiro; preserve mantém a native splash visível.
+  final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   // 2. Background handler após o binding, antes do Firebase.initializeApp.
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);

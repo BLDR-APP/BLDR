@@ -202,8 +202,11 @@ flutter_launcher_icons:
 # Cor idêntica ao AppTheme.primaryBlack e ao LaunchScreen iOS — zero flash.
 # Rodar após alterar: dart run flutter_native_splash:create
 flutter_native_splash:
-  color: "#050505"
+  color: "#0D0D0D"
+  image: assets/images/BLDR_CLEAN_BGLESS.png
   android: true
-  ios: false          # iOS usa o LaunchScreen.storyboard manual (texto BLDR via UILabel)
+  ios: true
   fullscreen: true
-  android_gravity: center
+  android_12:
+    color: "#0D0D0D"
+    image: assets/images/BLDR_CLEAN_BGLESS.png
