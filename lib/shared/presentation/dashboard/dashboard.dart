@@ -413,17 +413,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         selectedIndex: _navIndex,
         onChanged: (i) => _onTabSelected(_tabFromNav(i)),
         onClubTap: () => _onTabSelected(2),
-        // TEMPORÁRIO: BLDR_CLUB.png é uma wordmark larga (texto "BLDR CLUB"
-        // sobreposto), desenhada para tamanhos grandes (200px em
-        // bldr_club_screen.dart) — ilegível nos ~36px deste botão. Não existe
-        // hoje um ícone/emblema compacto do Club nos assets do projeto.
-        // Monograma "B" como placeholder até haver um asset dedicado.
-        clubLogo: Text(
-          'B',
-          style: BldrText.cardTitleLg.copyWith(
-            color: BldrColors.goldBright,
-            fontWeight: FontWeight.w600,
-          ),
+        clubLogo: Image.asset(
+          'assets/images/BLDR_CLUB.png',
+          fit: BoxFit.contain,
         ),
       ),
     );
