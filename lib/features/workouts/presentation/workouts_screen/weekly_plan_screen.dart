@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 import 'package:bldr_fitness/core/di/injection.dart';
@@ -17,6 +19,7 @@ import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/acti
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/routes/app_routes.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
+import 'package:bldr_fitness/features/integrations/data/widget_data_service.dart';
 import 'package:bldr_fitness/widgets/muscle_visualizer_widget.dart';
 
 // ── domain ────────────────────────────────────────────────────────────────────
@@ -756,6 +759,8 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
         backgroundColor: BldrColors.danger,
         behavior: SnackBarBehavior.floating,
       ));
+    } else {
+      unawaited(WidgetDataService.updateAll());
     }
     if (mounted) {
       setState(() => _loading = true);

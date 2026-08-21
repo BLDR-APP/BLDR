@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
@@ -27,6 +28,8 @@ import 'package:bldr_fitness/theme/bldr_tokens.dart';
 import 'package:bldr_fitness/widgets/muscle_visualizer_widget.dart';
 import 'package:bldr_fitness/widgets/notification_permission_modal.dart';
 import 'package:bldr_fitness/widgets/review_modal.dart';
+import 'package:bldr_fitness/shared/providers/workout_session_provider.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/paused_workout_summary.dart';
 
 class ActiveWorkoutScreen extends StatefulWidget {
   final String workoutId;
@@ -543,9 +546,25 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
   double get _estimatedCalories =>
       5.0 * 70 * (_elapsedSeconds / 3600.0);
 
+  void _exitWorkout() {
+    context.read<WorkoutSessionProvider>().setPausedWorkout(
+      PausedWorkoutSummary(
+        id: widget.workoutId,
+        name: widget.workoutName,
+        source: 'free',
+        startedAt: _startTime,
+        totalExercises: _exercises.length,
+        completedExercises: _currentExerciseIdx,
+        currentExerciseName: _currentExerciseName,
+      ),
+    );
+    Navigator.of(context).pop();
+  }
+
   void _finishWorkout() async {
     if (_finishing) return;
     _finishing = true;
+    final sessionProvider = context.read<WorkoutSessionProvider>();
     getIt<NotificationService>().cancelRestNotification();
     unawaited(getIt<WatchService>().sendWorkoutFinished());
     _hrSubscription?.cancel();
@@ -561,6 +580,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     await LiveActivityService.end();
     unawaited(WidgetDataService.updateAll());
     if (!mounted) return;
+    sessionProvider.setPausedWorkout(null);
     await _maybeTriggerPopups();
     if (mounted) Navigator.pop(context);
   }
@@ -626,7 +646,10 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) { if (!didPop) _exitWorkout(); },
+      child: Scaffold(
       backgroundColor: BldrColors.bgBase,
       body: BldrBackground(
         child: SafeArea(
@@ -680,6 +703,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                 ),
         ),
       ),
+    ),
     );
   }
 
@@ -698,7 +722,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
               icon: Icons.chevron_left,
               size: 36,
               filled: false,
-              onPressed: () => Navigator.pop(context),
+              onPressed: _exitWorkout,
             ),
           ),
           Expanded(

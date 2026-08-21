@@ -30,7 +30,9 @@ Responda APENAS com o texto do insight, sem JSON, sem markdown, sem aspas.`.trim
 }
 
 function buildUserPrompt(ctx: Record<string, unknown>): string {
-  const parts: string[] = ["Dados do usuário hoje:"];
+  const today = (ctx.today as string) ?? new Date().toISOString().split("T")[0];
+  const weekday = (ctx.weekday as string) ?? "";
+  const parts: string[] = [`Dados do usuário hoje (${weekday}, ${today}):`];
 
   const streak = ctx.streak as { days?: number; at_risk?: boolean } | undefined;
   if (streak) {
@@ -75,6 +77,7 @@ serve(async (req: Request) => {
 
     const body = await req.json();
     const ctx = (body.context ?? {}) as Record<string, unknown>;
+    console.log('[insight] context recebido:', JSON.stringify(ctx, null, 2));
     const locale = (ctx.locale as string) ?? "pt";
 
     const systemPrompt = buildSystemPrompt(locale);

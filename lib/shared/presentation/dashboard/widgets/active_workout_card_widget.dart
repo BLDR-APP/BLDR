@@ -14,6 +14,7 @@ import 'package:bldr_fitness/features/achievements/presentation/achievements/ach
 import 'package:bldr_fitness/features/club/presentation/bldr_club/club_active_workout_screen.dart';
 import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/active_workout_screen.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
+import 'package:bldr_fitness/shared/providers/workout_session_provider.dart';
 
 class ActiveWorkoutCardWidget extends StatefulWidget {
   final VoidCallback onStartPressed;
@@ -47,6 +48,8 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
   }
 
   Future<void> _loadActiveWorkout() async {
+    // Captura o provider antes de qualquer await para evitar uso de context em async gap
+    final sessionProvider = mounted ? context.read<WorkoutSessionProvider>() : null;
     try {
       if (!getIt<AuthRepository>().isAuthenticated) {
         if (mounted) setState(() { isLoading = false; hasError = false; });
@@ -56,6 +59,7 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
       final historyResult =
           await getIt<uc.GetWorkoutHistory>()(completedOnly: false, limit: 1);
       final pausedResult = await getIt<uc.GetPausedWorkouts>()(limit: 2);
+      final rawPaused = pausedResult.valueOrNull ?? [];
       // B8: lê o treino de hoje do Supabase (weekly_plan_days).
       // Filtra pelo dia da semana atual (1=seg … 7=dom).
       final planResult = await getIt<uc.GetWeeklyPlan>()();
@@ -71,8 +75,7 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
         throw Exception(historyResult.failureOrNull?.message);
       }
       final workouts = history.map(sessionToLegacyMap).toList();
-      final paused =
-          (pausedResult.valueOrNull ?? []).map(pausedToLegacyMap).toList();
+      final paused = rawPaused.map(pausedToLegacyMap).toList();
 
       if (mounted) {
         final active = workouts.isNotEmpty &&
@@ -84,6 +87,10 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
         final dedupedPaused = active == null
             ? paused
             : paused.where((p) => p['id'] != active['id']).toList();
+        // Popula o mini-player global com o primeiro pausado (se houver)
+        final firstPaused = rawPaused.isNotEmpty ? rawPaused.first : null;
+        sessionProvider?.setPausedWorkout(firstPaused);
+
         setState(() {
           activeWorkout = active;
           pausedSummaries = dedupedPaused;

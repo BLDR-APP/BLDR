@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -61,8 +62,13 @@ class GenerateHavokInsight {
         .subtract(Duration(days: now.weekday - 1));
     final weekEnd = weekStart.add(const Duration(days: 7));
 
-    final Map<String, dynamic> ctx = {'locale': locale};
+    final Map<String, dynamic> ctx = {
+      'locale': locale,
+      'today': '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}',
+      'weekday': _weekdayPt(now.weekday),
+    };
 
+    // workouts — fallback para 0 se falhar
     try {
       final weekResult =
           await getIt<GetWeekCompletedWorkouts>()(weekStart, weekEnd);
@@ -70,8 +76,13 @@ class GenerateHavokInsight {
       final completed =
           (week?.personal.length ?? 0) + (week?.club.length ?? 0);
       ctx['workouts'] = {'completedThisWeek': completed};
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('[HAVOK insight] erro ao carregar workouts: $e');
+      debugPrint('[HAVOK insight] stacktrace: $st');
+      ctx['workouts'] = {'completedThisWeek': 0};
+    }
 
+    // nutrition — omitido se falhar (sem dados = sem seção)
     try {
       final userId = getIt<GetCurrentUser>()()?.id;
       final summaryResult = await getIt<GetDailySummary>()(now);
@@ -88,8 +99,12 @@ class GenerateHavokInsight {
           'caloriesConsumed': summary.totals.calories,
         };
       }
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('[HAVOK insight] erro ao carregar nutrition: $e');
+      debugPrint('[HAVOK insight] stacktrace: $st');
+    }
 
+    // weight — omitido se falhar
     try {
       final weightResult =
           await getIt<GetMeasurements>()(measurementType: 'weight', limit: 1);
@@ -97,17 +112,24 @@ class GenerateHavokInsight {
       if (weights.isNotEmpty) {
         ctx['weight'] = {'latestKg': weights.first.value};
       }
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('[HAVOK insight] erro ao carregar weight: $e');
+      debugPrint('[HAVOK insight] stacktrace: $st');
+    }
 
+    // streak — fallback para 0 se falhar
     try {
       final streakResult = await getIt<GetCurrentStreak>()();
       final streak = streakResult.valueOrNull;
-      if (streak != null) {
-        final atRisk = await _isStreakAtRisk();
-        ctx['streak'] = {'days': streak, 'at_risk': atRisk};
-      }
-    } catch (_) {}
+      final atRisk = await _isStreakAtRisk();
+      ctx['streak'] = {'days': streak ?? 0, 'at_risk': atRisk};
+    } catch (e, st) {
+      debugPrint('[HAVOK insight] erro ao carregar streak: $e');
+      debugPrint('[HAVOK insight] stacktrace: $st');
+      ctx['streak'] = {'days': 0, 'at_risk': false};
+    }
 
+    // whoop — omitido se falhar (não essencial)
     try {
       final whoopResult = await getIt<GetTodayWhoopData>()();
       final whoop = whoopResult.valueOrNull;
@@ -119,8 +141,12 @@ class GenerateHavokInsight {
           'hrv': whoop.hrvRmssd,
         };
       }
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('[HAVOK insight] erro ao carregar whoop: $e');
+      debugPrint('[HAVOK insight] stacktrace: $st');
+    }
 
+    debugPrint('[HAVOK insight] contexto montado: $ctx');
     return ctx;
   }
 
@@ -134,5 +160,10 @@ class GenerateHavokInsight {
     return !(lastDate.year == today.year &&
         lastDate.month == today.month &&
         lastDate.day == today.day);
+  }
+
+  static String _weekdayPt(int weekday) {
+    const days = ['', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+    return days[weekday];
   }
 }

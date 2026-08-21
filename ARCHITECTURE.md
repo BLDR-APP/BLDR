@@ -115,6 +115,31 @@ WorkoutsScreen
   layout de features — usar como referência de destino, completando o `domain/`.
 - Config em `dart_defines.dev.json` (carregado via `rootBundle` no `main.dart`).
 
+## Mini-player global — treino pausado (2026-08-20)
+
+`BldrMiniPlayer` é um `Positioned` pill inserido no Stack de `BldrScreen`
+(em `lib/design_system/bldr_components.dart`), acima da navbar (`bottom: 140`).
+O estado é gerenciado por `WorkoutSessionProvider` (ChangeNotifier registrado
+no `MultiProvider` do `main.dart`).
+
+```
+active_workout_screen / club_active_workout_screen
+  → _finishWorkout(): sessionProvider.setPausedWorkout(null)
+
+active_workout_card_widget (Dashboard)
+  → após load: sessionProvider.setPausedWorkout(firstPaused)
+
+BldrMiniPlayer (Consumer<WorkoutSessionProvider>)
+  → isVisible == true → exibe pill com nome e progresso
+  → tap "Retomar": provider.hide() → push rota → .then(() => provider.show())
+```
+
+Fontes dos dados: `GetPausedWorkouts` use case → `PausedWorkoutSummary`
+(entidade com `id, name, source, startedAt, totalExercises, completedExercises`).
+Novos arquivos:
+- `lib/shared/providers/workout_session_provider.dart`
+- `lib/shared/presentation/widgets/bldr_mini_player.dart`
+
 ## Apple Watch — arquitetura atual (2026-08-09)
 
 ```

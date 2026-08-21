@@ -28,6 +28,7 @@ import 'package:bldr_fitness/features/integrations/data/watch_service.dart';
 import 'package:bldr_fitness/features/integrations/data/widget_data_service.dart';
 import 'package:bldr_fitness/firebase_options.dart';
 import 'package:bldr_fitness/core/providers/locale_provider.dart';
+import 'package:bldr_fitness/shared/providers/workout_session_provider.dart';
 
 // Handler de background — delegado ao PushNotificationService para evitar duplicação
 
@@ -121,6 +122,7 @@ class _AppLoaderState extends State<AppLoader> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ProfileNotifier()),
+        ChangeNotifierProvider(create: (_) => WorkoutSessionProvider()),
         ChangeNotifierProvider.value(
             value: _achievementProvider ?? AchievementProvider()),
         ChangeNotifierProvider.value(

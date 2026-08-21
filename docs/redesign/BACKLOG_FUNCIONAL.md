@@ -484,6 +484,48 @@ Seção "Suporte" + seção "Sobre" em `settings_screen.dart`:
 - Contratar tradução profissional pt-BR → it-IT (1.092 strings)
 - Prioridade: antes do lançamento no mercado italiano
 
+### F32. Mini-player global de treino pausado
+
+**✅ Implementado (2026-08-20).**
+
+Pill persistente acima da navbar em todas as telas que usam `BldrScreen`.
+
+- `WorkoutSessionProvider` (ChangeNotifier) registrado no `MultiProvider` do `main.dart`.
+- `BldrMiniPlayer` (`Consumer<WorkoutSessionProvider>`) injetado no Stack de `BldrScreen` em `lib/design_system/bldr_components.dart` (`Positioned bottom: 140`).
+- `active_workout_card_widget.dart` chama `sessionProvider.setPausedWorkout(firstPaused)` após carregar treinos pausados.
+- `active_workout_screen.dart` e `club_active_workout_screen.dart` chamam `sessionProvider.setPausedWorkout(null)` ao finalizar o treino.
+- Retomar: `provider.hide()` → push rota → `.then((_) => provider.show())`.
+- Novos arquivos: `lib/shared/providers/workout_session_provider.dart`, `lib/shared/presentation/widgets/bldr_mini_player.dart`.
+
+### F33. Sync do widget iOS ao alterar Meu Plano
+
+**✅ Implementado (2026-08-20).**
+
+`WidgetDataService.updateAll()` agora é chamado (via `unawaited`) em todos os pontos onde `UpdatePlanDay` é executado com sucesso:
+
+- `lib/features/workouts/presentation/workouts_screen/weekly_plan_screen.dart` — `_applyTemplateToDay()`
+- `lib/features/club/presentation/bldr_club/havok/workout_detail_screen.dart` — `_openAddToPlanSheet()`
+
+### F34. Excluir protocolos de performance em EsportesScreen
+
+**✅ Implementado (2026-08-20).**
+
+- Ícone `delete_outline` (vermelho) no card de cada protocolo; substitui o `chevron_right`.
+- `_confirmDelete()` — AlertDialog com nome do plano antes de excluir.
+- `_deletePlan()` — remove otimisticamente do estado local; chama `updatePerformancePlans` + `TrackerStorage.clearProtocolState` em paralelo.
+- `TrackerStorage.clearProtocolState(planId)` — novo método que remove todas as chaves de SharedPreferences que contêm o `planId`.
+
+### F35. Seção de protocolos HAVOK temporariamente desabilitada
+
+**⚠️ Desabilitado em EsportesScreen (2026-08-20) — bugs conhecidos documentados:**
+
+1. Estado do checklist não persiste entre sessões (SharedPreferences sem data-awareness).
+2. Checklist reseta ao trocar de dia ou reabrir — `_checked` é volátil, sem persistência.
+3. Sem tabela de DB dedicada — protocolos ficam em `user_profiles.performance_plans` (JSONB).
+4. `PlanoPerformanceDetailScreen` com lógica de "Dia concluído" não integrada ao plano semanal.
+
+Quando resolver: descomentar `slivers.add(_buildProtocolosSectionSliver())` em `_buildContentSlivers`, restaurar import de `plano_performance_detail_screen.dart` e reativar `onTap` no `_buildPerformanceCard`.
+
 ### F23. ✅ IMPLEMENTADO — Widgets iOS
 
 BLDRWidgets.swift completo: Small Streak, Small Calorias, Medium Resumo,

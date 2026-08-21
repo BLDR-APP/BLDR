@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
+import 'package:provider/provider.dart';
 import 'package:bldr_fitness/features/integrations/data/health_kit_service.dart';
 import 'package:bldr_fitness/features/integrations/data/live_activity_service.dart';
 import 'package:bldr_fitness/features/integrations/data/watch_service.dart';
@@ -22,6 +23,8 @@ import 'package:bldr_fitness/services/exercise_db_service.dart';
 import 'package:bldr_fitness/services/notification_service.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 import 'package:bldr_fitness/widgets/muscle_visualizer_widget.dart';
+import 'package:bldr_fitness/shared/providers/workout_session_provider.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/paused_workout_summary.dart';
 
 class ClubActiveWorkoutScreen extends StatefulWidget {
   final String workoutId;
@@ -548,9 +551,25 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
 
   double get _estimatedCalories => 5.0 * 70 * (_elapsedSeconds / 3600.0);
 
+  void _exitWorkout() {
+    context.read<WorkoutSessionProvider>().setPausedWorkout(
+      PausedWorkoutSummary(
+        id: widget.workoutId,
+        name: widget.workoutName,
+        source: 'club',
+        startedAt: _startTime,
+        totalExercises: _exercises.length,
+        completedExercises: _currentExerciseIdx,
+        currentExerciseName: _currentExerciseName,
+      ),
+    );
+    Navigator.of(context).pop();
+  }
+
   void _finishWorkout() async {
     if (_finishing) return;
     _finishing = true;
+    final sessionProvider = context.read<WorkoutSessionProvider>();
     _timer?.cancel();
     getIt<NotificationService>().cancelRestNotification();
     unawaited(getIt<WatchService>().sendWorkoutFinished());
@@ -569,7 +588,9 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
     unawaited(getIt<CheckAndUnlockAchievements>()('bldr_club'));
     unawaited(getIt<TryIncrementOperation>()('workout_count', 1));
     unawaited(WidgetDataService.updateAll());
-    if (mounted) _showCompletionSheet();
+    if (!mounted) return;
+    sessionProvider.setPausedWorkout(null);
+    _showCompletionSheet();
   }
 
   void _showCompletionSheet() {
@@ -624,7 +645,10 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) { if (!didPop) _exitWorkout(); },
+      child: Scaffold(
       backgroundColor: BldrColors.bgBase,
       body: BldrBackground(
         child: SafeArea(
@@ -677,6 +701,7 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
                 ),
         ),
       ),
+    ),
     );
   }
 
@@ -695,7 +720,7 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
               icon: Icons.chevron_left,
               size: 36,
               filled: false,
-              onPressed: () => Navigator.pop(context),
+              onPressed: _exitWorkout,
             ),
           ),
           Expanded(

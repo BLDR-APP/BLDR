@@ -32,6 +32,7 @@ import 'package:bldr_fitness/shared/presentation/dashboard/widgets/whoop_dashboa
 import 'package:bldr_fitness/shared/presentation/dashboard/widgets/nutrition_progress_widget.dart';
 import 'package:bldr_fitness/shared/presentation/dashboard/widgets/partnership_widget.dart';
 import 'package:bldr_fitness/features/integrations/data/widget_data_service.dart';
+import 'package:bldr_fitness/shared/presentation/widgets/bldr_mini_player.dart';
 import 'package:bldr_fitness/shared/presentation/dashboard/widgets/today_metrics_widget.dart';
 import 'package:bldr_fitness/features/whats_new/domain/usecases/whats_new_usecases.dart';
 import 'package:bldr_fitness/features/whats_new/presentation/whats_new_sheet.dart';
@@ -391,15 +392,20 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       key: _scaffoldKey,
       backgroundColor: BldrColors.bgBase,
       extendBody: true,
-      body: TabBarView(
-        controller: _tabController,
-        physics: const NeverScrollableScrollPhysics(),
+      body: Stack(
         children: [
-          _buildDashboardTab(), // 0
-          const WorkoutsScreen(), // 1
-          const BldrClubScreen(), // 2
-          const NutritionScreen(), // 3
-          const ProfileScreen(), // 4
+          TabBarView(
+            controller: _tabController,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              _buildDashboardTab(), // 0
+              const WorkoutsScreen(), // 1
+              const BldrClubScreen(), // 2
+              const NutritionScreen(), // 3
+              const ProfileScreen(), // 4
+            ],
+          ),
+          const BldrMiniPlayer(),
         ],
       ),
       // G5 — tab bar em glass, flutuando sobre o conteúdo rolável.

@@ -1,8 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
+import 'package:bldr_fitness/features/integrations/data/widget_data_service.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/havok/havok_hub.dart'; // Importa para usar as cores consistentes
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_template.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart';
@@ -154,21 +156,32 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
     );
     if (selectedDay == null || !mounted) return;
 
-    // ⚠️ O modelo de plano semanal do app hoje é split/frequência
-    // (WeeklyPlanConfig), sem associação explícita treino->dia — não existe
-    // use case para "colocar este treino no dia X". Guardamos localmente
-    // como preferência até essa peça de domínio existir de verdade.
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('havok_workout_plan_day_$_workoutName', selectedDay.toString());
+    // Cria o template no banco (source='havok') e associa ao dia selecionado.
+    setState(() => _saving = true);
+    try {
+      final template = await _createTemplate();
+      if (template == null || !mounted) return;
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Anotado para ${_kWeekDayLabels[selectedDay]}. '
-              'Ainda não aparece automaticamente no seu plano — F20/B5 seguem em aberto.'),
-          backgroundColor: goldColor,
-        ),
-      );
+      // _AddToPlanSheet retorna 0-indexed (0=Seg); UpdatePlanDay espera 1-indexed (1=Seg).
+      final result = await getIt<UpdatePlanDay>()(selectedDay + 1, template: template);
+      if (!mounted) return;
+
+      final failure = result.failureOrNull;
+      if (failure != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(failure.message), backgroundColor: Colors.redAccent),
+        );
+      } else {
+        unawaited(WidgetDataService.updateAll());
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${template.name} adicionado ao plano de ${_kWeekDayLabels[selectedDay]}.'),
+            backgroundColor: goldColor,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
   }
 

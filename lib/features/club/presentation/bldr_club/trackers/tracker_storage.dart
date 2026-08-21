@@ -134,4 +134,12 @@ class TrackerStorage {
       await prefs.setInt(_protocolDayKey(planId), current + 1);
     }
   }
+
+  static Future<void> clearProtocolState(String planId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final keysToRemove = prefs.getKeys().where((k) => k.contains(planId)).toList();
+    for (final key in keysToRemove) {
+      await prefs.remove(key);
+    }
+  }
 }

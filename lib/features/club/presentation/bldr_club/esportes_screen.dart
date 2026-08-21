@@ -8,7 +8,7 @@ import 'package:bldr_fitness/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
 import 'package:bldr_fitness/services/user_service.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/havok/havok_sheet.dart';
-import 'package:bldr_fitness/features/club/presentation/bldr_club/plano_performance_detail_screen.dart';
+// import 'package:bldr_fitness/features/club/presentation/bldr_club/plano_performance_detail_screen.dart'; // DESABILITADO — ver TODO acima
 import 'package:bldr_fitness/features/club/presentation/bldr_club/corrida/run_card_widget.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/trackers/round_timer_screen.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/trackers/match_tracker_screen.dart';
@@ -280,8 +280,18 @@ class _EsportesScreenState extends State<EsportesScreen> {
       ),
     );
 
-    // 3. BLOCO 2 — PROTOCOLOS ATIVOS (melhorado visualmente)
-    slivers.add(_buildProtocolosSectionSliver());
+    // ─── PROTOCOLOS HAVOK — TEMPORARIAMENTE DESABILITADO ──────────────────────
+    // TODO: Refatorar antes de reativar. Problemas conhecidos:
+    // 1. Estado do checklist (_checked) é local e não persistido — reseta ao sair
+    // 2. TrackerStorage usa SharedPreferences sem verificação de data — dia atual
+    //    não reseta com o calendário
+    // 3. Sem tabela de progresso no Supabase — impossível sincronizar entre
+    //    dispositivos ou recuperar após reinstall
+    // 4. Checklist "conclui tudo" ao abrir — bug de estado
+    //
+    // Para reativar: criar tabela protocol_progress no Supabase, persistir
+    // _checked por exercício, adicionar reset diário automático.
+    // slivers.add(_buildProtocolosSectionSliver());
 
     // 4. BLOCO 3 — TRACKERS (novo)
     slivers.add(_buildTrackersSectionSliver());
@@ -341,12 +351,8 @@ class _EsportesScreenState extends State<EsportesScreen> {
     return BldrGlassCard(
       background: BldrColors.goldTintStrong,
       borderColor: BldrColors.goldBorder,
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PlanoPerformanceDetailScreen(plan: plan),
-        ),
-      ),
+      // onTap desabilitado — PlanoPerformanceDetailScreen fora de serviço (ver TODO)
+      onTap: null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -361,8 +367,14 @@ class _EsportesScreenState extends State<EsportesScreen> {
                     overflow: TextOverflow.ellipsis,
                     style: BldrText.cardTitle),
               ),
-              const Icon(Icons.chevron_right,
-                  color: BldrColors.textMuted, size: 16),
+              GestureDetector(
+                onTap: () async {
+                  final confirm = await _confirmDelete(plan);
+                  if (confirm == true) await _deletePlan(plan);
+                },
+                child: const Icon(Icons.delete_outline,
+                    color: Colors.red, size: 16),
+              ),
             ],
           ),
           const SizedBox(height: 4),
@@ -385,6 +397,47 @@ class _EsportesScreenState extends State<EsportesScreen> {
         ],
       ),
     );
+  }
+
+  Future<bool?> _confirmDelete(PerformancePlan plan) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF111111),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Excluir protocolo?',
+            style: TextStyle(color: Colors.white, fontSize: 16)),
+        content: Text(
+          'O protocolo "${plan.title}" será removido permanentemente.',
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Cancelar',
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.4))),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Excluir',
+                style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _deletePlan(PerformancePlan plan) async {
+    setState(() {
+      _generatedPlans.removeWhere((p) => p.id == plan.id);
+      _protocolDays.remove(plan.id);
+    });
+    await Future.wait([
+      getIt<UserService>().updatePerformancePlans(
+        _generatedPlans.map((p) => p.toJson()).toList(),
+      ),
+      TrackerStorage.clearProtocolState(plan.id),
+    ]);
   }
 
   String? _trackerLabelForSport(String sport) {

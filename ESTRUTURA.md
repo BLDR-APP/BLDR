@@ -18,6 +18,7 @@ lib/
       data/                ← implementações que falam com Supabase/Firebase
       presentation/        ← TELAS e widgets da feature
   shared/presentation/     ← telas que usam várias features ao mesmo tempo
+  shared/providers/        ← ChangeNotifiers globais (WorkoutSessionProvider)
   routes/app_routes.dart   ← rotas nomeadas (não mudou)
   theme/                   ← AppTheme (não mudou)
   widgets/                 ← widgets globais reutilizáveis (não mudou)
@@ -42,6 +43,8 @@ lib/
 | **Dashboard** | `lib/shared/presentation/dashboard/` |
 | **Splash** | `lib/shared/presentation/splash_screen/` |
 | **Onboarding** | `lib/shared/presentation/onboarding_flow/` |
+| **Mini-player (treino pausado)** | `lib/shared/presentation/widgets/bldr_mini_player.dart` |
+| **Estado global de treino pausado** | `lib/shared/providers/workout_session_provider.dart` |
 
 Dashboard, splash e onboarding ficam em `shared/` porque consomem várias
 features ao mesmo tempo — não pertencem a nenhuma delas.
