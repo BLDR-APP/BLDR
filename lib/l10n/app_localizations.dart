@@ -1276,6 +1276,11 @@ abstract class AppLocalizations {
   /// **'Treino finalizado com sucesso!'**
   String get dashboard_workout_completed_success;
 
+  String get dashboard_workout_done_label;
+  String get dashboard_done_duration_label;
+  String get dashboard_done_sets_label;
+  String get dashboard_done_volume_label;
+
   /// No description provided for @dashboard_finish_workout_error.
   ///
   /// In pt, this message translates to:

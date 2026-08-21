@@ -7,6 +7,7 @@ import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/features/auth/domain/repositories/auth_repository.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart' as uc;
 import 'package:bldr_fitness/features/workouts/presentation/mappers/legacy_ui_maps.dart';
 import 'package:bldr_fitness/widgets/continue_workout_card.dart';
@@ -40,6 +41,8 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
   // de plano semanal, só o resultado imediato do onboarding).
   Map<String, String>? _todayTemplate;
   bool _startingToday = false;
+
+  WorkoutSession? _completedToday; // não nulo → exibe card "concluído"
 
   @override
   void initState() {
@@ -82,6 +85,20 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
                 workouts.first['is_completed'] == false
             ? workouts.first
             : null;
+
+        // Verifica se o treino mais recente foi concluído hoje.
+        WorkoutSession? completedToday;
+        if (active == null && history.isNotEmpty && history.first.isCompleted) {
+          final ct = history.first.completedAt?.toLocal();
+          final now = DateTime.now();
+          if (ct != null &&
+              ct.year == now.year &&
+              ct.month == now.month &&
+              ct.day == now.day) {
+            completedToday = history.first;
+          }
+        }
+
         // Race condition: a session already picked up as activeWorkout may also
         // appear in pausedSummaries — remove the duplicate.
         final dedupedPaused = active == null
@@ -95,6 +112,7 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
           activeWorkout = active;
           pausedSummaries = dedupedPaused;
           _todayTemplate = todayTemplate;
+          _completedToday = completedToday;
           isLoading = false;
           hasError = false;
         });
@@ -238,9 +256,106 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
       );
     }
 
+    if (_completedToday != null) return _buildDoneCard(_completedToday!);
+
     return activeWorkout != null
         ? _buildActiveWorkoutCard()
         : _buildStartWorkoutCard();
+  }
+
+  Widget _buildDoneCard(WorkoutSession session) {
+    final durSeconds = session.totalDurationSeconds ?? 0;
+    final durMin = durSeconds ~/ 60;
+    final durH = durMin ~/ 60;
+    final durLabel = durH > 0
+        ? '${durH}h ${durMin % 60}min'
+        : '${durMin}min';
+
+    final completedSets = session.sets.where((s) => s.isCompleted).toList();
+    final setsCount = completedSets.length;
+    final volumeKg = completedSets.fold<double>(
+      0,
+      (acc, s) => acc + ((s.reps ?? 0) * (s.weightKg ?? 0)),
+    );
+
+    final completedAtLabel = () {
+      final ct = session.completedAt?.toLocal();
+      if (ct == null) return '';
+      final h = ct.hour.toString().padLeft(2, '0');
+      final m = ct.minute.toString().padLeft(2, '0');
+      return '$h:$m';
+    }();
+
+    return Padding(
+      padding: BldrSpacing.pageInsets,
+      child: BldrHeroCard(
+        cornerGlow: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: AppTheme.successGreen.withValues(alpha: 0.18),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.check_rounded,
+                      color: AppTheme.successGreen, size: 16),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  AppLocalizations.of(context).dashboard_workout_today_title,
+                  style: BldrText.label,
+                ),
+                if (completedAtLabel.isNotEmpty) ...[
+                  const Spacer(),
+                  Text(completedAtLabel, style: BldrText.meta),
+                ],
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              session.templateName ?? session.name,
+              style: BldrText.kpiMd,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              AppLocalizations.of(context).dashboard_workout_done_label,
+              style: BldrText.meta.copyWith(color: AppTheme.successGreen),
+            ),
+            const SizedBox(height: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _DoneStat(
+                  icon: Icons.timer_outlined,
+                  value: durLabel,
+                  label: AppLocalizations.of(context).dashboard_done_duration_label,
+                ),
+                _DoneStat(
+                  icon: Icons.fitness_center_rounded,
+                  value: '$setsCount',
+                  label: AppLocalizations.of(context).dashboard_done_sets_label,
+                ),
+                if (volumeKg > 0)
+                  _DoneStat(
+                    icon: Icons.scale_rounded,
+                    value: volumeKg >= 1000
+                        ? '${(volumeKg / 1000).toStringAsFixed(1)}t'
+                        : '${volumeKg.toStringAsFixed(0)}kg',
+                    label: AppLocalizations.of(context).dashboard_done_volume_label,
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   /// D4 — placeholder do hero enquanto carrega. Mesma família visual do card
@@ -607,8 +722,9 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
     if (result.isFailure && mounted) _loadActiveWorkout();
   }
 
+  // ── helpers ──────────────────────────────────────────────────────────────
+
   void _showCompleteWorkoutDialog() {
-    // Captura o contexto do State antes do builder do dialog sobrescrever
     final stateContext = context;
     showDialog(
       context: stateContext,
@@ -680,6 +796,31 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
           ),
         ],
       );},
+    );
+  }
+}
+class _DoneStat extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+
+  const _DoneStat({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(icon, color: BldrColors.goldBright, size: 16),
+        const SizedBox(height: 4),
+        Text(value,
+            style: BldrText.meta
+                .copyWith(fontWeight: FontWeight.w700, color: Colors.white)),
+        Text(label, style: BldrText.meta),
+      ],
     );
   }
 }

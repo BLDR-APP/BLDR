@@ -666,6 +666,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Workout finished successfully!';
 
   @override
+  String get dashboard_workout_done_label => 'Completed';
+
+  @override
+  String get dashboard_done_duration_label => 'Duration';
+
+  @override
+  String get dashboard_done_sets_label => 'Sets';
+
+  @override
+  String get dashboard_done_volume_label => 'Volume';
+
+  @override
   String dashboard_finish_workout_error(String error) {
     return 'Failed to finish workout: $error';
   }

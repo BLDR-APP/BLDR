@@ -262,6 +262,10 @@
   "dashboard_finish_workout_dialog_body": "Você tem certeza que quer completar seu treino atual?",
   "dashboard_complete_workout_btn": "Completar",
   "dashboard_workout_completed_success": "Treino finalizado com sucesso!",
+  "dashboard_workout_done_label": "Concluído",
+  "dashboard_done_duration_label": "Duração",
+  "dashboard_done_sets_label": "Séries",
+  "dashboard_done_volume_label": "Volume",
   "dashboard_finish_workout_error": "Falha ao finalizar treino: {error}",
   "@dashboard_finish_workout_error": {
     "placeholders": {
