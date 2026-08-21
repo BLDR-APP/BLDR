@@ -17,7 +17,7 @@ enum WatchRunMode {
     case autonomous  // iPhone não acessível — Watch independente
 }
 
-class WatchViewModel: NSObject, ObservableObject, WCSessionDelegate {
+class WatchViewModel: NSObject, ObservableObject, @preconcurrency WCSessionDelegate {
 
     // MARK: — Treino de força (existente)
     @Published var treinoNome: String = "Sem treino ativo"
