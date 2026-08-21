@@ -7,6 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:bldr_fitness/features/professional_portal/presentation/screens/client_diet_screen.dart';
 import 'package:bldr_fitness/features/professional_portal/presentation/screens/client_workout_list_screen.dart';
 
+// --- IMPORTS ATUALIZADOS (V2.0 VISUAL + PAYWALL) ---
+import 'package:bldr_fitness/features/professional_portal/presentation/widgets/client_card_widget.dart';
+import 'package:bldr_fitness/features/professional_portal/presentation/widgets/empty_state_widget.dart';
+import 'package:bldr_fitness/features/professional_portal/presentation/screens/professional_paywall_screen.dart';
+// --- FIM DOS IMPORTS ---
+
+
 class ProfessionalDashboardScreen extends StatefulWidget {
   const ProfessionalDashboardScreen({Key? key}) : super(key: key);
 
@@ -20,9 +27,12 @@ class _ProfessionalDashboardScreenState extends State<ProfessionalDashboardScree
   String? _professionalRole;
   String _errorMessage = '';
 
-  // Esta é a nossa nova variável de estado para a lista
+  // --- VARIÁVEIS DE ESTADO DO PAYWALL ---
+  String _subscriptionStatus = 'inactive'; // Começa como 'inactive' por segurança
+  // --- FIM DAS VARIÁVEIS ---
+
   List<Map<String, dynamic>> _clients = [];
-  bool _isLoading = true; // Controla o estado de carregamento da tela inteira
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -30,16 +40,29 @@ class _ProfessionalDashboardScreenState extends State<ProfessionalDashboardScree
     _loadInitialData();
   }
 
+  // --- LÓGICA DE CARREGAMENTO ATUALIZADA (PAYWALL) ---
   Future<void> _loadInitialData() async {
     try {
-      // 1. Busca o 'role' do profissional
-      final role = await _repository.getMyProfessionalRole();
+      // 1. Busca o perfil completo (role e status)
+      // Chama a função com o nome correto: getMyProfessionalProfile
+      final profile = await _repository.getMyProfessionalProfile();
+      final role = profile['role'] as String?;
+      final status = profile['subscription_status'] as String?;
 
-      // 2. Busca a lista de IDs de clientes
+      // 2. Se o status for inativo, não precisamos carregar os clientes.
+      if (status != 'active') {
+        if (mounted) {
+          setState(() {
+            _professionalRole = role;
+            _subscriptionStatus = status ?? 'inactive';
+            _isLoading = false;
+          });
+        }
+        return; // Para aqui. Vai mostrar o Paywall.
+      }
+
+      // 3. Se estiver ativo, carrega os clientes.
       final clientIds = await _repository.getMyClientsIds();
-
-      // 3. Para cada ID, busca o perfil
-      // Usamos Future.wait para fazer todas as buscas em paralelo
       final clientProfiles = await Future.wait(
           clientIds.map((id) => _repository.getClientProfileById(id))
       );
@@ -47,13 +70,15 @@ class _ProfessionalDashboardScreenState extends State<ProfessionalDashboardScree
       if (mounted) {
         setState(() {
           _professionalRole = role;
+          _subscriptionStatus = status!;
           _clients = clientProfiles.map((profile) {
             return {
-              'id': profile['id'], // ou 'user_id' dependendo da sua tabela
-              'full_name': profile['full_name'] ?? 'Nome não encontrado'
+              'id': profile['id'],
+              'full_name': profile['full_name'] ?? 'Nome não encontrado',
+              'avatar_url': profile['avatar_url']
             };
           }).toList();
-          _isLoading = false; // Terminou de carregar
+          _isLoading = false;
         });
       }
     } catch (e) {
@@ -65,11 +90,12 @@ class _ProfessionalDashboardScreenState extends State<ProfessionalDashboardScree
       }
     }
   }
+  // --- FIM DA ATUALIZAÇÃO ---
 
-  // Esta função agora é chamada DEPOIS de adicionar um cliente
-  void _refreshClientList() {
-    setState(() { _isLoading = true; }); // Mostra o loading
-    _loadInitialData(); // Recarrega tudo
+  // Esta função é chamada pelo Paywall após um pagamento bem-sucedido
+  void _refreshAllData() {
+    setState(() { _isLoading = true; });
+    _loadInitialData();
   }
 
   Future<void> _signOut(BuildContext context) async {
@@ -117,7 +143,7 @@ class _ProfessionalDashboardScreenState extends State<ProfessionalDashboardScree
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(successMessage), backgroundColor: Colors.green),
                     );
-                    _refreshClientList(); // Recarrega a lista
+                    _refreshAllData(); // Atualiza a lista
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(e.toString().replaceFirst('Exception: ', '')), backgroundColor: Colors.redAccent),
@@ -132,6 +158,34 @@ class _ProfessionalDashboardScreenState extends State<ProfessionalDashboardScree
       },
     );
   }
+
+  void _navigateToClient(Map<String, dynamic> client) {
+    final clientName = client['full_name'] ?? 'Cliente';
+    final clientId = client['id'];
+
+    if (_professionalRole == 'personal') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ClientWorkoutListScreen(
+            clientId: clientId,
+            clientName: clientName,
+          ),
+        ),
+      );
+    } else if (_professionalRole == 'nutritionist') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ClientDietScreen(
+            clientId: clientId,
+            clientName: clientName,
+          ),
+        ),
+      );
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -152,16 +206,18 @@ class _ProfessionalDashboardScreenState extends State<ProfessionalDashboardScree
           ),
         ],
       ),
-      body: _buildBody(), // O corpo agora é construído pela função _buildBody
-      floatingActionButton: FloatingActionButton(
+      body: _buildBody(),
+      floatingActionButton: _subscriptionStatus == 'active'
+          ? FloatingActionButton(
         onPressed: _showAddClientDialog,
         backgroundColor: Colors.amber,
         child: const Icon(Icons.add, color: Colors.black),
-      ),
+      )
+          : null,
     );
   }
 
-  // Esta função agora constrói o corpo com base no estado (loading, erro, lista)
+  // --- _buildBody() ATUALIZADO COM A LÓGICA DO PAYWALL ---
   Widget _buildBody() {
     // 1. Estado de Carregamento
     if (_isLoading) {
@@ -173,49 +229,46 @@ class _ProfessionalDashboardScreenState extends State<ProfessionalDashboardScree
       return Center(child: Text('Erro: $_errorMessage'));
     }
 
-    // 3. Estado de Lista Vazia
+    // 3. A "MURALHA" (PAYWALL)
+    // Se o status não for 'active', mostra a tela de pagamento.
+    if (_subscriptionStatus != 'active') {
+      return ProfessionalPaywallScreen(
+        onSubscriptionSuccess: _refreshAllData,
+      );
+    }
+    // --- FIM DA MURALHA ---
+
+    // 4. Estado de Lista Vazia (só é mostrado se estiver 'active')
     if (_clients.isEmpty) {
-      return const Center(
-        child: Text(
-          'Você ainda não adicionou nenhum cliente.\nClique no botão + para começar.',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 18, color: Colors.grey),
-        ),
+      return EmptyStateWidget(
+        title: "Nenhum Cliente Adicionado",
+        message: "Clique no botão '+' para adicionar seu primeiro cliente pelo e-mail.",
+        iconData: Icons.people_outline,
+        buttonText: "Adicionar Cliente",
+        onButtonPressed: _showAddClientDialog,
       );
     }
 
-    // 4. Estado de Sucesso (mostrar a lista)
-    return ListView.builder(
+    // 5. Estado de Sucesso (só é mostrado se estiver 'active')
+    return GridView.builder(
+      padding: const EdgeInsets.all(16.0),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 16.0,
+        mainAxisSpacing: 16.0,
+        childAspectRatio: 0.8,
+      ),
       itemCount: _clients.length,
       itemBuilder: (context, index) {
         final client = _clients[index];
-        final clientName = client['full_name'] ?? 'Nome não encontrado';
-        return ListTile(
-          leading: CircleAvatar(child: Text(clientName.isNotEmpty ? clientName[0] : '?')),
-          title: Text(clientName),
-          onTap: () {
-            if (_professionalRole == 'personal') {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ClientWorkoutListScreen(
-                    clientId: client['id'],
-                    clientName: clientName,
-                  ),
-                ),
-              );
-            } else if (_professionalRole == 'nutritionist') {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ClientDietScreen(
-                    clientId: client['id'],
-                    clientName: clientName,
-                  ),
-                ),
-              );
-            }
-          },
+
+        return InkWell(
+          onTap: () => _navigateToClient(client),
+          borderRadius: BorderRadius.circular(16),
+          child: ClientCardWidget(
+            clientName: client['full_name'] ?? 'Nome não encontrado',
+            avatarUrl: client['avatar_url'],
+          ),
         );
       },
     );

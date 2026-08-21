@@ -3,7 +3,7 @@ import Flutter
 import FirebaseCore // <-- 1. IMPORTAMOS O CORE
 import FirebaseMessaging
 
-@UIApplicationMain
+@main
 @objc class AppDelegate: FlutterAppDelegate {
 
   override func application(
@@ -24,6 +24,79 @@ import FirebaseMessaging
     }
 
     GeneratedPluginRegistrant.register(with: self)
+
+    // HealthKit channels
+    if let controller = window?.rootViewController as? FlutterViewController {
+      let methodChannel = FlutterMethodChannel(
+        name: "bldr/healthkit",
+        binaryMessenger: controller.binaryMessenger)
+      methodChannel.setMethodCallHandler { call, result in
+        switch call.method {
+        case "requestPermission":
+          HealthKitService.shared.requestPermission(result: result)
+        case "checkPermission":
+          HealthKitService.shared.checkPermission(result: result)
+        case "fetchTodayCaloriesBurned":
+          HealthKitService.shared.fetchTodayCaloriesBurned(result: result)
+        case "saveCalories":
+          guard let args = call.arguments as? [String: Any],
+                let calories = args["calories"] as? Double,
+                let startTs = args["startTimestamp"] as? Double,
+                let endTs = args["endTimestamp"] as? Double else {
+            result(FlutterError(code: "INVALID_ARGS", message: nil, details: nil))
+            return
+          }
+          HealthKitService.shared.saveWorkoutCalories(
+            calories: calories,
+            startTimestamp: startTs,
+            endTimestamp: endTs,
+            result: result)
+        case "stopHeartRateMonitoring":
+          HealthKitService.shared.stopHeartRateMonitoring()
+          result(nil)
+        default:
+          result(FlutterMethodNotImplemented)
+        }
+      }
+
+      let eventChannel = FlutterEventChannel(
+        name: "bldr/healthkit/heartrate",
+        binaryMessenger: controller.binaryMessenger)
+      eventChannel.setStreamHandler(HeartRateStreamHandler())
+
+      // App Group channel — lê/remove runs autônomos do Watch
+      let appGroupChannel = FlutterMethodChannel(
+        name: "com.bldr.fitness/appgroup",
+        binaryMessenger: controller.binaryMessenger)
+      appGroupChannel.setMethodCallHandler { call, result in
+        let defaults = UserDefaults(suiteName: "group.com.bldr.fitness")
+        switch call.method {
+        case "getAppGroupValue":
+          guard let args = call.arguments as? [String: Any],
+                let key = args["key"] as? String else {
+            result(FlutterError(code: "INVALID_ARGS", message: nil, details: nil))
+            return
+          }
+          if let data = defaults?.data(forKey: key),
+             let str = String(data: data, encoding: .utf8) {
+            result(str)
+          } else {
+            result(nil)
+          }
+        case "removeAppGroupValue":
+          guard let args = call.arguments as? [String: Any],
+                let key = args["key"] as? String else {
+            result(FlutterError(code: "INVALID_ARGS", message: nil, details: nil))
+            return
+          }
+          defaults?.removeObject(forKey: key)
+          result(nil)
+        default:
+          result(FlutterMethodNotImplemented)
+        }
+      }
+    }
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 

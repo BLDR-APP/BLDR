@@ -3,10 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'club_service.dart';
-import 'models.dart';
-import 'program_detail_page.dart';
-import 'widgets.dart' as clubw show BldrGoldBadge, BldrBadgeRow, levelLabel;
+import 'package:bldr_fitness/features/club/club_service.dart';
+import 'package:bldr_fitness/features/club/models.dart';
+import 'package:bldr_fitness/features/club/program_detail_page.dart';
+import 'package:bldr_fitness/features/club/widgets.dart' as clubw show BldrGoldBadge, BldrBadgeRow, levelLabel;
 
 class ClubProgramsPage extends StatefulWidget {
   const ClubProgramsPage({super.key});

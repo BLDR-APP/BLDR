@@ -6,103 +6,232 @@ import 'package:sizer/sizer.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart'; // <<< ESSENCIAL PARA PUSH
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 // Importe suas outras dependências
-import './services/notification_service.dart';
-import './services/supabase_service.dart';
-import './services/profile_notifier.dart';
-import 'core/app_export.dart';
-import 'firebase_options.dart';
+import 'package:bldr_fitness/services/notification_service.dart';
+import 'package:bldr_fitness/services/push_notification_service.dart';
+import 'package:bldr_fitness/services/supabase_service.dart';
+import 'package:bldr_fitness/services/profile_notifier.dart';
+import 'package:bldr_fitness/services/payment_service.dart';
+import 'package:bldr_fitness/features/achievements/presentation/achievements/achievement_provider.dart';
+import 'package:bldr_fitness/features/achievements/presentation/achievements/achievement_overlay.dart';
+import 'dart:async';
 
-// Função Handler de Background exigida pelo Firebase Messaging
-@pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  if (kDebugMode) {
-    print('Handling a background message: ${message.messageId}');
-  }
-  // Você pode adicionar lógica aqui para notificar o usuário (ex: usando flutter_local_notifications)
-}
+import 'package:app_links/app_links.dart';
+import 'package:bldr_fitness/core/app_export.dart';
+import 'package:bldr_fitness/core/di/injection.dart';
+import 'package:bldr_fitness/features/integrations/data/live_activity_service.dart';
+import 'package:bldr_fitness/features/integrations/data/watch_service.dart';
+import 'package:bldr_fitness/features/integrations/data/widget_data_service.dart';
+import 'package:bldr_fitness/firebase_options.dart';
+import 'package:bldr_fitness/core/providers/locale_provider.dart';
+
+// Handler de background — delegado ao PushNotificationService para evitar duplicação
 
 late final Map<String, dynamic> appConfig;
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
-  // Garante que o Flutter esteja pronto
+  // 1. Binding obrigatoriamente primeiro.
   WidgetsFlutterBinding.ensureInitialized();
 
-  // REGISTRAR O HANDLER DE BACKGROUND (Obrigatório para PUSH em background/app fechado)
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  // 2. Background handler após o binding, antes do Firebase.initializeApp.
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-  try {
-    // 1. CARREGA SUA CONFIGURAÇÃO
-    final configString = await rootBundle.loadString('dart_defines.dev.json');
-    appConfig = json.decode(configString);
+  // Mínimo absoluto antes de runApp: config + Firebase.
+  final configString = await rootBundle.loadString('dart_defines.dev.json');
+  appConfig = json.decode(configString);
 
-    // 2. INICIALIZA O FIREBASE (ÚNICO E PADRÃO!)
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
-    // 3. INICIALIZAÇÃO DE SERVIÇOS
-    await SupabaseService.initialize();
+  // runApp imediatamente — elimina tela branca entre splash nativa e Flutter.
+  runApp(const AppLoader());
+}
 
-    Stripe.publishableKey = appConfig['STRIPE_PUBLISHABLE_KEY'] ?? '';
-    await Stripe.instance.applySettings();
+// ── AppLoader — inicializações pesadas pós-runApp ────────────────────────────
 
-    // Inicialização de Notificações Locais (A lógica PUSH está no ProfileDrawer)
-    await NotificationService().initialize();
+class AppLoader extends StatefulWidget {
+  const AppLoader({super.key});
+  @override
+  State<AppLoader> createState() => _AppLoaderState();
+}
 
-    // 4. RODA O APP
-    runApp(
-      ChangeNotifierProvider(
-        create: (context) => ProfileNotifier(),
-        child: const MyApp(),
-      ),
-    );
+class _AppLoaderState extends State<AppLoader> {
+  bool _ready = false;
+  AchievementProvider? _achievementProvider;
+  LocaleProvider? _localeProvider;
 
-  } catch (e) {
-    if (kDebugMode) {
-      print('Falha crítica na inicialização do App: $e');
+  @override
+  void initState() {
+    super.initState();
+    _initialize();
+  }
+
+  Future<void> _initialize() async {
+    try {
+      await SupabaseService.initialize();
+      setupInjection();
+
+      Stripe.publishableKey = PaymentService.isTestMode
+          ? (appConfig['STRIPE_TEST_PUBLISHABLE_KEY'] ?? '')
+          : (appConfig['STRIPE_PUBLISHABLE_KEY'] ?? '');
+      await Stripe.instance.applySettings();
+
+      await getIt<NotificationService>().initialize();
+      await getIt<PushNotificationService>()
+          .initialize(navigatorKey: appNavigatorKey);
+
+      // Não-críticos: não bloquear o runApp com await.
+      unawaited(WidgetDataService.init());
+      unawaited(LiveActivityService.init());
+      unawaited(getIt<WatchService>().initialize());
+
+      final achievementProvider = AchievementProvider();
+      await achievementProvider.init();
+
+      final localeProvider = getIt<LocaleProvider>();
+      await localeProvider.load();
+
+      if (mounted) {
+        setState(() {
+          _achievementProvider = achievementProvider;
+          _localeProvider = localeProvider;
+          _ready = true;
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) print('Falha crítica na inicialização: $e');
+      if (mounted) {
+        setState(() => _ready = true); // mostra tela de erro no MyApp
+      }
     }
-    runApp(MaterialApp(
-      home: Scaffold(
-        body: Center(
-          child: Text('Erro ao iniciar o aplicativo. Detalhes: $e'),
-        ),
-      ),
-    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_ready) {
+      // Mesma cor da splash nativa — zero flash.
+      return const ColoredBox(color: Color(0xFF050505));
+    }
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ProfileNotifier()),
+        ChangeNotifierProvider.value(
+            value: _achievementProvider ?? AchievementProvider()),
+        ChangeNotifierProvider.value(
+            value: _localeProvider ?? getIt<LocaleProvider>()),
+      ],
+      child: const MyApp(),
+    );
   }
 }
+
+// ── Deep link handler ────────────────────────────────────────────────────────
+// Trata bldr://workout/start/{templateId} e bldr://workout/confirm.
+// bldr://whoop/callback é capturado pelo flutter_web_auth_2 antes de chegar aqui.
+class _DeepLinkHandler extends StatefulWidget {
+  final Widget child;
+  const _DeepLinkHandler({required this.child});
+
+  @override
+  State<_DeepLinkHandler> createState() => _DeepLinkHandlerState();
+}
+
+class _DeepLinkHandlerState extends State<_DeepLinkHandler> {
+  StreamSubscription<Uri>? _sub;
+
+  @override
+  void initState() {
+    super.initState();
+    _initLinks();
+  }
+
+  Future<void> _initLinks() async {
+    final appLinks = AppLinks();
+    // Link inicial (app fechado)
+    final initial = await appLinks.getInitialLink();
+    if (initial != null) _handleLink(initial);
+    // Links enquanto app está aberto
+    _sub = appLinks.uriLinkStream.listen(_handleLink, onError: (_) {});
+  }
+
+  void _handleLink(Uri uri) {
+    if (uri.scheme != 'bldr') return;
+    final nav = appNavigatorKey.currentState;
+    if (nav == null) return;
+
+    // bldr://workout/start/{templateId}
+    if (uri.host == 'workout' && uri.pathSegments.length == 2
+        && uri.pathSegments[0] == 'start') {
+      final templateId = uri.pathSegments[1];
+      nav.pushNamed(
+        AppRoutes.activeWorkoutScreen,
+        arguments: {'workoutId': templateId, 'workoutName': 'Treino'},
+      );
+      return;
+    }
+
+    // bldr://workout/confirm — confirma série na tela de treino ativa.
+    // Usa Stream broadcast em vez de popUntil/route-name para suportar tanto
+    // o modo grátis (rota nomeada) quanto o Club (MaterialPageRoute sem nome).
+    if (uri.host == 'workout' && uri.pathSegments.firstOrNull == 'confirm') {
+      LiveActivityService.triggerConfirmSet();
+    }
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final localeProvider = context.watch<LocaleProvider>();
     return Sizer(
       builder: (context, orientation, deviceType) {
-        return MaterialApp(
-          title: 'BLDR App',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.darkTheme,
-          // Define o idioma padrão do app como Português (Brasil)
-          locale: const Locale('pt', 'BR'),
-
-          // Informa ao Flutter quais são os "tradutores"
-          localizationsDelegates: const [
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-
-          // Lista os idiomas que seu app suporta
-          supportedLocales: const [
-            Locale('pt', 'BR'), // Português (Brasil)
-            Locale('en', 'US'), // Inglês (como reserva, caso necessário)
-          ],
-          initialRoute: AppRoutes.splashScreen,
-          routes: AppRoutes.routes,
+        return _DeepLinkHandler(
+          child: MaterialApp(
+            title: 'BLDR App',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.darkTheme,
+            locale: localeProvider.locale,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('pt'),
+              Locale('en'),
+              Locale('it'),
+            ],
+            navigatorKey: appNavigatorKey,
+            initialRoute: AppRoutes.splashScreen,
+            routes: AppRoutes.routes,
+            builder: (context, child) {
+              return GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+                child: AchievementOverlay(child: child ?? const SizedBox.shrink()),
+              );
+            },
+          ),
         );
       },
     );

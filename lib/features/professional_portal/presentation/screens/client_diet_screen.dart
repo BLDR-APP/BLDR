@@ -1,11 +1,14 @@
 // lib/features/professional_portal/presentation/screens/client_diet_screen.dart
 
-import 'dart:io';
 import 'package:bldr_fitness/features/professional_portal/data/repositories/professional_repository.dart';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:intl/intl.dart'; // Para formatar a data
+import 'package:intl/intl.dart';
+
+// --- IMPORTS ATUALIZADOS (V2.0) ---
+import 'package:bldr_fitness/features/professional_portal/presentation/widgets/empty_state_widget.dart';
+// Este é o nosso próximo passo. Vamos criar este arquivo em seguida.
+import 'package:bldr_fitness/features/professional_portal/presentation/screens/meal_plan_editor_screen.dart';
+// --- FIM DOS IMPORTS ---
 
 class ClientDietScreen extends StatefulWidget {
   final String clientId;
@@ -23,89 +26,106 @@ class ClientDietScreen extends StatefulWidget {
 
 class _ClientDietScreenState extends State<ClientDietScreen> {
   final _repository = ProfessionalRepository();
-  late Future<List<Map<String, dynamic>>> _dietPlansFuture;
-  bool _isUploading = false;
+  // --- LÓGICA ATUALIZADA (V2.0) ---
+  // Trocamos o futuro de 'diet_plans' (PDFs) para 'meal_plans' (Estruturado)
+  late Future<List<Map<String, dynamic>>> _mealPlansFuture;
+  // Não precisamos mais do _isUploading
+  // --- FIM DA LÓGICA ---
 
   @override
   void initState() {
     super.initState();
-    _loadDietPlans();
+    // Função renomeada para clareza
+    _loadMealPlans();
   }
 
-  void _loadDietPlans() {
+  // --- FUNÇÃO ATUALIZADA (V2.0) ---
+  // Busca os novos planos estruturados
+  void _loadMealPlans() {
     setState(() {
-      _dietPlansFuture = _repository.getDietPlans(widget.clientId);
+      _mealPlansFuture = _repository.getMealPlans(widget.clientId);
     });
   }
+  // --- FIM DA FUNÇÃO ---
 
-  Future<void> _pickAndUploadFile() async {
-    // 1. Pedir para o usuário escolher um arquivo PDF
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf'],
-    );
+  // --- FUNÇÃO REMOVIDA (V2.0) ---
+  // _pickAndUploadFile() foi removida.
+  // _showTitleDialog() foi removida.
+  // _openPdf() foi removida.
+  // --- FIM DA REMOÇÃO ---
 
-    if (result != null) {
-      final file = File(result.files.single.path!);
-      final planTitle = await _showTitleDialog(); // 2. Pedir um título
+  // --- NOVA FUNÇÃO (V2.0) ---
+  // Abre o diálogo para criar um novo plano de refeição
+  Future<void> _showCreateMealPlanDialog() async {
+    final planNameController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
 
-      if (planTitle != null && planTitle.isNotEmpty) {
-        setState(() { _isUploading = true; });
-        try {
-          // 3. Fazer o upload
-          await _repository.uploadDietPlan(
-            file: file,
-            planTitle: planTitle,
-            clientId: widget.clientId,
-          );
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Plano enviado com sucesso!'), backgroundColor: Colors.green),
-          );
-          _loadDietPlans(); // 4. Recarregar a lista
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(e.toString()), backgroundColor: Colors.redAccent),
-          );
-        } finally {
-          setState(() { _isUploading = false; });
-        }
-      }
-    }
-  }
-
-  Future<String?> _showTitleDialog() {
-    final titleController = TextEditingController();
-    return showDialog<String>(
+    final planName = await showDialog<String>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Título do Plano'),
-          content: TextField(
-            controller: titleController,
-            decoration: const InputDecoration(hintText: "Ex: Dieta - Fase 1"),
+          title: const Text('Novo Plano de Dieta'),
+          content: Form(
+            key: formKey,
+            child: TextFormField(
+              controller: planNameController,
+              decoration: const InputDecoration(hintText: "Ex: Plano Cutting - 2500kcal"),
+              validator: (value) => (value == null || value.isEmpty) ? 'Dê um nome ao plano' : null,
+            ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Cancelar')),
             ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(titleController.text),
-              child: const Text('Salvar'),
+              onPressed: () {
+                if (formKey.currentState!.validate()) {
+                  Navigator.of(context).pop(planNameController.text);
+                }
+              },
+              child: const Text('Criar'),
             ),
           ],
         );
       },
     );
-  }
 
-  Future<void> _openPdf(String fileUrl) async {
-    final uri = Uri.parse(fileUrl);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Não foi possível abrir o arquivo: $fileUrl'), backgroundColor: Colors.redAccent),
-      );
+    // Se o usuário inseriu um nome e clicou em "Criar"
+    if (planName != null && planName.isNotEmpty) {
+      try {
+        await _repository.createMealPlan(
+          planName: planName,
+          clientId: widget.clientId,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Plano criado com sucesso!'), backgroundColor: Colors.green),
+        );
+        _loadMealPlans(); // Recarrega a lista
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.toString()), backgroundColor: Colors.redAccent),
+        );
+      }
     }
   }
+  // --- FIM DA NOVA FUNÇÃO ---
+
+  // --- NOVA FUNÇÃO (V2.0) ---
+  // Navega para a tela de edição do plano (que criaremos a seguir)
+  void _navigateToPlanEditor(Map<String, dynamic> plan) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MealPlanEditorScreen(
+          planId: plan['id'],
+          planName: plan['plan_name'],
+        ),
+      ),
+    ).then((_) {
+      // Quando o Nutri voltar, recarregamos os planos
+      _loadMealPlans();
+    });
+  }
+  // --- FIM DA NOVA FUNÇÃO ---
+
 
   @override
   Widget build(BuildContext context) {
@@ -114,62 +134,55 @@ class _ClientDietScreenState extends State<ClientDietScreen> {
         title: Text('Dietas de ${widget.clientName}'),
         backgroundColor: Colors.black,
       ),
-      body: Stack(
-        children: [
-          FutureBuilder<List<Map<String, dynamic>>>(
-            future: _dietPlansFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (snapshot.hasError) {
-                return Center(child: Text('Erro: ${snapshot.error}'));
-              }
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(
-                  child: Text('Nenhum plano de dieta enviado.', style: TextStyle(fontSize: 18, color: Colors.grey)),
-                );
-              }
+      // --- UI ATUALIZADA (V2.0) ---
+      // A Stack não é mais necessária
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _mealPlansFuture, // Usa o novo Future
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Erro: ${snapshot.error}'));
+          }
 
-              final plans = snapshot.data!;
-              return ListView.builder(
-                itemCount: plans.length,
-                itemBuilder: (context, index) {
-                  final plan = plans[index];
-                  final createdAt = DateTime.parse(plan['created_at']);
-                  final formattedDate = DateFormat('dd/MM/yyyy \'às\' HH:mm').format(createdAt);
+          // Usa o EmptyStateWidget para os novos planos
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return EmptyStateWidget(
+              title: "Nenhum Plano de Dieta Criado",
+              message: "Clique no botão '+' para criar o primeiro plano de dieta estruturado.",
+              iconData: Icons.restaurant_menu_outlined, // Novo ícone
+              buttonText: "Criar Plano de Dieta",
+              onButtonPressed: _showCreateMealPlanDialog, // Nova função
+            );
+          }
 
-                  return ListTile(
-                    leading: const Icon(Icons.picture_as_pdf, color: Colors.redAccent),
-                    title: Text(plan['plan_title']),
-                    subtitle: Text('Enviado em $formattedDate'),
-                    onTap: () => _openPdf(plan['file_path']),
-                  );
-                },
+          // Lista os novos planos estruturados
+          final plans = snapshot.data!;
+          return ListView.builder(
+            itemCount: plans.length,
+            itemBuilder: (context, index) {
+              final plan = plans[index];
+              final createdAt = DateTime.parse(plan['created_at']);
+              final formattedDate = DateFormat('dd/MM/yyyy').format(createdAt);
+
+              return ListTile(
+                leading: const Icon(Icons.restaurant_menu, color: Colors.green), // Novo ícone
+                title: Text(plan['plan_name']),
+                subtitle: Text('Criado em $formattedDate'),
+                trailing: const Icon(Icons.arrow_forward_ios),
+                onTap: () => _navigateToPlanEditor(plan), // Nova navegação
               );
             },
-          ),
-          if (_isUploading)
-            Container(
-              color: Colors.black.withOpacity(0.5),
-              child: const Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Enviando plano...', style: TextStyle(color: Colors.white, fontSize: 16)),
-                  ],
-                ),
-              ),
-            ),
-        ],
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _isUploading ? null : _pickAndUploadFile,
+        onPressed: _showCreateMealPlanDialog, // Nova função
         backgroundColor: Colors.amber,
-        child: const Icon(Icons.upload_file, color: Colors.black),
+        child: const Icon(Icons.add, color: Colors.black), // Ícone de "adicionar"
       ),
+      // --- FIM DA ATUALIZAÇÃO DA UI ---
     );
   }
 }

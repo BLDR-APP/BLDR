@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
@@ -8,31 +11,32 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// >>> BLOCO 1: Carrega as senhas do arquivo key.properties <<<
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "com.bldr_fitness.app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        // As suas linhas originais
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-
-        // A nossa nova linha (com sintaxe Kotlin '= true')
         isCoreLibraryDesugaringEnabled = true
     }
 
-    buildToolsVersion = "35.0.0" // <- fix: usa build-tools estável
+    buildToolsVersion = "35.0.0"
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_11.toString()
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.bldr_fitness.app"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -40,11 +44,32 @@ android {
         multiDexEnabled = true
     }
 
+    // >>> BLOCO 2: Cria a configuração de assinatura <<<
+    signingConfigs {
+        create("release") {
+            // Só carrega se o arquivo properties existir
+            if (keystoreProperties.isNotEmpty()) {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+            }
+        }
+    }
+
     buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+        getByName("release") {
+            // >>> BLOCO 3: Aplica a assinatura de release <<<
+            // Se não achar as chaves, ele não assina (evita erro de build, mas não sobe pra loja)
+            if (keystoreProperties.isNotEmpty()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
+
+            // Recomendado para produção: Ofusca o código e reduz tamanho
+            isMinifyEnabled = true
+            // Shrink resources remove arquivos não usados
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 }

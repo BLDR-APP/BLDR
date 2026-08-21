@@ -1,85 +1,175 @@
-// lib/services/push_notification_service.dart (VERSÃO CORRIGIDA)
+import 'dart:convert';
+import 'dart:io';
 
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:get_it/get_it.dart';
+
+import 'package:bldr_fitness/routes/app_routes.dart';
+import 'package:bldr_fitness/services/notification_service.dart';
+import 'package:bldr_fitness/services/user_service.dart';
+
+/// Roteador central para navegação por push.
+/// Usado tanto no foreground (onMessageOpenedApp) quanto na central
+/// de notificações (NotificationsScreen).
+class NotificationRouter {
+  static void navigate(
+    String? type,
+    Map<String, dynamic> data, {
+    required GlobalKey<NavigatorState> navigatorKey,
+  }) {
+    final nav = navigatorKey.currentState;
+    if (nav == null) return;
+
+    switch (type) {
+      case 'duel_invite':
+        final duelId = data['duel_id'] as String?;
+        nav.pushNamed(AppRoutes.comunidadeScreen,
+            arguments: duelId != null ? {'duel_id': duelId} : null);
+      case 'ranking':
+        nav.pushNamed(AppRoutes.rankingScreen);
+      case 'challenge':
+        nav.pushNamed(AppRoutes.comunidadeScreen);
+      case 'streak':
+        nav.pushNamed(AppRoutes.dashboard);
+      case 'level_up':
+        nav.pushNamed(AppRoutes.profileScreen);
+      case 'run_synced':
+        nav.pushNamed(AppRoutes.esportesScreen);
+      default:
+        nav.pushNamed(AppRoutes.notificacoesScreen);
+    }
+  }
+}
 
 class PushNotificationService {
   static final PushNotificationService _instance =
-  PushNotificationService._internal();
+      PushNotificationService._internal();
   factory PushNotificationService() => _instance;
   PushNotificationService._internal();
 
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
 
-  Future<void> initialize() async {
-    // 1. SOLICITAR PERMISSÕES (necessário no iOS e Android 13+)
-    NotificationSettings settings = await _fcm.requestPermission(
+  Future<void> initialize({GlobalKey<NavigatorState>? navigatorKey}) async {
+    // 1. Solicitar permissões
+    await _fcm.requestPermission(
       alert: true,
-      announcement: false,
       badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
       sound: true,
     );
 
-    if (kDebugMode) {
-      print('Permissão de Notificação concedida, status: ${settings.authorizationStatus}');
+    // 2. Foreground: exibir via flutter_local_notifications
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      final notification = message.notification;
+      if (notification == null) return;
+
+      await GetIt.instance<NotificationService>().showPushNotification(
+        id: message.hashCode,
+        title: notification.title ?? 'BLDR',
+        body: notification.body ?? '',
+        payload: jsonEncode(message.data),
+      );
+    });
+
+    // 3. Background → foreground: usuário toca na notificação
+    if (navigatorKey != null) {
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        _handleNotificationNavigation(message.data, navigatorKey: navigatorKey);
+      });
+
+      // App fechado: usuário toca na notificação
+      final initialMessage = await _fcm.getInitialMessage();
+      if (initialMessage != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _handleNotificationNavigation(initialMessage.data,
+              navigatorKey: navigatorKey);
+        });
+      }
     }
+  }
 
-    // 2. OBTER TOKEN (AGORA COM TRY-CATCH)
+  void _handleNotificationNavigation(
+    Map<String, dynamic> data, {
+    required GlobalKey<NavigatorState> navigatorKey,
+  }) {
+    final type = data['type'] as String?;
+    final actionData = data['action_data'] as String?;
+    final parsed = actionData != null
+        ? (jsonDecode(actionData) as Map<String, dynamic>)
+        : <String, dynamic>{};
 
-    // Este método é seguro e lida com a recuperação do token FCM,
-    // que é a chave que você envia para o seu servidor.
-    String? token = await _fcm.getToken();
+    NotificationRouter.navigate(type, parsed, navigatorKey: navigatorKey);
+  }
 
-    if (kDebugMode) {
-      print("Token FCM do dispositivo: $token");
+  /// Centraliza a sincronização do token FCM com o perfil do usuário.
+  /// Chamado ao ativar notificações em qualquer ponto do app.
+  Future<void> syncTokenToProfile({required bool enabled}) async {
+    try {
+      final Map<String, dynamic> updates = {
+        'notifications_enabled': enabled,
+        'platform_type': Platform.isIOS ? 'ios' : 'android',
+      };
+
+      if (enabled) {
+        if (Platform.isIOS) await _waitForAPNSToken();
+        final token = await _fcm.getToken();
+        if (token == null) throw Exception('Token FCM não obtido.');
+        updates['fcm_token'] = token;
+      } else {
+        updates['fcm_token'] = null;
+        await _fcm.deleteToken();
+      }
+
+      await UserService.instance.updateCurrentUserProfile(updates: updates);
+    } catch (e) {
+      if (kDebugMode) print('[PushNotificationService] syncTokenToProfile: $e');
+      rethrow;
     }
+  }
 
-    // AJUSTE CRÍTICO: Isolar a recuperação do token APNS em um try-catch.
-    // O erro 'apns-token-not-set' ocorre APENAS aqui e não deve quebrar a inicialização.
-    if (defaultTargetPlatform == TargetPlatform.iOS) {
+  Future<void> _waitForAPNSToken() async {
+    for (int i = 0; i < 5; i++) {
       try {
-        String? apnsToken = await _fcm.getAPNSToken();
-        if (kDebugMode) {
-          print("APNS Token (iOS): $apnsToken");
-        }
-      } catch (e) {
-        // Ignora a falha, pois o app deve continuar mesmo sem o token APNS inicial.
-        if (kDebugMode) {
-          print("ATENÇÃO: Não foi possível obter o token APNS inicial, mas a inicialização continuará. Erro: $e");
-        }
-      }
+        final apns = await _fcm.getAPNSToken();
+        if (apns != null) return;
+      } catch (_) {}
+      await Future.delayed(const Duration(seconds: 1));
     }
-
-
-    // 3. CONFIGURAR LISTENERS (para receber mensagens em foreground)
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      if (kDebugMode) {
-        print('Got a message whilst in the foreground!');
-        print('Message data: ${message.data}');
-      }
-
-      if (message.notification != null) {
-        if (kDebugMode) {
-          print('Message also contained a notification: ${message.notification!.body}');
-        }
-      }
-    });
-
-    // 4. CONFIGURAR INTERAÇÕES (usuário clica na notificação)
-    _fcm.getInitialMessage().then((RemoteMessage? message) {
-      if (message != null) {
-        if (kDebugMode) {
-          print('App aberto por notificação: ${message.data}');
-        }
-      }
-    });
   }
 
-  // Método opcional para obter o token a qualquer momento.
-  Future<String?> getDeviceToken() async {
-    return _fcm.getToken();
-  }
+  Future<String?> getDeviceToken() => _fcm.getToken();
+}
+
+/// Handler de background — roda em isolate separado, não pode usar getIt.
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+
+  final plugin = FlutterLocalNotificationsPlugin();
+  await plugin.initialize(const InitializationSettings(
+    android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+    iOS: DarwinInitializationSettings(),
+  ));
+
+  final notification = message.notification;
+  if (notification == null) return;
+
+  await plugin.show(
+    message.hashCode,
+    notification.title ?? 'BLDR',
+    notification.body ?? '',
+    const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'bldr_push_channel',
+        'Notificações BLDR',
+        importance: Importance.high,
+        priority: Priority.high,
+      ),
+      iOS: DarwinNotificationDetails(),
+    ),
+    payload: jsonEncode(message.data),
+  );
 }

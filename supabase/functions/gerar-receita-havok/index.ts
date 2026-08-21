@@ -1,5 +1,3 @@
-// supabase/functions/gerar-receita-havok/index.ts
-
 // @ts-ignore
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 // @ts-ignore
@@ -10,7 +8,43 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const GOOGLE_AI_MODEL = 'gemini-2.5-flash';
+const ANTHROPIC_MODEL = "claude-haiku-4-5-20251001";
+
+const SYSTEM_PROMPT = `
+Você é HAVOK, IA especialista em nutrição esportiva do BLDR.
+Crie receitas saudáveis, práticas e com macros adequados para atletas.
+Responda APENAS com o JSON solicitado, sem markdown, sem texto antes ou depois.
+`.trim();
+
+async function callClaude(userMessage: string, maxTokens = 2048): Promise<string> {
+  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY não configurada.");
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "anthropic-version": "2023-06-01",
+      "x-api-key": apiKey,
+    },
+    body: JSON.stringify({
+      model: ANTHROPIC_MODEL,
+      max_tokens: maxTokens,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: "user", content: userMessage }],
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Erro na API da Anthropic: ${response.status} ${errorBody}`);
+  }
+
+  const data = await response.json();
+  const text = data.content?.[0]?.text;
+  if (!text) throw new Error("Claude não retornou resposta.");
+  return text;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -18,103 +52,65 @@ serve(async (req) => {
   }
 
   try {
-    // --- ETAPA 1: AUTENTICAÇÃO E BUSCA DOS DADOS DO USUÁRIO ---
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: req.headers.get("Authorization")! } } }
+      { global: { headers: { Authorization: req.headers.get("Authorization")! } } },
     );
 
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) throw new Error("Usuário não autenticado.");
 
-    // Extrai o pedido do usuário (ex: "frango e batata doce" ou "Pós-treino")
     const { userQuery } = await req.json();
-    if (!userQuery || typeof userQuery !== 'string' || userQuery.trim() === '') {
+    if (!userQuery || typeof userQuery !== "string" || userQuery.trim() === "") {
       throw new Error("O pedido da receita está vazio ou inválido.");
     }
 
-    // Busca as preferências alimentares do usuário para personalizar a receita
-    const { data: profile, error: profileError } = await supabaseClient
-      .from('user_profiles')
-      .select('onboarding_data')
-      .eq('id', user.id)
+    const { data: profile } = await supabaseClient
+      .from("user_profiles")
+      .select("onboarding_data")
+      .eq("id", user.id)
       .single();
 
-    if (profileError || !profile || !profile.onboarding_data) {
-      throw new Error(`Dados de onboarding do usuário não encontrados.`);
-    }
+    const dietaryPreferences =
+      (profile?.onboarding_data?.dietary_preferences as string[] | undefined)?.join(", ") ||
+      "Sem restrições";
 
-    const dietaryPreferences = profile.onboarding_data.dietary_preferences?.join(', ') || 'Sem restrições';
+    const prompt = `Gere uma receita saudável baseada no pedido abaixo.
 
-    // --- ETAPA 2: CONSTRUÇÃO DO PROMPT PARA A IA ---
-    const prompt = `
-      Você é HAVOK, uma IA especialista em nutrição esportiva e culinária para o app BLDR.
-      Sua tarefa é gerar uma receita saudável, prática e deliciosa baseada no pedido do usuário.
+Pedido: "${userQuery}"
+Preferências alimentares: ${dietaryPreferences}
 
-      Pedido do Usuário: "${userQuery}"
-      Preferências Alimentares do Usuário: ${dietaryPreferences}
+Instruções:
+1. Crie um nome criativo e apetitoso.
+2. Liste ingredientes simples.
+3. Descreva o preparo em passos curtos.
+4. Forneça estimativa de macros.
 
-      Instruções:
-      1. Interprete o pedido e as preferências do usuário para criar UMA receita.
-      2. Crie um nome criativo e apetitoso para a receita.
-      3. Forneça uma lista de ingredientes simples.
-      4. Descreva o modo de preparo em passos claros e curtos.
-      5. Forneça uma ESTIMATIVA dos macronutrientes (proteínas, carboidratos, gorduras) e calorias. É crucial que sejam valores aproximados.
-      6. A resposta DEVE ser um objeto JSON válido, sem nenhum texto ou markdown antes ou depois.
+Retorne apenas JSON no schema:
+{
+  "nome": "Nome da Receita",
+  "descricao": "Descrição curta e atrativa.",
+  "ingredientes": ["150g de peito de frango", "200g de batata doce"],
+  "preparo": ["Cozinhe a batata doce.", "Grelhe o frango."],
+  "macros": {
+    "calorias_aprox": 450,
+    "proteinas_g": 40,
+    "carboidratos_g": 50,
+    "gorduras_g": 10
+  }
+}`;
 
-      Estrutura do JSON de Resposta:
-      {
-        "nome": "Nome Criativo da Receita",
-        "descricao": "Uma descrição curta e atrativa da receita.",
-        "ingredientes": [
-          "150g de peito de frango",
-          "200g de batata doce",
-          "1 colher de sopa de azeite"
-        ],
-        "preparo": [
-          "Cozinhe a batata doce até ficar macia.",
-          "Grelhe o frango com temperos.",
-          "Sirva tudo junto."
-        ],
-        "macros": {
-          "calorias_aprox": 450,
-          "proteinas_g": 40,
-          "carboidratos_g": 50,
-          "gorduras_g": 10
-        }
-      }
-    `;
+    const rawText = await callClaude(prompt);
+    const recipeJson = JSON.parse(rawText.replace(/```json/g, "").replace(/```/g, "").trim());
 
-    // --- ETAPA 3: CHAMADA PARA A API DO GOOGLE AI ---
-    const googleApiKey = Deno.env.get("GOOGLE_AI_KEY");
-    if (!googleApiKey) throw new Error("Chave de API do Google AI não configurada.");
-    const aiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GOOGLE_AI_MODEL}:generateContent?key=${googleApiKey}`;
-    const aiResponse = await fetch(aiApiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-    });
-    if (!aiResponse.ok) {
-      const errorBody = await aiResponse.text();
-      throw new Error(`Erro na API do Google AI: ${aiResponse.status} ${errorBody}`);
-    }
-    const aiData = await aiResponse.json();
-    let recipeText = aiData.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!recipeText) throw new Error("A IA não retornou uma receita válida.");
-    recipeText = recipeText.replace(/```json/g, '').replace(/```/g, '').trim();
-
-    // --- ETAPA 4: RETORNAR A RECEITA GERADA PARA O APP ---
-    // Nota: Por enquanto, não vamos salvar a receita no banco de dados.
-    const recipeJson = JSON.parse(recipeText);
     return new Response(JSON.stringify(recipeJson), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
-
   } catch (error) {
-    console.error(error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("Erro fatal na Edge Function gerar-receita-havok:", error);
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

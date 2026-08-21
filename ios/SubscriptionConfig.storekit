@@ -1,0 +1,135 @@
+{
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
+  "identifier" : "74107354",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6754264412",
+    "_askToBuyEnabled" : false,
+    "_billingGracePeriodEnabled" : false,
+    "_billingIssuesEnabled" : false,
+    "_developerTeamID" : "P8PPW4FR6D",
+    "_disableDialogs" : false,
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 787180434.50543702,
+    "_locale" : "pt_BR",
+    "_renewalBillingIssuesEnabled" : false,
+    "_storefront" : "BRA",
+    "_storeKitErrors" : [
+
+    ],
+    "_timeRate" : 0
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21835802",
+      "localizations" : [
+
+      ],
+      "name" : "BLDR CLUB",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "199.9",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "6755439041",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Grátis + treinos exclusivos, IA e mais funcionalidades",
+              "displayName" : "BLDR CLUB | ANUAL",
+              "locale" : "pt_BR"
+            }
+          ],
+          "productID" : "ANUAL",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "CLUB_ANUAL",
+          "subscriptionGroupID" : "21835802",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+            {
+              "displayPrice" : "9.9",
+              "eligibility" : [
+                "new"
+              ],
+              "internalID" : "06009829",
+              "isStackable" : false,
+              "numberOfPeriods" : 12,
+              "paymentMode" : "payAsYouGo",
+              "referenceName" : "100 CLUB",
+              "subscriptionPeriod" : "P1M"
+            },
+            {
+              "displayPrice" : "9.9",
+              "eligibility" : [
+                "new"
+              ],
+              "internalID" : "66F7CFFB",
+              "isStackable" : true,
+              "numberOfPeriods" : 12,
+              "paymentMode" : "payAsYouGo",
+              "referenceName" : "CLUB100",
+              "subscriptionPeriod" : "P1M"
+            }
+          ],
+          "displayPrice" : "34.9",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6755438502",
+          "introductoryOffer" : {
+            "internalID" : "1B286FFF",
+            "numberOfPeriods" : 1,
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P1M"
+          },
+          "localizations" : [
+            {
+              "description" : "Grátis + treinos exclusivos, IA e mais funcionalidades",
+              "displayName" : "BLDR CLUB | MENSAL",
+              "locale" : "pt_BR"
+            }
+          ],
+          "productID" : "MENSAL",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "CLUB_MENSAL",
+          "subscriptionGroupID" : "21835802",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

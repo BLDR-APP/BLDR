@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 // CORREÇÃO 1: Prefixo 'sb' para evitar conflito com User
 import 'package:supabase_flutter/supabase_flutter.dart' as sb;
 // Importado apenas para o ID do usuário
-import './auth_service.dart';
+import 'package:bldr_fitness/services/auth_service.dart';
 
 class FirebaseAuthService {
   static final FirebaseAuthService _instance = FirebaseAuthService._internal();

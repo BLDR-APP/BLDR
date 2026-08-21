@@ -4,7 +4,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
-import 'package:firebase_messaging/firebase_messaging.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -50,10 +49,6 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
-
-    await FirebaseMessaging.instance.requestPermission(
-        alert: true, badge: true, sound: true,
-    );
   }
 
   /// Agenda a notificação de "Descanso Concluído"
@@ -99,6 +94,34 @@ class NotificationService {
     );
 
     print("NOTIFICAÇÃO: Agendada para daqui a $seconds segundos.");
+  }
+
+  /// Exibe notificação push recebida em foreground via flutter_local_notifications.
+  Future<void> showPushNotification({
+    required int id,
+    required String title,
+    required String body,
+    String? payload,
+  }) async {
+    const channelId = 'bldr_push_channel';
+    const channelName = 'Notificações BLDR';
+
+    final androidDetails = AndroidNotificationDetails(
+      channelId,
+      channelName,
+      importance: Importance.high,
+      priority: Priority.high,
+      styleInformation: BigTextStyleInformation(body),
+    );
+    const iosDetails = DarwinNotificationDetails();
+
+    await _flutterLocalNotificationsPlugin.show(
+      id,
+      title,
+      body,
+      NotificationDetails(android: androidDetails, iOS: iosDetails),
+      payload: payload,
+    );
   }
 
   /// Cancela a notificação de descanso (se o utilizador ficar no app)

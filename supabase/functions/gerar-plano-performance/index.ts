@@ -1,177 +1,129 @@
-// supabase/functions/gerar-plano-performance/index.ts
+// @ts-ignore
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// @ts-ignore
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const ANTHROPIC_MODEL = "claude-haiku-4-5-20251001";
+
+const SYSTEM_PROMPT = `
+Você é HAVOK, IA de elite especializada em performance atlética do BLDR CLUB.
+Crie planos de treino específicos para o esporte solicitado — criativos, desafiadores e seguros.
+Responda APENAS com o JSON solicitado, sem markdown, sem texto antes ou depois.
+`.trim();
+
+async function callClaude(userMessage: string, maxTokens = 3000): Promise<string> {
+  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY não configurada.");
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "anthropic-version": "2023-06-01",
+      "x-api-key": apiKey,
+    },
+    body: JSON.stringify({
+      model: ANTHROPIC_MODEL,
+      max_tokens: maxTokens,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: "user", content: userMessage }],
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Erro na API da Anthropic: ${response.status} ${errorBody}`);
+  }
+
+  const data = await response.json();
+  const text = data.content?.[0]?.text;
+  if (!text) throw new Error("Claude não retornou resposta.");
+  return text;
+}
 
 serve(async (req) => {
-  // Trata a requisição CORS
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' } })
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    // 1. PEGAR O INPUT DO APP
-    const { sport } = await req.json()
-    if (!sport) {
-      throw new Error('O nome do "sport" é obrigatório no body.')
-    }
+    const { sport } = await req.json();
+    if (!sport) throw new Error('O campo "sport" é obrigatório.');
 
-    // 2. AUTENTICAR O USUÁRIO
-    const authHeader = req.headers.get('Authorization')!
+    const authHeader = req.headers.get("Authorization")!;
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: authHeader } } }
-    )
-    const { data: { user } } = await supabaseClient.auth.getUser()
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
 
+    const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) {
-      return new Response(JSON.stringify({ error: 'Usuário não autenticado.' }), { status: 401, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } })
+      return new Response(JSON.stringify({ error: "Usuário não autenticado." }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+      });
     }
 
-    // =================================================================
-    // 3. CHAMAR A API DO GOOGLE AI (GEMINI)
-    // =================================================================
+    const prompt = `Crie um plano de treino de performance de 4 dias por semana para um atleta de ${sport}.
 
-    const googleAiKey = Deno.env.get('GOOGLE_AI_KEY')
-    if (!googleAiKey) {
-      throw new Error('Segredo GOOGLE_AI_KEY não configurado.')
-    }
+O plano deve ser específico para ${sport}, evitando respostas genéricas.
 
-    // 3b. Criar o prompt para o Google AI (O PROMPT MELHORADO)
-    const promptParaIA = `
-Aja como 'HAVOK', um sistema de IA de elite especializado em performance atlética e parceiro oficial do BLDR CLUB.
-Sua missão é criar um plano de treino de performance de 4 dias por semana, em português (Brasil), para um atleta de ${sport}.
-
-O plano deve ser criativo, desafiador e específico para ${sport}, evitando respostas genéricas.
-O 'title' deve ser "Plano de Performance: ${sport}".
-O 'subtitle' deve ser motivador e claro (ex: "4 dias/semana focado em explosão e agilidade").
-
-Retorne SUA RESPOSTA ÚNICA E ESTRITAMENTE como um objeto JSON, sem '` + "```" + `json' ou qualquer outro texto.
-O formato DEVE ser:
+Retorne apenas JSON no schema:
 {
   "title": "Plano de Performance: ${sport}",
-  "subtitle": "Um subtítulo motivador de 1 linha.",
+  "subtitle": "subtítulo motivador de 1 linha",
   "planJson": {
     "dia_1": {
       "foco": "Explosão e Potência",
       "exercicios": [
-        {
-          "nome": "Nome do Exercício",
-          "series": "4",
-          "reps": "8-10",
-          "descanso": "60-90s",
-          "observacoes": "Foco na execução explosiva."
-        }
+        { "nome": "Exercício", "series": "4", "reps": "8-10", "descanso": "60-90s", "observacoes": "Dica de execução." }
       ]
     },
     "dia_2": {
       "foco": "Agilidade e Core",
       "exercicios": [
-        {
-          "nome": "Nome do Exercício",
-          "series": "3",
-          "reps": "12-15",
-          "descanso": "60s",
-          "observacoes": "Mantenha o core ativado."
-        }
+        { "nome": "Exercício", "series": "3", "reps": "12-15", "descanso": "60s", "observacoes": "Dica." }
       ]
     },
     "dia_3": {
-      "foco": "Força Funcional (Específico p/ ${sport})",
+      "foco": "Força Funcional específica para ${sport}",
       "exercicios": [
-        {
-          "nome": "Nome do Exercício",
-          "series": "4",
-          "reps": "10",
-          "descanso": "90s",
-          "observacoes": "Simule o movimento do esporte."
-        }
+        { "nome": "Exercício", "series": "4", "reps": "10", "descanso": "90s", "observacoes": "Dica." }
       ]
     },
     "dia_4": {
       "foco": "Prevenção de Lesões e Mobilidade",
       "exercicios": [
-        {
-          "nome": "Nome do Exercício",
-          "series": "2",
-          "reps": "15",
-          "descanso": "45s",
-          "observacoes": "Movimento controlado."
-        }
+        { "nome": "Exercício", "series": "2", "reps": "15", "descanso": "45s", "observacoes": "Dica." }
       ]
     }
   }
-}
-`
+}`;
 
-    // 3c. Chamar a API do Google AI (Gemini Pro)
-    const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini 2.5-flash:generateContent?key=${googleAiKey}`
+    const rawText = await callClaude(prompt);
+    const aiResponseObject = JSON.parse(rawText.replace(/```json/g, "").replace(/```/g, "").trim());
 
-    const googleAiResponse = await fetch(geminiApiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        "contents": [{ "parts": [{ "text": promptParaIA }] }],
-        "safetySettings": [
-          { "category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE" },
-          { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE" },
-          { "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE" },
-          { "category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE" }
-        ],
-        "generationConfig": {
-          "responseMimeType": "application/json",
-        }
-      }),
-    })
+    const finalResponse = {
+      ...aiResponseObject,
+      id: crypto.randomUUID(),
+      sport,
+      sportContextTag: sport.toLowerCase().replaceAll(" ", ""),
+    };
 
-    if (!googleAiResponse.ok) {
-      const errorBody = await googleAiResponse.json()
-      console.error('Erro da API Google:', errorBody)
-      throw new Error(`Erro da API Google: ${JSON.stringify(errorBody.error)}`)
-    }
-
-    const aiResponseJson = await googleAiResponse.json()
-
-    // =================================================================
-    // 4. EXTRAIR O JSON FORMATADO DA RESPOSTA DO GOOGLE
-    // =================================================================
-
-    let aiResponseText: string
-    try {
-      aiResponseText = aiResponseJson.candidates[0].content.parts[0].text
-    } catch (e) {
-      console.error("Erro ao extrair o texto da resposta do Google AI:", aiResponseJson)
-      throw new Error("A IA retornou uma resposta em formato inesperado.")
-    }
-
-    // Converte o *texto* (que é um JSON) em um objeto JSON
-    const aiResponseObject = JSON.parse(aiResponseText)
-
-    // =================================================================
-    // 5. ENRIQUECER O JSON E RETORNAR PARA O APP
-    // =================================================================
-
-    // Agora nós adicionamos os campos lógicos que o app espera
-    const finalResponseJson = {
-      ...aiResponseObject, // Pega "title", "subtitle", "planJson" da IA
-      id: crypto.randomUUID(), // Gera um ID único e real aqui
-      sport: sport, // Adiciona o esporte
-      sportContextTag: sport.toLowerCase().replaceAll(' ', ''), // Gera o tag
-    }
-
-    // 6. RETORNAR O JSON COMPLETO PARA O APP
-    return new Response(
-      JSON.stringify(finalResponseJson),
-      { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
-    )
-
+    return new Response(JSON.stringify(finalResponse), {
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    });
   } catch (error) {
-    // Tratar erros gerais
-    console.error('Erro geral na função:', error)
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
-    )
+    console.error("Erro fatal na Edge Function gerar-plano-performance:", error);
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+    });
   }
-})
+});

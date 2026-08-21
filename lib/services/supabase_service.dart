@@ -29,8 +29,8 @@ class SupabaseService {
         anonKey: supabaseAnonKey,
         debug: kDebugMode,
         authOptions: const FlutterAuthClientOptions(
-          authFlowType: AuthFlowType.implicit,
-          detectSessionInUri: false, // Prevent deep-link auth issues
+          authFlowType: AuthFlowType.pkce,
+          detectSessionInUri: true, // Prevent deep-link auth issues
         ),
         realtimeClientOptions: const RealtimeClientOptions(
           timeout: Duration(seconds: 30),

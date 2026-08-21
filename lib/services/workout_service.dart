@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import './auth_service.dart';
-import './supabase_service.dart';
+import 'package:bldr_fitness/services/auth_service.dart';
+import 'package:bldr_fitness/services/exercise_db_rapid_service.dart';
+import 'package:bldr_fitness/services/supabase_service.dart';
 
 class WorkoutService {
   static WorkoutService? _instance;
@@ -45,14 +47,48 @@ class WorkoutService {
         workout_template_exercises(
           id, order_index, sets, reps, duration_seconds, rest_seconds,
           weight_kg, distance_meters, notes,
+          exercise_db_id,
           exercises(
             id, name, description, exercise_type, primary_muscle_group,
             secondary_muscle_groups, instructions, tips, image_url,
             equipment_needed,
-            exercise_db_id 
+            exercise_db_id
           )
         )
       ''').eq('id', templateId).single();
+
+      // Enrich ExerciseDB exercises: resolve name from cache when the
+      // `exercises` join is null (i.e. the exercise came from ExerciseDB,
+      // not the BLDR internal library).
+      final rawExercises =
+          (response['workout_template_exercises'] as List?)?.cast<Map>() ?? [];
+
+      if (rawExercises.isNotEmpty) {
+        final enriched = await Future.wait(rawExercises.map((row) async {
+          final mutable = Map<String, dynamic>.from(row);
+          if (mutable['exercises'] == null &&
+              mutable['exercise_db_id'] != null) {
+            final dbId = mutable['exercise_db_id'] as String;
+            final dbEx =
+                await ExerciseDbRapidService.instance.getById(dbId);
+            if (dbEx != null) {
+              mutable['exercises'] = {
+                'id': null,
+                'name': dbEx.name,
+                'exercise_type': dbEx.bodyParts,
+                'primary_muscle_group': dbEx.targetMuscles,
+                'exercise_db_id': dbId,
+              };
+            }
+          }
+          return mutable;
+        }));
+
+        return {
+          ...response,
+          'workout_template_exercises': enriched,
+        };
+      }
 
       return response;
     } catch (error) {
@@ -68,6 +104,7 @@ class WorkoutService {
     int? estimatedDurationMinutes,
     int? difficultyLevel,
     bool isPublic = false,
+    String source = 'user',
     List<Map<String, dynamic>>? exercises,
   }) async {
     try {
@@ -85,6 +122,7 @@ class WorkoutService {
         'estimated_duration_minutes': estimatedDurationMinutes,
         'difficulty_level': difficultyLevel,
         'is_public': isPublic,
+        'source': source,
         'created_by': currentUser.id,
       })
           .select()
@@ -94,9 +132,8 @@ class WorkoutService {
         final templateExercises = exercises.asMap().entries.map((entry) {
           final index = entry.key;
           final exercise = entry.value;
-          return {
+          final row = <String, dynamic>{
             'workout_template_id': response['id'],
-            'exercise_id': exercise['exercise_id'],
             'order_index': index + 1,
             'sets': exercise['sets'],
             'reps': exercise['reps'],
@@ -106,6 +143,16 @@ class WorkoutService {
             'distance_meters': exercise['distance_meters'],
             'notes': exercise['notes'],
           };
+          // ExerciseDB exercises use exercise_db_id; BLDR library exercises use exercise_id
+          if (exercise['exercise_db_id'] != null) {
+            row['exercise_db_id'] = exercise['exercise_db_id'];
+          } else if (exercise['exercise_id'] != null) {
+            row['exercise_id'] = exercise['exercise_id'];
+          } else if (exercise['free_name'] != null) {
+            // Exercício gerado pelo HAVOK, sem match na biblioteca (B5).
+            row['free_name'] = exercise['free_name'];
+          }
+          return row;
         }).toList();
 
         await _client.from('workout_template_exercises').insert(templateExercises);
@@ -114,6 +161,131 @@ class WorkoutService {
       return response;
     } catch (error) {
       throw Exception('Failed to create workout template: $error');
+    }
+  }
+
+  /// Update an existing workout template (replaces exercises entirely).
+  Future<Map<String, dynamic>> updateWorkoutTemplate({
+    required String id,
+    required String name,
+    String? description,
+    required String workoutType,
+    int? estimatedDurationMinutes,
+    int? difficultyLevel,
+    List<Map<String, dynamic>>? exercises,
+  }) async {
+    try {
+      final response = await _client
+          .from('workout_templates')
+          .update({
+            'name': name,
+            'description': description,
+            'workout_type': workoutType,
+            'estimated_duration_minutes': estimatedDurationMinutes,
+            'difficulty_level': difficultyLevel,
+          })
+          .eq('id', id)
+          .select()
+          .single();
+
+      // Replace exercises: delete old, insert new
+      await _client
+          .from('workout_template_exercises')
+          .delete()
+          .eq('workout_template_id', id);
+
+      if (exercises != null && exercises.isNotEmpty) {
+        final templateExercises = exercises.asMap().entries.map((entry) {
+          final index = entry.key;
+          final exercise = entry.value;
+          final row = <String, dynamic>{
+            'workout_template_id': id,
+            'order_index': index + 1,
+            'sets': exercise['sets'],
+            'reps': exercise['reps'],
+            'duration_seconds': exercise['duration_seconds'],
+            'rest_seconds': exercise['rest_seconds'],
+            'weight_kg': exercise['weight_kg'],
+            'distance_meters': exercise['distance_meters'],
+            'notes': exercise['notes'],
+          };
+          if (exercise['exercise_db_id'] != null) {
+            row['exercise_db_id'] = exercise['exercise_db_id'];
+          } else if (exercise['exercise_id'] != null) {
+            row['exercise_id'] = exercise['exercise_id'];
+          } else if (exercise['free_name'] != null) {
+            row['free_name'] = exercise['free_name'];
+          }
+          return row;
+        }).toList();
+
+        await _client
+            .from('workout_template_exercises')
+            .insert(templateExercises);
+      }
+
+      return response;
+    } catch (error) {
+      throw Exception('Failed to update workout template: $error');
+    }
+  }
+
+  /// Delete a workout template and all its exercises.
+  Future<void> deleteWorkoutTemplate(String id) async {
+    try {
+      await _client
+          .from('workout_template_exercises')
+          .delete()
+          .eq('workout_template_id', id);
+      await _client
+          .from('workout_templates')
+          .delete()
+          .eq('id', id);
+    } catch (error) {
+      throw Exception('Failed to delete workout template: $error');
+    }
+  }
+
+  /// Delete a paused (not completed) workout and all its sets.
+  /// [source] must be 'free' or 'club'.
+  Future<void> deletePausedWorkout(String id, String source) async {
+    try {
+      if (source == 'free') {
+        await _client
+            .from('workout_exercise_sets')
+            .delete()
+            .eq('user_workout_id', id);
+        await _client.from('user_workouts').delete().eq('id', id);
+      } else {
+        await _client
+            .from('club_workout_exercise_sets')
+            .delete()
+            .eq('user_workout_id', id);
+        await _client.from('club_user_workouts').delete().eq('id', id);
+      }
+    } catch (error) {
+      throw Exception('Failed to delete paused workout: $error');
+    }
+  }
+
+  /// Delete a completed workout record and all its sets (free mode only).
+  Future<void> deleteCompletedWorkout(String id) async {
+    try {
+      await _client
+          .from('workout_exercise_sets')
+          .delete()
+          .eq('user_workout_id', id);
+      final deleted = await _client
+          .from('user_workouts')
+          .delete()
+          .eq('id', id)
+          .select('id');
+      if (deleted.isEmpty) {
+        throw Exception(
+            'Registro não encontrado ou sem permissão para excluir.');
+      }
+    } catch (error) {
+      throw Exception('Failed to delete completed workout: $error');
     }
   }
 
@@ -126,6 +298,7 @@ class WorkoutService {
       final currentUser = AuthService.instance.currentUser;
       if (currentUser == null) throw Exception('User must be authenticated');
 
+      debugPrint('[HAVOK] startWorkout → workoutTemplateId: $workoutTemplateId');
       // 1) cria o workout (UTC evita deslocamento de fuso)
       final baseInsert = {
         'user_id': currentUser.id,
@@ -153,7 +326,8 @@ class WorkoutService {
             .from('workout_template_exercises')
             .select('''
               order_index, sets, reps, duration_seconds, rest_seconds,
-              weight_kg, distance_meters, notes, exercise_id
+              weight_kg, distance_meters, notes, exercise_id, exercise_db_id,
+              free_name
             ''')
             .eq('workout_template_id', workoutTemplateId)
             .order('order_index', ascending: true);
@@ -162,9 +336,8 @@ class WorkoutService {
         for (final row in tpl) {
           final totalSets = (row['sets'] as int?) ?? 1;
           for (int s = 1; s <= totalSets; s++) {
-            setsToInsert.add({
+            final setRow = <String, dynamic>{
               'user_workout_id': workout['id'],
-              'exercise_id': row['exercise_id'],
               'set_number': s,
               'order_index': row['order_index'],
               'reps': row['reps'],
@@ -174,8 +347,20 @@ class WorkoutService {
               'rest_seconds': row['rest_seconds'],
               'notes': row['notes'],
               'completed_at': null,
-              'is_completed': false, // se não existir, faremos fallback
-            });
+              'is_completed': false,
+            };
+            if (row['exercise_id'] != null) {
+              setRow['exercise_id'] = row['exercise_id'];
+            }
+            if (row['exercise_db_id'] != null) {
+              setRow['exercise_db_id'] = row['exercise_db_id'];
+            }
+            if (row['exercise_id'] == null &&
+                row['exercise_db_id'] == null &&
+                row['free_name'] != null) {
+              setRow['free_name'] = row['free_name'];
+            }
+            setsToInsert.add(setRow);
           }
         }
 
@@ -201,6 +386,73 @@ class WorkoutService {
     }
   }
 
+  /// Garante que os sets iniciais existam para uma sessão já criada.
+  ///
+  /// Chamado como segurança após [startWorkout] — caso o INSERT dos sets tenha
+  /// falhado silenciosamente (ex: RLS retorna 204 sem lançar exceção), este
+  /// método detecta a ausência e tenta criar os sets novamente.
+  /// Não duplica sets: verifica antes de inserir.
+  Future<void> ensureInitialSets(String sessionId, String templateId) async {
+    try {
+      // 1. Verificar se já existem sets para esta sessão
+      final existing = await _client
+          .from('workout_exercise_sets')
+          .select('id')
+          .eq('user_workout_id', sessionId)
+          .limit(1);
+      if ((existing as List).isNotEmpty) return;
+
+      // 2. Buscar exercícios do template
+      final tpl = await _client
+          .from('workout_template_exercises')
+          .select('''
+            order_index, sets, reps, duration_seconds, rest_seconds,
+            weight_kg, distance_meters, notes, exercise_id, exercise_db_id,
+            free_name
+          ''')
+          .eq('workout_template_id', templateId)
+          .order('order_index', ascending: true);
+
+      if ((tpl as List).isEmpty) return;
+
+      // 3. Montar e inserir sets (mesma lógica do startWorkout)
+      final setsToInsert = <Map<String, dynamic>>[];
+      for (final row in tpl) {
+        final totalSets = (row['sets'] as int?) ?? 1;
+        for (int s = 1; s <= totalSets; s++) {
+          final setRow = <String, dynamic>{
+            'user_workout_id': sessionId,
+            'set_number': s,
+            'order_index': row['order_index'],
+            'reps': row['reps'],
+            'weight_kg': row['weight_kg'],
+            'duration_seconds': row['duration_seconds'],
+            'distance_meters': row['distance_meters'],
+            'rest_seconds': row['rest_seconds'],
+            'notes': row['notes'],
+            'completed_at': null,
+          };
+          if (row['exercise_id'] != null) setRow['exercise_id'] = row['exercise_id'];
+          if (row['exercise_db_id'] != null) setRow['exercise_db_id'] = row['exercise_db_id'];
+          if (row['exercise_id'] == null &&
+              row['exercise_db_id'] == null &&
+              row['free_name'] != null) {
+            setRow['free_name'] = row['free_name'];
+          }
+          setsToInsert.add(setRow);
+        }
+      }
+
+      if (setsToInsert.isNotEmpty) {
+        debugPrint('[HAVOK] ensureInitialSets → inserting ${setsToInsert.length} sets for session $sessionId, template $templateId');
+        await _client.from('workout_exercise_sets').insert(setsToInsert);
+        debugPrint('[HAVOK] ensureInitialSets → insert done (sem erro lançado)');
+      }
+    } catch (e) {
+      debugPrint('[HAVOK] ensureInitialSets → EXCEPTION: $e');
+    }
+  }
+
   /// Complete a workout
   Future<Map<String, dynamic>> completeWorkout({
     required String workoutId,
@@ -216,7 +468,8 @@ class WorkoutService {
           .single();
 
       final startedAt = DateTime.parse(workoutResponse['started_at'].toString());
-      final duration = now.difference(startedAt).inSeconds;
+      final rawDuration = now.difference(startedAt).inSeconds;
+      final duration = rawDuration < 60 ? 60 : rawDuration;
 
       final response = await _client
           .from('user_workouts')
@@ -239,7 +492,7 @@ class WorkoutService {
   /// Log exercise set
   Future<Map<String, dynamic>> logExerciseSet({
     required String userWorkoutId,
-    required String exerciseId,
+    String? exerciseId,
     required int setNumber,
     int? reps,
     double? weightKg,
@@ -313,10 +566,10 @@ class WorkoutService {
             workout_exercise_sets(
               id, set_number, reps, weight_kg, duration_seconds,
               distance_meters, rest_seconds, completed_at, notes,
-              order_index, 
+              order_index, exercise_db_id, free_name,
               exercises!workout_exercise_sets_exercise_id_fkey (
                 id, name, primary_muscle_group,
-                exercise_db_id
+                exercise_db_id, instructions
               )
             )
           ''')
@@ -338,10 +591,10 @@ class WorkoutService {
               workout_exercise_sets(
                 id, set_number, reps, weight_kg, duration_seconds,
                 distance_meters, rest_seconds, completed_at, notes,
-                order_index, 
+                order_index, exercise_db_id, free_name,
                 exercises(
                   id, name, primary_muscle_group,
-                  exercise_db_id
+                  exercise_db_id, instructions
                 )
               )
             ''')
@@ -365,15 +618,31 @@ class WorkoutService {
   // =========================================================================
   //
   /// Marca uma série como concluída
-  Future<void> completeSet({required String setId}) async {
+  Future<void> completeSet({
+    required String setId,
+    double? weight, // Recebe o peso da UI
+    int? reps,      // Recebe as reps da UI
+  }) async {
     try {
+      // 1. Cria o mapa de atualização básico
+      final Map<String, dynamic> updates = {
+        'completed_at': DateTime.now().toIso8601String(),
+      };
+
+      // 2. Só adiciona carga e reps se eles não forem nulos (para não apagar dados existentes sem querer)
+      if (weight != null) {
+        updates['weight_kg'] = weight; // Atenção: nome da coluna no banco deve ser 'weight_kg'
+      }
+      if (reps != null) {
+        updates['reps'] = reps;
+      }
+
+      // 3. Envia o mapa completo
       await _client
           .from('workout_exercise_sets')
-          .update({
-        'completed_at': DateTime.now().toIso8601String(),
-        // 'is_completed': true, // REMOVIDO - A coluna não existe no seu schema
-      })
+          .update(updates)
           .eq('id', setId);
+
     } catch (e) {
       throw Exception('Failed to complete set: $e');
     }
@@ -581,5 +850,142 @@ class WorkoutService {
     if (head == null) return null;
     final details = await getWorkoutDetails(head['id'] as String);
     return _decorateSetsWithIsCompleted(details);
+  }
+
+  // ── Paused workout summaries ───────────────────────────────────────────────
+
+  /// Returns up to [limit] paused (is_completed=false) workouts across both
+  /// free mode (user_workouts) and BLDR Club (club_user_workouts), merged and
+  /// sorted by started_at descending.
+  ///
+  /// Each map contains:
+  ///   id, name, started_at, source ('free' | 'club'),
+  ///   current_exercise_name, completed_exercises, total_exercises
+  Future<List<Map<String, dynamic>>> getPausedWorkoutSummaries({
+    int limit = 2,
+  }) async {
+    final currentUser = AuthService.instance.currentUser;
+    if (currentUser == null) return [];
+
+    try {
+      // Fetch candidates from both tables in parallel
+      final results = await Future.wait([
+        _client
+            .from('user_workouts')
+            .select('id, name, started_at')
+            .eq('user_id', currentUser.id)
+            .eq('is_completed', false)
+            .order('started_at', ascending: false)
+            .limit(limit),
+        _client
+            .from('club_user_workouts')
+            .select('id, name, started_at')
+            .eq('user_id', currentUser.id)
+            .eq('is_completed', false)
+            .order('started_at', ascending: false)
+            .limit(limit),
+      ]);
+
+      final free  = (results[0] as List).map((r) => {...(r as Map<String, dynamic>), 'source': 'free'}).toList();
+      final club  = (results[1] as List).map((r) => {...(r as Map<String, dynamic>), 'source': 'club'}).toList();
+
+      // Merge, dedup by id, sort desc, take top [limit]
+      final merged = [...free, ...club]
+        ..sort((a, b) {
+          final aT = DateTime.tryParse(a['started_at'] as String? ?? '') ?? DateTime(0);
+          final bT = DateTime.tryParse(b['started_at'] as String? ?? '') ?? DateTime(0);
+          return bT.compareTo(aT);
+        });
+
+      final seen = <String>{};
+      final deduped =
+          merged.where((w) => seen.add(w['id'] as String)).toList();
+      final candidates = deduped.take(limit).toList();
+      if (candidates.isEmpty) return [];
+
+      // Enrich each with exercise progress
+      final enriched = await Future.wait(candidates.map(_enrichPausedWorkout));
+      return enriched;
+    } catch (e) {
+      debugPrint('[WorkoutService] getPausedWorkoutSummaries error: $e');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> _enrichPausedWorkout(
+      Map<String, dynamic> head) async {
+    final id     = head['id'] as String;
+    final source = head['source'] as String;
+
+    try {
+      List<Map<String, dynamic>> sets = [];
+
+      if (source == 'free') {
+        final rows = await _client
+            .from('workout_exercise_sets')
+            .select('order_index, completed_at, exercises(name), exercise_db_id')
+            .eq('user_workout_id', id)
+            .order('order_index', ascending: true)
+            .order('set_number', ascending: true);
+        sets = List<Map<String, dynamic>>.from(rows);
+      } else {
+        final rows = await _client
+            .from('club_workout_exercise_sets')
+            .select('order_index, completed_at, exercises(name)')
+            .eq('user_workout_id', id)
+            .order('order_index', ascending: true)
+            .order('set_number', ascending: true);
+        sets = List<Map<String, dynamic>>.from(rows);
+      }
+
+      // Group by order_index
+      final byOrder = <int, List<Map<String, dynamic>>>{};
+      for (final s in sets) {
+        final idx = (s['order_index'] as int?) ?? 0;
+        byOrder.putIfAbsent(idx, () => []).add(s);
+      }
+
+      final totalExercises = byOrder.length;
+      int completedExercises = 0;
+      String currentExerciseName = '';
+
+      for (final entry in byOrder.entries) {
+        final exSets = entry.value;
+        final allDone = exSets.every((s) => s['completed_at'] != null);
+        if (allDone) {
+          completedExercises++;
+        } else if (currentExerciseName.isEmpty) {
+          // First incomplete exercise = where they left off
+          final ex = exSets.first['exercises'] as Map?;
+          currentExerciseName = ex?['name'] as String? ?? '';
+
+          // Fallback: look up in ExerciseDB cache if name is empty
+          if (currentExerciseName.isEmpty && source == 'free') {
+            final dbId = exSets.first['exercise_db_id'] as String?;
+            if (dbId != null && dbId.isNotEmpty) {
+              final cached = ExerciseDbRapidService.instance
+                  .musclesFromCache([dbId]); // just to check cache
+              // Try a direct cache lookup by id
+              currentExerciseName = dbId; // fallback to id if name unavailable
+            }
+          }
+        }
+      }
+
+      return {
+        ...head,
+        'total_exercises':     totalExercises,
+        'completed_exercises': completedExercises,
+        'current_exercise_name': currentExerciseName,
+      };
+    } catch (e) {
+      debugPrint('[WorkoutService] _enrichPausedWorkout error: $e');
+      return {
+        ...head,
+        'total_exercises':     0,
+        'completed_exercises': 0,
+        'current_exercise_name': '',
+      };
+    }
   }
 }

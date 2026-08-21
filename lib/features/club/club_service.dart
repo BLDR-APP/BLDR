@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'models.dart';
+import 'package:bldr_fitness/features/club/models.dart';
 
 class BldrClubProgramsService {
   BldrClubProgramsService(this._client);

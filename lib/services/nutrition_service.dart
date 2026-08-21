@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import './auth_service.dart';
-import './supabase_service.dart';
+import 'package:bldr_fitness/services/auth_service.dart';
+import 'package:bldr_fitness/services/supabase_service.dart';
 
 class NutritionService {
   static NutritionService? _instance;

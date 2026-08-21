@@ -4,10 +4,10 @@ import 'dart:async'; // Adicionado para o Future
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 // Importe seu modelo
-import '../models/exercise_model.dart';
+import 'package:bldr_fitness/models/exercise_model.dart';
 
 class ExerciseDbService {
-  final String _baseUrl = "https://www.exercisedb.dev/api/v1";
+  final String _baseUrl = "https://oss.exercisedb.dev/api/v1";
 
   /// Função principal para buscar os detalhes de um exercício pelo ID
   Future<ExerciseDetail?> getExerciseById(String exerciseId) async {

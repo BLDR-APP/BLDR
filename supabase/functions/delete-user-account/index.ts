@@ -33,30 +33,34 @@ serve(async (req) => {
 
     // 1. CANCELAR ASSINATURA NO STRIPE
     // Busca a assinatura ativa do usuário no nosso banco de dados
-    const { data: subscriptionData, error: subError } = await supabaseAdmin
+const { data: subscriptionData, error: subError } = await supabaseAdmin
       .from('user_subscriptions')
       .select('stripe_subscription_id, stripe_customer_id')
       .eq('user_id', user.id)
       .eq('status', 'active')
-      .single();
+      .maybeSingle(); // <--- Mudei para maybeSingle() para não dar erro se não achar nada
 
-    if (subError && subError.code !== 'PGRST116') { // PGRST116 = no rows found
-      throw new Error(`Erro ao buscar assinatura: ${subError.message}`);
-    }
-
-    if (subscriptionData) {
+    // O ERRO ESTAVA AQUI: Precisamos verificar se existe data E se existe o ID dentro dele
+    if (subscriptionData && subscriptionData.stripe_subscription_id) {
       console.log(`Assinatura encontrada: ${subscriptionData.stripe_subscription_id}. Cancelando no Stripe...`);
-      // Cancela a assinatura no Stripe imediatamente
-      await stripe.subscriptions.cancel(subscriptionData.stripe_subscription_id);
-      console.log(`Assinatura cancelada com sucesso no Stripe.`);
 
-      // 2. (OPCIONAL, MAS RECOMENDADO) DELETAR O CLIENTE NO STRIPE
-      // Isso remove os dados de pagamento do cliente do Stripe.
-      console.log(`Deletando cliente ${subscriptionData.stripe_customer_id} no Stripe...`);
-      await stripe.customers.del(subscriptionData.stripe_customer_id);
-      console.log(`Cliente deletado com sucesso no Stripe.`);
+      try {
+        await stripe.subscriptions.cancel(subscriptionData.stripe_subscription_id);
+        console.log(`Assinatura cancelada com sucesso no Stripe.`);
+      } catch (stripeError) {
+        // Se der erro no Stripe (ex: já cancelado), apenas logamos e continuamos
+        console.log(`Aviso: Não foi possível cancelar no Stripe (pode já estar cancelado): ${stripeError.message}`);
+      }
+
+      // Deletar cliente (Opcional, mas seguro colocar try/catch também)
+      if (subscriptionData.stripe_customer_id) {
+         try {
+             await stripe.customers.del(subscriptionData.stripe_customer_id);
+         } catch (e) { console.log('Erro ao deletar customer (ignorando):', e.message); }
+      }
+
     } else {
-      console.log('Nenhuma assinatura ativa encontrada para este usuário.');
+      console.log('Nenhuma assinatura ativa ou ID inválido. Pulando etapa do Stripe.');
     }
 
     // 3. DELETAR O USUÁRIO NO SUPABASE AUTH

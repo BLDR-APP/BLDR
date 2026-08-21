@@ -8,95 +8,103 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const GOOGLE_AI_MODEL = 'gemini-2.5-flash'; // Você estava usando gemini-2.5-flash, mantido.
+const ANTHROPIC_MODEL = "claude-haiku-4-5-20251001";
 
-// --- INÍCIO DA ADIÇÃO: Lógica do havok_prompt.js colada aqui ---
-/**
- * Gera o prompt de texto para a IA HAVOK com base nos dados do novo
- * fluxo de onboarding (15 etapas).
- *
- * @param {object} onboardingData - O objeto 'onboarding_data' salvo no perfil do usuário.
- * @returns {string} O prompt formatado para enviar à IA.
- */
-function generateHavokPrompt(onboardingData: any): string { // Adicionado tipo 'any' para Deno/TypeScript
-  // Extrai os dados do novo onboarding.
-  // Assume valores padrão ou strings vazias se algo for nulo.
+const LOCALE_LABELS: Record<string, string> = {
+  pt: "português do Brasil",
+  en: "English",
+  it: "italiano",
+};
 
-  // Dados de Nutrição (para contexto de objetivo)
-  const mainGoal = onboardingData.main_goal || 'Equilíbrio';
-  const goalPace = onboardingData.goal_pace || 'Moderado';
+function buildSystemPrompt(locale: string): string {
+  const lang = LOCALE_LABELS[locale] ?? LOCALE_LABELS["pt"];
+  return `Você é HAVOK, IA de personal training do BLDR. Tom técnico, direto, motivador.
+Segurança é prioridade. Adapte sempre ao nível do usuário.
+Responda SEMPRE em ${lang}. Nunca misture idiomas.
+Responda APENAS com o JSON solicitado, sem markdown, sem texto antes ou depois.`.trim();
+}
 
-  // Dados de Treino (essenciais)
-  const gender = onboardingData.gender || 'Não informado';
-  const experience = onboardingData.experience_level || 'Iniciante';
-  const freqDays = onboardingData.workout_frequency_days || 3;
-  const duration = onboardingData.workout_duration_range || '45-60 min';
-  const environment = onboardingData.workout_environment || 'Academia Completa';
+function buildPrompt(onboardingData: Record<string, unknown>): string {
+  const mainGoal   = (onboardingData.main_goal as string)           || 'Equilíbrio';
+  const goalPace   = (onboardingData.goal_pace as string)           || 'Moderado';
+  const gender     = (onboardingData.gender as string)              || 'Não informado';
+  const experience = (onboardingData.experience_level as string)    || 'Iniciante';
+  const freqDays   = (onboardingData.workout_frequency_days as number) || 3;
+  const duration   = (onboardingData.workout_duration_range as string) || '45-60 min';
+  const environment = (onboardingData.workout_environment as string) || 'Academia Completa';
+  const equipmentList = (onboardingData.home_equipment as string[]) || [];
+  const focusList  = (onboardingData.muscle_focus as string[])      || [];
+  const split      = (onboardingData.split_preference as string)    || 'Deixa a HAVOK decidir';
 
-  // Trata listas que podem ser nulas ou vazias
-  const equipmentList = onboardingData.home_equipment || [];
-  const focusList = onboardingData.muscle_focus || []; // ex: ['chest', 'shoulders']
-
-  const split = onboardingData.split_preference || 'Deixe a HAVOK decidir';
-
-  // --- Helpers de Texto ---
-
-  // Cria texto descritivo para equipamentos
   let equipmentText = environment;
-  if (environment === 'Casa com Equipamentos' && equipmentList.length > 0) {
-    equipmentText = `Treino em casa usando apenas: ${equipmentList.join(', ')}`;
-  } else if (environment === 'Casa com Equipamentos' && equipmentList.length === 0) {
-    equipmentText = 'Treino em casa, mas o usuário não especificou equipamentos (assuma peso corporal ou halteres básicos se necessário).';
+  if (environment === 'Casa com Equipamentos') {
+    equipmentText = equipmentList.length > 0
+      ? `Treino em casa usando: ${equipmentList.join(', ')}`
+      : 'Treino em casa (assuma peso corporal ou halteres básicos)';
   }
 
-  // Cria texto descritivo para o foco
   const focusText = focusList.length > 0
-    ? `Priorizar o desenvolvimento de: ${focusList.join(', ')}`
+    ? `Priorizar: ${focusList.join(', ')}`
     : 'Foco equilibrado no corpo inteiro';
 
+  return `Crie um treino personalizado (DIA 1) baseado nos dados abaixo.
 
-  // --- Montagem do Prompt ---
-  const prompt = `
-  Você é HAVOK, uma IA de classe mundial especialista em personal training para o app BLDR.
-  Sua tarefa é criar um plano de treino altamente personalizado, eficaz e seguro, baseado nos dados detalhados do usuário.
+Dados do usuário:
+- Gênero: ${gender}
+- Objetivo: ${mainGoal} (Ritmo: ${goalPace})
+- Nível de experiência: ${experience}
+- Frequência: ${freqDays} dias/semana
+- Duração: ${duration}
+- Ambiente: ${equipmentText}
+- Foco muscular: ${focusText}
+- Divisão preferida: ${split}
 
-  Dados Completos do Usuário (Novo Fluxo de Onboarding):
-  - Gênero: ${gender}
-  - Objetivo Principal: ${mainGoal} (Ritmo: ${goalPace})
-  - Nível de Experiência: ${experience}
-  - Frequência de Treino: ${freqDays} dias por semana
-  - Duração por Treino: ${duration}
-  - Ambiente de Treino: ${equipmentText}
-  - Foco Muscular Principal: ${focusText}
-  - Preferência de Estrutura (Split): ${split}
+Instruções:
+1. Se split for 'Deixa a HAVOK decidir': escolha a melhor estrutura para ${freqDays} dias e o foco indicado.
+2. Se split específico: gere apenas o DIA 1 desse split.
+3. Adapte ao ambiente — use apenas os equipamentos disponíveis.
+4. Adapte ao objetivo: perda de gordura → 10-15 reps; ganho de massa → 8-12 reps.
+5. Crie um nome poderoso em português.
+6. Selecione 5 a 8 exercícios.
 
-  Instruções CRÍTICAS:
-  1. **Se a Preferência de Estrutura for 'Deixe a HAVOK decidir'**: Crie a melhor estrutura (split) possível que combine a Frequência (${freqDays} dias) com o Foco Muscular (${focusText}).
-     Ex: Se a frequência for 3 dias e o foco for 'Upper Body', um split 'Full Body' 3x/semana com ênfase em superiores é ideal.
-     Ex: Se a frequência for 5 dias e o foco for 'Ombros e Pernas', um split 'Push/Pull/Legs/Upper/Lower' pode ser bom.
-  2. **Se a Preferência de Estrutura for um split específico (ex: 'Push/Pull/Legs')**: Respeite essa estrutura. Crie um treino para o DIA 1 desse split, garantindo que ele se encaixe na frequência e nos focos pedidos. (Atenção: Gere apenas UM dia de treino).
-  3. **Adapte ao Ambiente**: Se for 'Academia Completa', use máquinas, halteres e barras. Se for 'Peso Corporal', use apenas exercícios bodyweight. Se for 'Casa com Equipamentos', use APENAS os equipamentos listados em ${equipmentText}.
-  4. **Adapte ao Objetivo**: Se o objetivo for 'Perder Gordura', favoreça repetições ligeiramente mais altas (ex: 10-15) e talvez inclua exercícios compostos. Se for 'Ganhar Massa Muscular', foque na faixa de hipertrofia clássica (ex: 8-12 reps).
-  5. Crie um nome poderoso e motivador para o treino (DIA 1), em português.
-  6. Selecione de 5 a 8 exercícios baseados em TODOS os dados.
-  7. Defina séries e repetições adequadas.
-  8. NÃO inclua aquecimento, descanso ou notas. Apenas a estrutura do treino.
-  9. A resposta DEVE ser um objeto JSON válido, sem nenhum texto, markdown (como \`\`\`json) ou comentários antes ou depois do JSON.
-
-  Estrutura do JSON de Resposta:
-  {
-    "nome": "Nome do Treino (Ex: Protocolo Hipertrofia - Foco Peito)",
-    "exercicios": [
-      { "nome": "Nome do Exercício 1", "series": 4, "repeticoes": "8-12" },
-      { "nome": "Nome do Exercício 2", "series": 3, "repeticoes": "10-15" }
-    ]
-  }
-`;
-
-  return prompt;
+Retorne apenas JSON no schema:
+{
+  "nome": "Nome do Treino",
+  "exercicios": [
+    { "nome": "Exercício", "series": 4, "repeticoes": "8-12" }
+  ]
+}`;
 }
-// --- FIM DA ADIÇÃO ---
 
+async function callClaude(userMessage: string, systemPrompt: string, maxTokens = 2048): Promise<string> {
+  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY não configurada.");
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "anthropic-version": "2023-06-01",
+      "x-api-key": apiKey,
+    },
+    body: JSON.stringify({
+      model: ANTHROPIC_MODEL,
+      max_tokens: maxTokens,
+      system: systemPrompt,
+      messages: [{ role: "user", content: userMessage }],
+    }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Erro na API da Anthropic: ${response.status} ${errorBody}`);
+  }
+
+  const data = await response.json();
+  const text = data.content?.[0]?.text;
+  if (!text) throw new Error("Claude não retornou resposta.");
+  return text;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -104,93 +112,52 @@ serve(async (req) => {
   }
 
   try {
-    // --- ETAPA 1: AUTENTICAÇÃO E BUSCA DOS DADOS DO USUÁRIO ---
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      { global: { headers: { Authorization: req.headers.get("Authorization")! } } }
+      { global: { headers: { Authorization: req.headers.get("Authorization")! } } },
     );
 
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) throw new Error("Usuário não autenticado.");
 
-    // Busca a coluna 'onboarding_data' da sua tabela 'user_profiles'
     const { data: profile, error: profileError } = await supabaseClient
-      .from('user_profiles') // Nome da sua tabela de perfis
-      .select('onboarding_data') // Buscando a coluna JSON
-      .eq('id', user.id)
+      .from("user_profiles")
+      .select("onboarding_data")
+      .eq("id", user.id)
       .single();
 
-    if (profileError || !profile || !profile.onboarding_data) {
-      throw new Error(`Dados de onboarding do usuário não encontrados ou incompletos: ${profileError?.message}`);
+    if (profileError || !profile?.onboarding_data) {
+      throw new Error(`Dados de onboarding não encontrados: ${profileError?.message}`);
     }
 
-    const onboarding = profile.onboarding_data;
+    const body = await req.json().catch(() => ({}));
+    const locale = (body.locale as string) ?? "pt";
+    const systemPrompt = buildSystemPrompt(locale);
+    const prompt = buildPrompt(profile.onboarding_data);
+    const rawText = await callClaude(prompt, systemPrompt);
+    const workoutJson = JSON.parse(rawText.replace(/```json/g, "").replace(/```/g, "").trim());
 
-    // --- ETAPA 2: CONSTRUÇÃO DO PROMPT (MODIFICADO) ---
-    // Removemos a lógica antiga e chamamos a nova função
-    const prompt = generateHavokPrompt(onboarding);
-    // --- FIM DA MODIFICAÇÃO ---
-
-
-    // --- ETAPA 3: CHAMADA PARA A API DO GOOGLE AI ---
-    const googleApiKey = Deno.env.get("GOOGLE_AI_KEY");
-    if (!googleApiKey) throw new Error("Chave de API do Google AI não configurada.");
-    const aiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GOOGLE_AI_MODEL}:generateContent?key=${googleApiKey}`;
-
-    console.log("Enviando prompt para a IA:", prompt); // Adiciona log para debug
-
-    const aiResponse = await fetch(aiApiUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-    });
-
-    if (!aiResponse.ok) {
-      const errorBody = await aiResponse.text();
-      console.error("Erro da API do Google AI:", errorBody); // Log detalhado
-      throw new Error(`Erro na API do Google AI: ${aiResponse.status} ${errorBody}`);
-    }
-
-    const aiData = await aiResponse.json();
-    let workoutText = aiData.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!workoutText) {
-       console.error("Resposta da IA vazia ou mal formatada:", JSON.stringify(aiData, null, 2));
-       throw new Error("A IA não retornou um treino válido.");
-    }
-
-    workoutText = workoutText.replace(/```json/g, '').replace(/```/g, '').trim();
-
-    // --- ETAPA 4: PROCESSAR E SALVAR O TREINO NO BANCO DE DADOS ---
-    const workoutJson = JSON.parse(workoutText);
     const { data: savedWorkout, error: insertError } = await supabaseClient
-      .schema('bldr_club') // Certifique-se que o schema 'bldr_club' existe e tem a tabela
-      .from('havok_workouts')
+      .schema("bldr_club")
+      .from("havok_workouts")
       .insert({
         user_id: user.id,
         workout_data: workoutJson,
         workout_name: workoutJson.nome,
-        // Adiciona o prompt usado para debug, se a coluna existir
-        // prompt_used: prompt
       })
       .select()
       .single();
 
-    if (insertError) {
-       console.error("Erro ao salvar no Supabase:", insertError);
-       throw new Error(`Erro ao salvar o treino: ${insertError.message}`);
-    }
+    if (insertError) throw new Error(`Erro ao salvar treino: ${insertError.message}`);
 
-    // --- ETAPA 5: RETORNAR O TREINO GERADO PARA O APP ---
     return new Response(JSON.stringify(savedWorkout), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
-
   } catch (error) {
-    console.error("Erro fatal na Edge Function:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    console.error("Erro fatal na Edge Function gerar-treino-havok:", error);
+    return new Response(JSON.stringify({ error: (error as Error).message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });

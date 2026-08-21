@@ -1,17 +1,35 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
+import 'dart:async';
 
-import '../services/supabase_service.dart';
-import '../models/subscription_plan.dart';
+import 'package:bldr_fitness/services/supabase_service.dart';
+import 'package:bldr_fitness/models/subscription_plan.dart';
 
 class PaymentService {
   static PaymentService? _instance;
   static PaymentService get instance => _instance ??= PaymentService._();
-  PaymentService._();
+  static const bool isTestMode = false;
 
+  // Construtor privado
+  PaymentService._() {
+    _inAppPurchase.purchaseStream.listen(_handlePurchaseUpdates);
+  }
+
+  // --- STREAMS PARA AVISAR A TELA DE CHECKOUT ---
+  final StreamController<bool> _purchaseSuccessController = StreamController<bool>.broadcast();
+  Stream<bool> get purchaseSuccessStream => _purchaseSuccessController.stream;
+
+  final StreamController<String> _purchaseErrorController = StreamController<String>.broadcast();
+  Stream<String> get purchaseErrorStream => _purchaseErrorController.stream;
+  // -----------------------------------------------
+
+  final InAppPurchase _inAppPurchase = InAppPurchase.instance;
   final Dio _dio = Dio();
   final String _baseUrl = '${SupabaseService.supabaseUrl}/functions/v1/create-subscription';
+
+  // --- MÉTODOS ORIGINAIS (STRIPE/SUPABASE) MANTIDOS INTACTOS ---
 
   Future<List<SubscriptionPlan>> getSubscriptionPlans() async {
     try {
@@ -53,6 +71,9 @@ class PaymentService {
           'plan_id': planId,
           'billing_period': billingPeriod,
           'coupon_code': couponCode,
+
+          'is_test_mode': isTestMode,
+          'trial_period_days': 7,
         },
         options: Options(
           headers: {
@@ -140,6 +161,123 @@ class PaymentService {
     }
   }
 
+  // --- MÉTODOS APPLE IAP (STOREKIT) ---
+
+  Future<List<ProductDetails>> fetchAppleProducts(Set<String> productIds) async {
+    final bool available = await _inAppPurchase.isAvailable();
+    if (!available) {
+      print('FLUTTER (PaymentService): StoreKit não está disponível no dispositivo.');
+      return [];
+    }
+
+    final ProductDetailsResponse response =
+    await _inAppPurchase.queryProductDetails(productIds);
+
+    if (response.error != null) {
+      print('FLUTTER (PaymentService): ERRO ao buscar produtos Apple: ${response.error!.message}');
+      throw Exception(response.error!.message);
+    }
+
+    return response.productDetails;
+  }
+
+  Future<bool> processApplePurchase({required String productId}) async {
+    final products = await fetchAppleProducts({productId});
+
+    if (products.isEmpty) {
+      throw Exception('Produto Apple não encontrado ($productId). Verifique o App Store Connect.');
+    }
+
+    final ProductDetails productDetails = products.first;
+    final PurchaseParam purchaseParam = PurchaseParam(productDetails: productDetails);
+
+    // Inicia o fluxo de compra
+    final bool initiated = await _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam);
+
+    if (initiated) {
+      return true;
+    } else {
+      throw Exception("Não foi possível iniciar o pagamento.");
+    }
+  }
+
+  Future<void> _handlePurchaseUpdates(List<PurchaseDetails> purchaseDetailsList) async {
+    for (final purchaseDetails in purchaseDetailsList) {
+      if (purchaseDetails.status == PurchaseStatus.pending) {
+        print('FLUTTER (PaymentService): Compra pendente na Apple.');
+      } else {
+        if (purchaseDetails.status == PurchaseStatus.error) {
+          print('FLUTTER (PaymentService): Erro na compra: ${purchaseDetails.error}');
+          // Para erros, encerra a transação imediatamente para limpar a fila da Apple
+          if (purchaseDetails.pendingCompletePurchase) {
+            await _inAppPurchase.completePurchase(purchaseDetails);
+          }
+        } else if (purchaseDetails.status == PurchaseStatus.purchased ||
+            purchaseDetails.status == PurchaseStatus.restored) {
+          // Aguarda a verificação terminar antes de prosseguir.
+          // O completePurchase agora é chamado DENTRO de _verifyPurchase,
+          // somente após o backend confirmar com sucesso.
+          await _verifyPurchase(purchaseDetails);
+        }
+      }
+    }
+  }
+
+  Future<void> _verifyPurchase(PurchaseDetails purchaseDetails) async {
+    try {
+      final user = SupabaseService.instance.client.auth.currentUser;
+      if (user == null) {
+        print('ERRO: Usuário deslogado durante validação.');
+        _purchaseErrorController.add('Usuário não autenticado. Faça login e tente novamente.');
+        return;
+      }
+
+      final String receiptData = purchaseDetails.verificationData.serverVerificationData;
+
+      // Debug
+      print('DEBUG IAP: User ID: ${user.id}');
+      print('DEBUG IAP: Receipt Data Length: ${receiptData.length}');
+
+      // Chamada à Edge Function
+      final response = await _dio.post(
+          '${SupabaseService.supabaseUrl}/functions/v1/verify-apple-receipt',
+          data: {
+            'user_id': user.id,
+            'receipt_data': receiptData,
+            'product_id': purchaseDetails.productID,
+          },
+          options: Options(
+              headers: {
+                'Authorization': 'Bearer ${SupabaseService.instance.client.auth.currentSession?.accessToken}',
+                'Content-Type': 'application/json', // CRÍTICO: Header necessário para o Supabase
+              }
+          )
+      );
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        print('FLUTTER (PaymentService): Validação BEM SUCEDIDA!');
+        // Encerra a transação na Apple somente após o backend confirmar
+        if (purchaseDetails.pendingCompletePurchase) {
+          await _inAppPurchase.completePurchase(purchaseDetails);
+        }
+        // Avisa a tela que deu certo
+        _purchaseSuccessController.add(true);
+      } else {
+        print('FLUTTER (PaymentService): Validação FALHOU: ${response.data}');
+        // Não chama completePurchase — a transação ficará na fila da Apple
+        // e será reprocessada automaticamente na próxima abertura do app.
+        _purchaseErrorController.add('Não foi possível ativar sua assinatura. Abra o app novamente para tentar.');
+      }
+
+    } catch (e) {
+      print('FLUTTER (PaymentService): Erro de validação: $e');
+      // Não chama completePurchase — permite retry automático no próximo app launch.
+      _purchaseErrorController.add('Erro ao ativar assinatura. Abra o app novamente para tentar.');
+    }
+  }
+
+  // --- MÉTODOS DE USUÁRIO (RESTAUROU O CÓDIGO ORIGINAL) ---
+
   Future<UserSubscription?> getCurrentUserSubscription() async {
     final client = SupabaseService.instance.client;
     final user = client.auth.currentUser;
@@ -149,28 +287,21 @@ class PaymentService {
       return null;
     }
 
-    // --- ESTE É O PRINT MAIS IMPORTANTE DE TODOS ---
     print("DEBUG: ID do usuário LOGADO NO APP: ${user.id}");
-    // --- FIM DO PRINT ---
-
-    print("DEBUG: Buscando na tabela 'user_subscriptions' por user_id = ${user.id} E status = 'active'");
 
     try {
       final response = await client
           .from('user_subscriptions')
           .select()
           .eq('user_id', user.id)
-          .eq('status', 'active')
+          .or('status.eq.active,status.eq.trialing')
           .maybeSingle();
 
-      print("DEBUG: Resposta da busca no banco de dados: $response");
-
       if (response == null) {
-        print("DEBUG: Nenhuma assinatura ativa foi encontrada para este usuário.");
+        print("DEBUG: Nenhuma assinatura ativa encontrada.");
         return null;
       }
 
-      print("DEBUG: Assinatura encontrada, retornando para a tela.");
       return UserSubscription.fromJson(response);
 
     } catch (e) {

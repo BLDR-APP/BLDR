@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import './auth_service.dart';
-import './supabase_service.dart';
+import 'package:bldr_fitness/services/auth_service.dart';
+import 'package:bldr_fitness/services/supabase_service.dart';
 
 class ProgressService {
   static ProgressService? _instance;
@@ -293,19 +293,20 @@ class ProgressService {
           .gte('started_at', startDate.toIso8601String()) // <-- Envia UTC
           .count();
 
-      // Get total workout time
+      // Get total workout time — only workouts with duration > 0 count
       final workoutTimeResponse = await _client
           .from('user_workouts')
           .select('total_duration_seconds')
           .eq('user_id', targetUserId)
           .eq('is_completed', true)
-          .gte('started_at', startDate.toIso8601String()) // <-- Envia UTC
-          .not('total_duration_seconds', 'is', null);
+          .gte('started_at', startDate.toIso8601String())
+          .gt('total_duration_seconds', 0);
 
       int totalWorkoutTime = 0;
       for (final workout in workoutTimeResponse) {
         totalWorkoutTime += (workout['total_duration_seconds'] as int?) ?? 0;
       }
+      final workoutsWithDuration = workoutTimeResponse.length;
 
       final totalWorkouts = totalWorkoutsData.count ?? 0;
       final completedWorkouts = completedWorkoutsData.count ?? 0;
@@ -324,9 +325,9 @@ class ProgressService {
           1,
         ),
         'average_workout_duration_minutes':
-        completedWorkouts > 0
-            ? ((totalWorkoutTime / completedWorkouts) / 60).round()
-            : 0,
+        workoutsWithDuration > 0
+            ? ((totalWorkoutTime / workoutsWithDuration) / 60).round()
+            : null,
       };
     } catch (error) {
       throw Exception('Failed to get workout progress: $error');
@@ -527,6 +528,54 @@ class ProgressService {
         'longest_streak': 0,
         'total_workout_days': 0,
       };
+    }
+  }
+
+  /// Remove a specific amount of water intake for today
+  Future<void> removeWaterIntake({required int amountMl}) async {
+    try {
+      final currentUser = AuthService.instance.currentUser;
+      if (currentUser == null) {
+        throw Exception('User must be authenticated');
+      }
+
+      final nowUtc = DateTime.now().toUtc();
+      final dateUtcStr = nowUtc.toIso8601String().split('T')[0];
+
+      // 1. Tenta buscar o registro mais recente DE HOJE com a exata quantidade solicitada (ex: 250ml)
+      final response = await _client
+          .from('user_water_intake')
+          .select('id')
+          .eq('user_id', currentUser.id)
+          .eq('date_logged', dateUtcStr)
+          .eq('amount_ml', amountMl)
+          .order('logged_at', ascending: false)
+          .limit(1);
+
+      if (response.isNotEmpty) {
+        // Encontrou o registro exato! Vamos deletar.
+        final logId = response.first['id'];
+        await _client.from('user_water_intake').delete().eq('id', logId);
+      } else {
+        // 2. Fallback: Se não achar a quantidade exata (ex: pediu pra tirar 250, mas só tinha um de 500),
+        // ele apaga o ÚLTIMO registro do dia, independente do valor.
+        final fallbackResponse = await _client
+            .from('user_water_intake')
+            .select('id')
+            .eq('user_id', currentUser.id)
+            .eq('date_logged', dateUtcStr)
+            .order('logged_at', ascending: false)
+            .limit(1);
+
+        if (fallbackResponse.isNotEmpty) {
+          final fallbackLogId = fallbackResponse.first['id'];
+          await _client.from('user_water_intake').delete().eq('id', fallbackLogId);
+        } else {
+          throw Exception('Nenhum registro encontrado para remover hoje.');
+        }
+      }
+    } catch (error) {
+      throw Exception('Failed to remove water intake: $error');
     }
   }
 

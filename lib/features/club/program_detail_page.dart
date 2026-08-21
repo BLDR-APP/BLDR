@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'club_service.dart';
-import 'models.dart';
-import 'widgets.dart' as clubw show BldrGoldBadge, BldrBadgeRow, levelLabel; // <- inclui BldrBadgeRow
+import 'package:bldr_fitness/features/club/club_service.dart';
+import 'package:bldr_fitness/features/club/models.dart';
+import 'package:bldr_fitness/features/club/widgets.dart' as clubw show BldrGoldBadge, BldrBadgeRow, levelLabel; // <- inclui BldrBadgeRow
 
 class ProgramDetailPage extends StatefulWidget {
   const ProgramDetailPage({super.key, required this.programId});

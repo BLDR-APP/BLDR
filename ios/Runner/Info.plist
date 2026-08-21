@@ -2,8 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>FirebaseAppDelegateProxyEnabled</key>
-	<false/>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
@@ -22,8 +20,31 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>bldr</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.252169390838-8c382jo8qocp7jtal832fodc7dbsrjg8</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSAppTransportSecurity</key>
@@ -33,6 +54,16 @@
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Usaremos a câmera para escanear códigos, tirar fotos do alimento e registrar fotos de progresso.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>O BLDR usa sua frequência cardíaca para personalizar o treino e calcular calorias queimadas.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>O BLDR registra seus treinos e calorias no app Saúde.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Precisamos rastrear sua corrida para calcular distância e pace mesmo com o celular bloqueado.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>O BLDR precisa rastrear sua corrida mesmo com a tela bloqueada.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>O BLDR precisa da sua localização para rastrear seu treino de corrida.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Usaremos o microfone para adicionar alimentos por voz.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
@@ -41,6 +72,10 @@
 	<string>Permitir acesso à galeria para escolher fotos do alimento e de progresso.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Usaremos o reconhecimento de fala para transcrever sua voz em texto.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
+	<true/>
 	<key>SUPABASE_ANON_KEY</key>
 	<string>$(SUPABASE_ANON_KEY)</string>
 	<key>SUPABASE_URL</key>
@@ -50,6 +85,7 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
+		<string>location</string>
 	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
@@ -68,18 +104,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>CFBundleURLTypes</key>
+	<key>UIAppFonts</key>
 	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLName</key>
-			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>bldr</string>
-			</array>
-		</dict>
+		<string>Montserrat-Bold.ttf</string>
 	</array>
 </dict>
 </plist>

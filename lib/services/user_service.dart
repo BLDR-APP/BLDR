@@ -1,8 +1,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../models/user_profile.dart';
-import './auth_service.dart';
-import './supabase_service.dart';
+import 'package:bldr_fitness/core/di/injection.dart';
+import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
+import 'package:bldr_fitness/models/user_profile.dart';
+import 'package:bldr_fitness/services/auth_service.dart';
+import 'package:bldr_fitness/services/supabase_service.dart';
 
 class UserService {
   static UserService? _instance;
@@ -48,6 +50,21 @@ class UserService {
           .select()
           .single();
 
+      // Propaga full_name → club_profiles.display_name para manter ranking
+      // e comunidade sincronizados (quando display_name personalizado é nulo).
+      final newName = updates['full_name'];
+      if (newName != null) {
+        try {
+          await _client
+              .from('club_profiles')
+              .update({'display_name': newName})
+              .eq('user_id', userId)
+              .isFilter('display_name', null);
+        } catch (_) {
+          // club_profiles pode não existir — não é erro fatal.
+        }
+      }
+
       return UserProfile.fromJson(response);
     } catch (error) {
       throw Exception('Failed to update user profile: $error');
@@ -67,20 +84,16 @@ class UserService {
   /// Get user statistics
   Future<Map<String, dynamic>> getUserStatistics(String userId) async {
     try {
-      // Get workout count
-      final workoutData = await _client
-          .from('user_workouts')
-          .select('id')
-          .eq('user_id', userId)
-          .count();
+      // Contagem de treinos — histórico consolidado (pessoal + clube).
+      // Antes só contava `user_workouts`, subcontando quem treina pelo Club.
+      final historyResult = await getIt<GetConsolidatedWorkoutHistory>()(
+          userId: userId, limit: 1000);
+      final allWorkouts = historyResult.valueOrNull ?? [];
+      final completedWorkouts =
+          allWorkouts.where((w) => w.isCompleted).toList();
 
-      // Get completed workouts count
-      final completedWorkoutData = await _client
-          .from('user_workouts')
-          .select('id')
-          .eq('user_id', userId)
-          .eq('is_completed', true)
-          .count();
+      final totalWorkoutsCount = allWorkouts.length;
+      final completedWorkoutsCount = completedWorkouts.length;
 
       // Get achievements count
       final achievementData = await _client
@@ -104,15 +117,12 @@ class UserService {
       }
 
       return {
-        'total_workouts': workoutData.count ?? 0,
-        'completed_workouts': completedWorkoutData.count ?? 0,
+        'total_workouts': totalWorkoutsCount,
+        'completed_workouts': completedWorkoutsCount,
         'achievements': achievementData.count ?? 0,
         'current_weight': currentWeight,
-        'completion_rate': (workoutData.count ?? 0) > 0
-            ? ((completedWorkoutData.count ?? 0) /
-            (workoutData.count ?? 0) *
-            100)
-            .round()
+        'completion_rate': totalWorkoutsCount > 0
+            ? (completedWorkoutsCount / totalWorkoutsCount * 100).round()
             : 0,
       };
     } catch (error) {
@@ -213,6 +223,64 @@ class UserService {
       return UserProfile.fromJson(response);
     } catch (error) {
       throw Exception('Failed to mark onboarding complete: $error');
+    }
+  }
+
+  /// Dados do perfil usados pela tela de esportes (onboarding + planos).
+  Future<Map<String, dynamic>?> getSportsProfileData() async {
+    final currentUser = AuthService.instance.currentUser;
+    if (currentUser == null) return null;
+
+    final response = await _client
+        .from('user_profiles')
+        .select('onboarding_data, performance_plans')
+        .eq('id', currentUser.id)
+        .single();
+    return Map<String, dynamic>.from(response);
+  }
+
+  /// Gera um plano de performance via edge function (tela de esportes).
+  Future<Map<String, dynamic>> generatePerformancePlan(String sport) async {
+    final response = await _client.functions.invoke(
+      'gerar-plano-performance',
+      body: {'sport': sport},
+    );
+    if (response.status != 200 || response.data == null) {
+      throw Exception('Falha API: ${response.data?['error']}');
+    }
+    return Map<String, dynamic>.from(response.data as Map);
+  }
+
+  /// Persiste os planos de performance (tela de esportes).
+  Future<void> updatePerformancePlans(List<Map<String, dynamic>> plans) async {
+    final currentUser = AuthService.instance.currentUser;
+    if (currentUser == null) return;
+
+    await _client
+        .from('user_profiles')
+        .update({'performance_plans': plans}).eq('id', currentUser.id);
+  }
+
+  /// Versão do onboarding salva no perfil, ou `null` se não houver
+  /// (ou em caso de erro — o chamador trata `null` como "refazer").
+  Future<String?> getOnboardingVersion() async {
+    final currentUser = AuthService.instance.currentUser;
+    if (currentUser == null) return null;
+
+    try {
+      final response = await _client
+          .from('user_profiles')
+          .select('onboarding_data')
+          .eq('id', currentUser.id)
+          .maybeSingle();
+
+      final onboardingData = response?['onboarding_data'];
+      if (onboardingData is Map) {
+        return onboardingData['onboarding_version']?.toString();
+      }
+      return null;
+    } catch (error) {
+      return null;
     }
   }
 

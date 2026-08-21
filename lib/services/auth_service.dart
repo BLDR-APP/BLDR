@@ -4,7 +4,7 @@ import 'package:crypto/crypto.dart'; // <<< ADIÇÃO
 import 'dart:math';
 import 'dart:convert';
 
-import './supabase_service.dart';
+import 'package:bldr_fitness/services/supabase_service.dart';
 
 class AuthService {
   static AuthService? _instance;
@@ -101,6 +101,7 @@ class AuthService {
       // Esta função envia um OTP (código) para o e-mail
       await _client.auth.signInWithOtp(
         email: email,
+        shouldCreateUser: false,
       );
     } catch (error) {
       throw Exception('Failed to send OTP: $error');
@@ -207,6 +208,24 @@ class AuthService {
 
       print('>>> DIAG: Chamada signInWithIdToken FINALIZADA. Sessão criada.');
 
+      // 4. Salva o nome apenas se a Apple o enviou (só ocorre no primeiro login).
+      //    Nas sessões seguintes, givenName e familyName chegam como null — o bloco
+      //    não executa e o nome já gravado é preservado.
+      final givenName = credential.givenName;
+      final familyName = credential.familyName;
+      if (givenName != null || familyName != null) {
+        final fullName = [givenName, familyName]
+            .where((s) => s != null && s!.isNotEmpty)
+            .join(' ')
+            .trim();
+        if (fullName.isNotEmpty) {
+          await _client.auth.updateUser(
+            UserAttributes(data: {'full_name': fullName}),
+          );
+          print('>>> DIAG: full_name Apple salvo: $fullName');
+        }
+      }
+
     } catch (error) {
       if (error is SignInWithAppleAuthorizationException &&
           error.code == AuthorizationErrorCode.canceled) {
@@ -220,6 +239,8 @@ class AuthService {
     try {
       await _client.auth.signInWithOAuth(
         OAuthProvider.google,
+        redirectTo: 'bldr://login-callback',
+        authScreenLaunchMode: LaunchMode.externalApplication,
       );
     } catch (error) {
       throw Exception('Google Sign-In failed: $error');
