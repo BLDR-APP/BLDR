@@ -11,14 +11,11 @@ class AutonomousRunManager: NSObject, ObservableObject, CLLocationManagerDelegat
     @Published var heartRate: Double = 0
     @Published var isActive: Bool = false
     @Published var isPaused: Bool = false
+    @Published var startDate: Date? = nil
 
     private let locationManager = CLLocationManager()
-    private let healthStore = HKHealthStore()
-    private var workoutSession: HKWorkoutSession?
-    private var workoutBuilder: HKLiveWorkoutBuilder?
     private var elapsedTimer: Timer?
     private var lastLocation: CLLocation?
-    @Published var startDate: Date? = nil   // ajustado a cada resume para excluir tempo pausado
     private var pauseBegin: Date? = nil
     private var runLocations: [[String: Double]] = []
 
@@ -32,18 +29,10 @@ class AutonomousRunManager: NSObject, ObservableObject, CLLocationManagerDelegat
 
     func requestPermissions() {
         locationManager.requestWhenInUseAuthorization()
-        guard HKHealthStore.isHealthDataAvailable() else { return }
-        let hrType = HKQuantityType.quantityType(forIdentifier: .heartRate)!
-        let caloriesType = HKQuantityType.quantityType(forIdentifier: .activeEnergyBurned)!
-        healthStore.requestAuthorization(
-            toShare: [caloriesType],
-            read: [hrType, caloriesType]
-        ) { _, _ in }
     }
 
     func startRun() {
         startDate = Date()
-        // startDate @Published — alimenta Text(.timer) na UI sem Timer adicional
         elapsedSeconds = 0
         distanceMeters = 0
         currentPaceSecPerKm = 0
@@ -53,7 +42,6 @@ class AutonomousRunManager: NSObject, ObservableObject, CLLocationManagerDelegat
         isActive = true
         isPaused = false
         locationManager.startUpdatingLocation()
-        startWorkoutSession()
         startElapsedTimer()
     }
 
@@ -61,22 +49,18 @@ class AutonomousRunManager: NSObject, ObservableObject, CLLocationManagerDelegat
         isPaused = true
         pauseBegin = Date()
         locationManager.stopUpdatingLocation()
-        workoutSession?.pause()
         elapsedTimer?.invalidate()
         elapsedTimer = nil
     }
 
     func resumeRun() {
         isPaused = false
-        // Avança startDate pelo tempo que ficou pausado, para que Text(.timer) mostre
-        // apenas o tempo efetivo de corrida — sem contar o intervalo de pausa.
         if let pb = pauseBegin {
             let pauseDuration = Date().timeIntervalSince(pb)
             startDate = startDate.map { $0.addingTimeInterval(pauseDuration) }
             pauseBegin = nil
         }
         locationManager.startUpdatingLocation()
-        workoutSession?.resume()
         startElapsedTimer()
     }
 
@@ -84,7 +68,6 @@ class AutonomousRunManager: NSObject, ObservableObject, CLLocationManagerDelegat
         isActive = false
         isPaused = false
         locationManager.stopUpdatingLocation()
-        workoutSession?.end()
         elapsedTimer?.invalidate()
         elapsedTimer = nil
 
@@ -133,27 +116,6 @@ class AutonomousRunManager: NSObject, ObservableObject, CLLocationManagerDelegat
         lastLocation = location
     }
 
-    // MARK: — HKWorkoutSession (mantém Watch acordado)
-
-    private func startWorkoutSession() {
-        guard HKHealthStore.isHealthDataAvailable() else { return }
-        let config = HKWorkoutConfiguration()
-        config.activityType = .running
-        config.locationType = .outdoor
-        do {
-            workoutSession = try HKWorkoutSession(healthStore: healthStore, configuration: config)
-            workoutBuilder = workoutSession?.associatedWorkoutBuilder()
-            workoutBuilder?.dataSource = HKLiveWorkoutDataSource(
-                healthStore: healthStore,
-                workoutConfiguration: config)
-            workoutBuilder?.delegate = self
-            workoutSession?.startActivity(with: Date())
-            workoutBuilder?.beginCollection(withStart: Date()) { _, _ in }
-        } catch {
-            print("[BLDR] WorkoutSession error: \(error)")
-        }
-    }
-
     // MARK: — Persistência local (App Group)
 
     private func saveRunDataLocally(_ data: [String: Any]) {
@@ -183,21 +145,5 @@ class AutonomousRunManager: NSObject, ObservableObject, CLLocationManagerDelegat
         let s = elapsedSeconds % 60
         if h > 0 { return String(format: "%d:%02d:%02d", h, m, s) }
         return String(format: "%02d:%02d", m, s)
-    }
-}
-
-// MARK: — FC em tempo real
-
-extension AutonomousRunManager: HKLiveWorkoutBuilderDelegate {
-    func workoutBuilderDidCollectEvent(_ workoutBuilder: HKLiveWorkoutBuilder) {}
-
-    func workoutBuilder(_ workoutBuilder: HKLiveWorkoutBuilder,
-                        didCollectDataOf collectedTypes: Set<HKSampleType>) {
-        guard let hrType = HKQuantityType.quantityType(forIdentifier: .heartRate),
-              collectedTypes.contains(hrType) else { return }
-        let bpm = workoutBuilder.statistics(for: hrType)?
-            .mostRecentQuantity()?
-            .doubleValue(for: HKUnit.count().unitDivided(by: .minute())) ?? 0
-        DispatchQueue.main.async { self.heartRate = bpm }
     }
 }
