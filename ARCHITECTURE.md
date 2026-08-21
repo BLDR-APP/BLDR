@@ -152,8 +152,8 @@ WatchService                           WatchViewModel (WCSession)
 
 Corrida autônoma (Watch sem iPhone):
   AutonomousRunManager                 RunTabView (.autonomous)
-    HKWorkoutSession (wake lock)         AutonomousRunView
-    CLLocationManager (GPS)              Text(startDate, .timer) ← @Published startDate
+    CLLocationManager (GPS)              AutonomousRunView
+    Timer (elapsed)                      Text(startDate, .timer) ← @Published startDate
     UserDefaults(group.com.bldr.fitness) ← saveRunDataLocally()
 
 Sincronização pós-corrida:
@@ -173,3 +173,18 @@ LiveActivity (iPhone → Lock Screen / Dynamic Island):
 
 **Entitlements Watch:** `com.apple.developer.healthkit` + App Group `group.com.bldr.fitness`.
 **Info.plist Watch:** gerado via `GENERATE_INFOPLIST_FILE = YES`; usage descriptions em `INFOPLIST_KEY_*` no `project.pbxproj`.
+**Nota watchOS 26 SDK:** `HKLiveWorkoutBuilder` e `HKLiveWorkoutDataSource` foram re-anotados como watchOS 26+ no Xcode 26 SDK. Removidos do `AutonomousRunManager`; wake lock via CLLocationManager. `WATCHOS_DEPLOYMENT_TARGET = 10.0`. Hápticos migrados de `WKInterfaceDevice.current().play()` para `.sensoryFeedback()` (SwiftUI, watchOS 10+).
+
+## Regra de timezone — timestamps salvos no Supabase (2026-08-21)
+
+Todo `DateTime` serializado para o banco **deve usar `.toUtc().toIso8601String()`**.
+`DateTime.now().toIso8601String()` sem `.toUtc()` salva a hora local sem offset;
+o Supabase interpreta colunas `timestamptz` sem offset como UTC, causando defasagem
+do fuso (ex.: BRT = -3h → `completed_at` 3h antes do `started_at`).
+
+Arquivos corrigidos em 2026-08-21: `workout_service.dart`, `club_workouts_service.dart`,
+`payment_service.dart`, `supabase_club_datasource.dart`, `havok_repository_impl.dart`,
+`club_repositories_impl.dart`, `photo_progress_widget.dart`, `create_arena_screen.dart`.
+
+Registros históricos com `completed_at < started_at` foram corrigidos via migration
+(`completed_at + INTERVAL '3 hours'` em `user_workouts` e `club_user_workouts`).
