@@ -14,6 +14,9 @@ import 'package:bldr_fitness/features/workouts/domain/entities/extra_activity.da
 import 'package:bldr_fitness/features/workouts/domain/entities/weekly_plan.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart';
+import 'package:bldr_fitness/features/club/domain/repositories/club_workout_repository.dart';
+import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
+import 'package:bldr_fitness/features/club/presentation/bldr_club/club_active_workout_screen.dart';
 
 import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/active_workout_screen.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
@@ -613,137 +616,66 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
   // ── template picker ───────────────────────────────────────────────────────
 
   Future<void> _showTemplatePicker(PlanDay day) async {
-    final result = await getIt<GetWorkoutTemplates>()();
-    final allTemplates = result.valueOrNull ?? const [];
+    // Carregar templates pessoais e do Club em paralelo
+    final results = await Future.wait([
+      getIt<GetWorkoutTemplates>()(),
+      getIt<ClubWorkoutRepository>().myTemplates(),
+    ]);
     if (!mounted) return;
 
-    // Separar em 3 seções
-    final havokTemplates = allTemplates.where((t) => t.source == 'havok').toList();
-    final bldrTemplates = allTemplates.where((t) => t.isPublic && t.source != 'havok').toList();
-    final userTemplates = allTemplates.where((t) => !t.isPublic && t.source != 'havok').toList();
+    final allTemplates = results[0].valueOrNull ?? <WorkoutTemplate>[];
+    final clubTemplates = results[1].valueOrNull ?? <WorkoutTemplate>[];
 
-    const weekDayNames = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+    const weekDayNames = [
+      'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'
+    ];
     final dayName = weekDayNames[day.weekdayIndex];
-    String? selectedId = day.assignedTemplateId;
 
-    await showModalBottomSheet(
+    final result = await showModalBottomSheet<_PickerResult>(
       context: context,
-      backgroundColor: BldrColors.sheetBg,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheet) {
-          Widget templateTile(WorkoutTemplate tpl) {
-            final isSelected = tpl.id == selectedId;
-            final count = tpl.exercises.length;
-            return ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(tpl.name,
-                  style: BldrText.body.copyWith(
-                      color: isSelected ? BldrColors.goldBright : BldrColors.textPrimary)),
-              subtitle: count > 0
-                  ? Text('$count exercício${count == 1 ? '' : 's'}', style: BldrText.meta)
-                  : null,
-              trailing: isSelected
-                  ? const Icon(Icons.check_circle_rounded,
-                      color: BldrColors.goldBright, size: 20)
-                  : null,
-              onTap: () => setSheet(() => selectedId = tpl.id),
-            );
-          }
-
-          Widget sectionHeader(String label) => Padding(
-                padding: const EdgeInsets.only(top: 16, bottom: 4),
-                child: Text(label,
-                    style: BldrText.label.copyWith(color: BldrColors.textMuted)),
-              );
-
-          return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _sheetHandle(),
-                  const SizedBox(height: 16),
-                  Text('Escolher treino para $dayName', style: BldrText.cardTitleLg),
-                  const SizedBox(height: 4),
-                  Text('Selecione um treino ou defina como descanso.', style: BldrText.meta),
-                  const SizedBox(height: 4),
-                  if (allTemplates.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      child: Text(
-                        'Nenhum treino criado ainda.\nCrie fichas na tela de Treinos ou peça ao HAVOK.',
-                        style: BldrText.description,
-                        textAlign: TextAlign.center,
-                      ),
-                    )
-                  else
-                    ConstrainedBox(
-                      constraints: BoxConstraints(
-                          maxHeight: MediaQuery.of(ctx).size.height * 0.50),
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (havokTemplates.isNotEmpty) ...[
-                              sectionHeader('🤖  Gerados pelo HAVOK'),
-                              const Divider(color: BldrColors.borderSubtle, height: 1),
-                              ...havokTemplates.map(templateTile),
-                            ],
-                            if (bldrTemplates.isNotEmpty) ...[
-                              sectionHeader('📚  Biblioteca BLDR'),
-                              const Divider(color: BldrColors.borderSubtle, height: 1),
-                              ...bldrTemplates.map(templateTile),
-                            ],
-                            if (userTemplates.isNotEmpty) ...[
-                              sectionHeader('👤  Meus treinos'),
-                              const Divider(color: BldrColors.borderSubtle, height: 1),
-                              ...userTemplates.map(templateTile),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                  const Divider(color: BldrColors.borderSubtle, height: 24),
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: Text('Definir como descanso',
-                        style: BldrText.body.copyWith(
-                            color: selectedId == null
-                                ? BldrColors.goldBright
-                                : BldrColors.textSecondary)),
-                    trailing: selectedId == null
-                        ? const Icon(Icons.check_circle_rounded,
-                            color: BldrColors.goldBright, size: 20)
-                        : null,
-                    onTap: () => setSheet(() => selectedId = null),
-                  ),
-                  const SizedBox(height: 12),
-                  BldrPrimaryButton(
-                    label: 'Confirmar',
-                    onPressed: () async {
-                      final picked = selectedId != null
-                          ? allTemplates.where((t) => t.id == selectedId).firstOrNull
-                          : null;
-                      Navigator.pop(ctx);
-                      await _applyTemplateToDay(
-                        day.weekdayIndex + 1,
-                        selectedId,
-                        picked,
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.75,
+        minChildSize: 0.5,
+        maxChildSize: 0.92,
+        expand: false,
+        builder: (_, scrollController) => _TemplatePickerSheet(
+          scrollController: scrollController,
+          dayName: dayName,
+          allTemplates: allTemplates,
+          clubTemplates: clubTemplates,
+          initialSelectedId: day.assignedTemplateId,
+          initialSelectedSource: day.assignedTemplateSource,
+        ),
       ),
     );
+
+    if (result == null || !mounted) return;
+
+    if (result.isRest) {
+      await _applyTemplateToDay(day.weekdayIndex + 1, null, null);
+    } else if (result.templateId != null) {
+      if (result.source == 'club') {
+        final clubTpl = clubTemplates
+            .where((t) => t.id == result.templateId)
+            .firstOrNull;
+        // Cria WorkoutTemplate com source='club' para gravar corretamente
+        final tpl = WorkoutTemplate(
+          id: result.templateId,
+          name: clubTpl?.name ?? 'Treino Club',
+          source: 'club',
+        );
+        await _applyTemplateToDay(day.weekdayIndex + 1, result.templateId, tpl);
+      } else {
+        final tpl = allTemplates
+            .where((t) => t.id == result.templateId)
+            .firstOrNull;
+        await _applyTemplateToDay(day.weekdayIndex + 1, result.templateId, tpl);
+      }
+    }
   }
 
   Future<void> _applyTemplateToDay(
@@ -775,6 +707,37 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
     final name = day.assignedTemplateName ?? 'Treino';
     if (templateId == null) {
       _showTodaySheet(day);
+      return;
+    }
+
+    if (day.assignedTemplateSource == 'club') {
+      final startResult = await getIt<StartClubWorkout>()(
+        name: name,
+        templateId: templateId,
+      );
+      final session = startResult.valueOrNull;
+      if (session?.id == null || !mounted) {
+        final failure = startResult.failureOrNull;
+        if (failure != null && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(failure.message),
+            backgroundColor: BldrColors.danger,
+            behavior: SnackBarBehavior.floating,
+          ));
+        }
+        return;
+      }
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ClubActiveWorkoutScreen(
+              workoutId: session!.id!,
+              workoutName: name,
+            ),
+          ),
+        );
+      }
       return;
     }
 
@@ -1832,6 +1795,490 @@ class _HavokBadge extends StatelessWidget {
           fontSize: 9,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.8,
+        ),
+      ),
+    );
+  }
+}
+
+// ── picker result ─────────────────────────────────────────────────────────────
+
+class _PickerResult {
+  final String? templateId;
+  final String? source; // 'free' | 'club'
+  final bool isRest;
+  const _PickerResult({this.templateId, this.source, this.isRest = false});
+}
+
+// ── template picker sheet ─────────────────────────────────────────────────────
+
+class _TemplatePickerSheet extends StatefulWidget {
+  final ScrollController scrollController;
+  final String dayName;
+  final List<WorkoutTemplate> allTemplates;
+  final List<WorkoutTemplate> clubTemplates;
+  final String? initialSelectedId;
+  final String? initialSelectedSource;
+
+  const _TemplatePickerSheet({
+    required this.scrollController,
+    required this.dayName,
+    required this.allTemplates,
+    required this.clubTemplates,
+    this.initialSelectedId,
+    this.initialSelectedSource,
+  });
+
+  @override
+  State<_TemplatePickerSheet> createState() => _TemplatePickerSheetState();
+}
+
+class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
+  String? _selectedId;
+  String? _selectedSource;
+  String _filter = 'all';
+  String _search = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedId = widget.initialSelectedId;
+    _selectedSource = widget.initialSelectedSource ?? 'free';
+  }
+
+  List<WorkoutTemplate> get _havok => widget.allTemplates
+      .where((t) =>
+          t.source == 'havok' &&
+          (_search.isEmpty ||
+              t.name.toLowerCase().contains(_search)))
+      .toList();
+
+  List<WorkoutTemplate> get _user => widget.allTemplates
+      .where((t) =>
+          t.source != 'havok' &&
+          !t.isPublic &&
+          (_search.isEmpty ||
+              t.name.toLowerCase().contains(_search)))
+      .toList();
+
+  List<WorkoutTemplate> get _club => widget.clubTemplates
+      .where((t) =>
+          _search.isEmpty || t.name.toLowerCase().contains(_search))
+      .toList();
+
+  List<WorkoutTemplate> get _bldr => widget.allTemplates
+      .where((t) =>
+          t.isPublic &&
+          t.source != 'havok' &&
+          (_search.isEmpty ||
+              t.name.toLowerCase().contains(_search)))
+      .toList();
+
+  bool get _isEmpty =>
+      (_showSection('havok') ? _havok : <WorkoutTemplate>[]).isEmpty &&
+      (_showSection('user') ? _user : <WorkoutTemplate>[]).isEmpty &&
+      (_showSection('club') ? _club : <WorkoutTemplate>[]).isEmpty &&
+      (_showSection('bldr') ? _bldr : <WorkoutTemplate>[]).isEmpty;
+
+  bool _showSection(String section) =>
+      _filter == 'all' || _filter == section;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: BldrColors.sheetBg,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          // Handle
+          Padding(
+            padding: const EdgeInsets.only(top: 12, bottom: 4),
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: BldrColors.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          // Header
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 10, 18, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Escolher treino para ${widget.dayName}',
+                    style: BldrText.cardTitleLg),
+                const SizedBox(height: 3),
+                Text('Selecione ou defina como descanso.',
+                    style: BldrText.meta),
+              ],
+            ),
+          ),
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
+            child: TextField(
+              onChanged: (v) =>
+                  setState(() => _search = v.toLowerCase()),
+              style: BldrText.body,
+              decoration: InputDecoration(
+                hintText: 'Buscar treino...',
+                hintStyle: BldrText.meta,
+                prefixIcon: const Icon(Icons.search_rounded,
+                    color: BldrColors.textMuted, size: 18),
+                filled: true,
+                fillColor: BldrColors.surface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide:
+                      const BorderSide(color: BldrColors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide:
+                      const BorderSide(color: BldrColors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                      color: BldrColors.goldBright),
+                ),
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 10),
+              ),
+            ),
+          ),
+          // Filter chips
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.fromLTRB(18, 10, 18, 0),
+            child: Row(
+              children: [
+                _filterChip('all', 'Todos'),
+                _filterChip('havok', 'HAVOK'),
+                _filterChip('user', 'Meus treinos'),
+                _filterChip('club', 'Club'),
+                _filterChip('bldr', 'Biblioteca BLDR'),
+              ],
+            ),
+          ),
+          // Lista
+          Expanded(
+            child: ListView(
+              controller: widget.scrollController,
+              padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
+              children: [
+                if (_showSection('havok') && _havok.isNotEmpty) ...[
+                  _sectionHeader(
+                    icon: Icons.smart_toy_outlined,
+                    iconColor: BldrColors.goldBright,
+                    label: 'GERADOS PELO HAVOK',
+                    count: _havok.length,
+                  ),
+                  ..._havok.map((t) => _templateTile(
+                        id: t.id!,
+                        name: t.name,
+                        exerciseCount: t.exercises.length,
+                        durationMinutes:
+                            t.estimatedDurationMinutes,
+                        source: 'free',
+                        badge: 'HAVOK',
+                        badgeColor: BldrColors.goldBright,
+                        iconColor: BldrColors.goldBright,
+                      )),
+                  _sectionDivider(),
+                ],
+                if (_showSection('user') && _user.isNotEmpty) ...[
+                  _sectionHeader(
+                    icon: Icons.person_outline_rounded,
+                    iconColor: BldrColors.textSecondary,
+                    label: 'MEUS TREINOS',
+                    count: _user.length,
+                  ),
+                  ..._user.map((t) => _templateTile(
+                        id: t.id!,
+                        name: t.name,
+                        exerciseCount: t.exercises.length,
+                        durationMinutes:
+                            t.estimatedDurationMinutes,
+                        source: 'free',
+                      )),
+                  _sectionDivider(),
+                ],
+                if (_showSection('club') && _club.isNotEmpty) ...[
+                  _sectionHeader(
+                    icon: Icons.star_outline_rounded,
+                    iconColor: const Color(0xFF64B4FF),
+                    label: 'MEUS TREINOS DO CLUB',
+                    count: _club.length,
+                  ),
+                  ..._club.map((t) => _templateTile(
+                        id: t.id!,
+                        name: t.name,
+                        exerciseCount: t.exercises.length,
+                        durationMinutes:
+                            t.estimatedDurationMinutes,
+                        source: 'club',
+                        badge: 'CLUB',
+                        badgeColor: const Color(0xFF64B4FF),
+                        iconColor: const Color(0xFF64B4FF),
+                      )),
+                  _sectionDivider(),
+                ],
+                if (_showSection('bldr') && _bldr.isNotEmpty) ...[
+                  _sectionHeader(
+                    icon: Icons.auto_stories_outlined,
+                    iconColor: BldrColors.goldBright,
+                    label: 'BIBLIOTECA BLDR',
+                    count: _bldr.length,
+                  ),
+                  ..._bldr.map((t) => _templateTile(
+                        id: t.id!,
+                        name: t.name,
+                        exerciseCount: t.exercises.length,
+                        durationMinutes:
+                            t.estimatedDurationMinutes,
+                        source: 'free',
+                      )),
+                ],
+                if (_isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 32),
+                    child: Center(
+                      child: Text('Nenhum treino encontrado.',
+                          style: BldrText.meta),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+          // Footer
+          Container(
+            padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
+            decoration: const BoxDecoration(
+              border: Border(
+                  top: BorderSide(color: BldrColors.borderSubtle)),
+            ),
+            child: Column(
+              children: [
+                BldrPrimaryButton(
+                  label: 'Confirmar',
+                  onPressed: _selectedId == null
+                      ? null
+                      : () => Navigator.pop(
+                            context,
+                            _PickerResult(
+                              templateId: _selectedId,
+                              source: _selectedSource,
+                            ),
+                          ),
+                ),
+                const SizedBox(height: 8),
+                TextButton.icon(
+                  onPressed: () => Navigator.pop(
+                    context,
+                    const _PickerResult(isRest: true),
+                  ),
+                  icon: const Icon(Icons.bedtime_outlined,
+                      size: 15, color: BldrColors.textMuted),
+                  label: Text('Definir como descanso',
+                      style: BldrText.buttonSecondary
+                          .copyWith(color: BldrColors.textMuted)),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _filterChip(String value, String label) {
+    final isActive = _filter == value;
+    return GestureDetector(
+      onTap: () => setState(() => _filter = value),
+      child: Container(
+        margin: const EdgeInsets.only(right: 6),
+        padding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        decoration: BoxDecoration(
+          color: isActive
+              ? BldrColors.goldTintChip
+              : Colors.transparent,
+          border: Border.all(
+              color: isActive
+                  ? BldrColors.goldBorderChip
+                  : BldrColors.border),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: BldrText.metaSm.copyWith(
+            color: isActive
+                ? BldrColors.goldBright
+                : BldrColors.textMuted,
+            fontWeight: isActive
+                ? FontWeight.w600
+                : FontWeight.w400,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionHeader({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required int count,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 13, color: iconColor),
+          const SizedBox(width: 6),
+          Text(label,
+              style: BldrText.label
+                  .copyWith(color: BldrColors.textMuted)),
+          const SizedBox(width: 6),
+          Text('($count)',
+              style: BldrText.metaSm
+                  .copyWith(color: BldrColors.textMuted)),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionDivider() => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8),
+        child: Divider(
+            color: BldrColors.borderSubtle, height: 1),
+      );
+
+  Widget _templateTile({
+    required String id,
+    required String name,
+    required int exerciseCount,
+    int? durationMinutes,
+    required String source,
+    String? badge,
+    Color? badgeColor,
+    Color? iconColor,
+  }) {
+    final isSelected = _selectedId == id;
+    return GestureDetector(
+      onTap: () => setState(() {
+        _selectedId = id;
+        _selectedSource = source;
+      }),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 6),
+        padding: const EdgeInsets.symmetric(
+            horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? BldrColors.goldTintChip
+              : BldrColors.surface,
+          border: Border.all(
+              color: isSelected
+                  ? BldrColors.goldBorderChip
+                  : BldrColors.border),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: (iconColor ?? BldrColors.textMuted)
+                    .withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.fitness_center_rounded,
+                  size: 16,
+                  color: iconColor ?? BldrColors.textMuted),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: BldrText.body.copyWith(
+                      color: isSelected
+                          ? BldrColors.goldBright
+                          : BldrColors.textPrimary,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      const Icon(
+                          Icons.format_list_numbered_rounded,
+                          size: 10,
+                          color: BldrColors.textMuted),
+                      const SizedBox(width: 3),
+                      Text(
+                          '$exerciseCount ex.',
+                          style: BldrText.metaSm),
+                      if (durationMinutes != null) ...[
+                        const SizedBox(width: 8),
+                        const Icon(
+                            Icons.access_time_rounded,
+                            size: 10,
+                            color: BldrColors.textMuted),
+                        const SizedBox(width: 3),
+                        Text('~${durationMinutes}min',
+                            style: BldrText.metaSm),
+                      ],
+                      if (badge != null) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 5, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: (badgeColor ??
+                                    BldrColors.goldBright)
+                                .withValues(alpha: 0.12),
+                            borderRadius:
+                                BorderRadius.circular(4),
+                            border: Border.all(
+                                color: (badgeColor ??
+                                        BldrColors.goldBright)
+                                    .withValues(alpha: 0.25)),
+                          ),
+                          child: Text(
+                            badge,
+                            style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.w700,
+                              color: badgeColor ??
+                                  BldrColors.goldBright,
+                              letterSpacing: 0.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected)
+              const Icon(Icons.check_circle_rounded,
+                  color: BldrColors.goldBright, size: 20),
+          ],
         ),
       ),
     );
