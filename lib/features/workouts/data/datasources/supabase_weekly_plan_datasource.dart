@@ -102,7 +102,7 @@ class SupabaseWeeklyPlanDatasource {
   Future<List<Map<String, dynamic>>> getWeeklyPlan(String userId) async {
     final rows = await _client
         .from('weekly_plan_days')
-        .select('dia_semana, template_id, template_name, tipo, source')
+        .select('dia_semana, template_id, club_template_id, template_name, tipo, source')
         .eq('user_id', userId)
         .order('dia_semana');
     return List<Map<String, dynamic>>.from(rows);

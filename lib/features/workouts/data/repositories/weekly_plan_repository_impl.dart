@@ -49,13 +49,18 @@ class WeeklyPlanRepositoryImpl implements WeeklyPlanRepository {
   @override
   Future<Result<void>> saveWeeklyPlan(List<PlanDay> days) => _guard(() async {
         final uid = _requireUser();
-        final rows = days.map((d) => {
-              'user_id': uid,
-              'dia_semana': d.diaSemana,
-              'tipo': d.tipo,
-              'template_id': d.treino?.id,
-              'template_name': d.treino?.name,
-              'source': d.treino?.source ?? 'user',
+        final rows = days.map((d) {
+              final isClub = d.treino?.source == 'club';
+              return {
+                'user_id': uid,
+                'dia_semana': d.diaSemana,
+                'tipo': d.tipo,
+                // template_id tem FK → workout_templates; club templates usam clube_template_id
+                'template_id': isClub ? null : d.treino?.id,
+                'club_template_id': isClub ? d.treino?.id : null,
+                'template_name': d.treino?.name,
+                'source': d.treino?.source ?? 'user',
+              };
             }).toList();
         await _datasource.upsertWeeklyPlan(uid, rows);
       });
@@ -65,7 +70,12 @@ class WeeklyPlanRepositoryImpl implements WeeklyPlanRepository {
         final uid = _requireUser();
         final rows = await _datasource.getWeeklyPlan(uid);
         return rows.map((r) {
-          final templateId = r['template_id'] as String?;
+          final source = r['source'] as String?;
+          final isClub = source == 'club';
+          // club templates têm FK separada; pessoais usam template_id
+          final templateId = isClub
+              ? r['club_template_id'] as String?
+              : r['template_id'] as String?;
           final templateName = r['template_name'] as String?;
           return PlanDay(
             diaSemana: (r['dia_semana'] as int),
@@ -75,7 +85,7 @@ class WeeklyPlanRepositoryImpl implements WeeklyPlanRepository {
                     id: templateId,
                     name: templateName ?? '',
                     isPublic: false,
-                    source: r['source'] as String?,
+                    source: source,
                   )
                 : null,
           );
