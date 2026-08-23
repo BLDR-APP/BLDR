@@ -962,15 +962,15 @@ class _ClubWorkoutsScreenState extends State<ClubWorkoutsScreen>
                   // ── 1. Hero compacto ──────────────────────────────────
                   const SliverToBoxAdapter(child: _ClubHeroHeader()),
 
-                  // ── 1b. Continuar treino (quando há pausados) ─────────
-                  if (_pausedClubWorkouts.isNotEmpty)
-                    SliverPadding(
-                      padding:
-                          const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                      sliver: SliverToBoxAdapter(
-                        child: _buildContinueSection(),
-                      ),
-                    ),
+                  // ── 1b. Continuar treino (quando há pausados) — oculto, mini-player global assume ──
+                  // if (_pausedClubWorkouts.isNotEmpty)
+                  //   SliverPadding(
+                  //     padding:
+                  //         const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  //     sliver: SliverToBoxAdapter(
+                  //       child: _buildContinueSection(),
+                  //     ),
+                  //   ),
 
                   // ── 2. Card Semana Atual BLDR CLUB ────────────────────
                   SliverPadding(
