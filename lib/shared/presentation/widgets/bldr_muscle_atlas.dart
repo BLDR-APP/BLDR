@@ -28,6 +28,16 @@ class BLDRMuscleAtlas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('[Atlas] muscleGroups recebidos: $muscleGroups');
+    for (final id in muscleGroups) {
+      final label = _muscleLabels[id];
+      if (label != null) {
+        debugPrint('[Atlas] ID encontrado: $id → $label');
+      } else {
+        debugPrint('[Atlas] ID NÃO mapeado: $id (será exibido como raw)');
+      }
+    }
+    debugPrint('[Atlas] chips count: ${muscleGroups.length}');
     if (muscleGroups.isEmpty) return const SizedBox.shrink();
     return Wrap(
       spacing: 6,

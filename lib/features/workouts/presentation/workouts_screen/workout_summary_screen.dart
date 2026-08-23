@@ -21,9 +21,18 @@ class WorkoutSummaryScreen extends StatefulWidget {
 
 class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
   final _shareKey = GlobalKey();
+  final _shareButtonKey = GlobalKey();
   bool _sharing = false;
 
   WorkoutSummaryData get data => widget.data;
+
+  @override
+  void initState() {
+    super.initState();
+    debugPrint('[Summary] muscleGroups: ${widget.data.muscleGroups}');
+    debugPrint('[Summary] volumeKg: ${widget.data.volumeKg}');
+    debugPrint('[Summary] newPRs: ${widget.data.newPRs.length}');
+  }
 
   Future<void> _shareCard() async {
     if (_sharing) return;
@@ -37,10 +46,21 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/bldr_workout.png');
       await file.writeAsBytes(bytes);
+
+      RenderBox? box;
+      try {
+        box = _shareButtonKey.currentContext?.findRenderObject() as RenderBox?;
+      } catch (_) {}
+      final shareRect = box != null
+          ? box.localToGlobal(Offset.zero) & box.size
+          : Rect.fromLTWH(
+              0, 400, MediaQuery.of(context).size.width, 50);
+
       await SharePlus.instance.share(
         ShareParams(
           files: [XFile(file.path)],
           text: 'Treino concluído no BLDR 💪',
+          sharePositionOrigin: shareRect,
         ),
       );
     } catch (e) {
@@ -109,6 +129,7 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                     // ── Botões ──────────────────────────────────────────────
                     _ActionButtons(
                       sharing: _sharing,
+                      shareButtonKey: _shareButtonKey,
                       onShare: _shareCard,
                       onDashboard: () =>
                           Navigator.popUntil(context, (r) => r.isFirst),
@@ -424,11 +445,13 @@ class _ComparisonCard extends StatelessWidget {
 
 class _ActionButtons extends StatelessWidget {
   final bool sharing;
+  final GlobalKey shareButtonKey;
   final VoidCallback onShare;
   final VoidCallback onDashboard;
 
   const _ActionButtons({
     required this.sharing,
+    required this.shareButtonKey,
     required this.onShare,
     required this.onDashboard,
   });
@@ -437,6 +460,7 @@ class _ActionButtons extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(children: [
       SizedBox(
+        key: shareButtonKey,
         width: double.infinity,
         child: OutlinedButton.icon(
           onPressed: sharing ? null : onShare,
