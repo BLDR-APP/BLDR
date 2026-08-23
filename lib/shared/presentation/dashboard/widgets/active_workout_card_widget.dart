@@ -9,6 +9,7 @@ import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/features/auth/domain/repositories/auth_repository.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart' as uc;
+import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart' as clubUc;
 import 'package:bldr_fitness/features/workouts/presentation/mappers/legacy_ui_maps.dart';
 import 'package:bldr_fitness/widgets/continue_workout_card.dart';
 import 'package:bldr_fitness/features/achievements/presentation/achievements/achievement_provider.dart';
@@ -62,7 +63,12 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
       final historyResult =
           await getIt<uc.GetWorkoutHistory>()(completedOnly: false, limit: 1);
       final pausedResult = await getIt<uc.GetPausedWorkouts>()(limit: 2);
-      final rawPaused = pausedResult.valueOrNull ?? [];
+      final pausedClubResult =
+          await getIt<clubUc.GetPausedClubWorkouts>()(limit: 2);
+      final rawPaused = [
+        ...pausedResult.valueOrNull ?? [],
+        ...pausedClubResult.valueOrNull ?? [],
+      ];
       // B8: lê o treino de hoje do Supabase (weekly_plan_days).
       // Filtra pelo dia da semana atual (1=seg … 7=dom).
       final planResult = await getIt<uc.GetWeeklyPlan>()();
