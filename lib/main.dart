@@ -30,6 +30,7 @@ import 'package:bldr_fitness/firebase_options.dart';
 import 'package:bldr_fitness/core/providers/locale_provider.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:bldr_fitness/shared/providers/workout_session_provider.dart';
+import 'package:flutter_muscle_anatomy/flutter_muscle_anatomy.dart';
 
 // Handler de background — delegado ao PushNotificationService para evitar duplicação
 
@@ -78,6 +79,7 @@ class _AppLoaderState extends State<AppLoader> {
   Future<void> _initialize() async {
     try {
       await SupabaseService.initialize();
+      await FlutterMuscleAnatomy.initialize();
       setupInjection();
 
       Stripe.publishableKey = PaymentService.isTestMode
