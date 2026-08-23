@@ -59,6 +59,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
   bool _isPrefetching = false;
   bool _isPro = false;
   bool _finishing = false; // guard: prevents _finishWorkout from running twice
+  bool _isFinishing = false; // true quando navegando para WorkoutSummaryScreen
 
   // ExerciseDB cache: exercise_db_id → ExerciseDetail
   final Map<String, ExerciseDetail> _exDbCache = {};
@@ -594,17 +595,19 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     await LiveActivityService.end();
     unawaited(WidgetDataService.updateAll());
     if (!mounted) return;
-    sessionProvider.setPausedWorkout(null);
     await _maybeTriggerPopups();
     if (!mounted) return;
     final summaryData = result.valueOrNull;
     if (summaryData != null) {
+      setState(() => _isFinishing = true);
+      sessionProvider.setPausedWorkout(null);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
             builder: (_) => WorkoutSummaryScreen(data: summaryData)),
       );
     } else {
+      sessionProvider.setPausedWorkout(null);
       Navigator.pop(context);
     }
   }
@@ -672,7 +675,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, _) { if (!didPop) _exitWorkout(); },
+      onPopInvokedWithResult: (didPop, _) { if (!didPop && !_isFinishing) _exitWorkout(); },
       child: Scaffold(
       backgroundColor: BldrColors.bgBase,
       body: BldrBackground(
@@ -746,7 +749,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
               icon: Icons.chevron_left,
               size: 36,
               filled: false,
-              onPressed: _exitWorkout,
+              onPressed: _isFinishing ? null : _exitWorkout,
             ),
           ),
           Expanded(

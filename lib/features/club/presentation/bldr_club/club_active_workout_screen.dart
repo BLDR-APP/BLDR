@@ -66,6 +66,7 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
   bool _loading           = true;
   bool _isPrefetching     = false;
   bool _finishing         = false; // guard: prevents _finishWorkout from running twice
+  bool _isFinishing       = false; // true quando navegando para WorkoutSummaryScreen
 
   // ExerciseDB cache: exercise_db_id → ExerciseDetail
   final Map<String, ExerciseDetail> _exDbCache = {};
@@ -594,15 +595,17 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
     unawaited(getIt<TryIncrementOperation>()('workout_count', 1));
     unawaited(WidgetDataService.updateAll());
     if (!mounted) return;
-    sessionProvider.setPausedWorkout(null);
     final summaryData = result.valueOrNull;
     if (summaryData != null) {
+      setState(() => _isFinishing = true);
+      sessionProvider.setPausedWorkout(null);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
             builder: (_) => WorkoutSummaryScreen(data: summaryData)),
       );
     } else {
+      sessionProvider.setPausedWorkout(null);
       Navigator.pop(context);
     }
   }
@@ -640,7 +643,7 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, _) { if (!didPop) _exitWorkout(); },
+      onPopInvokedWithResult: (didPop, _) { if (!didPop && !_isFinishing) _exitWorkout(); },
       child: Scaffold(
       backgroundColor: BldrColors.bgBase,
       body: BldrBackground(
@@ -713,7 +716,7 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
               icon: Icons.chevron_left,
               size: 36,
               filled: false,
-              onPressed: _exitWorkout,
+              onPressed: _isFinishing ? null : _exitWorkout,
             ),
           ),
           Expanded(
