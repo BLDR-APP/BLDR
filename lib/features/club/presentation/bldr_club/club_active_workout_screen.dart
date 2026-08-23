@@ -25,6 +25,8 @@ import 'package:bldr_fitness/theme/bldr_tokens.dart';
 import 'package:bldr_fitness/widgets/muscle_visualizer_widget.dart';
 import 'package:bldr_fitness/shared/providers/workout_session_provider.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/paused_workout_summary.dart';
+import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart' as uc;
+import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/workout_summary_screen.dart';
 
 class ClubActiveWorkoutScreen extends StatefulWidget {
   final String workoutId;
@@ -581,37 +583,28 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
     ));
     getIt<HealthKitService>().stopHeartRateMonitoring();
     await LiveActivityService.end();
-    await getIt<CompleteClubWorkout>()(
+    final setsCount = _completedSetsCount;
+    final result = await getIt<uc.CompleteWorkoutWithAnalytics>()(
       workoutId: widget.workoutId,
+      source: 'club',
+      setsCompleted: setsCount,
       notes: 'Concluído via BLDR CLUB',
-    ); // falha silenciosa, como no original
+    );
     unawaited(getIt<CheckAndUnlockAchievements>()('bldr_club'));
     unawaited(getIt<TryIncrementOperation>()('workout_count', 1));
     unawaited(WidgetDataService.updateAll());
     if (!mounted) return;
     sessionProvider.setPausedWorkout(null);
-    _showCompletionSheet();
-  }
-
-  void _showCompletionSheet() {
-    showModalBottomSheet(
-      context: context,
-      isDismissible: false,
-      enableDrag: false,
-      backgroundColor: _surface,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (_) => _CompletionSheet(
-        workoutName: widget.workoutName,
-        timeLabel: _formatTime(_elapsedSeconds),
-        totalExercises: _exercises.length,
-        completedSets: _completedSetsCount,
-        onFinish: () {
-          Navigator.pop(context); // fecha sheet
-          Navigator.pop(context); // fecha tela de treino
-        },
-      ),
-    );
+    final summaryData = result.valueOrNull;
+    if (summaryData != null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (_) => WorkoutSummaryScreen(data: summaryData)),
+      );
+    } else {
+      Navigator.pop(context);
+    }
   }
 
   void _stopWorkout() {

@@ -8,6 +8,7 @@ import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/services/workout_service.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/paused_workout_summary.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/workout_summary_data.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_template.dart';
 import 'package:bldr_fitness/features/workouts/domain/repositories/workout_session_repository.dart';
 import 'package:bldr_fitness/features/workouts/domain/repositories/workout_template_repository.dart';
@@ -219,4 +220,48 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
   @override
   Future<Result<void>> ensureInitialSets(String sessionId, String templateId) =>
       _guard(() => _service.ensureInitialSets(sessionId, templateId));
+
+  @override
+  Future<Result<WorkoutSummaryData>> completeWithAnalytics({
+    required String workoutId,
+    required String source,
+    required int setsCompleted,
+    String? notes,
+  }) =>
+      _guard(() async {
+        final raw = await _service.completeWorkoutWithAnalytics(
+          workoutId: workoutId,
+          source: source,
+          notes: notes,
+        );
+        return WorkoutSummaryData(
+          workoutId: workoutId,
+          workoutName: raw['workout_name'] as String? ?? '',
+          source: source,
+          durationSeconds: (raw['duration_seconds'] as num?)?.toInt() ?? 0,
+          volumeKg: (raw['volume_kg'] as num?)?.toDouble() ?? 0,
+          setsCompleted: setsCompleted,
+          muscleGroups: (raw['muscle_groups'] as List?)
+                  ?.map((e) => e.toString())
+                  .toList() ??
+              [],
+          newPRs: _parsePRs(raw['new_prs']),
+          xpEarned: 240,
+          completedAt: DateTime.now(),
+        );
+      });
+
+  static List<PersonalRecordData> _parsePRs(dynamic prsJson) {
+    if (prsJson == null) return [];
+    return (prsJson as List).map((pr) {
+      final map = pr as Map<String, dynamic>;
+      return PersonalRecordData(
+        exerciseName: (map['free_name'] as String?) ??
+            (map['exercise_db_id'] as String?) ??
+            'Exercício',
+        newWeightKg: (map['max_weight_kg'] as num?)?.toDouble() ?? 0,
+        newE1rm: (map['e1rm'] as num?)?.toDouble(),
+      );
+    }).toList();
+  }
 }

@@ -1,6 +1,7 @@
 import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/paused_workout_summary.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/workout_summary_data.dart';
 
 /// Sessões de treino: iniciar, executar (séries), pausar, concluir e histórico.
 abstract class WorkoutSessionRepository {
@@ -50,4 +51,12 @@ abstract class WorkoutSessionRepository {
   /// Garante que os sets iniciais existam (cria se `workout_exercise_sets`
   /// estiver vazio para esta sessão). Idempotente: não duplica sets.
   Future<Result<void>> ensureInitialSets(String sessionId, String templateId);
+
+  /// Finaliza o treino via RPC e retorna dados analíticos (volume, músculos, PRs).
+  Future<Result<WorkoutSummaryData>> completeWithAnalytics({
+    required String workoutId,
+    required String source, // 'free' | 'club'
+    required int setsCompleted,
+    String? notes,
+  });
 }

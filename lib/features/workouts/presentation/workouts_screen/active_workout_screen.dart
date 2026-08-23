@@ -30,6 +30,7 @@ import 'package:bldr_fitness/widgets/notification_permission_modal.dart';
 import 'package:bldr_fitness/widgets/review_modal.dart';
 import 'package:bldr_fitness/shared/providers/workout_session_provider.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/paused_workout_summary.dart';
+import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/workout_summary_screen.dart';
 
 class ActiveWorkoutScreen extends StatefulWidget {
   final String workoutId;
@@ -561,6 +562,15 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     Navigator.of(context).pop();
   }
 
+  int get _completedSetsCount {
+    int count = 0;
+    for (final ex in _exercises) {
+      final sets = ex['sets'] as List<Map<String, dynamic>>? ?? [];
+      count += sets.where((s) => s['is_completed'] == true).length;
+    }
+    return count;
+  }
+
   void _finishWorkout() async {
     if (_finishing) return;
     _finishing = true;
@@ -568,21 +578,35 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     getIt<NotificationService>().cancelRestNotification();
     unawaited(getIt<WatchService>().sendWorkoutFinished());
     _hrSubscription?.cancel();
-    // Salvar calorias no app Saúde (fire-and-forget)
     unawaited(getIt<HealthKitService>().saveCalories(
       calories: _estimatedCalories,
       startTime: _startTime,
       endTime: DateTime.now(),
     ));
     getIt<HealthKitService>().stopHeartRateMonitoring();
-    await getIt<uc.CompleteWorkout>()(workoutId: widget.workoutId);
+    final setsCount = _completedSetsCount;
+    final result = await getIt<uc.CompleteWorkoutWithAnalytics>()(
+      workoutId: widget.workoutId,
+      source: 'free',
+      setsCompleted: setsCount,
+    );
     unawaited(getIt<CheckAndUnlockAchievements>()('workout'));
     await LiveActivityService.end();
     unawaited(WidgetDataService.updateAll());
     if (!mounted) return;
     sessionProvider.setPausedWorkout(null);
     await _maybeTriggerPopups();
-    if (mounted) Navigator.pop(context);
+    if (!mounted) return;
+    final summaryData = result.valueOrNull;
+    if (summaryData != null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (_) => WorkoutSummaryScreen(data: summaryData)),
+      );
+    } else {
+      Navigator.pop(context);
+    }
   }
 
   Future<void> _maybeTriggerPopups() async {

@@ -454,6 +454,26 @@ class WorkoutService {
   }
 
   /// Complete a workout
+  Future<Map<String, dynamic>> completeWorkoutWithAnalytics({
+    required String workoutId,
+    required String source,
+    String? notes,
+  }) async {
+    try {
+      final result = await _client.rpc(
+        'complete_workout_with_analytics',
+        params: {
+          'p_workout_id': workoutId,
+          'p_source': source,
+          if (notes != null) 'p_notes': notes,
+        },
+      );
+      return (result as Map<String, dynamic>?) ?? {};
+    } catch (error) {
+      throw Exception('Failed to complete workout with analytics: $error');
+    }
+  }
+
   Future<Map<String, dynamic>> completeWorkout({
     required String workoutId,
     String? notes,

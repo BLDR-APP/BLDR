@@ -1276,9 +1276,28 @@ abstract class AppLocalizations {
   /// **'Treino finalizado com sucesso!'**
   String get dashboard_workout_completed_success;
 
+  /// No description provided for @dashboard_workout_done_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'Concluído'**
   String get dashboard_workout_done_label;
+
+  /// No description provided for @dashboard_done_duration_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'Duração'**
   String get dashboard_done_duration_label;
+
+  /// No description provided for @dashboard_done_sets_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'Séries'**
   String get dashboard_done_sets_label;
+
+  /// No description provided for @dashboard_done_volume_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'Volume'**
   String get dashboard_done_volume_label;
 
   /// No description provided for @dashboard_finish_workout_error.

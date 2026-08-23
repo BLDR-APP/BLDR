@@ -172,6 +172,7 @@ void setupInjection() {
   getIt.registerFactory(() => DeleteWorkoutTemplate(getIt<WorkoutTemplateRepository>()));
   getIt.registerFactory(() => StartWorkout(getIt<WorkoutSessionRepository>()));
   getIt.registerFactory(() => CompleteWorkout(getIt<WorkoutSessionRepository>()));
+  getIt.registerFactory(() => CompleteWorkoutWithAnalytics(getIt<WorkoutSessionRepository>()));
   getIt.registerFactory(() => LogWorkoutSet(getIt<WorkoutSessionRepository>()));
   getIt.registerFactory(() => CompleteWorkoutSet(getIt<WorkoutSessionRepository>()));
   getIt.registerFactory(() => UndoWorkoutSet(getIt<WorkoutSessionRepository>()));

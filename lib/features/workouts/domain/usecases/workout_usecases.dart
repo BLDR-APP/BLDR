@@ -5,6 +5,7 @@ import 'package:bldr_fitness/features/workouts/domain/entities/activity_type.dar
 import 'package:bldr_fitness/features/workouts/domain/entities/extra_activity.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/paused_workout_summary.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/workout_summary_data.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/weekly_plan.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_template.dart';
 import 'package:bldr_fitness/features/workouts/domain/repositories/extra_activity_repository.dart';
@@ -83,6 +84,24 @@ class CompleteWorkout {
     String? notes,
   }) =>
       _repo.complete(workoutId: workoutId, notes: notes);
+}
+
+class CompleteWorkoutWithAnalytics {
+  final WorkoutSessionRepository _repo;
+  const CompleteWorkoutWithAnalytics(this._repo);
+
+  Future<Result<WorkoutSummaryData>> call({
+    required String workoutId,
+    required String source,
+    required int setsCompleted,
+    String? notes,
+  }) =>
+      _repo.completeWithAnalytics(
+        workoutId: workoutId,
+        source: source,
+        setsCompleted: setsCompleted,
+        notes: notes,
+      );
 }
 
 class LogWorkoutSet {
