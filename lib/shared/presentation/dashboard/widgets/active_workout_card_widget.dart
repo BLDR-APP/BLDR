@@ -7,6 +7,7 @@ import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/features/auth/domain/repositories/auth_repository.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/paused_workout_summary.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart' as uc;
 import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart' as clubUc;
@@ -65,7 +66,7 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
       final pausedResult = await getIt<uc.GetPausedWorkouts>()(limit: 2);
       final pausedClubResult =
           await getIt<clubUc.GetPausedClubWorkouts>()(limit: 2);
-      final rawPaused = [
+      final rawPaused = <PausedWorkoutSummary>[
         ...pausedResult.valueOrNull ?? [],
         ...pausedClubResult.valueOrNull ?? [],
       ];
