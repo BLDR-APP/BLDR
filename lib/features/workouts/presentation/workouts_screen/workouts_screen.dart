@@ -661,15 +661,15 @@ class _WorkoutsScreenState extends State<WorkoutsScreen>
                     ),
                   ),
 
-                // ── Banner treino ativo (legado) ────────────────────────
-                if (_hasActiveWorkout)
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(
-                        BldrSpacing.pageX, 16, BldrSpacing.pageX, 0),
-                    sliver: SliverToBoxAdapter(
-                      child: _buildActiveWorkoutBanner(),
-                    ),
-                  ),
+                // ── Banner treino ativo (legado) — oculto temporariamente ──
+                // if (_hasActiveWorkout)
+                //   SliverPadding(
+                //     padding: const EdgeInsets.fromLTRB(
+                //         BldrSpacing.pageX, 16, BldrSpacing.pageX, 0),
+                //     sliver: SliverToBoxAdapter(
+                //       child: _buildActiveWorkoutBanner(),
+                //     ),
+                //   ),
 
                 // ── T6. Meus Treinos (abas + carrossel) ─────────────────
                 SliverPadding(
