@@ -15,6 +15,7 @@ import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.
     as uc;
 import 'package:bldr_fitness/widgets/review_modal.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/bldr_club_screen.dart';
+import 'package:bldr_fitness/features/club/presentation/bldr_club/comunidade_screen.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/nutrition_screen.dart';
 import 'package:bldr_fitness/features/profile/presentation/profile_drawer/profile_screen.dart';
 import 'package:bldr_fitness/features/subscription/presentation/paywall/club_paywall_sheet.dart';
@@ -56,7 +57,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
     _loadUserData();
     unawaited(WidgetDataService.updateAll());
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkWhatsNew());
@@ -175,9 +176,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
   // FUNÇÃO ATUALIZADA PARA BLOQUEAR A ABA BLDR CLUB
   void _onTabSelected(int index) {
-    // O índice da aba 'BLDR CLUB' é 2
-    if (index == 2 && !_isPremium) {
-      // Se o usuário não for premium e clicar na aba 2, mostre o paywall
+    // O índice da aba 'BLDR CLUB' é 3 (Comunidade entrou como aba 2, sem
+    // paywall — gates de feature ficam dentro da própria CommunityScreen).
+    if (index == 3 && !_isPremium) {
+      // Se o usuário não for premium e clicar na aba do Club, mostre o paywall
       _showClubPaywall();
       return; // Impede a troca de aba
     }
@@ -196,7 +198,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       onSubscribed: () {
         // Assinatura confirmada: recarrega o estado e já leva para a aba.
         _loadUserData().then((_) {
-          if (mounted) _onTabSelected(2);
+          if (mounted) _onTabSelected(3);
         });
       },
     );
@@ -354,35 +356,40 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     );
   }
 
-  /// Índice do BldrNavBar (0..3) a partir do índice de aba (0..4).
-  /// A aba 2 é o Club, que na nav bar é o botão central — nesse caso
+  /// Índice do BldrNavBar (0..4) a partir do índice de aba (0..5).
+  /// A aba 3 é o Club, que na nav bar é o botão central — nesse caso
   /// nenhum item lateral fica ativo (-1).
+  /// NavBar: 0=Home, 1=Treinos, 2=Comunidade, 3=Nutrição, 4=Perfil.
   int get _navIndex {
     switch (_selectedIndex) {
       case 0:
-        return 0;
+        return 0; // Home
       case 1:
-        return 1;
-      case 3:
-        return 2;
+        return 1; // Treinos
+      case 2:
+        return 2; // Comunidade
       case 4:
-        return 3;
+        return 3; // Nutrição
+      case 5:
+        return 4; // Perfil
       default:
-        return -1; // Club
+        return -1; // Club (botão central)
     }
   }
 
-  /// Índice de aba (0..4) a partir do índice do BldrNavBar (0..3).
+  /// Índice de aba (0..5) a partir do índice do BldrNavBar (0..4).
   int _tabFromNav(int navIndex) {
     switch (navIndex) {
       case 0:
-        return 0;
+        return 0; // Home
       case 1:
-        return 1;
+        return 1; // Treinos
       case 2:
-        return 3;
+        return 2; // Comunidade
+      case 3:
+        return 4; // Nutrição
       default:
-        return 4;
+        return 5; // Perfil
     }
   }
 
@@ -400,9 +407,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             children: [
               _buildDashboardTab(), // 0
               const WorkoutsScreen(), // 1
-              const BldrClubScreen(), // 2
-              const NutritionScreen(), // 3
-              const ProfileScreen(), // 4
+              const ComunidadeScreen(), // 2
+              const BldrClubScreen(), // 3
+              const NutritionScreen(), // 4
+              const ProfileScreen(), // 5
             ],
           ),
           const BldrMiniPlayer(),
@@ -412,7 +420,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       bottomNavigationBar: BldrNavBar(
         selectedIndex: _navIndex,
         onChanged: (i) => _onTabSelected(_tabFromNav(i)),
-        onClubTap: () => _onTabSelected(2),
+        onClubTap: () => _onTabSelected(3),
         clubLogo: Image.asset(
           'assets/images/BLDR_CLUB.png',
           fit: BoxFit.contain,
@@ -538,7 +546,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                       // D9 — Parceiros: o widget já se oculta sozinho
                       // (SizedBox.shrink) enquanto não houver parceiro ativo.
                       PartnershipWidget(
-                        onViewAllPressed: () => _onTabSelected(2),
+                        onViewAllPressed: () => _onTabSelected(3),
                       ),
                     ],
                   ),

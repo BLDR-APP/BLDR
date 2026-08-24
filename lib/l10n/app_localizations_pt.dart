@@ -823,6 +823,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get nav_tab_workouts => 'Treinos';
 
   @override
+  String get nav_tab_community => 'Comunidade';
+
+  @override
   String get nav_tab_nutrition => 'Nutrição';
 
   @override

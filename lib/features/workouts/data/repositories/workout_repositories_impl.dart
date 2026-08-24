@@ -7,6 +7,7 @@ import 'package:bldr_fitness/core/errors/failure.dart';
 import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/services/workout_service.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/paused_workout_summary.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/muscle_normalizer.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_summary_data.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_template.dart';
@@ -83,7 +84,8 @@ class WorkoutTemplateRepositoryImpl implements WorkoutTemplateRepository {
       _guard(() async {
         final id = template.id;
         if (id == null) {
-          throw const ValidationFailure('Template sem id não pode ser atualizado.');
+          throw const ValidationFailure(
+              'Template sem id não pode ser atualizado.');
         }
         final map = await _service.updateWorkoutTemplate(
           id: id,
@@ -135,7 +137,9 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
   Future<Result<WorkoutSet>> logSet(WorkoutSet set) => _guard(() async {
         final exerciseId = set.exerciseId;
         // Exercícios HAVOK (freeName) não têm exercise_id — permitido.
-        if (exerciseId == null && set.freeName == null && set.exerciseDbId == null) {
+        if (exerciseId == null &&
+            set.freeName == null &&
+            set.exerciseDbId == null) {
           throw const ValidationFailure('Série sem exercise_id nem freeName.');
         }
         final map = await _service.logExerciseSet(
@@ -166,8 +170,7 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
       _guard(() => _service.undoSet(setId: setId));
 
   @override
-  Future<Result<bool>> hasActiveWorkout() =>
-      _guard(_service.hasActiveWorkout);
+  Future<Result<bool>> hasActiveWorkout() => _guard(_service.hasActiveWorkout);
 
   @override
   Future<Result<WorkoutSession?>> activeWorkoutDetails() => _guard(() async {
@@ -226,6 +229,7 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
     required String workoutId,
     required String source,
     required int setsCompleted,
+    int? exerciseCount,
     String? notes,
   }) =>
       _guard(() async {
@@ -234,6 +238,16 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
           source: source,
           notes: notes,
         );
+        final muscleGroups = (raw['muscle_groups'] as List?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            const <String>[];
+        final muscles = MuscleNormalizer.aggregate([
+          BldrMuscleContribution(primary: muscleGroups),
+        ]);
+        final completedAt =
+            DateTime.tryParse(raw['completed_at']?.toString() ?? '') ??
+                DateTime.now();
         return WorkoutSummaryData(
           workoutId: workoutId,
           workoutName: raw['workout_name'] as String? ?? '',
@@ -241,13 +255,18 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
           durationSeconds: (raw['duration_seconds'] as num?)?.toInt() ?? 0,
           volumeKg: (raw['volume_kg'] as num?)?.toDouble() ?? 0,
           setsCompleted: setsCompleted,
-          muscleGroups: (raw['muscle_groups'] as List?)
-                  ?.map((e) => e.toString())
-                  .toList() ??
-              [],
+          exerciseCount:
+              (raw['exercise_count'] as num?)?.toInt() ?? exerciseCount,
+          muscleGroups: muscleGroups,
+          muscleMapData: muscles.isEmpty
+              ? null
+              : BldrMuscleMapData(
+                  muscles: muscles,
+                  view: MuscleNormalizer.dominantView(muscles),
+                ),
           newPRs: _parsePRs(raw['new_prs']),
-          xpEarned: 240,
-          completedAt: DateTime.now(),
+          xpEarned: (raw['xp_earned'] as num?)?.toInt() ?? 0,
+          completedAt: completedAt,
         );
       });
 

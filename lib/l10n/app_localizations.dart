@@ -1534,6 +1534,12 @@ abstract class AppLocalizations {
   /// **'Treinos'**
   String get nav_tab_workouts;
 
+  /// No description provided for @nav_tab_community.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comunidade'**
+  String get nav_tab_community;
+
   /// No description provided for @nav_tab_nutrition.
   ///
   /// In pt, this message translates to:

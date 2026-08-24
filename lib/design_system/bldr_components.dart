@@ -820,6 +820,7 @@ class BldrNavBar extends StatelessWidget {
     final items = [
       (icon: TablerIcons.home, label: l10n.nav_tab_dashboard),
       (icon: TablerIcons.barbell, label: l10n.nav_tab_workouts),
+      (icon: TablerIcons.users, label: l10n.nav_tab_community),
       (icon: TablerIcons.tools_kitchen_2, label: l10n.nav_tab_nutrition),
       (icon: TablerIcons.user, label: l10n.nav_tab_profile),
     ];
@@ -853,7 +854,7 @@ class BldrNavBar extends StatelessWidget {
                 filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
                   decoration: BoxDecoration(
                     color: const Color(0x8C141414), // rgba(20,20,20,0.55)
                     borderRadius: BorderRadius.circular(34),
@@ -865,14 +866,16 @@ class BldrNavBar extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       _navItem(0, items),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 4),
                       _navItem(1, items),
-                      const SizedBox(width: 6),
-                      _clubButton(context),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 4),
                       _navItem(2, items),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 4),
+                      _clubButton(context),
+                      const SizedBox(width: 4),
                       _navItem(3, items),
+                      const SizedBox(width: 4),
+                      _navItem(4, items),
                     ],
                   ),
                 ),

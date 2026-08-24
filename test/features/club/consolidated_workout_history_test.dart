@@ -21,28 +21,34 @@ class FakePersonalRepository implements WorkoutSessionRepository {
     bool completedOnly = false,
     int limit = 20,
   }) async {
-    final filtered =
-        completedOnly ? sessions.where((s) => s.isCompleted).toList() : sessions;
+    final filtered = completedOnly
+        ? sessions.where((s) => s.isCompleted).toList()
+        : sessions;
     return Result.success(filtered);
   }
 
   @override
-  Future<Result<WorkoutSession>> start({required String name, String? templateId}) =>
+  Future<Result<WorkoutSession>> start(
+          {required String name, String? templateId}) =>
       throw UnimplementedError();
   @override
-  Future<Result<WorkoutSession>> complete({required String workoutId, String? notes}) =>
+  Future<Result<WorkoutSession>> complete(
+          {required String workoutId, String? notes}) =>
       throw UnimplementedError();
   @override
-  Future<Result<WorkoutSet>> logSet(WorkoutSet set) => throw UnimplementedError();
+  Future<Result<WorkoutSet>> logSet(WorkoutSet set) =>
+      throw UnimplementedError();
   @override
-  Future<Result<void>> completeSet({required String setId, int? reps, double? weightKg}) =>
+  Future<Result<void>> completeSet(
+          {required String setId, int? reps, double? weightKg}) =>
       throw UnimplementedError();
   @override
   Future<Result<void>> undoSet(String setId) => throw UnimplementedError();
   @override
   Future<Result<bool>> hasActiveWorkout() => throw UnimplementedError();
   @override
-  Future<Result<WorkoutSession?>> activeWorkoutDetails() => throw UnimplementedError();
+  Future<Result<WorkoutSession?>> activeWorkoutDetails() =>
+      throw UnimplementedError();
   @override
   Stream<WorkoutSession?> activeWorkoutStream() => throw UnimplementedError();
   @override
@@ -55,16 +61,21 @@ class FakePersonalRepository implements WorkoutSessionRepository {
   Future<Result<void>> deletePaused(String workoutId, String source) =>
       throw UnimplementedError();
   @override
-  Future<Result<void>> deleteCompleted(String workoutId) => throw UnimplementedError();
+  Future<Result<void>> deleteCompleted(String workoutId) =>
+      throw UnimplementedError();
   @override
-  Future<Result<void>> ensureInitialSets(String sessionId, String templateId) async => const Result.success(null);
+  Future<Result<void>> ensureInitialSets(
+          String sessionId, String templateId) async =>
+      const Result.success(null);
   @override
   Future<Result<WorkoutSummaryData>> completeWithAnalytics({
     required String workoutId,
     required String source,
     required int setsCompleted,
+    int? exerciseCount,
     String? notes,
-  }) => throw UnimplementedError();
+  }) =>
+      throw UnimplementedError();
 }
 
 class FakeClubRepository implements ClubWorkoutRepository {
@@ -76,13 +87,15 @@ class FakeClubRepository implements ClubWorkoutRepository {
     bool completedOnly = false,
     int limit = 20,
   }) async {
-    final filtered =
-        completedOnly ? sessions.where((s) => s.isCompleted).toList() : sessions;
+    final filtered = completedOnly
+        ? sessions.where((s) => s.isCompleted).toList()
+        : sessions;
     return Result.success(filtered);
   }
 
   @override
-  Future<Result<List<WorkoutTemplate>>> myTemplates() => throw UnimplementedError();
+  Future<Result<List<WorkoutTemplate>>> myTemplates() =>
+      throw UnimplementedError();
   @override
   Future<Result<void>> createTemplate(WorkoutTemplate template) =>
       throw UnimplementedError();
@@ -90,13 +103,16 @@ class FakeClubRepository implements ClubWorkoutRepository {
   Future<Result<void>> updateTemplate(WorkoutTemplate template) =>
       throw UnimplementedError();
   @override
-  Future<Result<WorkoutSession>> start({required String name, required String templateId}) =>
+  Future<Result<WorkoutSession>> start(
+          {required String name, required String templateId}) =>
       throw UnimplementedError();
   @override
-  Future<Result<WorkoutSession>> complete({required String workoutId, String? notes}) =>
+  Future<Result<WorkoutSession>> complete(
+          {required String workoutId, String? notes}) =>
       throw UnimplementedError();
   @override
-  Future<Result<void>> completeSet({required String setId, int? reps, double? weightKg}) =>
+  Future<Result<void>> completeSet(
+          {required String setId, int? reps, double? weightKg}) =>
       throw UnimplementedError();
   @override
   Future<Result<void>> undoSet(String setId) => throw UnimplementedError();
@@ -118,13 +134,16 @@ class FakeClubRepository implements ClubWorkoutRepository {
   Future<Result<List<TemplateExercise>>> templateExercises(String templateId) =>
       throw UnimplementedError();
   @override
-  Future<Result<List<WorkoutSession>>> workoutsBetween(DateTime start, DateTime end) =>
+  Future<Result<List<WorkoutSession>>> workoutsBetween(
+          DateTime start, DateTime end) =>
       throw UnimplementedError();
   @override
-  Future<Result<List<ClubActivity>>> activitiesBetween(DateTime start, DateTime end) =>
+  Future<Result<List<ClubActivity>>> activitiesBetween(
+          DateTime start, DateTime end) =>
       throw UnimplementedError();
   @override
-  Future<Result<int>> xpBetween(DateTime start, DateTime end) => throw UnimplementedError();
+  Future<Result<int>> xpBetween(DateTime start, DateTime end) =>
+      throw UnimplementedError();
   @override
   Future<Result<WorkoutSession?>> workoutDetails(String workoutId) =>
       throw UnimplementedError();
@@ -132,20 +151,27 @@ class FakeClubRepository implements ClubWorkoutRepository {
   Future<Result<WorkoutTemplate?>> templateWithExercises(String templateId) =>
       throw UnimplementedError();
   @override
-  Future<Result<void>> deleteTemplate(String templateId) => throw UnimplementedError();
+  Future<Result<void>> deleteTemplate(String templateId) =>
+      throw UnimplementedError();
   @override
   Future<Result<List<PausedWorkoutSummary>>> pausedSummaries({int limit = 2}) =>
       throw UnimplementedError();
   @override
-  Future<Result<void>> deletePaused(String workoutId) => throw UnimplementedError();
+  Future<Result<void>> deletePaused(String workoutId) =>
+      throw UnimplementedError();
   @override
-  Future<Result<void>> deleteWorkoutRecord(String workoutId) => throw UnimplementedError();
+  Future<Result<void>> deleteWorkoutRecord(String workoutId) =>
+      throw UnimplementedError();
   @override
-  Future<Result<void>> deleteActivityRecord(String activityId) => throw UnimplementedError();
+  Future<Result<void>> deleteActivityRecord(String activityId) =>
+      throw UnimplementedError();
   @override
-  Future<Result<void>> ensureClubInitialSets(String sessionId, String templateId) async => const Result.success(null);
+  Future<Result<void>> ensureClubInitialSets(
+          String sessionId, String templateId) async =>
+      const Result.success(null);
   @override
-  Future<Result<List<RunActivity>>> runActivities({int? limit}) => throw UnimplementedError();
+  Future<Result<List<RunActivity>>> runActivities({int? limit}) =>
+      throw UnimplementedError();
   @override
   Future<Result<void>> saveRun({
     required double distanceMeters,
@@ -185,7 +211,8 @@ class FakeClubRepository implements ClubWorkoutRepository {
       const Result.success(null);
 }
 
-WorkoutSession sessionAt(String id, DateTime completedAt, {bool isCompleted = true}) =>
+WorkoutSession sessionAt(String id, DateTime completedAt,
+        {bool isCompleted = true}) =>
     WorkoutSession(
       id: id,
       name: 'Treino $id',
@@ -194,11 +221,14 @@ WorkoutSession sessionAt(String id, DateTime completedAt, {bool isCompleted = tr
     );
 
 void main() {
-  group('GetConsolidatedWorkoutHistory (bug de divergência — mesmo padrão do B4)', () {
+  group(
+      'GetConsolidatedWorkoutHistory (bug de divergência — mesmo padrão do B4)',
+      () {
     test('inclui treinos pessoais e do clube, não só user_workouts', () async {
       // Reproduz o cenário do bug: um caminho que só olha `user_workouts`
       // (personal) subconta um usuário que treina pelo Club.
-      final personal = FakePersonalRepository([sessionAt('p1', DateTime(2026, 8, 1))]);
+      final personal =
+          FakePersonalRepository([sessionAt('p1', DateTime(2026, 8, 1))]);
       final club = FakeClubRepository([sessionAt('c1', DateTime(2026, 8, 2))]);
 
       final result = await GetConsolidatedWorkoutHistory(personal, club)();
@@ -209,8 +239,10 @@ void main() {
       expect(sessions.map((s) => s.id), containsAll(['p1', 'c1']));
     });
 
-    test('ordena por data mais recente primeiro, misturando as duas fontes', () async {
-      final personal = FakePersonalRepository([sessionAt('p1', DateTime(2026, 8, 1))]);
+    test('ordena por data mais recente primeiro, misturando as duas fontes',
+        () async {
+      final personal =
+          FakePersonalRepository([sessionAt('p1', DateTime(2026, 8, 1))]);
       final club = FakeClubRepository([sessionAt('c1', DateTime(2026, 8, 3))]);
 
       final result = await GetConsolidatedWorkoutHistory(personal, club)();
@@ -229,20 +261,25 @@ void main() {
         sessionAt('c1', DateTime(2026, 8, 2), isCompleted: false),
       ]);
 
-      final result =
-          await GetConsolidatedWorkoutHistory(personal, club)(completedOnly: true);
+      final result = await GetConsolidatedWorkoutHistory(personal, club)(
+          completedOnly: true);
 
       final sessions = result.valueOrNull!;
       expect(sessions.length, 1);
       expect(sessions.single.id, 'p1');
     });
 
-    test('só `user_workouts` (comportamento antigo) subestima o total — prova do bug',
+    test(
+        'só `user_workouts` (comportamento antigo) subestima o total — prova do bug',
         () async {
-      final personal = FakePersonalRepository(
-          [sessionAt('p1', DateTime(2026, 8, 1)), sessionAt('p2', DateTime(2026, 8, 2))]);
-      final club = FakeClubRepository(
-          [sessionAt('c1', DateTime(2026, 8, 3)), sessionAt('c2', DateTime(2026, 8, 4))]);
+      final personal = FakePersonalRepository([
+        sessionAt('p1', DateTime(2026, 8, 1)),
+        sessionAt('p2', DateTime(2026, 8, 2))
+      ]);
+      final club = FakeClubRepository([
+        sessionAt('c1', DateTime(2026, 8, 3)),
+        sessionAt('c2', DateTime(2026, 8, 4))
+      ]);
 
       final onlyPersonal = (await personal.history()).valueOrNull!;
       final consolidated =
@@ -266,12 +303,13 @@ void main() {
     }
 
     test('streak zerado quando não há treino nenhum', () async {
-      final result =
-          await GetCurrentStreak(FakePersonalRepository([]), FakeClubRepository([]))();
+      final result = await GetCurrentStreak(
+          FakePersonalRepository([]), FakeClubRepository([]))();
       expect(result.valueOrNull, 0);
     });
 
-    test('streak com gap: treinou hoje e há 2 dias, não ontem — streak = 1', () async {
+    test('streak com gap: treinou hoje e há 2 dias, não ontem — streak = 1',
+        () async {
       final personal = FakePersonalRepository([
         sessionAt('p1', daysAgo(0)),
         sessionAt('p2', daysAgo(2)),
@@ -280,8 +318,7 @@ void main() {
       expect(result.valueOrNull, 1);
     });
 
-    test(
-        'streak contínuo com múltiplos treinos no mesmo dia conta como 1 dia',
+    test('streak contínuo com múltiplos treinos no mesmo dia conta como 1 dia',
         () async {
       final personal = FakePersonalRepository([
         sessionAt('p1', daysAgo(0)),

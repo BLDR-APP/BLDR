@@ -616,6 +616,7 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
       workoutId: widget.workoutId,
       source: 'club',
       setsCompleted: setsCount,
+      exerciseCount: _exercises.length,
       notes: 'Concluído via BLDR CLUB',
     );
     final summaryData = result.valueOrNull;

@@ -630,6 +630,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
       workoutId: widget.workoutId,
       source: 'free',
       setsCompleted: setsCount,
+      exerciseCount: _exercises.length,
     );
     final summaryData = result.valueOrNull;
     if (summaryData == null) {

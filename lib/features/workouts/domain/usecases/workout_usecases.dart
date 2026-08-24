@@ -94,12 +94,14 @@ class CompleteWorkoutWithAnalytics {
     required String workoutId,
     required String source,
     required int setsCompleted,
+    int? exerciseCount,
     String? notes,
   }) =>
       _repo.completeWithAnalytics(
         workoutId: workoutId,
         source: source,
         setsCompleted: setsCompleted,
+        exerciseCount: exerciseCount,
         notes: notes,
       );
 }
@@ -168,8 +170,7 @@ class GetWorkoutHistory {
     bool completedOnly = false,
     int limit = 20,
   }) =>
-      _repo.history(
-          userId: userId, completedOnly: completedOnly, limit: limit);
+      _repo.history(userId: userId, completedOnly: completedOnly, limit: limit);
 }
 
 class GetPausedWorkouts {
@@ -304,7 +305,10 @@ class GetCurrentStreak {
     if (clubFailure != null) return Result.failure(clubFailure);
 
     final workedDays = <DateTime>{};
-    for (final w in [...personalResult.valueOrNull!, ...clubResult.valueOrNull!]) {
+    for (final w in [
+      ...personalResult.valueOrNull!,
+      ...clubResult.valueOrNull!
+    ]) {
       final dt = w.completedAt?.toLocal();
       if (dt != null) workedDays.add(DateTime(dt.year, dt.month, dt.day));
     }

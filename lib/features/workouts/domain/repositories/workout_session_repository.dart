@@ -57,6 +57,7 @@ abstract class WorkoutSessionRepository {
     required String workoutId,
     required String source, // 'free' | 'club'
     required int setsCompleted,
+    int? exerciseCount,
     String? notes,
   });
 }
