@@ -5,6 +5,17 @@ import 'package:bldr_fitness/features/workouts/domain/entities/workout_share_dat
 import 'package:bldr_fitness/shared/presentation/widgets/bldr_muscle_map.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 
+/// Sombra sutil para o texto ficar legível sobre qualquer foto/vídeo de
+/// fundo no Stories — o canvas é transparente, então não há garantia de
+/// contraste como havia com o fundo opaco anterior.
+List<Shadow> _shareTextShadow([double scale = 1]) => [
+      Shadow(
+        color: Colors.black.withValues(alpha: 0.55),
+        blurRadius: 6 * scale,
+        offset: Offset(0, 1 * scale),
+      ),
+    ];
+
 class WorkoutShareTemplate extends StatelessWidget {
   final WorkoutShareData data;
   final WorkoutShareStyle style;
@@ -18,8 +29,11 @@ class WorkoutShareTemplate extends StatelessWidget {
   @override
   Widget build(BuildContext context) => AspectRatio(
         aspectRatio: 9 / 16,
+        // Overlay/sticker de Stories: fundo transparente — o exporter captura
+        // via RenderRepaintBoundary preservando o canal alpha. Nunca pintar
+        // uma cor opaca aqui, senão o PNG cobre a foto/vídeo do usuário.
         child: DecoratedBox(
-          decoration: const BoxDecoration(color: BldrColors.bgBase),
+          decoration: const BoxDecoration(color: Colors.transparent),
           child: LayoutBuilder(builder: (context, box) {
             final scale = box.maxWidth / 360;
             return Padding(
@@ -148,6 +162,7 @@ class _CompactComposition extends StatelessWidget {
                       style: BldrText.body.copyWith(
                         color: BldrColors.textPrimary,
                         fontSize: 11 * scale,
+                        shadows: _shareTextShadow(scale),
                       ),
                     ),
                   ],
@@ -164,7 +179,7 @@ class _Brand extends StatelessWidget {
   const _Brand();
 
   @override
-  Widget build(BuildContext context) => const Align(
+  Widget build(BuildContext context) => Align(
         alignment: Alignment.topCenter,
         child: Text(
           'BLDR',
@@ -174,6 +189,7 @@ class _Brand extends StatelessWidget {
             fontSize: 12,
             fontWeight: FontWeight.w700,
             letterSpacing: 3,
+            shadows: _shareTextShadow(),
           ),
         ),
       );
@@ -211,6 +227,7 @@ class _Metrics extends StatelessWidget {
                     style: BldrText.kpiMd.copyWith(
                       color: BldrColors.goldBright,
                       fontSize: 17 * scale,
+                      shadows: _shareTextShadow(scale),
                     ),
                   ),
                 ),
@@ -221,6 +238,7 @@ class _Metrics extends StatelessWidget {
                     color: BldrColors.textTertiary,
                     fontSize: 7 * scale,
                     letterSpacing: .7 * scale,
+                    shadows: _shareTextShadow(scale),
                   ),
                 ),
               ],
