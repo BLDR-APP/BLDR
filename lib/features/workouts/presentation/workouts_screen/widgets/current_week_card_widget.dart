@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
+import 'package:bldr_fitness/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
+import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 
@@ -49,7 +50,6 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
   Future<void> reload() => _load();
   List<_WeekDay> _days = [];
   bool _loading = true;
-  String _splitChip = '';
 
   @override
   void initState() {
@@ -70,23 +70,14 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
     return ['Treino'];
   }
 
-  String _splitChipLabel(String pref) {
-    if (pref.contains('Full Body')) return 'Full Body';
-    if (pref.contains('Upper/Lower')) return 'Upper · Lower';
-    if (pref.contains('Push/Pull/Legs')) return 'Push · Pull · Legs';
-    if (pref.contains('ABCDE')) return 'A · B · C · D · E';
-    if (pref.contains('HAVOK') || pref.isEmpty) return 'HAVOK decide';
-    return pref.split('(').first.trim();
-  }
-
   // Evenly spread n training days across 7, starting from Monday (0-indexed)
   List<int> _trainingIndices(int n) {
     n = n.clamp(1, 7);
     if (n >= 7) return List.generate(7, (i) => i);
     return {
-          for (int i = 0; i < n; i++) (i * 7 / n).round() % 7,
-        }.toList()
-        ..sort();
+      for (int i = 0; i < n; i++) (i * 7 / n).round() % 7,
+    }.toList()
+      ..sort();
   }
 
   // Derive training indices from stored rest_days (0=Mon … 6=Sun)
@@ -97,35 +88,25 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
 
   Future<void> _load() async {
     try {
-      final uid = Supabase.instance.client.auth.currentUser?.id;
+      final uid = getIt<GetCurrentUser>()()?.id;
       if (uid == null) {
         if (mounted) setState(() => _loading = false);
         widget.onTodayLabel?.call(null);
         return;
       }
 
-      // Onboarding data
-      final profile = await Supabase.instance.client
-          .from('user_profiles')
-          .select('onboarding_data')
-          .eq('id', uid)
-          .maybeSingle();
-
-      final ob = (profile?['onboarding_data'] as Map<String, dynamic>?) ?? {};
-      final splitPref = (ob['split_preference'] as String?) ?? '';
-      final freqDays = (ob['workout_frequency_days'] as int?) ?? 3;
+      final configResult = await getIt<GetWeeklyPlanConfig>()();
+      final weeklyPlanResult = await getIt<GetWeeklyPlan>()();
+      final config = configResult.valueOrNull;
+      final splitPref = config?.splitPreference ?? '';
+      final freqDays = config?.frequencyDays ?? 3;
 
       // Prefer explicit rest_days; fallback to even distribution
-      final restDaysRaw = (ob['rest_days'] as List?)
-              ?.map((e) => (e as num).toInt())
-              .toList() ??
-          [];
+      final restDaysRaw = config?.restDays ?? const <int>[];
       final labels = _splitLabels(splitPref);
       final indices = restDaysRaw.isNotEmpty
           ? _trainingFromRestDays(restDaysRaw)
           : _trainingIndices(freqDays);
-      final effectiveFreq = indices.length;
-
       // This-week's workouts
       final now = DateTime.now();
       final weekStart = _monday(now);
@@ -152,11 +133,16 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
 
       const abbrevs = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
       final todayIdx = now.weekday - 1;
+      final assignedByIndex = {
+        for (final day in weeklyPlanResult.valueOrNull ?? const [])
+          if (day.treino != null) day.diaSemana - 1: day.treino!,
+      };
 
       final List<_WeekDay> days = [];
       for (int i = 0; i < 7; i++) {
         final date = weekStart.add(Duration(days: i));
-        final isTraining = indices.contains(i);
+        final assigned = assignedByIndex[i];
+        final isTraining = assigned != null || indices.contains(i);
         final labelIdx = indices.indexOf(i);
 
         _DayStatus status;
@@ -179,9 +165,10 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
           abbrev: abbrevs[i],
           dayNumber: date.day,
           status: status,
-          workoutLabel: isTraining && labelIdx >= 0
-              ? labels[labelIdx % labels.length]
-              : null,
+          workoutLabel: assigned?.name ??
+              (isTraining && labelIdx >= 0
+                  ? labels[labelIdx % labels.length]
+                  : null),
           workoutId: wId,
         ));
       }
@@ -189,8 +176,6 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
       if (mounted) {
         setState(() {
           _days = days;
-          _splitChip =
-              '${_splitChipLabel(splitPref)} — ${effectiveFreq}x/semana';
           _loading = false;
         });
       }
@@ -241,7 +226,9 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    isDone ? AppLocalizations.of(context).plan_workout_done : AppLocalizations.of(context).plan_workout_not_done,
+                    isDone
+                        ? AppLocalizations.of(context).plan_workout_done
+                        : AppLocalizations.of(context).plan_workout_not_done,
                     style: BldrText.cardTitleLg,
                   ),
                 ],
@@ -273,50 +260,65 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return BldrGlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header row
+    final completed = _days.where((d) => d.status == _DayStatus.done).length;
+    final planned = _days.where((d) => d.status != _DayStatus.rest).length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(AppLocalizations.of(context).plan_current_week,
+                style: BldrText.cardTitleLg),
+            GestureDetector(
+              onTap: widget.onViewPlan,
+              behavior: HitTestBehavior.opaque,
+              child: Text(
+                AppLocalizations.of(context).plan_see_plan,
+                style: BldrText.buttonSecondary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        // Days grid
+        if (_loading)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: SizedBox(
+                height: 28,
+                width: 28,
+                child: CircularProgressIndicator(
+                    color: BldrColors.goldBright, strokeWidth: 2),
+              ),
+            ),
+          )
+        else
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(AppLocalizations.of(context).plan_current_week, style: BldrText.cardTitleLg),
-              GestureDetector(
-                onTap: widget.onViewPlan,
-                behavior: HitTestBehavior.opaque,
-                child: Text(
-                  AppLocalizations.of(context).plan_see_plan,
-                  style: BldrText.buttonSecondary,
-                ),
-              ),
-            ],
+            children: _days.map(_buildDayCol).toList(),
           ),
-          if (_splitChip.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            BldrChip(label: _splitChip),
-          ],
-          const SizedBox(height: 16),
-          // Days grid
-          if (_loading)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 24),
-              child: Center(
-                child: SizedBox(
-                  height: 28,
-                  width: 28,
-                  child: CircularProgressIndicator(
-                      color: BldrColors.goldBright, strokeWidth: 2),
-                ),
-              ),
-            )
-          else
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: _days.map(_buildDayCol).toList(),
+        if (!_loading && planned > 0) ...[
+          const SizedBox(height: 14),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(3),
+            child: LinearProgressIndicator(
+              value: completed / planned,
+              minHeight: 4,
+              color: BldrColors.goldBright,
+              backgroundColor: BldrColors.track,
             ),
+          ),
+          const SizedBox(height: 8),
+          Text('$completed / $planned treinos concluídos',
+              style: BldrText.metaSm.copyWith(
+                  color: completed > 0
+                      ? BldrColors.goldBright
+                      : BldrColors.textTertiary)),
         ],
-      ),
+      ],
     );
   }
 
@@ -340,9 +342,8 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
             Text(
               day.abbrev,
               style: BldrText.metaSm.copyWith(
-                color: isToday
-                    ? BldrColors.goldBright
-                    : BldrColors.textTertiary,
+                color:
+                    isToday ? BldrColors.goldBright : BldrColors.textTertiary,
                 fontWeight: isToday ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
@@ -356,9 +357,8 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
             Text(
               '${day.dayNumber}',
               style: BldrText.metaSm.copyWith(
-                color: isToday
-                    ? BldrColors.textPrimary
-                    : BldrColors.textTertiary,
+                color:
+                    isToday ? BldrColors.textPrimary : BldrColors.textTertiary,
                 fontWeight: isToday ? FontWeight.w600 : FontWeight.w400,
               ),
             ),

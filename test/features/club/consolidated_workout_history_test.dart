@@ -6,6 +6,7 @@ import 'package:bldr_fitness/features/club/domain/repositories/club_workout_repo
 import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/paused_workout_summary.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/workout_summary_data.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_template.dart';
 import 'package:bldr_fitness/features/workouts/domain/repositories/workout_session_repository.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart';
@@ -57,6 +58,13 @@ class FakePersonalRepository implements WorkoutSessionRepository {
   Future<Result<void>> deleteCompleted(String workoutId) => throw UnimplementedError();
   @override
   Future<Result<void>> ensureInitialSets(String sessionId, String templateId) async => const Result.success(null);
+  @override
+  Future<Result<WorkoutSummaryData>> completeWithAnalytics({
+    required String workoutId,
+    required String source,
+    required int setsCompleted,
+    String? notes,
+  }) => throw UnimplementedError();
 }
 
 class FakeClubRepository implements ClubWorkoutRepository {

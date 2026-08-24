@@ -145,6 +145,9 @@ flutter:
     - assets/images/whoop/
     - assets/models/
     - assets/images/categories/
+    - assets/images/muscle_map/base/
+    - assets/images/muscle_map/front_masks/
+    - assets/images/muscle_map/back_masks/
   #   - images/a_dot_ham.jpeg
 
   # Inter empacotado localmente para o design system (lib/theme/bldr_tokens.dart).

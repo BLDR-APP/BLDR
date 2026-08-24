@@ -36,8 +36,9 @@ Map<String, dynamic> templateToLegacyMap(WorkoutTemplate t) => {
                         'exercise_db_id': e.exercise!.exerciseDbId,
                         'name': e.exercise!.name,
                         'exercise_type': e.exercise!.exerciseType,
-                        'primary_muscle_group':
-                            e.exercise!.primaryMuscleGroup,
+                        'primary_muscle_group': e.exercise!.primaryMuscleGroup,
+                        'secondary_muscle_groups':
+                            e.exercise!.secondaryMuscleGroups,
                         'image_url': e.exercise!.imageUrl,
                         'instructions': e.exercise!.instructions,
                       },
@@ -55,8 +56,7 @@ Map<String, dynamic> sessionToLegacyMap(WorkoutSession w) => {
       'total_duration_seconds': w.totalDurationSeconds,
       'notes': w.notes,
       'is_completed': w.isCompleted,
-      if (w.templateName != null ||
-          w.templateEstimatedDurationMinutes != null)
+      if (w.templateName != null || w.templateEstimatedDurationMinutes != null)
         'workout_templates': {
           'name': w.templateName,
           'workout_type': w.workoutType,
@@ -82,8 +82,7 @@ Map<String, dynamic> sessionToLegacyMap(WorkoutSession w) => {
                     : {
                         'id': s.exercise!.id,
                         'name': s.exercise!.name,
-                        'primary_muscle_group':
-                            s.exercise!.primaryMuscleGroup,
+                        'primary_muscle_group': s.exercise!.primaryMuscleGroup,
                         'exercise_db_id': s.exercise!.exerciseDbId,
                         'instructions': s.exercise!.instructions,
                       },

@@ -1,0 +1,247 @@
+{
+  "version": 1,
+  "canvas": {
+    "width": 512,
+    "height": 1024
+  },
+  "base": {
+    "front": "base/body_front_base.png",
+    "back": "base/body_back_base.png"
+  },
+  "front": {
+    "chest": {
+      "file": "front_masks/chest.png",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "front_delts": {
+      "file": "front_masks/front_delts.png",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "side_delts": {
+      "file": "front_masks/side_delts.png",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "biceps": {
+      "file": "front_masks/biceps.png",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "triceps": {
+      "file": "front_masks/triceps.png",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "forearms": {
+      "file": "front_masks/forearms.png",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "abs": {
+      "file": "front_masks/abs.png",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "obliques": {
+      "file": "front_masks/obliques.png",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "quads": {
+      "file": "front_masks/quads.png",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "adductors": {
+      "file": "front_masks/adductors.png",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "calves": {
+      "file": "front_masks/calves.png",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    }
+  },
+  "back": {
+    "traps": {
+      "file": "back_masks/traps.png",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "rear_delts": {
+      "file": "back_masks/rear_delts.png",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "lats": {
+      "file": "back_masks/lats.png",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "triceps": {
+      "file": "back_masks/triceps.png",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "forearms": {
+      "file": "back_masks/forearms.png",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "lower_back": {
+      "file": "back_masks/lower_back.png",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "glutes": {
+      "file": "back_masks/glutes.png",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "hamstrings": {
+      "file": "back_masks/hamstrings.png",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "calves": {
+      "file": "back_masks/calves.png",
+      "rect": [
+        0,
+        0,
+        1,
+        1
+      ]
+    }
+  },
+  "states": {
+    "primary": {
+      "opacity": 1.0
+    },
+    "secondary": {
+      "opacity": 0.62
+    },
+    "tertiary": {
+      "opacity": 0.34
+    },
+    "inactive": {
+      "opacity": 0.0
+    }
+  },
+  "presets": {
+    "push": {
+      "front": [
+        "chest",
+        "front_delts",
+        "side_delts",
+        "triceps"
+      ],
+      "back": [
+        "triceps"
+      ]
+    },
+    "pull": {
+      "front": [
+        "biceps",
+        "forearms"
+      ],
+      "back": [
+        "traps",
+        "rear_delts",
+        "lats",
+        "biceps",
+        "forearms"
+      ]
+    },
+    "legs": {
+      "front": [
+        "quads",
+        "adductors",
+        "calves"
+      ],
+      "back": [
+        "glutes",
+        "hamstrings",
+        "calves"
+      ]
+    }
+  }
+}

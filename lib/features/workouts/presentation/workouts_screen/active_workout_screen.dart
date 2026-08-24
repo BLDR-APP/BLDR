@@ -12,10 +12,12 @@ import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/routes/app_routes.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
-import 'package:bldr_fitness/features/subscription/domain/usecases/subscription_usecases.dart' as subUc;
+import 'package:bldr_fitness/features/subscription/domain/usecases/subscription_usecases.dart'
+    as subUc;
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
 import 'package:bldr_fitness/features/achievements/domain/usecases/achievement_usecases.dart';
-import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart' as uc;
+import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart'
+    as uc;
 import 'package:bldr_fitness/features/integrations/data/live_activity_service.dart';
 import 'package:bldr_fitness/features/integrations/data/health_kit_service.dart';
 import 'package:bldr_fitness/features/integrations/data/watch_service.dart';
@@ -104,6 +106,11 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     )..repeat(reverse: true);
 
     _startTimer();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<WorkoutSessionProvider>().markActive(widget.workoutId);
+      }
+    });
     _loadWorkout();
     _loadSubscription();
     LiveActivityService.init();
@@ -125,8 +132,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     try {
       final sub = (await getIt<subUc.GetCurrentSubscription>()()).valueOrNull;
       if (mounted) {
-        final active = sub != null &&
-            (sub.status == 'active' || sub.status == 'trialing');
+        final active =
+            sub != null && (sub.status == 'active' || sub.status == 'trialing');
         setState(() => _isPro = active);
       }
     } catch (_) {}
@@ -147,6 +154,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_isFinishing) return;
     if (state == AppLifecycleState.resumed && mounted) {
       setState(() {
         _elapsedSeconds =
@@ -212,14 +220,17 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
       // Fallback PASSO 3: sets podem estar vazios se o INSERT silenciou
       // (ex: RLS retorna 204 sem erro). Tenta criar agora e recarrega.
       if (session.sets.isEmpty && session.templateId != null) {
-        debugPrint('[HAVOK] sets vazios + templateId presente → chamando EnsureWorkoutSets');
+        debugPrint(
+            '[HAVOK] sets vazios + templateId presente → chamando EnsureWorkoutSets');
         await getIt<uc.EnsureWorkoutSets>()(session.id!, session.templateId!);
         final reloaded =
             (await getIt<uc.GetWorkoutDetails>()(widget.workoutId)).valueOrNull;
         if (reloaded != null) session = reloaded;
-        debugPrint('[HAVOK] após EnsureWorkoutSets → sets count: ${session.sets.length}');
+        debugPrint(
+            '[HAVOK] após EnsureWorkoutSets → sets count: ${session.sets.length}');
       } else if (session.sets.isEmpty && session.templateId == null) {
-        debugPrint('[HAVOK] ⚠️ sets vazios E templateId NULL → fallback não vai disparar');
+        debugPrint(
+            '[HAVOK] ⚠️ sets vazios E templateId NULL → fallback não vai disparar');
       }
 
       // Group sets by exercise (using order_index as primary sort key).
@@ -252,8 +263,11 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
 
         // Stable group key: prefer internal exercise id, fall back to db id,
         // depois nome livre — nunca colapsa em '' quando há freeName (B5).
-        final exId =
-            s.exercise?.id ?? s.exerciseId ?? s.exerciseDbId ?? s.freeName ?? '';
+        final exId = s.exercise?.id ??
+            s.exerciseId ??
+            s.exerciseDbId ??
+            s.freeName ??
+            '';
         grouped
             .putIfAbsent(exId, () => [])
             .add({..._setToUiMap(s), 'exercise': exMap});
@@ -305,7 +319,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
       // been populated above from the set's own exercise_db_id column).
       final dbIds = builtExercises
           .map((e) =>
-              ((e['exercise'] as Map<String, dynamic>)['exercise_db_id'] as String?) ?? '')
+              ((e['exercise'] as Map<String, dynamic>)['exercise_db_id']
+                  as String?) ??
+              '')
           .where((id) => id.isNotEmpty)
           .toList();
 
@@ -336,7 +352,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     if (_exercises.isEmpty) return widget.workoutName;
     final ex = _exercises[_currentExerciseIdx];
     final exData = ex['exercise'] as Map<String, dynamic>;
-    return exData['name'] as String? ?? exData['free_name'] as String? ?? widget.workoutName;
+    return exData['name'] as String? ??
+        exData['free_name'] as String? ??
+        widget.workoutName;
   }
 
   int get _currentTotalSets {
@@ -358,7 +376,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     );
   }
 
-  void _updateLiveActivity({bool? isResting, int? restTotalSeconds, DateTime? restEndTime}) {
+  void _updateLiveActivity(
+      {bool? isResting, int? restTotalSeconds, DateTime? restEndTime}) {
     final effectiveIsResting = isResting ?? _resting;
     final endTime = restEndTime ?? _restEndTime;
     final restEnd = effectiveIsResting && endTime != null
@@ -460,7 +479,10 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     });
     getIt<NotificationService>().scheduleRestNotification(seconds);
     _restTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) { t.cancel(); return; }
+      if (!mounted) {
+        t.cancel();
+        return;
+      }
       final left = _restEndTime!.difference(DateTime.now()).inSeconds;
       if (left <= 0) {
         t.cancel();
@@ -508,10 +530,15 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
       final exercises = _exercises.map((exGroup) {
         final ex = exGroup['exercise'] as Map<String, dynamic>;
         return {
-          'nome': ex['free_name'] as String? ?? ex['name'] as String? ?? 'Exercício',
+          'nome': ex['free_name'] as String? ??
+              ex['name'] as String? ??
+              'Exercício',
           'series': (exGroup['totalSets'] as int?) ?? 1,
           'reps': ((exGroup['sets'] as List).isNotEmpty
-              ? ((exGroup['sets'] as List<Map<String, dynamic>>).first['reps']?.toString() ?? '—')
+              ? ((exGroup['sets'] as List<Map<String, dynamic>>)
+                      .first['reps']
+                      ?.toString() ??
+                  '—')
               : '—'),
           'duracao_segundos': ex['duration_seconds'] as int? ?? 0,
         };
@@ -529,10 +556,14 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     final exercises = _exercises.map((exGroup) {
       final ex = exGroup['exercise'] as Map<String, dynamic>;
       return {
-        'nome': ex['free_name'] as String? ?? ex['name'] as String? ?? 'Exercício',
+        'nome':
+            ex['free_name'] as String? ?? ex['name'] as String? ?? 'Exercício',
         'series': (exGroup['totalSets'] as int?) ?? 1,
         'reps': ((exGroup['sets'] as List).isNotEmpty
-            ? ((exGroup['sets'] as List<Map<String, dynamic>>).first['reps']?.toString() ?? '—')
+            ? ((exGroup['sets'] as List<Map<String, dynamic>>)
+                    .first['reps']
+                    ?.toString() ??
+                '—')
             : '—'),
         'duracao_segundos': ex['duration_seconds'] as int? ?? 0,
       };
@@ -545,21 +576,21 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
   }
 
   // MET ~5 (musculação moderada) × peso padrão 70 kg × horas
-  double get _estimatedCalories =>
-      5.0 * 70 * (_elapsedSeconds / 3600.0);
+  double get _estimatedCalories => 5.0 * 70 * (_elapsedSeconds / 3600.0);
 
   void _exitWorkout() {
+    if (_finishing || _isFinishing) return;
     context.read<WorkoutSessionProvider>().setPausedWorkout(
-      PausedWorkoutSummary(
-        id: widget.workoutId,
-        name: widget.workoutName,
-        source: 'free',
-        startedAt: _startTime,
-        totalExercises: _exercises.length,
-        completedExercises: _currentExerciseIdx,
-        currentExerciseName: _currentExerciseName,
-      ),
-    );
+          PausedWorkoutSummary(
+            id: widget.workoutId,
+            name: widget.workoutName,
+            source: 'free',
+            startedAt: _startTime,
+            totalExercises: _exercises.length,
+            completedExercises: _currentExerciseIdx,
+            currentExerciseName: _currentExerciseName,
+          ),
+        );
     Navigator.of(context).pop();
   }
 
@@ -575,8 +606,17 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
   void _finishWorkout() async {
     if (_finishing) return;
     _finishing = true;
+    _isFinishing = true;
     final sessionProvider = context.read<WorkoutSessionProvider>();
-    getIt<NotificationService>().cancelRestNotification();
+    sessionProvider.beginFinishing(widget.workoutId);
+    _timer?.cancel();
+    _restTimer?.cancel();
+    try {
+      await getIt<NotificationService>().cancelRestNotification();
+    } catch (error) {
+      debugPrint(
+          '[WorkoutLifecycle] Falha ao cancelar rest notification: $error');
+    }
     unawaited(getIt<WatchService>().sendWorkoutFinished());
     _hrSubscription?.cancel();
     unawaited(getIt<HealthKitService>().saveCalories(
@@ -591,25 +631,35 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
       source: 'free',
       setsCompleted: setsCount,
     );
+    final summaryData = result.valueOrNull;
+    if (summaryData == null) {
+      _finishing = false;
+      _isFinishing = false;
+      sessionProvider.markActive(widget.workoutId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(result.failureOrNull?.message ??
+              'Não foi possível concluir o treino. Tente novamente.'),
+        ));
+      }
+      return;
+    }
+    sessionProvider.markCompleted(widget.workoutId);
     unawaited(getIt<CheckAndUnlockAchievements>()('workout'));
-    await LiveActivityService.end();
+    try {
+      await LiveActivityService.end();
+    } catch (error) {
+      debugPrint('[WorkoutLifecycle] Falha ao encerrar Live Activity: $error');
+    }
     unawaited(WidgetDataService.updateAll());
     if (!mounted) return;
     await _maybeTriggerPopups();
     if (!mounted) return;
-    final summaryData = result.valueOrNull;
-    if (summaryData != null) {
-      setState(() => _isFinishing = true);
-      sessionProvider.setPausedWorkout(null);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-            builder: (_) => WorkoutSummaryScreen(data: summaryData)),
-      );
-    } else {
-      sessionProvider.setPausedWorkout(null);
-      Navigator.pop(context);
-    }
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+          builder: (_) => WorkoutSummaryScreen(data: summaryData)),
+    );
   }
 
   Future<void> _maybeTriggerPopups() async {
@@ -626,8 +676,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
       if (profile == null || !mounted) return;
       final settings =
           await FirebaseMessaging.instance.getNotificationSettings();
-      final permGranted = settings.authorizationStatus ==
-          AuthorizationStatus.authorized;
+      final permGranted =
+          settings.authorizationStatus == AuthorizationStatus.authorized;
       final showNotif = await PopupService.shouldShowNotificationPopup(
         userCreatedAt: profile.createdAt,
         osPermissionGranted: permGranted,
@@ -644,13 +694,15 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
       builder: (ctx) => AlertDialog(
         backgroundColor: BldrColors.sheetBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(AppLocalizations.of(ctx).workout_stop_title, style: BldrText.cardTitleLg),
+        title: Text(AppLocalizations.of(ctx).workout_stop_title,
+            style: BldrText.cardTitleLg),
         content: Text(AppLocalizations.of(ctx).workout_stop_body,
             style: BldrText.description),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(AppLocalizations.of(ctx).common_continue_btn, style: BldrText.buttonSecondary),
+            child: Text(AppLocalizations.of(ctx).common_continue_btn,
+                style: BldrText.buttonSecondary),
           ),
           TextButton(
             onPressed: () {
@@ -675,62 +727,65 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, _) { if (!didPop && !_isFinishing) _exitWorkout(); },
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && !_isFinishing) _exitWorkout();
+      },
       child: Scaffold(
-      backgroundColor: BldrColors.bgBase,
-      body: BldrBackground(
-        child: SafeArea(
-          child: _loading
-              ? const Center(
-                  child: CircularProgressIndicator(color: BldrColors.goldBright))
-              : Stack(
-                  children: [
-                    Column(
-                      children: [
-                        _buildHeader(),
-                        Expanded(
-                          child: SingleChildScrollView(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: BldrSpacing.pageX),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 16),
-                                _buildTimeSeriesCards(),
-                                const SizedBox(height: 14),
-                                _buildOverallProgress(),
-                                const SizedBox(height: 22),
-                                if (_exercises.isNotEmpty) ...[
-                                  _buildCurrentExercise(),
-                                  const SizedBox(height: 18),
-                                  _buildInputRow(),
+        backgroundColor: BldrColors.bgBase,
+        body: BldrBackground(
+          child: SafeArea(
+            child: _loading
+                ? const Center(
+                    child:
+                        CircularProgressIndicator(color: BldrColors.goldBright))
+                : Stack(
+                    children: [
+                      Column(
+                        children: [
+                          _buildHeader(),
+                          Expanded(
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: BldrSpacing.pageX),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 16),
+                                  _buildTimeSeriesCards(),
                                   const SizedBox(height: 14),
-                                  _buildSeriesList(),
+                                  _buildOverallProgress(),
                                   const SizedBox(height: 22),
-                                  _buildExerciseTimeline(),
-                                  const SizedBox(height: 130),
+                                  if (_exercises.isNotEmpty) ...[
+                                    _buildCurrentExercise(),
+                                    const SizedBox(height: 18),
+                                    _buildInputRow(),
+                                    const SizedBox(height: 14),
+                                    _buildSeriesList(),
+                                    const SizedBox(height: 22),
+                                    _buildExerciseTimeline(),
+                                    const SizedBox(height: 130),
+                                  ],
                                 ],
-                              ],
+                              ),
                             ),
                           ),
-                        ),
-                        _buildFooter(),
-                      ],
-                    ),
-                    // Faixa de descanso — flutua sobre o conteúdo, que
-                    // continua rolável e utilizável por trás dela.
-                    if (_resting)
-                      Positioned(
-                        left: 14,
-                        right: 14,
-                        bottom: 88,
-                        child: _buildRestFloatingStrip(),
+                          _buildFooter(),
+                        ],
                       ),
-                  ],
-                ),
+                      // Faixa de descanso — flutua sobre o conteúdo, que
+                      // continua rolável e utilizável por trás dela.
+                      if (_resting)
+                        Positioned(
+                          left: 14,
+                          right: 14,
+                          bottom: 88,
+                          child: _buildRestFloatingStrip(),
+                        ),
+                    ],
+                  ),
+          ),
         ),
       ),
-    ),
     );
   }
 
@@ -755,7 +810,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
           Expanded(
             child: Column(
               children: [
-                Text(AppLocalizations.of(context).workout_in_progress, style: BldrText.label),
+                Text(AppLocalizations.of(context).workout_in_progress,
+                    style: BldrText.label),
                 const SizedBox(height: 2),
                 Text(
                   widget.workoutName,
@@ -805,7 +861,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(AppLocalizations.of(context).workout_time_label, style: BldrText.label),
+                Text(AppLocalizations.of(context).workout_time_label,
+                    style: BldrText.label),
                 const SizedBox(height: 4),
                 Text(
                   _formatTime(_elapsedSeconds),
@@ -890,9 +947,13 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(AppLocalizations.of(context).workout_exercise_of(totalEx == 0 ? 0 : doneEx + 1, totalEx),
+            Text(
+                AppLocalizations.of(context).workout_exercise_of(
+                    totalEx == 0 ? 0 : doneEx + 1, totalEx),
                 style: BldrText.meta),
-            Text(AppLocalizations.of(context).workout_percent_done((progress * 100).round()),
+            Text(
+                AppLocalizations.of(context)
+                    .workout_percent_done((progress * 100).round()),
                 style: BldrText.meta.copyWith(
                     color: BldrColors.goldBright, fontWeight: FontWeight.w500)),
           ],
@@ -966,7 +1027,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
               ),
             ),
             const SizedBox(width: 8),
-            BldrChip(icon: Icons.fitness_center, label: equipment, active: true),
+            BldrChip(
+                icon: Icons.fitness_center, label: equipment, active: true),
           ],
         ),
         const SizedBox(height: 14),
@@ -976,7 +1038,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(child: _buildExerciseImageCard(gifUrl, muscle, ex, detail)),
+              Expanded(
+                  child: _buildExerciseImageCard(gifUrl, muscle, ex, detail)),
               const SizedBox(width: 10),
               MuscleVisualizerWidget(
                 targetMuscles: detail?.targetMuscles ??
@@ -1133,7 +1196,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                     ? ex['name'] as String
                     : (detail?.name.isNotEmpty == true
                         ? detail!.name
-                        : AppLocalizations.of(sheetCtx).workout_technique_fallback),
+                        : AppLocalizations.of(sheetCtx)
+                            .workout_technique_fallback),
                 style: BldrText.cardTitleLg,
               ),
               const SizedBox(height: 14),
@@ -1144,9 +1208,10 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                   secondaryMuscles: secondaryMuscles,
                   isPro: _isPro,
                   size: VisualizerSize.full,
-                  paywallMessage:
-                      AppLocalizations.of(sheetCtx).workout_paywall_muscle_message,
-                  paywallButtonLabel: AppLocalizations.of(sheetCtx).plan_paywall_muscle_btn,
+                  paywallMessage: AppLocalizations.of(sheetCtx)
+                      .workout_paywall_muscle_message,
+                  paywallButtonLabel:
+                      AppLocalizations.of(sheetCtx).plan_paywall_muscle_btn,
                   onUpgradeTap: () {
                     Navigator.pop(sheetCtx);
                     Navigator.pushNamed(context, AppRoutes.checkoutScreen);
@@ -1154,12 +1219,16 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                 ),
               if (targetMuscles.isNotEmpty) const SizedBox(height: 16),
               // ── Instructions ──────────────────────────────────────────────
-              if (instructions.isNotEmpty) Text(AppLocalizations.of(sheetCtx).workout_execution_label, style: BldrText.label),
+              if (instructions.isNotEmpty)
+                Text(AppLocalizations.of(sheetCtx).workout_execution_label,
+                    style: BldrText.label),
               if (instructions.isNotEmpty) const SizedBox(height: 8),
               Expanded(
                 child: instructions.isEmpty
                     ? Center(
-                        child: Text(AppLocalizations.of(sheetCtx).workout_no_instructions,
+                        child: Text(
+                            AppLocalizations.of(sheetCtx)
+                                .workout_no_instructions,
                             style: BldrText.description),
                       )
                     : ListView.separated(
@@ -1176,7 +1245,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                               decoration: BoxDecoration(
                                 color: BldrColors.goldTint,
                                 shape: BoxShape.circle,
-                                border: Border.all(color: BldrColors.goldBorder),
+                                border:
+                                    Border.all(color: BldrColors.goldBorder),
                               ),
                               child: Center(
                                 child: Text(
@@ -1190,7 +1260,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                               ),
                             ),
                             Expanded(
-                              child: Text(instructions[i], style: BldrText.body),
+                              child:
+                                  Text(instructions[i], style: BldrText.body),
                             ),
                           ],
                         ),
@@ -1212,32 +1283,48 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     // Dashboard — ver BldrTimelineItem).
     return IntrinsicHeight(
       child: Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Expanded(
-          child: _buildStepper(
-            label: AppLocalizations.of(context).workout_load_kg,
-            valueLabel: _weight == _weight.roundToDouble()
-                ? _weight.toInt().toString()
-                : _weight.toStringAsFixed(1),
-            decreaseSemantics: AppLocalizations.of(context).workout_decrease_load,
-            increaseSemantics: AppLocalizations.of(context).workout_increase_load,
-            onDecrease: () { setState(() => _weight = (_weight - 2.5).clamp(0, 999)); _updateLiveActivity(); },
-            onIncrease: () { setState(() => _weight = _weight + 2.5); _updateLiveActivity(); },
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: _buildStepper(
+              label: AppLocalizations.of(context).workout_load_kg,
+              valueLabel: _weight == _weight.roundToDouble()
+                  ? _weight.toInt().toString()
+                  : _weight.toStringAsFixed(1),
+              decreaseSemantics:
+                  AppLocalizations.of(context).workout_decrease_load,
+              increaseSemantics:
+                  AppLocalizations.of(context).workout_increase_load,
+              onDecrease: () {
+                setState(() => _weight = (_weight - 2.5).clamp(0, 999));
+                _updateLiveActivity();
+              },
+              onIncrease: () {
+                setState(() => _weight = _weight + 2.5);
+                _updateLiveActivity();
+              },
+            ),
           ),
-        ),
-        const SizedBox(width: BldrSpacing.gapCard),
-        Expanded(
-          child: _buildStepper(
-            label: AppLocalizations.of(context).workout_reps_label,
-            valueLabel: '$_reps',
-            decreaseSemantics: AppLocalizations.of(context).workout_decrease_reps,
-            increaseSemantics: AppLocalizations.of(context).workout_increase_reps,
-            onDecrease: () { setState(() => _reps = (_reps - 1).clamp(0, 999)); _updateLiveActivity(); },
-            onIncrease: () { setState(() => _reps = _reps + 1); _updateLiveActivity(); },
+          const SizedBox(width: BldrSpacing.gapCard),
+          Expanded(
+            child: _buildStepper(
+              label: AppLocalizations.of(context).workout_reps_label,
+              valueLabel: '$_reps',
+              decreaseSemantics:
+                  AppLocalizations.of(context).workout_decrease_reps,
+              increaseSemantics:
+                  AppLocalizations.of(context).workout_increase_reps,
+              onDecrease: () {
+                setState(() => _reps = (_reps - 1).clamp(0, 999));
+                _updateLiveActivity();
+              },
+              onIncrease: () {
+                setState(() => _reps = _reps + 1);
+                _updateLiveActivity();
+              },
+            ),
           ),
-        ),
-      ],
+        ],
       ),
     );
   }
@@ -1261,8 +1348,11 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
               Semantics(
                 label: decreaseSemantics,
                 button: true,
-                child:
-                    BldrCircleButton(icon: Icons.remove, size: 38, filled: false, onPressed: onDecrease),
+                child: BldrCircleButton(
+                    icon: Icons.remove,
+                    size: 38,
+                    filled: false,
+                    onPressed: onDecrease),
               ),
               Text(
                 valueLabel,
@@ -1276,8 +1366,11 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
               Semantics(
                 label: increaseSemantics,
                 button: true,
-                child:
-                    BldrCircleButton(icon: Icons.add, size: 38, filled: false, onPressed: onIncrease),
+                child: BldrCircleButton(
+                    icon: Icons.add,
+                    size: 38,
+                    filled: false,
+                    onPressed: onIncrease),
               ),
             ],
           ),
@@ -1318,7 +1411,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: BldrSetRow(index: setIndex, state: state, valueLabel: valueLabel),
+          child:
+              BldrSetRow(index: setIndex, state: state, valueLabel: valueLabel),
         );
       }),
     );
@@ -1331,8 +1425,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
         _restTotalSeconds > 0 ? _restSecondsLeft / _restTotalSeconds : 0.0;
     final mm = _restSecondsLeft ~/ 60;
     final ss = _restSecondsLeft % 60;
-    final label =
-        mm > 0 ? '$mm:${ss.toString().padLeft(2, '0')}' : '${ss}s';
+    final label = mm > 0 ? '$mm:${ss.toString().padLeft(2, '0')}' : '${ss}s';
 
     final exGroup =
         _exercises.isNotEmpty ? _exercises[_currentExerciseIdx] : null;
@@ -1348,7 +1441,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
           decoration: BoxDecoration(
             color: const Color(0x29C9A227), // rgba(201,162,39,0.16)
             borderRadius: BldrRadius.all(22),
-            border: Border.all(color: const Color(0x52E0B830)), // rgba(224,184,48,0.32)
+            border: Border.all(
+                color: const Color(0x52E0B830)), // rgba(224,184,48,0.32)
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.45),
@@ -1387,7 +1481,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                         style: BldrText.label.copyWith(
                             fontSize: 10, color: BldrColors.goldBright)),
                     const SizedBox(height: 2),
-                    Text(AppLocalizations.of(context).workout_next_set(nextSet, totalSets),
+                    Text(
+                        AppLocalizations.of(context)
+                            .workout_next_set(nextSet, totalSets),
                         style: BldrText.body.copyWith(
                             fontSize: 12, color: BldrColors.textSecondary)),
                   ],
@@ -1396,7 +1492,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
               const SizedBox(width: 8),
               _restActionButton(
                 icon: Icons.add,
-                semanticLabel: AppLocalizations.of(context).workout_add_rest_label,
+                semanticLabel:
+                    AppLocalizations.of(context).workout_add_rest_label,
                 onTap: () => _addRestSeconds(15),
               ),
               const SizedBox(width: 8),
@@ -1442,7 +1539,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(AppLocalizations.of(context).workout_exercises_label, style: BldrText.sectionTitle),
+        Text(AppLocalizations.of(context).workout_exercises_label,
+            style: BldrText.sectionTitle),
         const SizedBox(height: 12),
         ...List.generate(_exercises.length, (i) {
           final ex = _exercises[i]['exercise'] as Map<String, dynamic>;
@@ -1478,9 +1576,13 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                       ),
                     ),
                   ),
-                  if (isCurrent) BldrBadge(label: AppLocalizations.of(context).workout_set_current),
+                  if (isCurrent)
+                    BldrBadge(
+                        label:
+                            AppLocalizations.of(context).workout_set_current),
                   if (!isCurrent && !isDone)
-                    Text(AppLocalizations.of(context).workout_next_up, style: BldrText.meta),
+                    Text(AppLocalizations.of(context).workout_next_up,
+                        style: BldrText.meta),
                   if (isDone)
                     const Icon(Icons.check_circle_outline,
                         color: BldrColors.goldBright, size: 16),

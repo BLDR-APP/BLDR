@@ -4,6 +4,7 @@ import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/onboarding/domain/entities/onboarding_plan.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/weekly_plan.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_template.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/today_workout_resolver.dart';
 import 'package:bldr_fitness/features/workouts/domain/repositories/weekly_plan_repository.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart';
 
@@ -21,7 +22,8 @@ class _FakeWeeklyPlanRepository implements WeeklyPlanRepository {
 
   @override
   Future<Result<List<PlanDay>>> getWeeklyPlan() async {
-    final sorted = [..._stored]..sort((a, b) => a.diaSemana.compareTo(b.diaSemana));
+    final sorted = [..._stored]
+      ..sort((a, b) => a.diaSemana.compareTo(b.diaSemana));
     return Result.success(sorted);
   }
 
@@ -39,7 +41,8 @@ class _FakeWeeklyPlanRepository implements WeeklyPlanRepository {
       const Result.success(null);
 
   @override
-  Future<Result<WeekCompletedWorkouts>> completedBetween(DateTime a, DateTime b) async =>
+  Future<Result<WeekCompletedWorkouts>> completedBetween(
+          DateTime a, DateTime b) async =>
       Result.success(WeekCompletedWorkouts(personal: const [], club: const []));
 
   @override
@@ -76,7 +79,8 @@ void main() {
   });
 
   group('B8 — WeeklyPlan no Supabase', () {
-    test('SaveWeeklyPlan salva 7 dias e GetWeeklyPlan retorna os mesmos', () async {
+    test('SaveWeeklyPlan salva 7 dias e GetWeeklyPlan retorna os mesmos',
+        () async {
       final days = [
         _treino(1, 'id-a', 'Peito'),
         _descanso(2),
@@ -107,7 +111,8 @@ void main() {
       expect(day.treino, isNull);
     });
 
-    test('GetWeeklyPlan retorna lista vazia quando nenhum plano foi salvo', () async {
+    test('GetWeeklyPlan retorna lista vazia quando nenhum plano foi salvo',
+        () async {
       final result = await getUC();
       expect(result.isSuccess, isTrue);
       expect(result.valueOrNull, isEmpty);
@@ -120,6 +125,36 @@ void main() {
       final days = result.valueOrNull!;
       expect(days.length, 2);
       expect(days.first.treino?.id, 'new-id');
+    });
+  });
+
+  group('Workout Home — treino de hoje', () {
+    const push = WorkoutTemplate(id: 'push-id', name: 'Push');
+    const teste = WorkoutTemplate(id: 'teste-id', name: 'Teste');
+
+    test('alteração no Meu Plano troca imediatamente o template do Hero', () {
+      final before = TodayWorkoutResolver.resolve(
+        plan: [_treino(1, 'push-id', 'Push')],
+        templates: const [push, teste],
+        weekday: 1,
+      );
+      final after = TodayWorkoutResolver.resolve(
+        plan: [_treino(1, 'teste-id', 'Teste')],
+        templates: const [push, teste],
+        weekday: 1,
+      );
+      expect(before?.id, 'push-id');
+      expect(after?.id, 'teste-id');
+      expect(after?.name, 'Teste');
+    });
+
+    test('não usa primeiro template ou nome do split como fallback', () {
+      final selected = TodayWorkoutResolver.resolve(
+        plan: [_treino(1, 'missing-id', 'Push')],
+        templates: const [teste, push],
+        weekday: 1,
+      );
+      expect(selected, isNull);
     });
   });
 }

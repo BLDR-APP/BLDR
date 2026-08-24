@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/bldr_muscle.dart';
+import 'package:bldr_fitness/shared/presentation/widgets/bldr_muscle_map.dart';
 
 // ─────────────────────────────────────────────────────────────
 // FUNDO DA TELA
@@ -1233,6 +1235,12 @@ class BldrWorkoutCard extends StatelessWidget {
   final VoidCallback? onTap;
   final VoidCallback? onStart;
 
+  /// Grupos musculares normalizados para exibir no slot da capa.
+  /// `null` = exibe ícone de halter (comportamento legacy).
+  /// `[]`   = exibe silhueta vazia (placeholder sem destaques).
+  final Object? muscles;
+  final BldrMuscleMapView view;
+
   const BldrWorkoutCard({
     super.key,
     required this.title,
@@ -1241,6 +1249,8 @@ class BldrWorkoutCard extends StatelessWidget {
     this.metaRight,
     this.onTap,
     this.onStart,
+    this.muscles,
+    this.view = BldrMuscleMapView.front,
   });
 
   @override
@@ -1261,10 +1271,18 @@ class BldrWorkoutCard extends StatelessWidget {
                   colors: [Color(0x40C9A227), Color(0x14C9A227)],
                 ),
               ),
-              child: const Center(
-                child: Icon(TablerIcons.barbell,
-                    size: 28, color: Color(0x59E0B830)),
-              ),
+              child: muscles != null
+                  ? Center(
+                      child: BldrMuscleMap(
+                        muscles: muscles!,
+                        size: BldrMuscleMapSize.card,
+                        view: view,
+                      ),
+                    )
+                  : const Center(
+                      child: Icon(TablerIcons.barbell,
+                          size: 28, color: Color(0x59E0B830)),
+                    ),
             ),
           ),
           Padding(
@@ -1300,7 +1318,10 @@ class BldrWorkoutCard extends StatelessWidget {
                 ],
                 if (onStart != null) ...[
                   const SizedBox(height: 10),
-                  BldrSecondaryButton(label: AppLocalizations.of(context).component_workout_start_btn, onPressed: onStart),
+                  BldrSecondaryButton(
+                      label: AppLocalizations.of(context)
+                          .component_workout_start_btn,
+                      onPressed: onStart),
                 ],
               ],
             ),
@@ -1495,7 +1516,8 @@ class BldrSetRow extends StatelessWidget {
           if (isDone && valueLabel != null)
             Text(valueLabel!, style: BldrText.meta)
           else if (isCurrent)
-            BldrBadge(label: AppLocalizations.of(context).component_current_badge),
+            BldrBadge(
+                label: AppLocalizations.of(context).component_current_badge),
         ],
       ),
     );
@@ -1753,7 +1775,9 @@ class BldrFoodItemRow extends StatelessWidget {
                           overflow: TextOverflow.ellipsis),
                     ),
                     const SizedBox(width: 8),
-                    Text(AppLocalizations.of(context).component_kcal_label(calories),
+                    Text(
+                        AppLocalizations.of(context)
+                            .component_kcal_label(calories),
                         style: TextStyle(
                             fontFamily: BldrText.family,
                             color: BldrColors.goldBright,
@@ -1762,7 +1786,12 @@ class BldrFoodItemRow extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(AppLocalizations.of(context).component_macro_detail(protein.toString(), carbs.toString(), fat.toString(), portion),
+                Text(
+                    AppLocalizations.of(context).component_macro_detail(
+                        protein.toString(),
+                        carbs.toString(),
+                        fat.toString(),
+                        portion),
                     style: BldrText.meta,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),

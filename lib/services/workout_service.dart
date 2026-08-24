@@ -24,22 +24,34 @@ class WorkoutService {
       var query = _client.from('workout_templates').select('''
         id, name, description, workout_type, estimated_duration_minutes,
         difficulty_level, is_public, created_at,
-        user_profiles!created_by(full_name)
+        user_profiles!created_by(full_name),
+        workout_template_exercises(
+          id, order_index, sets, reps, duration_seconds, rest_seconds,
+          weight_kg, distance_meters, notes, exercise_db_id,
+          exercises(
+            id, name, description, exercise_type, primary_muscle_group,
+            secondary_muscle_groups, instructions, tips, image_url,
+            equipment_needed, exercise_db_id
+          )
+        )
       ''');
 
       if (publicOnly) query = query.eq('is_public', true);
       if (workoutType != null) query = query.eq('workout_type', workoutType);
-      if (difficultyLevel != null) query = query.eq('difficulty_level', difficultyLevel);
+      if (difficultyLevel != null)
+        query = query.eq('difficulty_level', difficultyLevel);
 
       final response = await query.order('created_at', ascending: false);
-      return List<Map<String, dynamic>>.from(response);
+      final rows = List<Map<String, dynamic>>.from(response);
+      return Future.wait(rows.map(_enrichExerciseDbRows));
     } catch (error) {
       throw Exception('Failed to get workout templates: $error');
     }
   }
 
   /// Get workout template with exercises
-  Future<Map<String, dynamic>?> getWorkoutTemplateWithExercises(String templateId) async {
+  Future<Map<String, dynamic>?> getWorkoutTemplateWithExercises(
+      String templateId) async {
     try {
       final response = await _client.from('workout_templates').select('''
         id, name, description, workout_type, estimated_duration_minutes,
@@ -60,40 +72,45 @@ class WorkoutService {
       // Enrich ExerciseDB exercises: resolve name from cache when the
       // `exercises` join is null (i.e. the exercise came from ExerciseDB,
       // not the BLDR internal library).
-      final rawExercises =
-          (response['workout_template_exercises'] as List?)?.cast<Map>() ?? [];
-
-      if (rawExercises.isNotEmpty) {
-        final enriched = await Future.wait(rawExercises.map((row) async {
-          final mutable = Map<String, dynamic>.from(row);
-          if (mutable['exercises'] == null &&
-              mutable['exercise_db_id'] != null) {
-            final dbId = mutable['exercise_db_id'] as String;
-            final dbEx =
-                await ExerciseDbRapidService.instance.getById(dbId);
-            if (dbEx != null) {
-              mutable['exercises'] = {
-                'id': null,
-                'name': dbEx.name,
-                'exercise_type': dbEx.bodyParts,
-                'primary_muscle_group': dbEx.targetMuscles,
-                'exercise_db_id': dbId,
-              };
-            }
-          }
-          return mutable;
-        }));
-
-        return {
-          ...response,
-          'workout_template_exercises': enriched,
-        };
-      }
-
-      return response;
+      return _enrichExerciseDbRows(Map<String, dynamic>.from(response));
     } catch (error) {
       throw Exception('Failed to get workout template: $error');
     }
+  }
+
+  /// Resolve todos os IDs ExerciseDB antes de o template atravessar o
+  /// repository. Assim presentation nunca recebe um template parcialmente
+  /// enriquecido e não precisa disparar Futures durante o build.
+  Future<Map<String, dynamic>> _enrichExerciseDbRows(
+      Map<String, dynamic> template) async {
+    final raw =
+        (template['workout_template_exercises'] as List?)?.cast<Map>() ??
+            const <Map>[];
+    if (raw.isEmpty) return template;
+
+    final enriched = await Future.wait(raw.map((row) async {
+      final mutable = Map<String, dynamic>.from(row);
+      if (mutable['exercises'] == null && mutable['exercise_db_id'] != null) {
+        final dbId = mutable['exercise_db_id'].toString();
+        final dbEx = await ExerciseDbRapidService.instance.getById(dbId);
+        if (dbEx != null) {
+          mutable['exercises'] = {
+            'id': null,
+            'name': dbEx.name,
+            'exercise_type': dbEx.bodyParts,
+            'primary_muscle_group': dbEx.targetMuscles,
+            'secondary_muscle_groups': dbEx.secondaryMuscles,
+            'instructions': dbEx.instructions,
+            'image_url': dbEx.displayUrl,
+            'exercise_db_id': dbId,
+          };
+        } else if (kDebugMode) {
+          debugPrint('[MuscleMap] ExerciseDB id não resolvido: $dbId');
+        }
+      }
+      return mutable;
+    }));
+    return {...template, 'workout_template_exercises': enriched};
   }
 
   /// Create workout template
@@ -116,15 +133,15 @@ class WorkoutService {
       final response = await _client
           .from('workout_templates')
           .insert({
-        'name': name,
-        'description': description,
-        'workout_type': workoutType,
-        'estimated_duration_minutes': estimatedDurationMinutes,
-        'difficulty_level': difficultyLevel,
-        'is_public': isPublic,
-        'source': source,
-        'created_by': currentUser.id,
-      })
+            'name': name,
+            'description': description,
+            'workout_type': workoutType,
+            'estimated_duration_minutes': estimatedDurationMinutes,
+            'difficulty_level': difficultyLevel,
+            'is_public': isPublic,
+            'source': source,
+            'created_by': currentUser.id,
+          })
           .select()
           .single();
 
@@ -155,7 +172,9 @@ class WorkoutService {
           return row;
         }).toList();
 
-        await _client.from('workout_template_exercises').insert(templateExercises);
+        await _client
+            .from('workout_template_exercises')
+            .insert(templateExercises);
       }
 
       return response;
@@ -237,10 +256,7 @@ class WorkoutService {
           .from('workout_template_exercises')
           .delete()
           .eq('workout_template_id', id);
-      await _client
-          .from('workout_templates')
-          .delete()
-          .eq('id', id);
+      await _client.from('workout_templates').delete().eq('id', id);
     } catch (error) {
       throw Exception('Failed to delete workout template: $error');
     }
@@ -298,7 +314,8 @@ class WorkoutService {
       final currentUser = AuthService.instance.currentUser;
       if (currentUser == null) throw Exception('User must be authenticated');
 
-      debugPrint('[HAVOK] startWorkout → workoutTemplateId: $workoutTemplateId');
+      debugPrint(
+          '[HAVOK] startWorkout → workoutTemplateId: $workoutTemplateId');
       // 1) cria o workout (UTC evita deslocamento de fuso)
       final baseInsert = {
         'user_id': currentUser.id,
@@ -310,11 +327,20 @@ class WorkoutService {
 
       Map<String, dynamic> workout;
       try {
-        workout = await _client.from('user_workouts').insert(baseInsert).select().single();
+        workout = await _client
+            .from('user_workouts')
+            .insert(baseInsert)
+            .select()
+            .single();
       } on PostgrestException catch (e) {
         if ((e.message ?? '').toLowerCase().contains('is_completed')) {
-          final withoutFlag = Map<String, dynamic>.from(baseInsert)..remove('is_completed');
-          workout = await _client.from('user_workouts').insert(withoutFlag).select().single();
+          final withoutFlag = Map<String, dynamic>.from(baseInsert)
+            ..remove('is_completed');
+          workout = await _client
+              .from('user_workouts')
+              .insert(withoutFlag)
+              .select()
+              .single();
         } else {
           rethrow;
         }
@@ -370,7 +396,8 @@ class WorkoutService {
           } on PostgrestException catch (e) {
             if ((e.message ?? '').toLowerCase().contains('is_completed')) {
               final fallback = setsToInsert
-                  .map((m) => Map<String, dynamic>.from(m)..remove('is_completed'))
+                  .map((m) =>
+                      Map<String, dynamic>.from(m)..remove('is_completed'))
                   .toList();
               await _client.from('workout_exercise_sets').insert(fallback);
             } else {
@@ -432,8 +459,10 @@ class WorkoutService {
             'notes': row['notes'],
             'completed_at': null,
           };
-          if (row['exercise_id'] != null) setRow['exercise_id'] = row['exercise_id'];
-          if (row['exercise_db_id'] != null) setRow['exercise_db_id'] = row['exercise_db_id'];
+          if (row['exercise_id'] != null)
+            setRow['exercise_id'] = row['exercise_id'];
+          if (row['exercise_db_id'] != null)
+            setRow['exercise_db_id'] = row['exercise_db_id'];
           if (row['exercise_id'] == null &&
               row['exercise_db_id'] == null &&
               row['free_name'] != null) {
@@ -444,9 +473,11 @@ class WorkoutService {
       }
 
       if (setsToInsert.isNotEmpty) {
-        debugPrint('[HAVOK] ensureInitialSets → inserting ${setsToInsert.length} sets for session $sessionId, template $templateId');
+        debugPrint(
+            '[HAVOK] ensureInitialSets → inserting ${setsToInsert.length} sets for session $sessionId, template $templateId');
         await _client.from('workout_exercise_sets').insert(setsToInsert);
-        debugPrint('[HAVOK] ensureInitialSets → insert done (sem erro lançado)');
+        debugPrint(
+            '[HAVOK] ensureInitialSets → insert done (sem erro lançado)');
       }
     } catch (e) {
       debugPrint('[HAVOK] ensureInitialSets → EXCEPTION: $e');
@@ -468,10 +499,68 @@ class WorkoutService {
           if (notes != null) 'p_notes': notes,
         },
       );
-      return (result as Map<String, dynamic>?) ?? {};
+      final raw = (result as Map<String, dynamic>?) ?? {};
+      final completion = await _ensureWorkoutCompleted(
+        workoutId: workoutId,
+        source: source,
+        notes: notes,
+      );
+      return {
+        ...raw,
+        'duration_seconds':
+            raw['duration_seconds'] ?? completion['total_duration_seconds'],
+        'completed_at': completion['completed_at'],
+        'is_completed': completion['is_completed'],
+      };
     } catch (error) {
       throw Exception('Failed to complete workout with analytics: $error');
     }
+  }
+
+  /// A RPC calcula analytics, mas o lifecycle só termina quando a linha que
+  /// alimenta active/recovery está persistida e confirmada como concluída.
+  Future<Map<String, dynamic>> _ensureWorkoutCompleted({
+    required String workoutId,
+    required String source,
+    String? notes,
+  }) async {
+    final table = switch (source) {
+      'free' => 'user_workouts',
+      'club' => 'club_user_workouts',
+      _ => throw ArgumentError.value(source, 'source', 'Fonte inválida'),
+    };
+    final current = await _client
+        .from(table)
+        .select(
+            'id, started_at, completed_at, total_duration_seconds, is_completed')
+        .eq('id', workoutId)
+        .single();
+    Map<String, dynamic> completed = Map<String, dynamic>.from(current);
+    if (completed['is_completed'] != true ||
+        completed['completed_at'] == null) {
+      final now = DateTime.now();
+      final startedAt =
+          DateTime.tryParse(completed['started_at']?.toString() ?? '');
+      final duration = startedAt == null
+          ? 60
+          : now.difference(startedAt).inSeconds.clamp(60, 86400);
+      completed = Map<String, dynamic>.from(await _client
+          .from(table)
+          .update({
+            'is_completed': true,
+            'completed_at': now.toUtc().toIso8601String(),
+            'total_duration_seconds': duration,
+            if (notes != null) 'notes': notes,
+          })
+          .eq('id', workoutId)
+          .select('id, completed_at, total_duration_seconds, is_completed')
+          .single());
+    }
+    if (completed['is_completed'] != true ||
+        completed['completed_at'] == null) {
+      throw StateError('Conclusão do treino não foi persistida');
+    }
+    return completed;
   }
 
   Future<Map<String, dynamic>> completeWorkout({
@@ -487,18 +576,19 @@ class WorkoutService {
           .eq('id', workoutId)
           .single();
 
-      final startedAt = DateTime.parse(workoutResponse['started_at'].toString());
+      final startedAt =
+          DateTime.parse(workoutResponse['started_at'].toString());
       final rawDuration = now.difference(startedAt).inSeconds;
       final duration = rawDuration < 60 ? 60 : rawDuration;
 
       final response = await _client
           .from('user_workouts')
           .update({
-        'completed_at': now.toUtc().toIso8601String(),
-        'total_duration_seconds': duration,
-        'notes': notes,
-        'is_completed': true,
-      })
+            'completed_at': now.toUtc().toIso8601String(),
+            'total_duration_seconds': duration,
+            'notes': notes,
+            'is_completed': true,
+          })
           .eq('id', workoutId)
           .select()
           .single();
@@ -525,16 +615,16 @@ class WorkoutService {
       final response = await _client
           .from('workout_exercise_sets')
           .insert({
-        'user_workout_id': userWorkoutId,
-        'exercise_id': exerciseId,
-        'set_number': setNumber,
-        'reps': reps,
-        'weight_kg': weightKg,
-        'duration_seconds': durationSeconds,
-        'distance_meters': distanceMeters,
-        'rest_seconds': restSeconds,
-        'notes': notes,
-      })
+            'user_workout_id': userWorkoutId,
+            'exercise_id': exerciseId,
+            'set_number': setNumber,
+            'reps': reps,
+            'weight_kg': weightKg,
+            'duration_seconds': durationSeconds,
+            'distance_meters': distanceMeters,
+            'rest_seconds': restSeconds,
+            'notes': notes,
+          })
           .select()
           .single();
 
@@ -566,7 +656,8 @@ class WorkoutService {
 
       if (completedOnly) query = query.eq('is_completed', true);
 
-      final response = await query.order('started_at', ascending: false).limit(limit);
+      final response =
+          await query.order('started_at', ascending: false).limit(limit);
       return List<Map<String, dynamic>>.from(response);
     } catch (error) {
       throw Exception('Failed to get user workouts: $error');
@@ -594,8 +685,10 @@ class WorkoutService {
             )
           ''')
           .eq('id', workoutId)
-          .order('order_index', referencedTable: 'workout_exercise_sets', ascending: true)
-          .order('set_number', referencedTable: 'workout_exercise_sets', ascending: true)
+          .order('order_index',
+              referencedTable: 'workout_exercise_sets', ascending: true)
+          .order('set_number',
+              referencedTable: 'workout_exercise_sets', ascending: true)
           .single();
 
       return response;
@@ -619,8 +712,10 @@ class WorkoutService {
               )
             ''')
             .eq('id', workoutId)
-            .order('order_index', referencedTable: 'workout_exercise_sets', ascending: true)
-            .order('set_number', referencedTable: 'workout_exercise_sets', ascending: true)
+            .order('order_index',
+                referencedTable: 'workout_exercise_sets', ascending: true)
+            .order('set_number',
+                referencedTable: 'workout_exercise_sets', ascending: true)
             .single();
 
         return response;
@@ -641,7 +736,7 @@ class WorkoutService {
   Future<void> completeSet({
     required String setId,
     double? weight, // Recebe o peso da UI
-    int? reps,      // Recebe as reps da UI
+    int? reps, // Recebe as reps da UI
   }) async {
     try {
       // 1. Cria o mapa de atualização básico
@@ -651,7 +746,8 @@ class WorkoutService {
 
       // 2. Só adiciona carga e reps se eles não forem nulos (para não apagar dados existentes sem querer)
       if (weight != null) {
-        updates['weight_kg'] = weight; // Atenção: nome da coluna no banco deve ser 'weight_kg'
+        updates['weight_kg'] =
+            weight; // Atenção: nome da coluna no banco deve ser 'weight_kg'
       }
       if (reps != null) {
         updates['reps'] = reps;
@@ -662,7 +758,6 @@ class WorkoutService {
           .from('workout_exercise_sets')
           .update(updates)
           .eq('id', setId);
-
     } catch (e) {
       throw Exception('Failed to complete set: $e');
     }
@@ -677,19 +772,15 @@ class WorkoutService {
   /// Desfaz a conclusão de uma série
   Future<void> undoSet({required String setId}) async {
     try {
-      await _client
-          .from('workout_exercise_sets')
-          .update({
+      await _client.from('workout_exercise_sets').update({
         'completed_at': null,
         // 'is_completed': false, // REMOVIDO - A coluna não existe no seu schema
-      })
-          .eq('id', setId);
+      }).eq('id', setId);
     } catch (e) {
       throw Exception('Failed to undo set: $e');
     }
   }
   // =========================================================================
-
 
   /// (Opcional) Desfaz por workout + número da série
   Future<void> undoSetByWorkoutAndNumber({
@@ -700,9 +791,9 @@ class WorkoutService {
       await _client
           .from('workout_exercise_sets')
           .update({
-        'completed_at': null,
-        // 'is_completed': false, // REMOVIDO
-      })
+            'completed_at': null,
+            // 'is_completed': false, // REMOVIDO
+          })
           .eq('user_workout_id', userWorkoutId)
           .eq('set_number', setNumber);
     } catch (e) {
@@ -745,7 +836,8 @@ class WorkoutService {
   }
 
   /// Injeta `is_completed` em cada set com base em `completed_at`, caso não exista
-  Map<String, dynamic>? _decorateSetsWithIsCompleted(Map<String, dynamic>? workout) {
+  Map<String, dynamic>? _decorateSetsWithIsCompleted(
+      Map<String, dynamic>? workout) {
     if (workout == null) return null;
     final sets = workout['workout_exercise_sets'];
     if (sets is List) {
@@ -822,8 +914,8 @@ class WorkoutService {
     }
 
     // Observa mudanças nos treinos do usuário
-    workoutsChannel = _client
-        .channel('uw_${currentUser.id}_${DateTime.now().millisecondsSinceEpoch}')
+    workoutsChannel = _client.channel(
+        'uw_${currentUser.id}_${DateTime.now().millisecondsSinceEpoch}')
       ..onPostgresChanges(
         event: PostgresChangeEvent.all,
         schema: 'public',
@@ -906,20 +998,24 @@ class WorkoutService {
             .limit(limit),
       ]);
 
-      final free  = (results[0] as List).map((r) => {...(r as Map<String, dynamic>), 'source': 'free'}).toList();
-      final club  = (results[1] as List).map((r) => {...(r as Map<String, dynamic>), 'source': 'club'}).toList();
+      final free = (results[0] as List)
+          .map((r) => {...(r as Map<String, dynamic>), 'source': 'free'})
+          .toList();
+      final club = (results[1] as List)
+          .map((r) => {...(r as Map<String, dynamic>), 'source': 'club'})
+          .toList();
 
       // Merge, dedup by id, sort desc, take top [limit]
-      final merged = [...free, ...club]
-        ..sort((a, b) {
-          final aT = DateTime.tryParse(a['started_at'] as String? ?? '') ?? DateTime(0);
-          final bT = DateTime.tryParse(b['started_at'] as String? ?? '') ?? DateTime(0);
+      final merged = [...free, ...club]..sort((a, b) {
+          final aT = DateTime.tryParse(a['started_at'] as String? ?? '') ??
+              DateTime(0);
+          final bT = DateTime.tryParse(b['started_at'] as String? ?? '') ??
+              DateTime(0);
           return bT.compareTo(aT);
         });
 
       final seen = <String>{};
-      final deduped =
-          merged.where((w) => seen.add(w['id'] as String)).toList();
+      final deduped = merged.where((w) => seen.add(w['id'] as String)).toList();
       final candidates = deduped.take(limit).toList();
       if (candidates.isEmpty) return [];
 
@@ -934,7 +1030,7 @@ class WorkoutService {
 
   Future<Map<String, dynamic>> _enrichPausedWorkout(
       Map<String, dynamic> head) async {
-    final id     = head['id'] as String;
+    final id = head['id'] as String;
     final source = head['source'] as String;
 
     try {
@@ -943,7 +1039,8 @@ class WorkoutService {
       if (source == 'free') {
         final rows = await _client
             .from('workout_exercise_sets')
-            .select('order_index, completed_at, exercises(name), exercise_db_id')
+            .select(
+                'order_index, completed_at, exercises(name), exercise_db_id')
             .eq('user_workout_id', id)
             .order('order_index', ascending: true)
             .order('set_number', ascending: true);
@@ -994,7 +1091,7 @@ class WorkoutService {
 
       return {
         ...head,
-        'total_exercises':     totalExercises,
+        'total_exercises': totalExercises,
         'completed_exercises': completedExercises,
         'current_exercise_name': currentExerciseName,
       };
@@ -1002,7 +1099,7 @@ class WorkoutService {
       debugPrint('[WorkoutService] _enrichPausedWorkout error: $e');
       return {
         ...head,
-        'total_exercises':     0,
+        'total_exercises': 0,
         'completed_exercises': 0,
         'current_exercise_name': '',
       };
