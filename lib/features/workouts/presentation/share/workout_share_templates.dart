@@ -124,14 +124,18 @@ class _CompactComposition extends StatelessWidget {
                   _Metrics(data: data, scale: scale * metricScale),
                   if (data.muscleMapData != null) ...[
                     SizedBox(height: 30 * scale),
-                    SizedBox(
-                      height: mapHeight * scale,
-                      child: FittedBox(
-                        fit: BoxFit.contain,
-                        child: BldrMuscleMap(
-                          muscles: data.muscleMapData!.muscles,
-                          view: data.shareMuscleView,
-                          size: BldrMuscleMapSize.summary,
+                    LayoutBuilder(
+                      builder: (context, constraints) => SizedBox(
+                        width: constraints.maxWidth,
+                        height: mapHeight * scale,
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          alignment: Alignment.center,
+                          child: BldrMuscleMap(
+                            muscles: data.muscleMapData!.muscles,
+                            view: data.shareMuscleView,
+                            size: BldrMuscleMapSize.summary,
+                          ),
                         ),
                       ),
                     ),

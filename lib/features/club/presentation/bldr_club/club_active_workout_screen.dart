@@ -612,11 +612,14 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
     ));
     getIt<HealthKitService>().stopHeartRateMonitoring();
     final setsCount = _completedSetsCount;
+    final exerciseCount = _exercises.length;
+    debugPrint('[Summary] setsCount capturado: $setsCount');
+    debugPrint('[Summary] exerciseCount capturado: $exerciseCount');
     final result = await getIt<uc.CompleteWorkoutWithAnalytics>()(
       workoutId: widget.workoutId,
       source: 'club',
       setsCompleted: setsCount,
-      exerciseCount: _exercises.length,
+      exerciseCount: exerciseCount,
       notes: 'Concluído via BLDR CLUB',
     );
     final summaryData = result.valueOrNull;

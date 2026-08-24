@@ -598,7 +598,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     int count = 0;
     for (final ex in _exercises) {
       final sets = ex['sets'] as List<Map<String, dynamic>>? ?? [];
-      count += sets.where((s) => s['is_completed'] == true).length;
+      // `_confirmSet` grava `completed_at` (não `is_completed`) — mesmo
+      // campo que `_setToUiMap` usa para hidratar o estado inicial.
+      count += sets.where((s) => s['completed_at'] != null).length;
     }
     return count;
   }
@@ -626,11 +628,14 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     ));
     getIt<HealthKitService>().stopHeartRateMonitoring();
     final setsCount = _completedSetsCount;
+    final exerciseCount = _exercises.length;
+    debugPrint('[Summary] setsCount capturado: $setsCount');
+    debugPrint('[Summary] exerciseCount capturado: $exerciseCount');
     final result = await getIt<uc.CompleteWorkoutWithAnalytics>()(
       workoutId: widget.workoutId,
       source: 'free',
       setsCompleted: setsCount,
-      exerciseCount: _exercises.length,
+      exerciseCount: exerciseCount,
     );
     final summaryData = result.valueOrNull;
     if (summaryData == null) {
