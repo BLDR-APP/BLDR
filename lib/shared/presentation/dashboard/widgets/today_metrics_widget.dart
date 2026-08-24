@@ -215,12 +215,13 @@ class _StatCard extends StatelessWidget {
     return SizedBox(
       width: 106,
       child: BldrGlassCard(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 15, color: BldrColors.goldSolid),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(value, style: BldrText.kpiSm),
             const SizedBox(height: 1),
             Text(label, style: BldrText.meta),
