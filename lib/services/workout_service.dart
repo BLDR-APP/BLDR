@@ -513,7 +513,12 @@ class WorkoutService {
         'is_completed': completion['is_completed'],
       };
     } catch (error) {
-      throw Exception('Failed to complete workout with analytics: $error');
+      // Não envolver em Exception genérica: isso mascarava o erro real
+      // (PostgrestException, StateError etc.) atrás de "Ocorreu um erro
+      // inesperado" no repository, tornando o bug impossível de diagnosticar
+      // a partir do que o usuário via na tela.
+      debugPrint('[WorkoutService] completeWorkoutWithAnalytics falhou: $error');
+      rethrow;
     }
   }
 
