@@ -225,8 +225,8 @@ class _ShareMuscleMap extends StatelessWidget {
           fit: BoxFit.contain,
           alignment: Alignment.center,
           child: SizedBox(
-            width: 104,
-            height: 208,
+            width: BldrMuscleMapSize.summary.singleViewWidth,
+            height: BldrMuscleMapSize.summary.height,
             child: BldrMuscleMap(
               muscles: muscles,
               view: view,
