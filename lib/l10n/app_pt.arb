@@ -1,0 +1,2045 @@
+{
+  "@@locale": "pt",
+  "common_continue_btn": "Continuar",
+  "common_finish_btn": "Concluir",
+  "common_back_btn": "Voltar",
+  "common_next_btn": "Avançar",
+  "common_cancel": "Cancelar",
+  "common_ok": "OK",
+  "common_resend": "Reenviar",
+  "common_or": "ou",
+  "common_retry": "Tentar Novamente",
+  "common_start_btn": "Começar",
+  "common_got_it_btn": "Entendi",
+  "login_title": "Bem-Vindo!",
+  "login_subtitle": "Faça login para continuar sua jornada fitness",
+  "login_email_label": "Email",
+  "login_email_hint": "Insira seu endereço de e-mail",
+  "login_email_required_error": "E-mail é obrigatório",
+  "login_email_invalid_error": "Insira um endereço de e-mail válido",
+  "login_password_label": "Senha",
+  "login_password_hint": "Insira sua senha",
+  "login_password_required_error": "Senha é obrigatória",
+  "login_remember_me": "Lembrar-me",
+  "login_forgot_password": "Esqueceu a senha?",
+  "login_btn": "Entrar",
+  "login_apple_btn": "Continuar com a Apple",
+  "login_google_btn": "Continuar com o Google",
+  "login_no_account": "Não possui uma conta? ",
+  "login_create_account_link": "Criar conta",
+  "login_email_not_confirmed_title": "E-mail não confirmado",
+  "login_email_not_confirmed_body": "Você precisa confirmar seu e-mail antes de fazer login. Verifique sua caixa de entrada e clique no link de confirmação.",
+  "login_email_confirmation_resent": "E-mail de confirmação reenviado",
+  "login_resend_email_error": "Erro ao reenviar e-mail: {message}",
+  "@login_resend_email_error": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "login_recover_password_title": "Recuperar Senha",
+  "login_recover_password_body": "Insira seu e-mail para receber um código de 6 dígitos.",
+  "login_enter_email_hint": "Insira seu e-mail",
+  "login_enter_email_error": "Por favor, insira um e-mail.",
+  "login_send_code_btn": "Enviar Código",
+  "login_send_code_error": "Erro ao enviar código: {message}",
+  "@login_send_code_error": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "login_error": "Falha no login: {message}",
+  "@login_error": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "signup_title": "Criar Conta",
+  "signup_subtitle": "Junte-se à BLDR e comece sua jornada fitness com treinos personalizados e acompanhamento nutricional.",
+  "signup_form_title": "Juntar-se ao BLDR",
+  "signup_form_subtitle": "Começe sua transformação fitness hoje",
+  "signup_full_name_label": "Nome completo",
+  "signup_full_name_hint": "Insira seu nome completo",
+  "signup_full_name_required_error": "Nome completo é obrigatório",
+  "signup_full_name_min_length_error": "Nome completo deve ter pelo menos 2 caractéres",
+  "signup_password_min_length_error": "Senha deverá conter 8 caractéres",
+  "signup_password_uppercase_error": "Senha deverá conter pelo menos um caractére em maiúsculo",
+  "signup_password_number_error": "Senha deverá conter pelo menos um número",
+  "signup_confirm_password_label": "Confirmar Senha",
+  "signup_confirm_password_hint": "Confirme sua senha",
+  "signup_confirm_password_required_error": "Por favor confirme sua senha",
+  "signup_passwords_mismatch_error": "Senhas não coincidem",
+  "signup_agree_terms_prefix": "Eu concordo com os ",
+  "signup_terms_of_service": "Termos de Serviço",
+  "signup_privacy_policy": "Privacidade",
+  "signup_must_agree_terms_error": "Por favor concorde com os Termos de Serviço",
+  "signup_error": "Erro no cadastro: {message}",
+  "@signup_error": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "signup_create_account_btn": "Criar Conta",
+  "signup_already_have_account": "Já possui uma conta? ",
+  "signup_confirm_email_title": "Confirme seu E-mail",
+  "signup_confirm_email_sent_to": "Enviamos um e-mail de confirmação para:",
+  "signup_confirm_email_instruction": "Clique no link do e-mail para confirmar sua conta e continuar.",
+  "signup_resend_email_btn": "Reenviar E-mail",
+  "signup_back_to_login_btn": "Voltar ao Login",
+  "wait_confirm_email_body": "Enviamos um link de confirmação para o seu endereço de e-mail. Por favor, clique no link para ativar sua conta.",
+  "wait_confirm_no_email_error": "Não foi possível encontrar o e-mail do usuário.",
+  "wait_confirm_email_resent_success": "E-mail de confirmação reenviado com sucesso!",
+  "wait_confirm_back_to_login_btn": "Voltar para o Login",
+  "otp_title": "Verificar Código",
+  "otp_heading": "Digite o Código",
+  "otp_body": "Enviamos um código de 6 dígitos para o seu e-mail:",
+  "otp_validator_error": "Digite o código de 6 dígitos",
+  "otp_verify_btn": "Verificar e Continuar",
+  "otp_invalid_code_error": "Código inválido ou expirado. Tente novamente.",
+  "new_password_title": "Criar Nova Senha",
+  "new_password_heading": "Defina sua Nova Senha",
+  "new_password_body": "Por favor, insira uma nova senha forte para sua conta.",
+  "new_password_field_label": "Nova Senha",
+  "new_password_field_hint": "Insira sua nova senha",
+  "new_password_min_length_error": "Senha deverá conter pelo menos 8 caracteres",
+  "new_password_confirm_label": "Confirmar Nova Senha",
+  "new_password_confirm_hint": "Confirme sua nova senha",
+  "new_password_passwords_mismatch_error": "As senhas não coincidem",
+  "new_password_save_btn": "Salvar Nova Senha",
+  "new_password_success": "Senha atualizada com sucesso!",
+  "new_password_error": "Erro ao atualizar senha: {message}",
+  "@new_password_error": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "new_password_confirm_required_error": "Por favor, confirme sua senha",
+  "onboarding_step_indicator": "Passo {step} de {total}",
+  "@onboarding_step_indicator": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "onboarding_exit_dialog_title": "Sair da Configuração?",
+  "onboarding_exit_dialog_body": "Seu progresso será perdido.",
+  "onboarding_exit_dialog_exit_btn": "Sair",
+  "onboarding_completion_error": "Falha ao concluir configuração: {error}",
+  "@onboarding_completion_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "onboarding_welcome_title": "Bem-vindo ao BLDR.",
+  "onboarding_welcome_body": "Vamos configurar seu plano 100% personalizado com a IA HAVOK.",
+  "onboarding_welcome_bullet_nutrition": "Plano de nutrição personalizado",
+  "onboarding_welcome_bullet_workout": "Treino gerado pelo HAVOK",
+  "onboarding_welcome_bullet_adjustments": "Ajustes contínuos conforme sua evolução",
+  "onboarding_welcome_duration_hint": "Isso levará apenas alguns minutos.",
+  "onboarding_goal_title": "Qual é a sua meta principal?",
+  "onboarding_goal_body": "Isso definirá a direção do seu plano de nutrição.",
+  "onboarding_pace_title": "Em qual ritmo você prefere ir?",
+  "onboarding_pace_body": "Ritmo agressivo traz resultados mais rápidos, mas exige mais disciplina.",
+  "onboarding_profile_title": "Sobre você",
+  "onboarding_profile_body": "Essencial para calcular suas metas de nutrição.",
+  "onboarding_profile_age": "Idade",
+  "onboarding_profile_height": "Altura",
+  "onboarding_profile_weight": "Peso",
+  "onboarding_activity_title": "Como é o seu dia-a-dia?",
+  "onboarding_activity_body": "Excluindo treinos e esportes — define seu NEAT.",
+  "onboarding_workout_config_title": "Configurando seu treino",
+  "onboarding_workout_config_body": "Essas informações guiam a IA HAVOK na criação do seu plano.",
+  "onboarding_experience_section_title": "Nível de experiência",
+  "onboarding_freq_days_label": "Dias por semana",
+  "onboarding_duration_section_title": "Tempo médio por sessão",
+  "onboarding_environment_title": "Onde você vai treinar?",
+  "onboarding_environment_body": "Isso dirá ao HAVOK quais exercícios incluir.",
+  "onboarding_equipment_title": "Quais equipamentos você tem?",
+  "onboarding_equipment_body": "Selecione todos que se aplicam.",
+  "onboarding_activities_title": "Atividades e foco muscular",
+  "onboarding_activities_body": "Quais atividades você pratica e onde quer focar.",
+  "onboarding_activities_section_title": "Atividades físicas",
+  "onboarding_muscles_section_title": "Grupos musculares",
+  "onboarding_muscles_body": "Selecione os músculos que quer priorizar.",
+  "onboarding_split_injuries_title": "Divisão e lesões",
+  "onboarding_split_injuries_body": "Últimas informações para o HAVOK montar seu treino.",
+  "onboarding_split_section_title": "Divisão de treino",
+  "onboarding_split_body": "Se não souber, deixe o HAVOK decidir.",
+  "onboarding_injuries_section_title": "Lesões ou limitações",
+  "onboarding_injuries_body": "O HAVOK evitará exercícios que prejudiquem sua recuperação.",
+  "onboarding_injury_other_hint": "Descreva sua lesão...",
+  "onboarding_summary_title": "Tudo pronto!",
+  "onboarding_summary_body": "Seu plano personalizado foi calculado.",
+  "onboarding_summary_nutrition_section": "Nutrição",
+  "onboarding_summary_tdee": "TDEE: {tdee} kcal/dia",
+  "@onboarding_summary_tdee": {
+    "placeholders": {
+      "tdee": {
+        "type": "String"
+      }
+    }
+  },
+  "onboarding_calorie_goal_label": "Meta calórica",
+  "onboarding_protein_label": "Proteína",
+  "onboarding_summary_carbs_label": "Carboidrato",
+  "onboarding_summary_fat_label": "Gordura",
+  "onboarding_summary_hydration_label": "Hidratação",
+  "onboarding_summary_workout_section": "Treino",
+  "onboarding_summary_goal_label": "Meta",
+  "onboarding_summary_level_label": "Nível",
+  "onboarding_summary_frequency_label": "Frequência",
+  "onboarding_summary_duration_label": "Duração",
+  "onboarding_summary_environment_label": "Ambiente",
+  "onboarding_summary_split_label": "Split",
+  "onboarding_summary_focus_label": "Foco",
+  "onboarding_summary_confirm_hint": "Ao confirmar, o HAVOK gerará seu plano de treino personalizado.",
+  "onboarding_tdee_info_title": "O que é TDEE?",
+  "onboarding_tdee_info_body": "TDEE (Total Daily Energy Expenditure) é a quantidade de calorias que seu corpo gasta por dia. Usamos isso como base para calcular suas metas.",
+  "onboarding_completion_generating_title": "Montando sua semana",
+  "onboarding_completion_generating_body": "Estou usando o que você me contou para desenhar seu primeiro plano.",
+  "onboarding_completion_ready_title": "Sua semana está pronta",
+  "onboarding_completion_plan_fallback_desc": "Plano personalizado pelo HAVOK",
+  "onboarding_completion_starts_today_label": "Começa hoje",
+  "onboarding_rest_day": "Descanso",
+  "onboarding_completion_adjust_hint": "Pode ajustar tudo depois em Treinos e Configurações.",
+  "onboarding_completion_regenerate_btn": "Quero outra divisão",
+  "onboarding_completion_fallback_title": "Não consegui gerar agora.",
+  "onboarding_completion_fallback_body_with_plan": "Criei um plano base para você começar — ajuste quando quiser.",
+  "onboarding_completion_fallback_body_no_plan": "Tente novamente em instantes — você pode montar seu treino manualmente em Treinos.",
+  "onboarding_completion_today_workout_label": "Treino de hoje",
+  "onboarding_summary_review_title": "Revise suas Escolhas",
+  "onboarding_summary_perfect_body": "Perfeito! Usaremos essas informações para criar a sua experiência fitness personalizada!",
+  "onboarding_summary_edit_btn": "Editar",
+  "common_loading": "Carregando…",
+  "dashboard_greeting_morning": "Bom Dia",
+  "dashboard_greeting_afternoon": "Boa Tarde",
+  "dashboard_greeting_evening": "Boa Noite",
+  "dashboard_guest_user": "Convidado",
+  "dashboard_streak_label": "Streak",
+  "dashboard_workouts_month_label": "Treinos/mês",
+  "dashboard_total_time_label": "Tempo total",
+  "dashboard_achievements_label": "Conquistas",
+  "dashboard_streak_value": "{count, plural, one{{count} dia} other{{count} dias}}",
+  "@dashboard_streak_value": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboard_continue_workout_label": "Continuar",
+  "dashboard_delete_paused_title": "Excluir treino pausado?",
+  "dashboard_delete_paused_body": "Deseja excluir este treino pausado? O progresso não será recuperado.",
+  "dashboard_delete_btn": "Excluir",
+  "dashboard_workout_today_title": "Treino de hoje",
+  "dashboard_workout_load_error_title": "Não foi possível carregar os treinos",
+  "dashboard_workout_load_error_body": "Verifique sua conexão e tente novamente",
+  "dashboard_welcome_title": "Bem vindo ao BLDR",
+  "dashboard_welcome_subtitle": "Entre para acompanhar seus treinos",
+  "dashboard_login_btn": "Entrar",
+  "dashboard_workout_in_progress": "Treino em andamento",
+  "dashboard_finish_workout_btn": "Finalizar treino",
+  "dashboard_workout_ready": "Pronto para treinar?",
+  "dashboard_workout_havok_generated": "Gerado pelo HAVOK no seu onboarding",
+  "dashboard_workout_next_session": "Começar próxima sessão",
+  "dashboard_workout_start_btn": "Iniciar treino",
+  "dashboard_finish_workout_dialog_title": "Finalizar Treino",
+  "dashboard_finish_workout_dialog_body": "Você tem certeza que quer completar seu treino atual?",
+  "dashboard_complete_workout_btn": "Completar",
+  "dashboard_workout_completed_success": "Treino finalizado com sucesso!",
+  "dashboard_workout_done_label": "Concluído",
+  "dashboard_done_duration_label": "Duração",
+  "dashboard_done_sets_label": "Séries",
+  "dashboard_done_volume_label": "Volume",
+  "dashboard_finish_workout_error": "Falha ao finalizar treino: {error}",
+  "@dashboard_finish_workout_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboard_no_workouts_available": "Nenhum treino disponível no momento",
+  "dashboard_weight_goal_label": "Peso alvo",
+  "dashboard_goal_target": "meta {value} {unit}",
+  "@dashboard_goal_target": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboard_goal_empty_title": "Defina seu objetivo",
+  "dashboard_goal_empty_subtitle": "Crie uma meta na aba Progresso",
+  "dashboard_calories_label": "Calorias",
+  "dashboard_calories_of_target": "de {target} kcal",
+  "@dashboard_calories_of_target": {
+    "placeholders": {
+      "target": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboard_macros_label": "Macros",
+  "dashboard_macro_protein_abbrev": "P",
+  "dashboard_macro_carbs_abbrev": "C",
+  "dashboard_macro_fat_abbrev": "G",
+  "dashboard_seven_days": "7 dias",
+  "dashboard_workouts_count": "{count, plural, one{{count} treino} other{{count} treinos}}",
+  "@dashboard_workouts_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboard_havok_insight_title": "Sua semana em um relance",
+  "dashboard_havok_insight_body": "Em breve o HAVOK vai comentar sua aderência ao plano, proteína e streak diretamente aqui.",
+  "dashboard_havok_insight_action_btn": "Ver progresso",
+  "dashboard_level_label": "Nível {level}",
+  "@dashboard_level_label": {
+    "placeholders": {
+      "level": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboard_partners_title": "Parceiros",
+  "dashboard_partner_view_offer_btn": "Ver oferta",
+  "dashboard_partner_copy_coupon_btn": "Copiar cupom",
+  "dashboard_partners_view_all_btn": "Ver todos",
+  "dashboard_partner_coupon_copied": "Cupom \"{coupon}\" copiado!",
+  "@dashboard_partner_coupon_copied": {
+    "placeholders": {
+      "coupon": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboard_quick_log_title": "Registro Rápido",
+  "dashboard_quick_log_meal": "Registrar Refeição",
+  "dashboard_quick_log_workout": "Registrar Exercício",
+  "dashboard_quick_log_weight": "Registrar Peso",
+  "dashboard_quick_log_water": "Registrar Água",
+  "whoop_card_connect_subtitle": "Conecte seu Whoop para ver Sleep, Recovery e Strain.",
+  "whoop_card_connect_btn": "Conectar",
+  "whoop_card_today": "Hoje",
+  "whoop_card_sleep_label": "SLEEP",
+  "whoop_card_recovery_label": "RECOVERY",
+  "whoop_card_strain_label": "STRAIN",
+  "whoop_card_recovery_tip_low": "Recovery baixo — priorize descanso hoje.",
+  "whoop_card_recovery_tip_med": "Recovery moderado — treino leve ou técnico.",
+  "whoop_card_recovery_tip_high": "Recovery alto — dia ideal para esforço intenso.",
+  "nav_tab_dashboard": "Dashboard",
+  "nav_tab_workouts": "Treinos",
+  "nav_tab_community": "Comunidade",
+  "nav_tab_nutrition": "Nutrição",
+  "nav_tab_profile": "Perfil",
+  "nav_club_label": "BLDR Club",
+  "component_workout_start_btn": "Iniciar",
+  "component_series_label": "Série {index}",
+  "@component_series_label": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      }
+    }
+  },
+  "component_current_badge": "Atual",
+  "component_kcal_label": "{calories} kcal",
+  "@component_kcal_label": {
+    "placeholders": {
+      "calories": {
+        "type": "int"
+      }
+    }
+  },
+  "component_macro_detail": "P {protein}g · C {carbs}g · G {fat}g · {portion}",
+  "@component_macro_detail": {
+    "placeholders": {
+      "protein": {
+        "type": "String"
+      },
+      "carbs": {
+        "type": "String"
+      },
+      "fat": {
+        "type": "String"
+      },
+      "portion": {
+        "type": "String"
+      }
+    }
+  },
+  "common_delete": "Excluir",
+  "workouts_title": "Treinos",
+  "workouts_search_hint": "Buscar treino…",
+  "workouts_today_hero_label": "Treino de hoje",
+  "workouts_today_with_label": "Hoje · {label}",
+  "@workouts_today_with_label": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "workouts_today_hero_subtitle": "Toque para ver o plano completo da semana",
+  "workouts_continue_title": "Continuar",
+  "workouts_active_banner_text": "Treino em andamento — continuar",
+  "workouts_my_workouts": "Meus treinos",
+  "workouts_created_by_me": "Criados por mim",
+  "workouts_from_my_trainer": "Do meu personal",
+  "workouts_empty_state": "Nenhum treino criado ainda",
+  "workouts_empty_subtitle": "Crie seu primeiro treino personalizado",
+  "workouts_create_btn": "Criar treino",
+  "workouts_from_photo_btn": "A partir de foto",
+  "workouts_photo_camera": "Câmera",
+  "workouts_photo_gallery": "Galeria",
+  "workouts_photo_no_exercises": "Não foi possível identificar exercícios na imagem. Tente outra foto.",
+  "workouts_photo_error": "Erro ao analisar foto: {error}",
+  "@workouts_photo_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "workouts_trainer_empty_state": "Treinos do personal — em desenvolvimento",
+  "workouts_trainer_empty_subtitle": "Em breve você poderá receber treinos direcionados pelo seu personal trainer.",
+  "workouts_bldr_library": "Biblioteca BLDR",
+  "workouts_see_less": "Ver menos",
+  "workouts_see_all": "Ver tudo",
+  "workouts_bldr_empty": "Nenhum treino BLDR disponível",
+  "workouts_start_workout_btn": "Iniciar treino",
+  "workouts_exercises_header": "Exercícios",
+  "workouts_exercises_count": "{exercises} · {sets} séries",
+  "@workouts_exercises_count": {
+    "placeholders": {
+      "exercises": {
+        "type": "int"
+      },
+      "sets": {
+        "type": "int"
+      }
+    }
+  },
+  "workouts_sets": "{count} séries",
+  "@workouts_sets": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "workouts_reps": "{count} reps",
+  "@workouts_reps": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "workouts_no_exercises": "Nenhum exercício",
+  "workouts_technique_unavailable": "Técnica não disponível para este exercício.",
+  "workouts_delete_title": "Excluir treino",
+  "workouts_delete_body": "Tem certeza que deseja excluir \"{name}\"?\nEsta ação não pode ser desfeita.",
+  "@workouts_delete_body": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "workouts_deleted_snackbar": "\"{name}\" excluído",
+  "@workouts_deleted_snackbar": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "workouts_delete_error": "Erro ao excluir: {error}",
+  "@workouts_delete_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "workouts_start_error": "Falha ao iniciar treino",
+  "workouts_difficulty_label": "Nível {level}",
+  "@workouts_difficulty_label": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "plan_current_week": "Semana atual",
+  "plan_see_plan": "Ver plano →",
+  "plan_workout_done": "Treino realizado",
+  "plan_workout_not_done": "Treino não feito",
+  "plan_no_record": "Sem registro para este dia.",
+  "plan_view_week_btn": "Ver plano da semana",
+  "plan_title": "Meu plano",
+  "plan_change_btn": "Alterar",
+  "plan_of_total_workouts": "de {total} treinos",
+  "@plan_of_total_workouts": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "plan_workouts_count": "{count} treinos",
+  "@plan_workouts_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "plan_remaining": "{count} restantes nesta semana",
+  "@plan_remaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "plan_streak_singular": "dia seguido",
+  "plan_streak_plural": "dias seguidos",
+  "plan_xp_week": "XP esta semana",
+  "plan_xp_earned": "+{xp} XP",
+  "@plan_xp_earned": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "plan_edit_sheet_title": "Editar plano semanal",
+  "plan_split_section": "Divisão de treinos",
+  "plan_days_section": "Dias da semana",
+  "plan_training_rest_summary": "{training} treino · {rest} descanso",
+  "@plan_training_rest_summary": {
+    "placeholders": {
+      "training": {
+        "type": "int"
+      },
+      "rest": {
+        "type": "int"
+      }
+    }
+  },
+  "plan_days_toggle_hint": "Toque em um dia para alternar entre treino e descanso",
+  "plan_save_btn": "Salvar alterações",
+  "plan_save_success": "Plano atualizado com sucesso!",
+  "plan_save_error": "Erro ao salvar: {error}",
+  "@plan_save_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "plan_pro_title": "Desbloqueie o plano premium",
+  "plan_pro_subtitle": "Personalize cada dia da sua semana",
+  "plan_see_plans_btn": "Ver planos",
+  "plan_pro_feature_1": "Escolher treino específico por dia",
+  "plan_pro_feature_2": "Alterar o plano livremente",
+  "plan_pro_feature_3": "Usar treinos personalizados no plano",
+  "plan_pro_feature_4": "Sincronização com Apple Watch",
+  "plan_pro_feature_5": "Analytics avançados de progresso",
+  "plan_do_now_btn": "Fazer agora",
+  "plan_today_sheet_title": "Treino de hoje",
+  "plan_next_workout": "Ver treino",
+  "plan_rest_day": "Descanso",
+  "plan_not_done": "Não feito",
+  "plan_extra_badge": "Extra",
+  "plan_extras_label": "Extras",
+  "plan_delete_record_btn": "Excluir registro",
+  "plan_delete_record_title": "Excluir registro?",
+  "plan_delete_record_body": "Deseja excluir este registro de treino? Esta ação não pode ser desfeita.",
+  "plan_delete_record_error": "Erro ao excluir registro.",
+  "plan_edit_btn": "Editar plano",
+  "plan_register_extra_btn": "Registrar extra",
+  "plan_extra_sheet_title": "Registrar atividade extra",
+  "plan_extra_sheet_subtitle": "Atividade fora do plano · +50 XP",
+  "plan_extra_type_label": "Tipo de atividade",
+  "plan_extra_duration_label": "Duração",
+  "plan_extra_notes_label": "Notas (opcional)",
+  "plan_extra_notes_hint": "Ex: partida de futebol com amigos",
+  "plan_extra_register_btn": "Registrar + 50 XP",
+  "plan_extra_register_error": "Erro ao registrar: {error}",
+  "@plan_extra_register_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "plan_extra_register_success": "Atividade registrada! +50 XP",
+  "plan_paywall_muscle_message": "Desbloqueie a análise muscular completa — BLDR CLUB",
+  "plan_paywall_muscle_btn": "Conhecer o BLDR Club",
+  "workout_stop_title": "Parar treino?",
+  "workout_stop_body": "O progresso será salvo até aqui.",
+  "workout_stop_btn": "Parar",
+  "workout_stop_label": "Parar treino",
+  "workout_in_progress": "EM ANDAMENTO",
+  "workout_time_label": "TEMPO",
+  "workout_set_label": "SÉRIE",
+  "workout_exercise_of": "Exercício {current} de {total}",
+  "@workout_exercise_of": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "workout_percent_done": "{percent}% concluído",
+  "@workout_percent_done": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "workout_see_technique": "Ver técnica",
+  "workout_paywall_muscle_message": "Veja quais músculos secundários você está ativando — BLDR Club",
+  "workout_technique_fallback": "Técnica",
+  "workout_execution_label": "Execução",
+  "workout_no_instructions": "Sem instruções disponíveis.",
+  "workout_load_kg": "Carga (kg)",
+  "workout_decrease_load": "Diminuir carga",
+  "workout_increase_load": "Aumentar carga",
+  "workout_reps_label": "Repetições",
+  "workout_decrease_reps": "Diminuir repetições",
+  "workout_increase_reps": "Aumentar repetições",
+  "workout_resting": "DESCANSANDO",
+  "workout_next_set": "Próxima: série {set} de {total}",
+  "@workout_next_set": {
+    "placeholders": {
+      "set": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "workout_add_rest_label": "Adicionar 15 segundos ao descanso",
+  "workout_skip_rest": "Pular descanso",
+  "workout_exercises_label": "Exercícios",
+  "workout_set_current": "Atual",
+  "workout_next_up": "A seguir",
+  "workout_skip_exercise": "Pular exercício",
+  "workout_confirm_set_btn": "Confirmar série",
+  "workout_rest_edit_label": "Editar tempo de descanso",
+  "workout_rest_sheet_title": "Tempo de descanso",
+  "workout_confirm_btn": "Confirmar",
+  "workout_finished_title": "Treino Concluído!",
+  "workout_stat_time": "Tempo",
+  "workout_stat_sets": "Séries",
+  "workout_finish_btn": "Finalizar",
+  "common_today": "Hoje",
+  "common_required_field": "Campo obrigatório",
+  "common_invalid_value": "Valor inválido",
+  "common_unauthenticated": "Usuário não autenticado.",
+  "nutrition_food_removed": "Comida removida com sucesso!",
+  "nutrition_remove_error": "Falha ao remover item.",
+  "nutrition_daily_summary": "Resumo diário",
+  "nutrition_protein": "Proteína",
+  "nutrition_carbs": "Carboidrato",
+  "nutrition_fat": "Gordura",
+  "nutrition_remaining_today": "Restantes hoje",
+  "nutrition_goal_exceeded": "Meta ultrapassada",
+  "nutrition_iqd_gauge_label": "IQD · /100",
+  "nutrition_fiber": "Fibra",
+  "nutrition_sodium": "Sódio",
+  "nutrition_sugars": "Açúcares",
+  "nutrition_iqd_premium_msg": "Análise de qualidade (IQD)\\ndisponível no Premium",
+  "nutrition_iqd_premium_btn": "Seja Premium",
+  "nutrition_meals_section": "Refeições",
+  "nutrition_photo_meal_btn": "Foto do prato",
+  "nutrition_search_btn": "Buscar alimento",
+  "nutrition_no_food": "Nenhum alimento",
+  "nutrition_add_btn": "Adicionar",
+  "nutrition_unnamed_food": "Alimento sem nome",
+  "nutrition_item_id_missing": "ID do item de comida não encontrado.",
+  "nutrition_item_action_question": "O que você deseja fazer com este item?",
+  "nutrition_edit_quantity": "Editar quantidade",
+  "nutrition_remove_item": "Remover item",
+  "nutrition_breakfast": "Café da manhã",
+  "nutrition_snack": "Lanche",
+  "nutrition_lunch": "Almoço",
+  "nutrition_pre_workout": "Pré-treino",
+  "nutrition_post_workout": "Pós-treino",
+  "nutrition_dinner": "Jantar",
+  "nutrition_add_to_meal": "Adicionar em: {mealType}",
+  "@nutrition_add_to_meal": {
+    "placeholders": {
+      "mealType": {
+        "type": "String"
+      }
+    }
+  },
+  "nutrition_search_db_hint": "Buscar comida na base...",
+  "nutrition_photo_auto_label": "Foto do prato — identificação automática",
+  "nutrition_coming_soon": "Em breve",
+  "nutrition_select_category": "Selecione uma categoria ou pesquise acima.",
+  "nutrition_cat_meat": "Carnes & Aves",
+  "nutrition_cat_fish": "Peixes & Frutos do Mar",
+  "nutrition_cat_eggs": "Ovos",
+  "nutrition_cat_dairy": "Laticínios",
+  "nutrition_cat_fruits": "Frutas",
+  "nutrition_cat_vegetables": "Legumes & Verduras",
+  "nutrition_cat_grains": "Grãos & Cereais",
+  "nutrition_cat_fats": "Gorduras & Óleos",
+  "nutrition_cat_nuts": "Oleaginosas",
+  "nutrition_cat_sweets": "Doces & Sobremesas",
+  "nutrition_cat_drinks": "Bebidas",
+  "nutrition_cat_fastfood": "Fast Food",
+  "nutrition_cat_processed": "Industrializados",
+  "nutrition_cat_readymeals": "Refeições Prontas",
+  "nutrition_cat_sauces": "Molhos & Temperos",
+  "nutrition_cat_supplements": "Suplementos",
+  "hydration_title": "Hidratação",
+  "hydration_loading": "Carregando...",
+  "hydration_consumed": "Água consumida",
+  "hydration_remaining": "{value}L restantes",
+  "@hydration_remaining": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "hydration_total_today": "Total hoje",
+  "hydration_entries": "Entradas",
+  "hydration_goal_percent": "% da meta",
+  "hydration_custom_amount": "Quantidade personalizada",
+  "hydration_remove_last": "Remover última entrada",
+  "hydration_log_error": "Falha ao registrar água",
+  "hydration_add_btn": "Adicionar",
+  "hydration_no_data": "Você ainda não registrou água hoje.",
+  "hydration_remove_title": "Remover água",
+  "hydration_too_small": "Quantidade muito pequena para remover por aqui.",
+  "hydration_removed": "Removido: {amount}ml",
+  "@hydration_removed": {
+    "placeholders": {
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
+  "hydration_remove_error": "Falha ao remover água",
+  "nutrition_search_error": "Erro na busca.",
+  "nutrition_search_type_prompt": "Digite para buscar alimentos.",
+  "nutrition_no_results": "Nenhum resultado encontrado.",
+  "nutrition_img_not_implemented": "Reconhecimento por imagem ainda não implementado",
+  "nutrition_search_food_title": "Buscar Alimento",
+  "nutrition_search_hint": "Buscar alimentos...",
+  "nutrition_popular_foods": "Alimentos Populares",
+  "nutrition_search_results_count": "Resultados da Busca ({count})",
+  "@nutrition_search_results_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "nutrition_scan_title": "Escanear Código",
+  "nutrition_scan_hint": "Aponte a câmera para o código de barras",
+  "nutrition_scan_auto": "O código será detectado automaticamente",
+  "nutrition_scan_flash": "Flash",
+  "nutrition_scan_camera_label": "Câmera",
+  "nutrition_tab_recent": "Recentes",
+  "nutrition_tab_favorites": "Favoritos",
+  "nutrition_tab_manual": "Manual",
+  "nutrition_category_empty": "Nenhum alimento encontrado para esta categoria.",
+  "nutrition_recent_empty": "Nenhum alimento recente.",
+  "nutrition_favorites_empty": "Nenhum favorito salvo ainda.",
+  "nutrition_favorites_hint": "Use \"Manual\" e marque \"Salvar nos favoritos\".",
+  "nutrition_iqd_impact_label": "Impacto no IQD",
+  "nutrition_saving": "Salvando...",
+  "nutrition_add_meal_btn": "Adicionar {mealType}",
+  "@nutrition_add_meal_btn": {
+    "placeholders": {
+      "mealType": {
+        "type": "String"
+      }
+    }
+  },
+  "nutrition_food_name_label": "Nome da comida",
+  "nutrition_essential_label": "Essencial",
+  "nutrition_calories": "Calorias",
+  "nutrition_carbs_short": "Carbo",
+  "nutrition_iqd_quality_data": "Dados de qualidade (IQD)",
+  "nutrition_fibers": "Fibras",
+  "nutrition_save_favorites": "Salvar nos favoritos",
+  "nutrition_set_portion": "Definir porção",
+  "nutrition_grams": "Gramas",
+  "nutrition_food_label": "Alimento",
+  "nutrition_unit": "Unidade",
+  "nutrition_unit_weight_label": "Peso de 1 unidade:",
+  "nutrition_unit_short": "Unid.",
+  "nutrition_quantity_label": "Quantidade:",
+  "nutrition_update_quantity": "Atualizar quantidade",
+  "nutrition_add_food_btn": "Adicionar comida",
+  "nutrition_favorites_load_error": "Não foi possível carregar os favoritos.",
+  "nutrition_fill_one_macro": "Preencha pelo menos um valor nutricional.",
+  "nutrition_create_error": "Falha ao criar item.",
+  "nutrition_save_error": "Erro ao salvar: {error}",
+  "@nutrition_save_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "nutrition_item_updated": "Item atualizado com sucesso!",
+  "nutrition_food_added": "Comida adicionada com sucesso!",
+  "nutrition_fail": "Falha: {error}",
+  "@nutrition_fail": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "nutrition_scan_hint_qr": "Aponte para o código de barras/QR do alimento",
+  "progress_title": "Progresso",
+  "progress_load_error": "Falha ao carregar dados do progresso",
+  "progress_period_7d": "Últimos 7 dias",
+  "progress_period_30d": "Últimos 30 dias",
+  "progress_period_3m": "Últimos 3 meses",
+  "progress_period_1y": "Último ano",
+  "progress_tab_general": "Geral",
+  "progress_tab_body": "Corpo",
+  "progress_tab_workouts": "Treinos",
+  "progress_tab_nutrition": "Nutri",
+  "progress_loading": "Carregando dados...",
+  "progress_export_compiling": "Compilando relatório completo (Corpo, Treino, Nutri)...",
+  "progress_no_data_period": "Sem dados neste período.",
+  "progress_export_error": "Erro ao gerar relatório.",
+  "achievements_title": "Conquistas",
+  "achievements_unlocked_of_total": "{unlocked} de {total} desbloqueadas",
+  "@achievements_unlocked_of_total": {
+    "placeholders": {
+      "unlocked": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "achievements_category_first_steps": "Primeiros Passos",
+  "achievements_category_workouts": "Treinos",
+  "achievements_category_strength": "Força",
+  "achievements_category_milestones": "Marcos",
+  "achievements_category_nutrition": "Nutrição",
+  "goals_create_dialog_title": "Criar novo objetivo",
+  "goals_title_field": "Título do objetivo",
+  "goals_description_field": "Descrição",
+  "goals_target_value_field": "Objetivo (valor alvo)",
+  "goals_unit_field": "Unidade",
+  "goals_category_field": "Categoria",
+  "goals_category_weight": "Peso",
+  "goals_category_workout": "Treino",
+  "goals_category_strength": "Força",
+  "goals_category_endurance": "Resistência",
+  "goals_category_general": "Geral",
+  "goals_set_deadline": "Definir prazo (opcional)",
+  "goals_deadline_set": "Prazo: {date}",
+  "@goals_deadline_set": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "goals_fill_required": "Preencha título, objetivo e unidade",
+  "goals_create_btn": "Criar objetivo",
+  "goals_create_success": "Objetivo criado com sucesso!",
+  "goals_section_title": "Objetivos",
+  "goals_create_first_btn": "Criar primeiro objetivo",
+  "goals_empty_title": "Sem objetivos ativos",
+  "goals_empty_instruction": "Crie objetivos para acompanhar sua jornada",
+  "goals_update_progress_title": "Atualizar progresso",
+  "goals_update_progress_btn": "Atualizar progresso",
+  "goals_current_value_field": "Valor atual ({unit})",
+  "@goals_current_value_field": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "goals_update_btn": "Atualizar",
+  "goals_update_success": "Progresso atualizado com sucesso!",
+  "goals_more_options": "Mais opções",
+  "goals_pause": "Pausar objetivo",
+  "goals_paused": "Objetivo pausado",
+  "goals_delete": "Deletar objetivo",
+  "goals_deleted": "Objetivo deletado",
+  "goals_overdue": "Atrasado",
+  "goals_due_today": "Vence hoje",
+  "goals_days_remaining": "{days}d restantes",
+  "@goals_days_remaining": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "photo_progress_title": "Foto do progresso",
+  "photo_add_sheet_title": "Adicionar foto",
+  "photo_option_camera": "Câmera",
+  "photo_option_gallery": "Galeria",
+  "photo_permission_title": "Permissão necessária",
+  "photo_delete_title": "Remover foto?",
+  "photo_delete_message": "Isso não pode ser desfeito.",
+  "photo_delete_btn": "Remover",
+  "photo_deleted": "Foto removida.",
+  "photo_comparison_title": "Comparação do progresso",
+  "photo_comparison_before": "Antes",
+  "photo_comparison_after": "Depois",
+  "photo_close_btn": "Fechar",
+  "photo_swap_btn": "Trocar",
+  "photo_empty_title": "Sem fotos ainda",
+  "photo_empty_instruction": "Tire fotos para acompanhar sua transformação",
+  "photo_compare_btn": "Comparar progresso",
+  "photo_tips_title": "Dicas",
+  "photo_tips_content": "• Tire fotos na mesma luz e pose\n• Utilize roupas similares para consistência\n• Tire de frente, lado e de costas\n• Programe fotos semanais",
+  "photo_saved": "Foto salva com sucesso!",
+  "photo_need_two": "Adicione ao menos 2 fotos para comparar",
+  "photo_add_semantics": "Adicionar foto",
+  "progress_overview_title": "Resumo do progresso",
+  "progress_overview_period": "Últimos {days} dias",
+  "@progress_overview_period": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "progress_stat_workouts": "Treinos",
+  "progress_stat_time": "Tempo",
+  "progress_stat_time_unit": "horas",
+  "progress_stat_badges": "Badges",
+  "progress_stat_badges_unit": "desbloqueadas",
+  "progress_stat_streak": "Streak",
+  "progress_stat_streak_unit": "dias",
+  "progress_stat_total": "total",
+  "measurements_label_weight": "Peso",
+  "measurements_label_body_fat": "Gordura Corporal",
+  "measurements_label_muscle_mass": "Massa Muscular",
+  "measurements_add_dialog_title": "Adicionar {label}",
+  "@measurements_add_dialog_title": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "measurements_value_field": "Valor ({unit})",
+  "@measurements_value_field": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "measurements_notes_field": "Notas (opcional)",
+  "measurements_save_success": "Dado salvo com sucesso",
+  "measurements_save_error": "Falha ao salvar dado",
+  "measurements_empty_title": "Sem dados de {label} ainda",
+  "@measurements_empty_title": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "measurements_empty_instruction": "Registre um valor para acompanhar a evolução",
+  "measurements_current_label": "Atual · {label}",
+  "@measurements_current_label": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "measurements_recent_title": "Últimos registros",
+  "measurements_register_btn": "Registrar {label}",
+  "@measurements_register_btn": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "measurements_time_days_ago": "{days}d atrás",
+  "@measurements_time_days_ago": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "measurements_time_hours_ago": "{hours}h atrás",
+  "@measurements_time_hours_ago": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "measurements_time_minutes_ago": "{minutes}m atrás",
+  "@measurements_time_minutes_ago": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "measurements_time_now": "Agora",
+  "export_title": "Exportar Progresso",
+  "export_subtitle": "Escolha como deseja visualizar seus dados",
+  "export_pdf_title": "Relatório Oficial (PDF)",
+  "export_pdf_desc": "Documento formatado com histórico e design da marca",
+  "export_csv_title": "Planilha de Dados (CSV)",
+  "export_csv_desc": "Arquivo bruto para análise externa ou backup",
+  "export_share_title": "Compartilhar Resumo",
+  "export_share_desc": "Texto rápido para WhatsApp ou Redes Sociais",
+  "workout_progress_consistency": "Consistência",
+  "workout_progress_less": "Menos",
+  "workout_progress_more": "Mais",
+  "workout_progress_tooltip": "{count} treinos em {date}",
+  "@workout_progress_tooltip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "workout_progress_completed": "Completos",
+  "workout_progress_avg_duration": "Duração média",
+  "workout_progress_total_time": "Tempo total",
+  "workout_progress_recent_title": "Treinos recentes",
+  "workout_progress_empty": "Ainda sem treinos",
+  "workout_progress_today": "Hoje",
+  "workout_progress_yesterday": "Ontem",
+  "workout_progress_days_ago": "{days}d atrás",
+  "@workout_progress_days_ago": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "workout_progress_recently": "Recentemente",
+  "nutrition_analytics_avg_daily": "Média diária",
+  "nutrition_analytics_days_on_target": "Dias na meta",
+  "nutrition_analytics_adherence_title": "Aderência à dieta",
+  "nutrition_analytics_calorie_goal": "Meta de calorias",
+  "nutrition_analytics_no_recent_data": "Sem dados recentes",
+  "nutrition_analytics_log_meals_hint": "Registre suas refeições para ver o gráfico",
+  "nutrition_analytics_calorie_history": "Histórico de calorias",
+  "nutrition_analytics_goal_label": "Meta",
+  "nutrition_analytics_macros_title": "Macros no período",
+  "nutrition_analytics_no_meals": "Sem refeições registradas no período",
+  "nutrition_analytics_iqd_title": "Evolução do IQD",
+  "nutrition_analytics_iqd_subtitle": "Índice de qualidade da dieta",
+  "nutrition_analytics_no_iqd": "Sem dados suficientes para o IQD",
+  "nutrition_analytics_meals_title": "Refeições — últimos 7 dias",
+  "nutrition_analytics_no_meals_7d": "Nenhuma refeição registrada nos últimos 7 dias",
+  "nutrition_analytics_today": "Hoje",
+  "nutrition_analytics_protein": "Proteína",
+  "nutrition_analytics_carbs": "Carboidrato",
+  "nutrition_analytics_fat": "Gordura",
+  "nutrition_analytics_pct_of_goal": "% da meta",
+  "nutrition_meal_type_cafe": "Café da manhã",
+  "nutrition_meal_type_almoco": "Almoço",
+  "nutrition_meal_type_lanche": "Lanche",
+  "nutrition_meal_type_jantar": "Jantar",
+  "nutrition_meal_type_outro": "Outro",
+  "profile_title": "Meu perfil",
+  "profile_error": "Erro ao carregar perfil",
+  "profile_plan_choose_title": "Escolha seu Plano",
+  "profile_plan_choose_subtitle": "Desbloqueie todo o potencial do BLDR",
+  "profile_plan_popular_badge": "POPULAR",
+  "profile_plan_annual_prefix": "ou {price}",
+  "@profile_plan_annual_prefix": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "profile_plan_current": "Plano Atual",
+  "profile_plan_choose_btn": "Escolher Plano",
+  "profile_plan_load_error": "Erro ao carregar planos: {error}",
+  "@profile_plan_load_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profile_photo_change_title": "Alterar foto de perfil",
+  "profile_photo_remove_btn": "Remover Foto",
+  "profile_measurements_title": "Medidas Corporais",
+  "profile_measurements_height": "Altura (cm)",
+  "profile_measurements_target_weight": "Peso Alvo (kg)",
+  "profile_measurements_saved": "Medidas salvas!",
+  "profile_cancel_subscription_title": "Cancelar Assinatura",
+  "profile_cancel_subscription_before": "Estamos implementando o cancelamento automático via app de sua assinatura.\n\nSe deseja mesmo cancelar, entre em contato em ",
+  "profile_cancel_subscription_after": " que iremos realizar o seu cancelamento.\n\nDesde já agradeçemos a compreensão e sentiremos sua falta na comunidade BLDR CLUB.",
+  "profile_permission_title": "Permissão Necessária",
+  "profile_permission_body": "As notificações foram bloqueadas nas configurações do dispositivo. Para reativá-las, acesse as configurações do app.",
+  "profile_open_settings_btn": "Abrir Configurações",
+  "profile_updated": "Perfil atualizado com sucesso!",
+  "profile_update_error": "Erro ao atualizar perfil: {error}",
+  "@profile_update_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profile_photo_updated": "Foto de perfil atualizada!",
+  "profile_photo_update_error": "Erro ao atualizar foto: {error}",
+  "@profile_photo_update_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profile_photo_removed": "Foto de perfil removida!",
+  "profile_photo_remove_error": "Erro ao remover foto: {error}",
+  "@profile_photo_remove_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profile_camera_error": "Erro ao usar a câmera: {error}",
+  "@profile_camera_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profile_gallery_error": "Erro ao escolher imagem: {error}",
+  "@profile_gallery_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profile_notifications_error": "Erro ao atualizar notificações: {error}",
+  "@profile_notifications_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "profile_plan_free": "Plano Gratuito",
+  "profile_plan_premium": "Plano Premium",
+  "profile_xp_bar_level": "Nível {level} · {xp} XP",
+  "@profile_xp_bar_level": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      },
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_xp_bar_next_level": "Nível {nextLevel} em {xpNext} XP",
+  "@profile_xp_bar_next_level": {
+    "placeholders": {
+      "nextLevel": {
+        "type": "int"
+      },
+      "xpNext": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_xp_bar_to_next": "+{toNext} XP para subir de nível",
+  "@profile_xp_bar_to_next": {
+    "placeholders": {
+      "toNext": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_stat_total_workouts": "Treinos totais",
+  "profile_stat_hours_trained": "Horas treinadas",
+  "profile_stat_current_streak": "Streak atual",
+  "profile_stat_achievements": "Conquistas",
+  "profile_duels_title": "Duelos",
+  "profile_duels_wins": "Vitórias",
+  "profile_duels_losses": "Derrotas",
+  "profile_duels_win_rate": "Aproveit.",
+  "profile_badges_section": "Conquistas",
+  "profile_next_achievement": "Próxima conquista",
+  "profile_achievement_almost": "Quase lá!",
+  "profile_achievement_do_workout_singular": "Faça mais {n} treino",
+  "@profile_achievement_do_workout_singular": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_achievement_do_workout_plural": "Faça mais {n} treinos",
+  "@profile_achievement_do_workout_plural": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_achievement_maintain_streak_singular": "Mantenha o streak por mais {n} dia",
+  "@profile_achievement_maintain_streak_singular": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_achievement_maintain_streak_plural": "Mantenha o streak por mais {n} dias",
+  "@profile_achievement_maintain_streak_plural": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_achievement_calorie_goal_singular": "Atinja sua meta calórica por mais {n} dia",
+  "@profile_achievement_calorie_goal_singular": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_achievement_calorie_goal_plural": "Atinja sua meta calórica por mais {n} dias",
+  "@profile_achievement_calorie_goal_plural": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_achievement_log_meal_singular": "Registre mais {n} refeição",
+  "@profile_achievement_log_meal_singular": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_achievement_log_meal_plural": "Registre mais {n} refeições",
+  "@profile_achievement_log_meal_plural": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_achievement_earn_xp": "Ganhe mais {n} XP",
+  "@profile_achievement_earn_xp": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_achievement_reach_level": "Alcance o nível {n} no Club",
+  "@profile_achievement_reach_level": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_achievement_complete_workout_singular": "Complete mais {n} treino",
+  "@profile_achievement_complete_workout_singular": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_achievement_complete_workout_plural": "Complete mais {n} treinos",
+  "@profile_achievement_complete_workout_plural": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_achievement_keep_going": "Continue progredindo!",
+  "profile_weight_card_title": "Peso · últimos 30 dias",
+  "profile_see_all": "Ver tudo →",
+  "profile_progress_section": "Seu progresso",
+  "profile_stat_total_time": "Tempo total",
+  "profile_rank_position": "#{position} no ranking",
+  "@profile_rank_position": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_sign_in_message": "Confira meu perfil do BLDR!\n\nJunte-se à comunidade BLDR CLUB!",
+  "profile_notifications_enabled": "Ativado",
+  "profile_notifications_disabled": "Desativado",
+  "settings_title": "Configurações",
+  "settings_section_account": "Conta",
+  "settings_edit_profile": "Editar perfil",
+  "settings_edit_profile_subtitle": "Nome, e-mail, telefone",
+  "settings_share_profile": "Compartilhar perfil",
+  "settings_section_plan": "Plano e assinatura",
+  "settings_current_plan_row": "Plano atual",
+  "settings_manage_subscription": "Gerenciar assinatura",
+  "settings_manage_subscription_subtitle": "Pagamento, faturas, cancelar",
+  "settings_section_workout": "Treino",
+  "settings_workout_preferences": "Preferências de treino",
+  "settings_workout_preferences_subtitle": "Atualizar suas preferências iniciais",
+  "settings_goals_row": "Metas",
+  "settings_goals_subtitle": "Peso, calorias, macros",
+  "settings_section_app": "Aplicativo",
+  "settings_notifications_row": "Notificações",
+  "settings_notifications_enabled": "Ativado",
+  "settings_notifications_disabled": "Desativado",
+  "settings_language_row": "Idioma",
+  "settings_language_subtitle": "Português, English, Italiano",
+  "settings_privacy_row": "Privacidade",
+  "settings_privacy_subtitle": "Visibilidade no ranking e feed",
+  "settings_section_integrations": "Integrações",
+  "settings_whoop_synced": "Recovery, Strain e Sleep sincronizados",
+  "settings_whoop_connected_badge": "Conectado",
+  "settings_whoop_disconnect_btn": "Desconectar",
+  "settings_whoop_connect_subtitle": "Conecte seu Whoop",
+  "settings_apple_health": "Apple Saúde",
+  "settings_soon_badge": "Em breve",
+  "settings_watchables": "Relógios e wearables",
+  "settings_section_support": "Suporte",
+  "settings_help_center": "Central de ajuda",
+  "settings_terms": "Termos de uso",
+  "settings_privacy_policy_row": "Política de privacidade",
+  "settings_section_about": "Sobre",
+  "settings_version_row": "Versão",
+  "settings_copyright": "© {year} BLDR Fitness. Todos os direitos reservados.",
+  "@settings_copyright": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_sign_out_row": "Sair da conta",
+  "settings_delete_account_row": "Excluir conta",
+  "settings_version_footer": "BLDR · versão {version}",
+  "@settings_version_footer": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_manage_sub_sheet_title": "Gerenciar assinatura",
+  "settings_upgrade_btn": "Fazer upgrade",
+  "settings_upgrade_subtitle": "Desbloquear recursos premium",
+  "settings_cancel_sub_btn": "Cancelar assinatura",
+  "settings_cancel_sub_subtitle": "Encerrar sua assinatura BLDR CLUB",
+  "settings_sign_out_dialog_title": "Sair",
+  "settings_sign_out_dialog_message": "Tem certeza que deseja sair?",
+  "settings_sign_out_dialog_confirm": "Sair",
+  "settings_sign_out_error": "Erro ao sair: {error}",
+  "@settings_sign_out_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_delete_account_dialog_title": "Excluir Conta",
+  "settings_delete_account_dialog_message": "Tem certeza que deseja excluir sua conta?\n\nTodos os seus dados e sua assinatura serão removidos permanentemente. Esta ação não pode ser desfeita.",
+  "settings_delete_account_dialog_confirm": "Sim, Excluir",
+  "settings_delete_account_error": "Erro ao excluir conta: {error}",
+  "@settings_delete_account_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_cancel_sub_error": "Erro ao carregar planos: {error}",
+  "@settings_cancel_sub_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "goals_screen_title": "Metas",
+  "goals_macros_exceed": "Soma dos macros excede a meta calórica.",
+  "goals_saved": "Metas salvas com sucesso!",
+  "goals_section_weight": "PESO",
+  "goals_current_weight_label": "Peso atual",
+  "goals_editable_in_progress": "Editável em Progresso",
+  "goals_target_weight_label": "Peso alvo",
+  "goals_pace_title": "Ritmo",
+  "goals_pace_subtitle": "Velocidade do progresso em relação ao alvo",
+  "goals_section_nutrition": "NUTRIÇÃO",
+  "goals_calorie_goal_label": "Meta calórica diária",
+  "goals_calorie_calculated": "Calculado pelo HAVOK",
+  "goals_use_calculated": "Usar calculado",
+  "goals_customize": "Personalizar",
+  "goals_macros_title": "Macronutrientes",
+  "goals_macro_protein": "Proteína",
+  "goals_macro_carbs": "Carboidrato",
+  "goals_macro_fat": "Gordura",
+  "goals_macro_pct_calories": "{pct}% das calorias",
+  "@goals_macro_pct_calories": {
+    "placeholders": {
+      "pct": {
+        "type": "String"
+      }
+    }
+  },
+  "goals_footer_note": "Alterações afetam Dashboard, Nutrição e o contexto do HAVOK.",
+  "goals_save_btn": "Salvar",
+  "privacy_title": "Privacidade",
+  "privacy_nickname_required": "Informe um apelido ou use o nome real.",
+  "privacy_saved": "Privacidade atualizada.",
+  "privacy_section_identity": "IDENTIDADE NO RANKING E FEED",
+  "privacy_name_toggle_title": "Nome no ranking e feed",
+  "privacy_name_active_label": "Apelido",
+  "privacy_name_inactive_label": "Nome real",
+  "privacy_name_inactive_subtitle": "Nome real (padrão)",
+  "privacy_nickname_hint": "Apelido (máx. 20 chars)",
+  "privacy_photo_toggle_title": "Foto de perfil visível",
+  "privacy_photo_active_subtitle": "Visível para todos",
+  "privacy_photo_inactive_subtitle": "Só para membros do squad",
+  "privacy_photo_active_label": "Todos",
+  "privacy_photo_inactive_label": "Squad",
+  "privacy_section_feed": "FEED DE ATIVIDADE",
+  "privacy_feed_toggle_title": "Aparecer no feed da comunidade",
+  "privacy_feed_active_subtitle": "Suas atividades aparecem no feed",
+  "privacy_feed_inactive_subtitle": "Atividades não aparecem para outros",
+  "privacy_yes": "Sim",
+  "privacy_no": "Não",
+  "privacy_reactions_toggle_title": "Permitir reações",
+  "privacy_reactions_subtitle": "Outros podem reagir às suas atividades",
+  "privacy_section_ranking": "RANKING",
+  "privacy_ranking_toggle_title": "Participar do ranking público",
+  "privacy_ranking_active_subtitle": "Aparece no ranking geral",
+  "privacy_ranking_inactive_subtitle": "Oculto no ranking geral (squad não afetado)",
+  "privacy_legal_text": "Seus dados são processados conforme nossa Política de Privacidade.",
+  "privacy_legal_link": "Ver política →",
+  "privacy_save_btn": "Salvar",
+  "language_sheet_title": "Idioma do app",
+  "language_havok_note": "O conteúdo gerado pelo HAVOK também será no idioma selecionado.",
+  "language_pt_region": "Brasil",
+  "language_en_region": "United States",
+  "language_it_region": "Italia",
+  "edit_profile_dialog_title": "Editar Perfil",
+  "edit_profile_name_label": "Nome Completo",
+  "edit_profile_email_label": "Email",
+  "edit_profile_email_tooltip": "Email não pode ser alterado",
+  "edit_profile_phone_label": "Telefone (opcional)",
+  "edit_profile_name_required": "Nome é obrigatório",
+  "edit_profile_save_btn": "Salvar",
+  "edit_profile_cancel_btn": "Cancelar",
+  "common_save": "Salvar",
+  "photo_camera_permission_body": "Habilite a câmera nas configurações para registrar seu progresso.",
+  "photo_gallery_permission_body": "Habilite o acesso às fotos nas configurações.",
+  "goals_create_semantics": "Criar objetivo",
+  "club_events_title": "Eventos",
+  "club_announcements_title": "Anúncios",
+  "club_workouts_title": "Treinos",
+  "club_workouts_subtitle": "Biblioteca · Programas",
+  "club_sports_title": "Esportes",
+  "club_sports_subtitle": "Run · Protocolos",
+  "club_community_title": "Comunidade",
+  "club_community_subtitle": "Feed · Desafios",
+  "club_competition_title": "Competição",
+  "club_competition_subtitle": "Squads · Operações",
+  "club_weekly_operation": "OPERAÇÃO DA SEMANA",
+  "club_operation_completed": "CONCLUÍDA ✓",
+  "club_operation_progress": "{current} de {goal} {unit}",
+  "@club_operation_progress": {
+    "placeholders": {
+      "current": {
+        "type": "Object"
+      },
+      "goal": {
+        "type": "Object"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "club_operation_xp_reward": "+{xp} XP ao completar",
+  "@club_operation_xp_reward": {
+    "placeholders": {
+      "xp": {
+        "type": "Object"
+      }
+    }
+  },
+  "club_level": "Nível {level}",
+  "@club_level": {
+    "placeholders": {
+      "level": {
+        "type": "Object"
+      }
+    }
+  },
+  "club_ranking_badge": "#{position} no ranking",
+  "@club_ranking_badge": {
+    "placeholders": {
+      "position": {
+        "type": "Object"
+      }
+    }
+  },
+  "club_xp_progress": "{current} / {total} XP",
+  "@club_xp_progress": {
+    "placeholders": {
+      "current": {
+        "type": "Object"
+      },
+      "total": {
+        "type": "Object"
+      }
+    }
+  },
+  "havok_sheet_title": "HAVOK",
+  "havok_sheet_subtitle": "SEU TREINADOR BLDR",
+  "havok_input_placeholder": "Pergunte ao HAVOK…",
+  "havok_disclaimer": "HAVOK é uma IA e pode errar. Não substitui orientação médica ou nutricional.",
+  "havok_error_open": "Não consegui abrir a conversa.",
+  "havok_no_reply": "O HAVOK não respondeu. Tente de novo.",
+  "havok_workout_exercises_tap": "{count} exercícios · toque para ver",
+  "@havok_workout_exercises_tap": {
+    "placeholders": {
+      "count": {
+        "type": "Object"
+      }
+    }
+  },
+  "club_competition_hub_title": "CENTRAL DE OPERAÇÕES",
+  "club_create_operation": "CRIAR\nOPERAÇÃO",
+  "club_be_the_leader": "Seja o líder.",
+  "club_join_now": "ALISTAR-SE\nAGORA",
+  "club_enter_code": "Cole o código.",
+  "club_game_modes_header": "MODOS DE JOGO",
+  "club_game_mode_survivor": "SURVIVOR",
+  "club_game_mode_alfa": "ALFA",
+  "club_game_mode_roadrunner": "ROADRUNNER",
+  "club_game_mode_hustle": "HUSTLE",
+  "club_survivor_description": "Quem ficar 2 dias sem treinar é eliminado automaticamente.",
+  "club_alfa_description": "Ganha quem acumular mais XP total — todos os treinos contam.",
+  "club_roadrunner_description": "Vence quem acumular a maior distância em corridas.",
+  "club_hustle_description": "Não importa o treino, importa ir. Ganha quem treinar mais dias.",
+  "club_my_active_squads": "MEUS SQUADS ATIVOS",
+  "club_no_active_operation": "Nenhuma operação ativa.",
+  "club_community_tab": "Comunidade",
+  "club_challenges_tab": "Desafios",
+  "club_ranking_week": "Ranking da semana",
+  "club_see_all": "Ver tudo ›",
+  "club_my_duels": "SEUS DUELOS",
+  "club_collective_challenges": "DESAFIOS COLETIVOS",
+  "club_create": "Criar",
+  "club_duel_history": "HISTÓRICO DE DUELOS",
+  "club_no_active_duel": "Nenhum duelo ativo",
+  "club_go_to_ranking": "Vá ao Ranking e desafie alguém!",
+  "club_no_collective_challenge": "Nenhum desafio coletivo ativo",
+  "club_create_first_challenge": "Toque em \"Criar\" e seja o primeiro!",
+  "club_no_ended_duel": "Nenhum duelo encerrado ainda.",
+  "club_recent_activity": "Atividade recente",
+  "club_no_recent_activity": "Nenhuma atividade recente.",
+  "club_your_position": "Sua posição",
+  "club_xp_to_next_position": "+{xp} XP para o #{pos}",
+  "@club_xp_to_next_position": {
+    "placeholders": {
+      "xp": {
+        "type": "Object"
+      },
+      "pos": {
+        "type": "Object"
+      }
+    }
+  },
+  "club_morale_sent": "Você mandou moral para {name}! 👊🔥",
+  "@club_morale_sent": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "ranking_duel_accepted": "Desafio ACEITO! A guerra começou. 🔥",
+  "ranking_duel_refused": "Desafio recusado.",
+  "ranking_win_snackbar": "PARABÉNS! Você venceu o duelo! 🏆",
+  "ranking_you_suffix": " (Você)",
+  "ranking_you_label": "VOCÊ",
+  "ranking_rival_label": "RIVAL",
+  "ranking_vs": "VS",
+  "ranking_challenge_received": "DESAFIO RECEBIDO",
+  "ranking_challenge_prompt": " te chamou para o duelo!\nVai encarar ou correr?",
+  "ranking_refuse_btn": "Recusar",
+  "ranking_accept_btn": "ACEITAR",
+  "ranking_yourself_msg": "Esse é você, campeão! Continue focando. 🔥",
+  "ranking_duel_title": "⚔️ INICIAR DUELO",
+  "ranking_duel_subtitle": "Quem bater a meta primeiro vence",
+  "ranking_xp_goal": "META EM XP",
+  "ranking_deadline": "PRAZO",
+  "ranking_winner_label": "Vencedor",
+  "ranking_deadline_label": "Prazo",
+  "ranking_badge_label": "Badge",
+  "ranking_duelista": "Duelista",
+  "ranking_duel_sent": "⚔️ Duelo de {xp} XP enviado para {name}!",
+  "@ranking_duel_sent": {
+    "placeholders": {
+      "xp": {
+        "type": "Object"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "ranking_duel_send_error": "Erro ao enviar desafio.",
+  "ranking_who_bets": "Quem bater {xp} xp primeiro em {prazo} vence",
+  "@ranking_who_bets": {
+    "placeholders": {
+      "xp": {
+        "type": "Object"
+      },
+      "prazo": {
+        "type": "String"
+      }
+    }
+  },
+  "ranking_start_duel_btn": "INICIAR DUELO DE {xp} XP",
+  "@ranking_start_duel_btn": {
+    "placeholders": {
+      "xp": {
+        "type": "Object"
+      }
+    }
+  },
+  "havok_loading": "Carregando...",
+  "havok_hello": "Olá, {name}",
+  "@havok_hello": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "havok_tagline": "Pronto para superar seus limites?",
+  "havok_generate_training": "GERAÇÃO DE TREINO",
+  "havok_generate_btn": "GERAR TREINO HAVOK",
+  "havok_error_generate": "Erro ao gerar treino. Tente novamente.",
+  "havok_guest": "Visitante",
+  "havok_user_default": "Usuário",
+  "havok_loading_step1": "Buscando informações do seu perfil...",
+  "havok_loading_step2": "Gerando seu treino personalizado...",
+  "havok_loading_step3": "Tudo pronto!",
+  "free_workout_title": "TREINO LIVRE",
+  "free_workout_describe": "Descreva o treino que você quer",
+  "free_workout_hint": "Digite seu comando aqui...",
+  "free_workout_btn": "GERAR COM HAVOK",
+  "workout_library_title": "BIBLIOTECA HAVOK",
+  "workout_library_empty": "Você ainda não gerou nenhum treino.",
+  "workout_library_go_hub": "Vá para o Hub do HAVOK para criar o seu.",
+  "workout_library_error": "Ocorreu um erro ao buscar seus treinos.",
+  "workout_detail_save": "Salvar na biblioteca",
+  "workout_detail_saved": "Salvo ✓",
+  "workout_detail_start_now": "Iniciar agora",
+  "workout_detail_add_plan": "Adicionar ao plano",
+  "workout_detail_which_day": "Em qual dia da semana?",
+  "club_my_workouts": "Meus treinos",
+  "club_created_by_me": "Criados por mim",
+  "club_from_trainer": "Do meu personal",
+  "club_start_workout_btn": "Iniciar treino",
+  "club_no_workout_created": "Nenhum treino criado ainda",
+  "club_create_first_workout": "Crie seu primeiro treino personalizado",
+  "club_trainer_programs_soon": "Em breve",
+  "club_trainer_programs_soon_desc": "Em breve você poderá receber treinos\ndirecionados pelo seu personal trainer.",
+  "club_programs_title": "Programas Club",
+  "club_programs_subtitle": "Sequências estruturadas · Exclusivo BLDR CLUB",
+  "club_see_all_arrow": "Ver todos →",
+  "club_no_workout_found": "Nenhum treino encontrado.",
+  "club_fail_start": "Falha ao iniciar treino",
+  "club_create_workout": "Criar treino",
+  "club_from_photo": "A partir de foto",
+  "club_trainer_workouts": "Treinos do personal",
+  "club_programs_soon": "Programas em breve",
+  "club_cardio_saved": "Sessão de cardio salva! 🔥",
+  "club_camera": "Câmera",
+  "club_gallery": "Galeria",
+  "club_no_exercise_in_photo": "Não foi possível identificar exercícios na imagem. Tente outra foto.",
+  "club_analyzing_photo": "Analisando ficha…",
+  "club_start_btn": "Iniciar",
+  "notifications_title": "Notificações",
+  "notifications_mark_read": "Marcar lidas",
+  "notifications_empty": "Sem notificações",
+  "notifications_up_to_date": "Você está em dia com tudo!",
+  "notifications_now": "Agora",
+  "notifications_today": "Hoje",
+  "notifications_yesterday": "Ontem",
+  "notifications_this_week": "Esta semana",
+  "notifications_older": "Mais antigo",
+  "notifications_general": "Geral",
+  "notifications_see_duel": "Ver duelo",
+  "notifications_see_ranking": "Ver ranking",
+  "notifications_see_challenge": "Ver desafio",
+  "sports_title": "Esportes & Performance",
+  "sports_active_protocols": "Protocolos ativos",
+  "sports_trackers": "Trackers",
+  "sports_round_timer": "Round Timer",
+  "sports_round_timer_subtitle": "Boxe · MMA · Jiu Jitsu · Muay Thai",
+  "sports_match_tracker": "Match Tracker",
+  "sports_match_tracker_subtitle": "Tênis · Padel · Beach Tennis",
+  "sports_detected": "Esportes detectados",
+  "sports_other": "Outro",
+  "sports_recommended": "Recomendado para você",
+  "sports_challenge_havok": "Desafie o HAVOK",
+  "sports_generate_workout": "Gerar ficha de treino",
+  "sports_select_sport": "Selecione um esporte ou digite outro",
+  "sports_other_sport_hint": "Ou digite outro esporte…",
+  "sports_generate_strategy": "Gerar estratégia",
+  "sports_havok_processing": "HAVOK processando…",
+  "sports_creating_strategy": "Criando estratégia de performance personalizada.",
+  "sports_weekly": "Sua semana",
+  "sports_day_of": "Dia {current} de {total}",
+  "@sports_day_of": {
+    "placeholders": {
+      "current": {
+        "type": "Object"
+      },
+      "total": {
+        "type": "Object"
+      }
+    }
+  },
+  "sports_active_time": "Tempo ativo: {time}",
+  "@sports_active_time": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "sports_corridas_sync": "Corridas sincronizadas · outros só neste dispositivo",
+  "profile_retry": "Tentar novamente",
+  "profile_duel": "Desafiar para duelo",
+  "profile_react": "👊 Reagir",
+  "profile_react_sent": "👊 Reação enviada!",
+  "profile_ranking_position": "#{pos} Ranking",
+  "@profile_ranking_position": {
+    "placeholders": {
+      "pos": {
+        "type": "Object"
+      }
+    }
+  },
+  "profile_workouts_label": "Treinos",
+  "profile_streak_label": "Streak",
+  "profile_duels_label": "Duelos",
+  "profile_wins": "Vitórias",
+  "profile_losses": "Derrotas",
+  "profile_winrate": "Aproveit.",
+  "profile_achievements": "CONQUISTAS",
+  "profile_activity": "ATIVIDADE RECENTE",
+  "profile_athlete_bldr": "Atleta BLDR",
+  "profile_athlete": "Atleta",
+  "profile_level": "Nível {level}",
+  "@profile_level": {
+    "placeholders": {
+      "level": {
+        "type": "Object"
+      }
+    }
+  },
+  "profile_xp_to_next": "Nível {next} em {xp} XP",
+  "@profile_xp_to_next": {
+    "placeholders": {
+      "next": {
+        "type": "Object"
+      },
+      "xp": {
+        "type": "Object"
+      }
+    }
+  },
+  "join_squad_title": "Entrar em Operação",
+  "join_squad_subtitle": "Cole o código de convite (Ex: K9X-2M1).",
+  "join_squad_code_label": "CÓDIGO DE ACESSO",
+  "join_squad_btn": "JUNTAR-SE AGORA",
+  "join_squad_not_found": "Nenhum Squad encontrado com este código.",
+  "join_squad_already_member": "Você já é membro deste Squad!",
+  "join_squad_welcome": "Bem-vindo ao Squad {name}! 👊",
+  "@join_squad_welcome": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "squad_settings_saved": "Configurações salvas! ✅",
+  "squad_settings_error": "Erro ao salvar.",
+  "squad_now_private": "Squad agora é PRIVADO 🔒",
+  "squad_now_public": "Squad agora é PÚBLICO 🌍",
+  "squad_edit_title": "Editar Operação",
+  "squad_name_label": "Nome do Squad",
+  "squad_mission_label": "Missão (Descrição)",
+  "squad_cancel": "CANCELAR",
+  "squad_save": "SALVAR",
+  "squad_daily_mission": "Missão Diária",
+  "squad_daily_challenge": "Desafio do Dia",
+  "squad_define": "DEFINIR",
+  "squad_score_limits": "Limites de Pontuação",
+  "squad_score_limits_desc": "Limite máximo de XP que um usuário pode ganhar por dia para evitar fraudes.",
+  "paywall_title": "Treine no seu limite, não no dos outros",
+  "paywall_subtitle": "Desbloqueie o BLDR Club: treinos, desafios e comunidade num só lugar.",
+  "paywall_trial_badge": "{days} DIAS GRÁTIS",
+  "paywall_save_percent": "ECONOMIZE {percent}%",
+  "paywall_plan_weekly": "Semanal",
+  "paywall_plan_weekly_badge": "MAIS FLEXÍVEL",
+  "paywall_per_week": "/semana",
+  "paywall_best_value": "MELHOR VALOR",
+  "paywall_plan_monthly": "Mensal",
+  "paywall_plan_annual": "Anual",
+  "paywall_monthly_equiv": "equivale a {price}/mês",
+  "paywall_benefits_title": "Incluso em todos os planos",
+  "paywall_subscribe_weekly_btn": "Assinar plano semanal",
+  "paywall_subscribe_annual_btn": "Assinar plano anual",
+  "paywall_start_trial_btn": "Começar {days} dias grátis",
+  "paywall_subscribe_monthly_btn": "Assinar plano mensal",
+  "paywall_processing": "Processando…",
+  "paywall_redeem": "Resgatar código",
+  "paywall_restore": "Restaurar compras",
+  "paywall_load_error": "Não foi possível carregar os planos agora. Tente novamente em instantes.",
+  "paywall_billing_title": "Dados de cobrança",
+  "paywall_billing_name_label": "Nome completo",
+  "paywall_billing_email_label": "E-mail",
+  "checkout_screen_title": "Checkout BLDR",
+  "checkout_choose_plan_title": "Escolha seu Plano",
+  "checkout_choose_plan_subtitle": "Selecione o plano que mais se adequa aos seus objetivos",
+  "checkout_billing_info_title": "Informações de Cobrança",
+  "checkout_billing_info_subtitle": "Preencha seus dados para continuar",
+  "checkout_name_label": "Nome Completo",
+  "checkout_email_label": "Email",
+  "checkout_continue_payment_btn": "Continuar para Pagamento",
+  "checkout_payment_title": "Finalizar Pagamento",
+  "checkout_payment_subtitle": "Confirme os dados e finalize sua assinatura",
+  "checkout_order_summary": "Resumo do Pedido",
+  "checkout_billing_annual": "Cobrança anual",
+  "checkout_billing_monthly": "Cobrança mensal",
+  "checkout_coupon_title": "Cupom de Desconto (Opcional)",
+  "checkout_coupon_label": "Código do cupom",
+  "checkout_coupon_apply_btn": "Aplicar",
+  "checkout_coupon_applied": "Cupom \"{code}\" aplicado!",
+  "checkout_apple_payment_title": "Pagamento via App Store",
+  "checkout_apple_payment_subtitle": "A cobrança será feita na sua conta Apple.",
+  "checkout_subscribe_btn": "Assinar",
+  "checkout_redeem_btn": "Resgatar código de oferta",
+  "checkout_privacy_policy": "Política de Privacidade",
+  "checkout_terms_of_use": "Termos de Uso (EULA)",
+  "checkout_success_title": "Sucesso!",
+  "checkout_success_default_message": "Sua assinatura foi ativada com sucesso!",
+  "checkout_success_active_message": "Assinatura ativada com sucesso!",
+  "checkout_apple_success_message": "Assinatura realizada com sucesso!",
+  "checkout_success_plan": "Plano: {name}",
+  "checkout_field_required": "Por favor, preencha o campo {field}",
+  "checkout_email_invalid": "Por favor, insira um email válido",
+  "checkout_card_info_title": "Informações do Cartão",
+  "checkout_card_data_label": "Dados do Cartão",
+  "checkout_card_helper": "Digite o número, validade e CVV do seu cartão",
+  "checkout_processing": "Processando...",
+  "checkout_finalize_btn": "Finalizar Pagamento",
+  "checkout_toggle_save_badge": "ECONOMIZE",
+  "checkout_plan_popular_badge": "POPULAR",
+  "checkout_trial_badge": "🎉 7 DIAS GRÁTIS INCLUÍDOS",
+  "checkout_savings_amount": "Economize {amount}",
+  "splash_tagline": "CONSTRUA SUA MELHOR VERSÃO",
+  "splash_connection_error_title": "Erro de Conexão",
+  "splash_init_error_msg": "Falha ao inicializar o app. Tente novamente.",
+  "splash_retry_btn": "Tentar novamente",
+  "splash_connection_failed": "Falha na Conexão",
+  "splash_retry_shortly": "A opção de tentar novamente aparecerá em breve",
+  "app_init_error": "Erro ao iniciar o aplicativo. Detalhes: {details}",
+  "@paywall_trial_badge": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "@paywall_save_percent": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "@paywall_monthly_equiv": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "@paywall_start_trial_btn": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "@checkout_coupon_applied": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "@checkout_success_plan": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "@checkout_field_required": {
+    "placeholders": {
+      "field": {
+        "type": "String"
+      }
+    }
+  },
+  "@checkout_savings_amount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "@app_init_error": {
+    "placeholders": {
+      "details": {
+        "type": "String"
+      }
+    }
+  },
+
+  "feedback_title": "Feedback",
+  "@feedback_title": {},
+  "feedback_report_bug": "Reportar bug",
+  "@feedback_report_bug": {},
+  "feedback_send_suggestion": "Enviar sugestão",
+  "@feedback_send_suggestion": {},
+  "feedback_chip_bug": "Bug",
+  "@feedback_chip_bug": {},
+  "feedback_chip_suggestion": "Sugestão",
+  "@feedback_chip_suggestion": {},
+  "feedback_chip_complaint": "Reclamação",
+  "@feedback_chip_complaint": {},
+  "feedback_chip_other": "Outro",
+  "@feedback_chip_other": {},
+  "feedback_bldr_greeting": "Olá! Como posso te ajudar hoje?",
+  "@feedback_bldr_greeting": {},
+  "feedback_bldr_select_type": "Escolha o tipo de feedback para começar.",
+  "@feedback_bldr_select_type": {},
+  "feedback_bldr_bug_step1": "Entendido! Descreva o bug com o máximo de detalhes possível. O que aconteceu?",
+  "@feedback_bldr_bug_step1": {},
+  "feedback_bldr_bug_step2": "Quer incluir uma captura de tela? (opcional)",
+  "@feedback_bldr_bug_step2": {},
+  "feedback_bldr_suggestion_step1": "Ótimo! Qual é a sua sugestão? Descreva o que você gostaria de ver no app.",
+  "@feedback_bldr_suggestion_step1": {},
+  "feedback_bldr_suggestion_step2": "Quer incluir uma imagem para ilustrar? (opcional)",
+  "@feedback_bldr_suggestion_step2": {},
+  "feedback_bldr_complaint_step1": "Lamentamos que você esteja tendo problemas. Descreva o que aconteceu.",
+  "@feedback_bldr_complaint_step1": {},
+  "feedback_bldr_complaint_step2": "Quer incluir uma captura de tela? (opcional)",
+  "@feedback_bldr_complaint_step2": {},
+  "feedback_bldr_other_step1": "Pode falar! O que você gostaria de compartilhar?",
+  "@feedback_bldr_other_step1": {},
+  "feedback_bldr_other_step2": "Quer incluir uma imagem? (opcional)",
+  "@feedback_bldr_other_step2": {},
+  "feedback_bldr_sending": "Enviando seu feedback...",
+  "@feedback_bldr_sending": {},
+  "feedback_bldr_success": "Mensagem enviada!",
+  "@feedback_bldr_success": {},
+  "feedback_bldr_protocol": "Protocolo: #{protocolo}",
+  "@feedback_bldr_protocol": {
+    "placeholders": {
+      "protocolo": { "type": "String" }
+    }
+  },
+  "feedback_bldr_thanks": "Agradecemos seu feedback. Nossa equipe vai analisá-lo em breve.",
+  "@feedback_bldr_thanks": {},
+  "feedback_hint_message": "Digite sua mensagem...",
+  "@feedback_hint_message": {},
+  "feedback_add_screenshot": "Adicionar imagem",
+  "@feedback_add_screenshot": {},
+  "feedback_remove_screenshot": "Remover",
+  "@feedback_remove_screenshot": {},
+  "feedback_send": "Enviar",
+  "@feedback_send": {},
+  "feedback_skip": "Pular",
+  "@feedback_skip": {},
+  "feedback_error_retry": "Tentar novamente",
+  "@feedback_error_retry": {},
+  "feedback_chars_remaining": "{count} / 500",
+  "@feedback_chars_remaining": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  }
+}
