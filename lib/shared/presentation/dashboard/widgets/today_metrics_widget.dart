@@ -6,6 +6,7 @@ import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/features/achievements/domain/usecases/achievement_usecases.dart';
 import 'package:bldr_fitness/features/auth/domain/repositories/auth_repository.dart';
+import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart';
 import 'package:bldr_fitness/services/auth_service.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
@@ -31,6 +32,7 @@ class _TodayMetricsWidgetState extends State<TodayMetricsWidget> {
   int _workoutsThisMonth = 0;
   int _totalMinutes = 0;
   int _streak = 0;
+  bool _streakAtRisk = false;
   int _unlockedAchievements = 0;
   int _totalAchievements = 0;
   bool _isLoading = true;
@@ -99,7 +101,28 @@ class _TodayMetricsWidgetState extends State<TodayMetricsWidget> {
     try {
       if (!getIt<AuthRepository>().isAuthenticated) return;
       final result = await getIt<GetCurrentStreak>()();
-      if (mounted) setState(() => _streak = result.valueOrNull ?? 0);
+      final streak = result.valueOrNull ?? 0;
+
+      bool atRisk = false;
+      if (streak > 0) {
+        final lastResult = await getIt<GetConsolidatedWorkoutHistory>()(
+            completedOnly: true, limit: 1);
+        final last = lastResult.valueOrNull?.firstOrNull;
+        final lastDate = last?.completedAt?.toLocal();
+        if (lastDate != null) {
+          final today = DateTime.now();
+          atRisk = !(lastDate.year == today.year &&
+              lastDate.month == today.month &&
+              lastDate.day == today.day);
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _streak = streak;
+          _streakAtRisk = atRisk;
+        });
+      }
     } catch (e) {
       debugPrint('[TodayMetrics] erro streak: $e');
     }
@@ -139,11 +162,26 @@ class _TodayMetricsWidgetState extends State<TodayMetricsWidget> {
     // O zero é informativo no streak e nos contadores de progresso
     // (REDESIGN_SPEC, "Estados vazios") — por isso não são ocultados.
     // Hierarquia (mockup): ícone → valor COM unidade → label da categoria.
+    final showRisk = _streakAtRisk && _streak > 0;
+    final streakValueColor =
+        showRisk ? BldrColors.goldBright : BldrColors.textPrimary;
+
     final cards = <Widget>[
-      _StatCard(
-        icon: Icons.local_fire_department_outlined,
-        value: l10n.dashboard_streak_value(_streak),
-        label: l10n.dashboard_streak_label,
+      GestureDetector(
+        onTap: showRisk
+            ? () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(
+                      'Treine hoje para manter seu streak de $_streak dias!'),
+                  backgroundColor: const Color(0xFFFF6432),
+                  behavior: SnackBarBehavior.floating,
+                ))
+            : null,
+        child: _StatCard(
+          icon: Icons.local_fire_department_outlined,
+          value: l10n.dashboard_streak_value(_streak),
+          label: l10n.dashboard_streak_label,
+          valueColor: streakValueColor,
+        ),
       ),
       _StatCard(
         icon: Icons.calendar_today_outlined,
@@ -178,18 +216,21 @@ class _TodayMetricsWidgetState extends State<TodayMetricsWidget> {
   }
 }
 
-/// D3 — card vertical de estatística: ícone (15px, dourado) → valor grande
-/// (com unidade) → label da categoria. Largura mínima ~106px (mockup).
+/// D3 — card vertical de estatística: ícone (15px) → valor grande → label.
+/// Os ícones permanecem dourados; [valueColor] permite destacar somente o
+/// valor de um indicador específico.
 class _StatCard extends StatelessWidget {
   const _StatCard({
     required this.icon,
     required this.value,
     required this.label,
+    this.valueColor,
   });
 
   final IconData icon;
   final String value;
   final String label;
+  final Color? valueColor;
 
   @override
   Widget build(BuildContext context) {
@@ -203,7 +244,12 @@ class _StatCard extends StatelessWidget {
           children: [
             Icon(icon, size: 15, color: BldrColors.goldSolid),
             const SizedBox(height: 6),
-            Text(value, style: BldrText.kpiSm),
+            Text(
+              value,
+              style: BldrText.kpiSm.copyWith(
+                color: valueColor ?? BldrColors.textPrimary,
+              ),
+            ),
             const SizedBox(height: 1),
             Text(label, style: BldrText.meta),
           ],

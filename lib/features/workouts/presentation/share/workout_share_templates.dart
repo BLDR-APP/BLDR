@@ -145,6 +145,7 @@ class _CompactComposition extends StatelessWidget {
                     SizedBox(height: 10 * scale),
                     Text(
                       handle,
+                      key: const ValueKey('share-username'),
                       maxLines: 1,
                       overflow: TextOverflow.fade,
                       softWrap: false,
@@ -178,17 +179,21 @@ class _Brand extends StatelessWidget {
   const _Brand({required this.scale});
 
   @override
-  Widget build(BuildContext context) => ClipRect(
-        child: SizedBox(
-          key: const ValueKey('share-bldr-logo'),
-          width: 72 * scale,
-          height: 28 * scale,
-          child: Transform.scale(
-            scale: 4,
-            child: Image.asset(
-              'assets/images/BLDR_CLEAN_BGLESS.png',
-              fit: BoxFit.contain,
-              filterQuality: FilterQuality.high,
+  Widget build(BuildContext context) => SizedOverflowBox(
+        size: Size(76 * scale, 28 * scale),
+        alignment: Alignment.center,
+        child: ClipRect(
+          child: SizedBox(
+            key: const ValueKey('share-bldr-logo'),
+            width: 86 * scale,
+            height: 28 * scale,
+            child: Transform.scale(
+              scale: 5,
+              child: Image.asset(
+                'assets/images/BLDR_CLEAN_BGLESS.png',
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.high,
+              ),
             ),
           ),
         ),

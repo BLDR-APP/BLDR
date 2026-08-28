@@ -10,6 +10,7 @@ import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/features/subscription/domain/usecases/subscription_usecases.dart'
     as subUc;
+import 'package:bldr_fitness/features/subscription/presentation/paywall/club_paywall_sheet.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart';
 import 'package:bldr_fitness/features/workouts/presentation/mappers/legacy_ui_maps.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
@@ -143,13 +144,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
           .toList();
 
       // Load subscription in parallel (non-blocking for main list)
-      getIt<subUc.GetCurrentSubscription>()().then((r) {
-        final sub = r.valueOrNull;
-        if (mounted) {
-          setState(() => _isPro = sub != null &&
-              (sub.status == 'active' || sub.status == 'trialing'));
-        }
-      });
+      _loadSubscription();
 
       setState(() {
         _bldrWorkouts = all.where((w) => w['is_public'] == true).toList();
@@ -1301,6 +1296,34 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
 
   // ── Explorar ─────────────────────────────────────────────────────────────
 
+  Future<void> _loadSubscription() async {
+    final result = await getIt<subUc.GetCurrentSubscription>()();
+    final subscription = result.valueOrNull;
+    if (!mounted) return;
+    setState(() {
+      _isPro = subscription != null &&
+          (subscription.status == 'active' ||
+              subscription.status == 'trialing');
+    });
+  }
+
+  void _openClubDestination(WidgetBuilder builder) {
+    if (_isPro) {
+      Navigator.push(context, MaterialPageRoute(builder: builder));
+      return;
+    }
+
+    ClubPaywallSheet.show(
+      context,
+      onSubscribed: () async {
+        await _loadSubscription();
+        if (mounted && _isPro) {
+          Navigator.push(context, MaterialPageRoute(builder: builder));
+        }
+      },
+    );
+  }
+
   Widget _buildExplorSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1319,20 +1342,15 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
           title: 'BLDR CLUB',
           subtitle: 'Biblioteca completa + exclusivos',
           locked: !_isPro,
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const BldrClubScreen()),
-          ),
+          onTap: () => _openClubDestination((_) => const BldrClubScreen()),
         ),
         const SizedBox(height: 10),
         _buildExplorCard(
           icon: TablerIcons.books,
           title: 'Programas',
           subtitle: 'Programas estruturados e periodizados',
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const ClubProgramsPage()),
-          ),
+          locked: !_isPro,
+          onTap: () => _openClubDestination((_) => const ClubProgramsPage()),
         ),
       ],
     );

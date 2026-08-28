@@ -51,8 +51,27 @@ void main() {
     expect(data.exerciseCount, 6);
   });
 
+  test('WorkoutShareData normaliza espaços e qualquer prefixo de arrobas', () {
+    expect(
+      WorkoutShareData.fromSummary(fixture(), username: '  pedro  ').handle,
+      '@pedro',
+    );
+    expect(
+      WorkoutShareData.fromSummary(fixture(), username: '@pedro').handle,
+      '@pedro',
+    );
+    expect(
+      WorkoutShareData.fromSummary(fixture(), username: '@@pedro').handle,
+      '@pedro',
+    );
+  });
+
   test('WorkoutShareData sem username omite handle', () {
     expect(WorkoutShareData.fromSummary(fixture()).handle, isNull);
+    expect(
+      WorkoutShareData.fromSummary(fixture(), username: '   ').handle,
+      isNull,
+    );
   });
 
   test('WorkoutShareData sem Muscle Map usa fallback seguro', () {
@@ -110,6 +129,20 @@ void main() {
       expect(find.textContaining('TREINO MUITO LONGO'), findsNothing);
     });
   }
+
+  testWidgets('username vazio não renderiza linha nem placeholder',
+      (tester) async {
+    await tester.binding.setSurfaceSize(const Size(360, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(MaterialApp(
+      home: WorkoutShareTemplate(
+        data: WorkoutShareData.fromSummary(fixture(), username: '  '),
+        style: WorkoutShareStyle.performance,
+      ),
+    ));
+    expect(find.byKey(const ValueKey('share-username')), findsNothing);
+    expect(find.text('@'), findsNothing);
+  });
 
   for (final view in BldrMuscleMapView.values) {
     testWidgets('template suporta Muscle Map ${view.name}', (tester) async {

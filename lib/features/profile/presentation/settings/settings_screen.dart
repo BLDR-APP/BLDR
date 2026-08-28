@@ -13,6 +13,7 @@ import 'package:bldr_fitness/core/app_export.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/features/subscription/domain/usecases/subscription_usecases.dart' as subUc;
+import 'package:bldr_fitness/features/subscription/presentation/paywall/club_paywall_sheet.dart';
 import 'package:bldr_fitness/models/subscription_plan.dart';
 import 'package:bldr_fitness/models/user_profile.dart';
 import 'package:bldr_fitness/services/auth_service.dart';
@@ -199,7 +200,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } catch (_) {}
   }
 
-  // ── Plano e assinatura (mesma lógica de profile_screen.dart) ────────────
+  // ── Plano e assinatura ───────────────────────────────────────────────────
 
   void _navigateToCheckout(SubscriptionPlan plan) {
     Navigator.pushNamed(
@@ -209,177 +210,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showPlanUpgradeDialog() async {
-    try {
-      final plans = (await getIt<subUc.GetSubscriptionPlans>()())
-          .fold(onSuccess: (p) => p, onFailure: (f) => throw Exception(f.message));
-
-      showModalBottomSheet(
-        context: context,
-        backgroundColor: AppTheme.dialogDark,
-        isScrollControlled: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        builder: (context) => DraggableScrollableSheet(
-          initialChildSize: 0.8,
-          maxChildSize: 0.9,
-          minChildSize: 0.5,
-          expand: false,
-          builder: (context, scrollController) => Container(
-            padding: EdgeInsets.all(4.w),
-            child: Column(
-              children: [
-                Container(
-                  width: 12.w,
-                  height: 0.5.h,
-                  decoration: BoxDecoration(
-                    color: AppTheme.dividerGray,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                SizedBox(height: 2.h),
-                Text('Escolha seu Plano',
-                    style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(
-                        color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
-                SizedBox(height: 1.h),
-                Text('Desbloqueie todo o potencial do BLDR',
-                    style: AppTheme.darkTheme.textTheme.bodyMedium
-                        ?.copyWith(color: AppTheme.textSecondary),
-                    textAlign: TextAlign.center),
-                SizedBox(height: 3.h),
-                Expanded(
-                  child: ListView.builder(
-                    controller: scrollController,
-                    itemCount: plans.length,
-                    itemBuilder: (context, index) {
-                      final plan = plans[index];
-                      final isCurrentPlan = _userSubscription?.planId == plan.id;
-                      return Container(
-                        margin: EdgeInsets.only(bottom: 3.h),
-                        padding: EdgeInsets.all(4.w),
-                        decoration: BoxDecoration(
-                          color: AppTheme.cardDark,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: plan.isPopular
-                                ? AppTheme.accentGold
-                                : AppTheme.dividerGray,
-                            width: plan.isPopular ? 2 : 1,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(plan.name,
-                                    style: AppTheme.darkTheme.textTheme.titleLarge
-                                        ?.copyWith(
-                                            color: AppTheme.textPrimary,
-                                            fontWeight: FontWeight.w700)),
-                                if (plan.isPopular)
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 3.w, vertical: 0.5.h),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.accentGold,
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Text('POPULAR',
-                                        style: AppTheme
-                                            .darkTheme.textTheme.labelSmall
-                                            ?.copyWith(
-                                                color: AppTheme.primaryBlack,
-                                                fontWeight: FontWeight.w700)),
-                                  ),
-                              ],
-                            ),
-                            SizedBox(height: 1.h),
-                            Text(plan.description,
-                                style: AppTheme.darkTheme.textTheme.bodyMedium
-                                    ?.copyWith(color: AppTheme.textSecondary)),
-                            SizedBox(height: 2.h),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(plan.monthlyPriceText,
-                                    style: AppTheme
-                                        .darkTheme.textTheme.headlineSmall
-                                        ?.copyWith(
-                                            color: AppTheme.accentGold,
-                                            fontWeight: FontWeight.w700)),
-                                SizedBox(width: 2.w),
-                                Text('ou ${plan.annualPriceText}',
-                                    style: AppTheme.darkTheme.textTheme.bodySmall
-                                        ?.copyWith(color: AppTheme.textSecondary)),
-                              ],
-                            ),
-                            SizedBox(height: 2.h),
-                            ...plan.features.map((feature) => Padding(
-                                  padding: EdgeInsets.only(bottom: 1.h),
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.check_circle,
-                                          color: AppTheme.successGreen, size: 4.w),
-                                      SizedBox(width: 2.w),
-                                      Expanded(
-                                        child: Text(feature,
-                                            style: AppTheme
-                                                .darkTheme.textTheme.bodyMedium
-                                                ?.copyWith(
-                                                    color: AppTheme.textPrimary)),
-                                      ),
-                                    ],
-                                  ),
-                                )),
-                            SizedBox(height: 2.h),
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: isCurrentPlan
-                                    ? null
-                                    : () {
-                                        Navigator.pop(context);
-                                        _navigateToCheckout(plan);
-                                      },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: isCurrentPlan
-                                      ? AppTheme.inactiveGray
-                                      : AppTheme.accentGold,
-                                  padding: EdgeInsets.symmetric(vertical: 2.h),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12)),
-                                ),
-                                child: Text(
-                                  isCurrentPlan ? AppLocalizations.of(context)!.profile_plan_current : AppLocalizations.of(context)!.profile_plan_choose_btn,
-                                  style: AppTheme.darkTheme.textTheme.titleMedium
-                                      ?.copyWith(
-                                    color: isCurrentPlan
-                                        ? AppTheme.textSecondary
-                                        : AppTheme.primaryBlack,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(AppLocalizations.of(context)!.settings_cancel_sub_error('$e')),
-          backgroundColor: AppTheme.errorRed));
-    }
+  void _showPlanUpgradeDialog() {
+    ClubPaywallSheet.show(context);
   }
 
   void _showCancelSubscriptionDialog() {

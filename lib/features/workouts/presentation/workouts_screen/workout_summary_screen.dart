@@ -17,6 +17,7 @@ class WorkoutSummaryScreen extends StatefulWidget {
 
 class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
   late WorkoutShareData _shareData;
+  bool _isProfileLoading = true;
 
   @override
   void initState() {
@@ -29,14 +30,22 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
   }
 
   Future<void> _loadProfile() async {
+    WorkoutShareData? loadedShareData;
     try {
       final profile = await UserService.instance.getCurrentUserProfile();
-      if (profile != null && mounted) {
-        setState(() => _shareData = WorkoutShareData.fromSummary(widget.data,
-            username: profile.username, avatarUrl: profile.avatarUrl));
+      if (profile != null) {
+        loadedShareData = WorkoutShareData.fromSummary(widget.data,
+            username: profile.username, avatarUrl: profile.avatarUrl);
       }
     } catch (error) {
       debugPrint('[WorkoutShare] Perfil indisponível: $error');
+    } finally {
+      if (mounted) {
+        setState(() {
+          if (loadedShareData != null) _shareData = loadedShareData;
+          _isProfileLoading = false;
+        });
+      }
     }
   }
 
@@ -77,11 +86,15 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                 ],
                 const SizedBox(height: 20),
                 FilledButton.icon(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => WorkoutSharePreview(data: _shareData)),
-                  ),
+                  onPressed: _isProfileLoading
+                      ? null
+                      : () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  WorkoutSharePreview(data: _shareData),
+                            ),
+                          ),
                   style: FilledButton.styleFrom(
                     backgroundColor: BldrColors.goldSolid,
                     foregroundColor: BldrColors.bgBase,
