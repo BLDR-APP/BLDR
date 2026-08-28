@@ -34,8 +34,15 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
     try {
       final profile = await UserService.instance.getCurrentUserProfile();
       if (profile != null) {
-        loadedShareData = WorkoutShareData.fromSummary(widget.data,
-            username: profile.username, avatarUrl: profile.avatarUrl);
+        debugPrint('[ShareCard] username="${profile.username}" avatarUrl="${profile.avatarUrl}" fullName="${profile.fullName}"');
+        loadedShareData = WorkoutShareData.fromSummary(
+          widget.data,
+          username: profile.username,
+          fullName: profile.fullName,
+          avatarUrl: profile.avatarUrl,
+        );
+      } else {
+        debugPrint('[ShareCard] profile is null — handle não será exibido');
       }
     } catch (error) {
       debugPrint('[WorkoutShare] Perfil indisponível: $error');

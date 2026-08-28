@@ -269,11 +269,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         currentName: _userProfile!.fullName,
         currentEmail: _userProfile!.email,
         currentPhone: '',
-        onSave: (name, email, phone) async {
+        currentUsername: _userProfile!.username,
+        onSave: (name, email, phone, username) async {
           try {
+            final updates = <String, dynamic>{'full_name': name};
+            if (username != null && username.isNotEmpty) updates['username'] = username;
             final updatedProfile =
                 await UserService.instance.updateCurrentUserProfile(
-              updates: {'full_name': name},
+              updates: updates,
             );
 
             if (updatedProfile != null) {
@@ -901,6 +904,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text(profile.fullName,
                     style: BldrText.cardTitleLg,
                     overflow: TextOverflow.ellipsis),
+                if (profile.username != null && profile.username!.isNotEmpty)
+                  Text(
+                    '@${profile.username}',
+                    style: BldrText.description.copyWith(
+                      color: BldrColors.goldBright,
+                      fontSize: 12,
+                    ),
+                  ),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,

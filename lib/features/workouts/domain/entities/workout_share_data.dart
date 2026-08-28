@@ -5,22 +5,26 @@ import 'package:bldr_fitness/features/workouts/domain/entities/workout_summary_d
 class WorkoutShareData {
   final WorkoutSummaryData summary;
   final String? username;
+  final String? fullName;
   final String? avatarUrl;
 
   const WorkoutShareData({
     required this.summary,
     this.username,
+    this.fullName,
     this.avatarUrl,
   });
 
   factory WorkoutShareData.fromSummary(
     WorkoutSummaryData summary, {
     String? username,
+    String? fullName,
     String? avatarUrl,
   }) {
     return WorkoutShareData(
       summary: summary,
       username: normalizeUsername(username),
+      fullName: fullName?.trim().isEmpty == true ? null : fullName?.trim(),
       avatarUrl: avatarUrl,
     );
   }
@@ -38,7 +42,11 @@ class WorkoutShareData {
   int? get xpEarned => summary.xpEarned > 0 ? summary.xpEarned : null;
   List<PersonalRecordData> get prs => summary.newPRs;
   BldrMuscleMapData? get muscleMapData => summary.muscleMapData;
-  String? get handle => username == null ? null : '@$username';
+  String? get handle {
+    if (username != null) return '@$username';
+    if (fullName != null) return fullName;
+    return null;
+  }
 
   BldrMuscleMapView get shareMuscleView {
     final data = muscleMapData;

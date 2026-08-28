@@ -168,11 +168,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         currentName: _userProfile!.fullName,
         currentEmail: _userProfile!.email,
         currentPhone: '',
-        onSave: (name, email, phone) async {
+        currentUsername: _userProfile!.username,
+        onSave: (name, email, phone, username) async {
           try {
+            final updates = <String, dynamic>{'full_name': name};
+            if (username != null && username.isNotEmpty) updates['username'] = username;
             final updatedProfile =
                 await UserService.instance.updateCurrentUserProfile(
-              updates: {'full_name': name},
+              updates: updates,
             );
             if (updatedProfile != null) {
               setState(() => _userProfile = updatedProfile);
