@@ -120,55 +120,60 @@ class _CompactComposition extends StatelessWidget {
   Widget build(BuildContext context) {
     final muscles = data.muscleMapData?.muscles ?? const <BldrMuscle, double>{};
     return Center(
-      child: SizedBox(
-        height: 208 * scale,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _ShareMuscleMap(
-              key: const ValueKey('share-muscle-front'),
-              muscles: muscles,
-              view: BldrMuscleMapView.front,
-              scale: scale,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _Brand(scale: scale),
+          SizedBox(height: 12 * scale),
+          SizedBox(
+            height: 208 * scale,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _ShareMuscleMap(
+                  key: const ValueKey('share-muscle-front'),
+                  muscles: muscles,
+                  view: BldrMuscleMapView.front,
+                  scale: scale,
+                ),
+                SizedBox(width: 10 * scale),
+                SizedBox(
+                  width: 76 * scale,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _Metrics(data: data, scale: scale),
+                      if (data.handle case final handle?) ...[
+                        SizedBox(height: 10 * scale),
+                        Text(
+                          handle,
+                          key: const ValueKey('share-username'),
+                          maxLines: 1,
+                          overflow: TextOverflow.fade,
+                          softWrap: false,
+                          textAlign: TextAlign.center,
+                          style: BldrText.body.copyWith(
+                            color: BldrColors.textPrimary,
+                            fontSize: 10 * scale,
+                            shadows: _shareTextShadow(scale),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                SizedBox(width: 10 * scale),
+                _ShareMuscleMap(
+                  key: const ValueKey('share-muscle-back'),
+                  muscles: muscles,
+                  view: BldrMuscleMapView.back,
+                  scale: scale,
+                ),
+              ],
             ),
-            SizedBox(width: 10 * scale),
-            SizedBox(
-              width: 76 * scale,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _Brand(scale: scale),
-                  SizedBox(height: 10 * scale),
-                  _Metrics(data: data, scale: scale),
-                  if (data.handle case final handle?) ...[
-                    SizedBox(height: 10 * scale),
-                    Text(
-                      handle,
-                      key: const ValueKey('share-username'),
-                      maxLines: 1,
-                      overflow: TextOverflow.fade,
-                      softWrap: false,
-                      textAlign: TextAlign.center,
-                      style: BldrText.body.copyWith(
-                        color: BldrColors.textPrimary,
-                        fontSize: 10 * scale,
-                        shadows: _shareTextShadow(scale),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            SizedBox(width: 10 * scale),
-            _ShareMuscleMap(
-              key: const ValueKey('share-muscle-back'),
-              muscles: muscles,
-              view: BldrMuscleMapView.back,
-              scale: scale,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
