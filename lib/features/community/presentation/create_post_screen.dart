@@ -87,17 +87,42 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       final uid = _client.auth.currentUser?.id;
       if (uid == null) return;
 
-      final rows = await _client
-          .from('user_workouts')
-          .select('id, workout_template_id, completed_at, volume_kg')
-          .eq('user_id', uid)
-          .eq('is_completed', true)
-          .order('completed_at', ascending: false)
-          .limit(5);
+      // Buscar das duas fontes em paralelo
+      final results = await Future.wait([
+        _client
+            .from('user_workouts')
+            .select('id, workout_template_id, completed_at, volume_kg')
+            .eq('user_id', uid)
+            .eq('is_completed', true)
+            .order('completed_at', ascending: false)
+            .limit(5),
+        _client
+            .from('club_user_workouts')
+            .select('id, workout_template_id, completed_at, volume_kg')
+            .eq('user_id', uid)
+            .eq('is_completed', true)
+            .order('completed_at', ascending: false)
+            .limit(5),
+      ]);
+
+      // Unificar, marcar source e ordenar por completed_at desc, pegar top 5
+      final combined = <Map<String, dynamic>>[];
+      for (final row in results[0] as List) {
+        combined.add({...row as Map<String, dynamic>, 'source': 'free'});
+      }
+      for (final row in results[1] as List) {
+        combined.add({...row as Map<String, dynamic>, 'source': 'club'});
+      }
+      combined.sort((a, b) {
+        final aTs = a['completed_at'] as String? ?? '';
+        final bTs = b['completed_at'] as String? ?? '';
+        return bTs.compareTo(aTs);
+      });
+      final top5 = combined.take(5).toList();
 
       // Buscar nomes dos templates
       final List<Map<String, dynamic>> workouts = [];
-      for (final row in rows as List) {
+      for (final row in top5) {
         final templateId = row['workout_template_id'] as String?;
         String name = 'Treino';
         if (templateId != null) {
@@ -113,7 +138,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           'name': name,
           'completed_at': row['completed_at'],
           'volume_kg': row['volume_kg'],
-          'source': 'free',
+          'source': row['source'],
         });
       }
 
