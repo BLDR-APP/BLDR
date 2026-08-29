@@ -237,7 +237,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       );
 
       if (!mounted) return;
-      Navigator.pop(context);
+      Navigator.of(context, rootNavigator: true).pop();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -275,7 +275,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           leading: IconButton(
             icon: const Icon(TablerIcons.x,
                 color: BldrColors.textPrimary),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
           ),
           title: Text('Criar post', style: BldrText.screenTitle),
           actions: [
