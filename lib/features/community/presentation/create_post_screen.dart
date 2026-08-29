@@ -9,6 +9,7 @@ import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/features/community/domain/repositories/community_feed_repository.dart';
 import 'package:bldr_fitness/features/community/presentation/widgets/wearable_import_card.dart';
+import 'package:bldr_fitness/services/user_service.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 
 class CreatePostScreen extends StatefulWidget {
@@ -29,6 +30,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   final _repo = getIt<CommunityFeedRepository>();
   final _client = Supabase.instance.client;
   final _captionController = TextEditingController();
+
+  // Perfil
+  String _userFullName = '';
+  String? _userUsername;
 
   int _activeIcon = 0; // 0=treino 1=atividade 2=wearable 3=foto 4=mais
   String _visibility = 'public';
@@ -64,7 +69,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   @override
   void initState() {
     super.initState();
-    debugPrint('[CreatePostScreen] initState');
+    _loadProfile();
     _loadRecentWorkouts();
     _detectWearable();
     if (widget.preselectedWorkoutId != null) {
@@ -83,6 +88,17 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     super.dispose();
   }
 
+  Future<void> _loadProfile() async {
+    try {
+      final profile = await UserService.instance.getCurrentUserProfile();
+      if (!mounted || profile == null) return;
+      setState(() {
+        _userFullName = profile.fullName;
+        _userUsername = profile.username;
+      });
+    } catch (_) {}
+  }
+
   Future<void> _loadRecentWorkouts() async {
     try {
       final uid = _client.auth.currentUser?.id;
@@ -92,14 +108,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       final results = await Future.wait([
         _client
             .from('user_workouts')
-            .select('id, workout_template_id, completed_at, volume_kg')
+            .select('id, workout_template_id, completed_at, volume_kg, duration_s, total_duration_seconds, sets_count')
             .eq('user_id', uid)
             .eq('is_completed', true)
             .order('completed_at', ascending: false)
             .limit(5),
         _client
             .from('club_user_workouts')
-            .select('id, workout_template_id, completed_at, volume_kg')
+            .select('id, workout_template_id, completed_at, volume_kg, duration_s, total_duration_seconds, sets_count')
             .eq('user_id', uid)
             .eq('is_completed', true)
             .order('completed_at', ascending: false)
@@ -121,29 +137,36 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       });
       final top5 = combined.take(5).toList();
 
-      // Buscar nomes dos templates — tabela depende da source
+      // Buscar nomes + muscle_groups dos templates — tabela depende da source
       final List<Map<String, dynamic>> workouts = [];
       for (final row in top5) {
         final templateId = row['workout_template_id'] as String?;
         final source = row['source'] as String;
         String name = 'Treino';
+        List muscleGroups = [];
         if (templateId != null) {
           final table = source == 'club'
               ? 'club_workout_templates'
               : 'workout_templates';
           final tmpl = await _client
               .from(table)
-              .select('name')
+              .select('name, muscle_groups')
               .eq('id', templateId)
               .maybeSingle();
           name = tmpl?['name'] as String? ?? 'Treino';
+          muscleGroups = tmpl?['muscle_groups'] as List? ?? [];
         }
+        final completedAt = row['completed_at'] as String?;
         workouts.add({
           'id': row['id'],
           'name': name,
-          'completed_at': row['completed_at'],
+          'completed_at': completedAt,
           'volume_kg': row['volume_kg'],
+          'duration_s': row['duration_s'] ?? row['total_duration_seconds'],
+          'sets_count': row['sets_count'],
+          'muscle_groups': muscleGroups,
           'source': source,
+          'date_label': _formatDate(completedAt),
         });
       }
 
@@ -266,11 +289,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: BldrColors.bgBase,
+    return BldrBackground(
+      child: Scaffold(
+      backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        backgroundColor: BldrColors.bgBase,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
         leading: IconButton(
@@ -317,12 +341,13 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildComposer() {
-    final uid = _client.auth.currentUser?.id ?? '';
-    final initial = uid.isNotEmpty ? uid[0].toUpperCase() : '?';
+    final initial = _userFullName.isNotEmpty
+        ? _userFullName[0].toUpperCase()
+        : '?';
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -330,26 +355,56 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           width: 40,
           height: 40,
           decoration: const BoxDecoration(
-            color: BldrColors.goldTint,
+            gradient: LinearGradient(
+              colors: [BldrColors.goldSolid, BldrColors.goldBright],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
             shape: BoxShape.circle,
           ),
           child: Center(
-            child: Text(initial,
-                style: BldrText.cardTitle.copyWith(
-                    color: BldrColors.goldBright)),
+            child: Text(
+              initial,
+              style: BldrText.cardTitle.copyWith(color: Colors.black),
+            ),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: TextField(
-            controller: _captionController,
-            maxLines: null,
-            style: BldrText.body,
-            decoration: const InputDecoration(
-              hintText: 'O que você quer compartilhar?',
-              hintStyle: TextStyle(color: BldrColors.textTertiary),
-              border: InputBorder.none,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _userUsername != null
+                    ? '@$_userUsername'
+                    : _userFullName.isNotEmpty
+                        ? _userFullName
+                        : '...',
+                style: BldrText.cardTitle.copyWith(
+                  color: _userUsername != null
+                      ? BldrColors.goldBright
+                      : BldrColors.textPrimary,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: _captionController,
+                maxLines: null,
+                style: BldrText.body,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  hintText: 'O que você quer compartilhar?',
+                  hintStyle: BldrText.body.copyWith(
+                      color: BldrColors.textTertiary),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -357,67 +412,61 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   Widget _buildIconBar() {
-    final icons = [
-      (TablerIcons.barbell, 'Treino'),
-      (TablerIcons.run, 'Atividade'),
-      (TablerIcons.device_watch, 'Wearable'),
-      (TablerIcons.camera, 'Foto'),
-      (TablerIcons.dots, 'Mais'),
-    ];
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+      decoration: const BoxDecoration(
+        color: BldrColors.surface,
+        border: Border(
+          top: BorderSide(color: BldrColors.border),
+          bottom: BorderSide(color: BldrColors.border),
+        ),
+      ),
       child: Row(
-        children: icons.asMap().entries.map((e) {
-          final i = e.key;
-          final (icon, label) = e.value;
-          final active = _activeIcon == i;
-          return GestureDetector(
-            onTap: () {
-              if (i == 3) {
-                _pickPhoto();
-                return;
-              }
-              setState(() => _activeIcon = i);
-            },
-            child: Container(
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: active
-                    ? BldrColors.goldTint
-                    : BldrColors.surface,
-                border: Border.all(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _iconTab(0, TablerIcons.barbell, 'Treino'),
+          _iconTab(1, TablerIcons.run, 'Atividade'),
+          _iconTab(2, TablerIcons.device_watch, 'Wearable'),
+          _iconTab(3, TablerIcons.camera, 'Foto'),
+          _iconTab(4, TablerIcons.dots, 'Mais'),
+        ],
+      ),
+    );
+  }
+
+  Widget _iconTab(int index, IconData icon, String label) {
+    final active = _activeIcon == index;
+    return GestureDetector(
+      onTap: () {
+        if (index == 3) _pickPhoto();
+        setState(() => _activeIcon = index);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: active ? BldrColors.goldTint : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon,
+                size: 22,
+                color:
+                    active ? BldrColors.goldBright : BldrColors.textTertiary),
+            const SizedBox(height: 4),
+            Text(label,
+                style: TextStyle(
+                  fontSize: 9,
                   color: active
-                      ? BldrColors.goldBorder
-                      : BldrColors.border,
-                ),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                children: [
-                  Icon(icon,
-                      size: 15,
-                      color: active
-                          ? BldrColors.goldBright
-                          : BldrColors.textSecondary),
-                  const SizedBox(width: 6),
-                  Text(
-                    label,
-                    style: BldrText.meta.copyWith(
-                      color: active
-                          ? BldrColors.goldBright
-                          : BldrColors.textSecondary,
-                      fontWeight: active
-                          ? FontWeight.w600
-                          : FontWeight.w400,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }).toList(),
+                      ? BldrColors.goldBright
+                      : BldrColors.textTertiary,
+                  fontWeight:
+                      active ? FontWeight.w600 : FontWeight.w400,
+                )),
+          ],
+        ),
       ),
     );
   }
@@ -474,19 +523,29 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   Widget _buildWorkoutItem(Map<String, dynamic> w) {
     final isSelected = _selectedWorkoutId == w['id'];
-    final date = w['completed_at'] != null
-        ? DateTime.tryParse(w['completed_at'].toString())
-        : null;
-    final dateStr = date != null
-        ? '${date.day}/${date.month}/${date.year}'
-        : '';
-    final vol = w['volume_kg'];
+    final dateLabel = w['date_label'] as String? ?? '';
+    final volLabel = _formatVolume(w['volume_kg']);
+    final durLabel = _formatDuration(w['duration_s'] as int?);
+    final subtitle = [
+      if (dateLabel.isNotEmpty) dateLabel,
+      if (volLabel != '—') volLabel,
+      if (durLabel != '—') durLabel,
+    ].join(' · ');
 
     return GestureDetector(
       onTap: () => setState(() {
         _selectedWorkoutId = w['id'] as String;
         _selectedSource = w['source'] as String? ?? 'free';
-        _selectedWorkoutData = w;
+        _selectedWorkoutData = {
+          'id': w['id'],
+          'name': w['name'],
+          'source': w['source'],
+          'volume_kg': w['volume_kg'],
+          'duration_s': w['duration_s'],
+          'sets_count': w['sets_count'],
+          'muscle_groups': w['muscle_groups'] ?? [],
+          'date_label': dateLabel,
+        };
       }),
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
@@ -512,21 +571,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 children: [
                   Text(w['name'] as String? ?? 'Treino',
                       style: BldrText.cardTitle),
-                  if (dateStr.isNotEmpty || vol != null)
-                    Text(
-                      [
-                        if (dateStr.isNotEmpty) dateStr,
-                        if (vol != null)
-                          '${(vol as num).toStringAsFixed(0)}kg',
-                      ].join(' · '),
-                      style: BldrText.meta,
-                    ),
+                  if (subtitle.isNotEmpty)
+                    Text(subtitle, style: BldrText.meta),
                 ],
               ),
             ),
             if (isSelected)
-              const Icon(TablerIcons.check, size: 16,
-                  color: BldrColors.goldBright),
+              const Icon(TablerIcons.check,
+                  size: 16, color: BldrColors.goldBright),
           ],
         ),
       ),
@@ -535,54 +587,181 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   Widget _buildWorkoutPreview() {
     final w = _selectedWorkoutData!;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        BldrGlassCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final muscles = (w['muscle_groups'] as List?) ?? [];
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: BldrColors.goldTint,
+        border: Border.all(color: BldrColors.goldBorder),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header: ícone + nome + "Trocar"
+          Row(
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(w['name'] as String? ?? 'Treino',
-                        style: BldrText.cardTitleLg),
-                  ),
-                  GestureDetector(
-                    onTap: () => setState(() {
-                      _selectedWorkoutId = null;
-                      _selectedWorkoutData = null;
-                    }),
-                    child: Text('Trocar', style: BldrText.body.copyWith(
-                        color: BldrColors.goldBright)),
-                  ),
-                ],
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: BldrColors.goldTint,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(TablerIcons.barbell,
+                    size: 18, color: BldrColors.goldBright),
               ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(TablerIcons.trophy, size: 14,
-                      color: BldrColors.goldBright),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () => setState(() => _includePrs = !_includePrs),
-                    child: Text(
-                      _includePrs ? 'Incluir PRs ✓' : 'Incluir PRs',
-                      style: BldrText.body.copyWith(
-                        color: _includePrs
-                            ? BldrColors.goldBright
-                            : BldrColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                ],
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(w['name'] as String? ?? 'Treino',
+                        style: BldrText.cardTitle),
+                    if ((w['date_label'] as String?)?.isNotEmpty == true)
+                      Text(w['date_label'] as String,
+                          style: BldrText.meta.copyWith(
+                              color: BldrColors.textSecondary)),
+                  ],
+                ),
+              ),
+              GestureDetector(
+                onTap: () => setState(() {
+                  _selectedWorkoutId = null;
+                  _selectedWorkoutData = null;
+                }),
+                child: Text('Trocar',
+                    style: BldrText.meta.copyWith(
+                        color: BldrColors.goldBright)),
               ),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: 12),
+          // Stats row
+          Row(
+            children: [
+              _previewStat(
+                  _formatDuration(w['duration_s'] as int?), 'DURAÇÃO'),
+              const SizedBox(width: 8),
+              _previewStat(_formatVolume(w['volume_kg']), 'VOLUME'),
+              const SizedBox(width: 8),
+              _previewStat('${w['sets_count'] ?? '—'}', 'SÉRIES'),
+            ],
+          ),
+          if (muscles.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 5,
+              runSpacing: 5,
+              children: [
+                for (final m in muscles)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.08)),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(m.toString(),
+                        style: BldrText.meta.copyWith(
+                            color: BldrColors.textSecondary)),
+                  ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 10),
+          // Toggle PRs
+          Row(
+            children: [
+              const Icon(TablerIcons.trophy,
+                  size: 16, color: BldrColors.goldBright),
+              const SizedBox(width: 8),
+              Text('Incluir PRs no post',
+                  style: BldrText.meta.copyWith(
+                      color: BldrColors.goldBright)),
+              const Spacer(),
+              GestureDetector(
+                onTap: () => setState(() => _includePrs = !_includePrs),
+                child: Container(
+                  width: 34,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: _includePrs
+                        ? BldrColors.goldBright
+                        : BldrColors.surface,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: AnimatedAlign(
+                    duration: const Duration(milliseconds: 150),
+                    alignment: _includePrs
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
+                    child: Container(
+                      width: 14,
+                      height: 14,
+                      margin:
+                          const EdgeInsets.symmetric(horizontal: 3),
+                      decoration: BoxDecoration(
+                        color: _includePrs
+                            ? Colors.black
+                            : BldrColors.textTertiary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
+
+  // ── Helpers de formatação ───────────────────────────────────────────────────
+
+  String _formatDuration(int? seconds) {
+    if (seconds == null || seconds == 0) return '—';
+    final m = seconds ~/ 60;
+    return '$m MIN';
+  }
+
+  String _formatVolume(dynamic kg) {
+    if (kg == null) return '—';
+    final v = (kg as num).toDouble();
+    if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)} T';
+    return '${v.toStringAsFixed(0)} KG';
+  }
+
+  String _formatDate(String? iso) {
+    if (iso == null) return '';
+    final d = DateTime.parse(iso).toLocal();
+    return '${d.day}/${d.month.toString().padLeft(2, '0')} · treino';
+  }
+
+  Widget _previewStat(String value, String label) => Expanded(
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.25),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            children: [
+              Text(value,
+                  style: BldrText.cardTitle.copyWith(
+                      color: BldrColors.goldBright, fontSize: 14)),
+              const SizedBox(height: 2),
+              Text(label,
+                  style: BldrText.metaSm.copyWith(
+                      color: BldrColors.textTertiary,
+                      letterSpacing: .5)),
+            ],
+          ),
+        ),
+      );
 
   // ── Atividade ──────────────────────────────────────────────────────────────
 
