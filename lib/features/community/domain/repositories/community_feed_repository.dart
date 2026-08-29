@@ -1,4 +1,7 @@
+import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_post.dart';
+import 'package:bldr_fitness/features/community/domain/entities/recent_workout.dart';
+import 'package:bldr_fitness/features/community/domain/entities/workout_exercise.dart';
 
 abstract class CommunityFeedRepository {
   /// Feed público — paginado por cursor (created_at DESC).
@@ -29,4 +32,13 @@ abstract class CommunityFeedRepository {
 
   /// Inserir post de streak milestone (chamado pelo Flutter após detectar milestone).
   Future<void> postStreakMilestone({required int days});
+
+  /// Últimos 5 treinos concluídos do usuário (free + club), ordenados por data.
+  Future<Result<List<RecentWorkout>>> fetchRecentWorkouts();
+
+  /// Exercícios e séries de um treino específico (para WorkoutDetailSheet).
+  Future<Result<List<WorkoutExercise>>> fetchWorkoutExercises({
+    required String workoutId,
+    required String source,
+  });
 }

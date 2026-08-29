@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
+import 'package:bldr_fitness/features/community/domain/entities/workout_exercise.dart';
 import 'package:bldr_fitness/features/community/domain/repositories/community_feed_repository.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 
@@ -26,11 +26,10 @@ class WorkoutDetailSheet extends StatefulWidget {
 
 class _WorkoutDetailSheetState extends State<WorkoutDetailSheet> {
   final _repo = getIt<CommunityFeedRepository>();
-  final _client = Supabase.instance.client;
 
   bool _loading = true;
   bool _copying = false;
-  List<_ExerciseGroup> _exercises = [];
+  List<WorkoutExercise> _exercises = [];
 
   @override
   void initState() {
@@ -39,43 +38,18 @@ class _WorkoutDetailSheetState extends State<WorkoutDetailSheet> {
   }
 
   Future<void> _loadExercises() async {
-    try {
-      final table = widget.source == 'club'
-          ? 'club_workout_exercise_sets'
-          : 'workout_exercise_sets';
-
-      final rows = await _client
-          .from(table)
-          .select('exercise_id, free_name, weight_kg, reps, created_at')
-          .eq('user_workout_id', widget.workoutId)
-          .not('completed_at', 'is', null)
-          .order('created_at');
-
-      final grouped = <String, _ExerciseGroup>{};
-      for (final row in rows as List) {
-        final key = (row['exercise_id'] as String?) ??
-            (row['free_name'] as String?) ??
-            'Exercício';
-        grouped.putIfAbsent(
-          key,
-          () => _ExerciseGroup(name: row['free_name'] as String? ?? key),
-        );
-        final weight = (row['weight_kg'] as num?)?.toDouble();
-        final reps = row['reps'] as int?;
-        if (weight != null || reps != null) {
-          grouped[key]!.sets.add(_SetData(weightKg: weight, reps: reps));
-        }
-      }
-
-      if (!mounted) return;
-      setState(() {
-        _exercises = grouped.values.toList();
+    final result = await _repo.fetchWorkoutExercises(
+      workoutId: widget.workoutId,
+      source: widget.source,
+    );
+    if (!mounted) return;
+    result.fold(
+      onSuccess: (exercises) => setState(() {
+        _exercises = exercises;
         _loading = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-    }
+      }),
+      onFailure: (_) => setState(() => _loading = false),
+    );
   }
 
   Future<void> _copyWorkout() async {
@@ -191,7 +165,7 @@ class _WorkoutDetailSheetState extends State<WorkoutDetailSheet> {
     );
   }
 
-  Widget _buildExerciseCard(_ExerciseGroup ex) {
+  Widget _buildExerciseCard(WorkoutExercise ex) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
@@ -208,9 +182,7 @@ class _WorkoutDetailSheetState extends State<WorkoutDetailSheet> {
               const Icon(TablerIcons.barbell, size: 14,
                   color: BldrColors.goldBright),
               const SizedBox(width: 8),
-              Expanded(
-                  child:
-                      Text(ex.name, style: BldrText.cardTitle)),
+              Expanded(child: Text(ex.name, style: BldrText.cardTitle)),
             ],
           ),
           if (ex.sets.isNotEmpty) ...[
@@ -231,8 +203,7 @@ class _WorkoutDetailSheetState extends State<WorkoutDetailSheet> {
                       horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0x08FFFFFF),
-                    border: Border.all(
-                        color: const Color(0x0DFFFFFF)),
+                    border: Border.all(color: const Color(0x0DFFFFFF)),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
@@ -256,16 +227,3 @@ class _WorkoutDetailSheetState extends State<WorkoutDetailSheet> {
   }
 }
 
-class _ExerciseGroup {
-  final String name;
-  final List<_SetData> sets = [];
-
-  _ExerciseGroup({required this.name});
-}
-
-class _SetData {
-  final double? weightKg;
-  final int? reps;
-
-  const _SetData({this.weightKg, this.reps});
-}

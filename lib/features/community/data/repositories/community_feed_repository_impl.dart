@@ -1,6 +1,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:bldr_fitness/core/errors/failure.dart';
+import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_post.dart';
+import 'package:bldr_fitness/features/community/domain/entities/recent_workout.dart';
+import 'package:bldr_fitness/features/community/domain/entities/workout_exercise.dart';
 import 'package:bldr_fitness/features/community/domain/repositories/community_feed_repository.dart';
 
 class CommunityFeedRepositoryImpl implements CommunityFeedRepository {
@@ -140,5 +144,142 @@ class CommunityFeedRepositoryImpl implements CommunityFeedRepository {
       'visibility': 'public',
       'created_at': DateTime.now().toUtc().toIso8601String(),
     });
+  }
+
+  @override
+  Future<Result<List<RecentWorkout>>> fetchRecentWorkouts() async {
+    try {
+      final uid = _client.auth.currentUser?.id;
+      if (uid == null) {
+        return const Result.failure(AuthFailure('Usuário não autenticado.'));
+      }
+
+      final results = await Future.wait([
+        _client
+            .from('user_workouts')
+            .select('id, workout_template_id, completed_at, volume_kg, muscle_groups, total_duration_seconds')
+            .eq('user_id', uid)
+            .eq('is_completed', true)
+            .order('completed_at', ascending: false)
+            .limit(5),
+        _client
+            .from('club_user_workouts')
+            .select('id, workout_template_id, completed_at, volume_kg, muscle_groups, total_duration_seconds')
+            .eq('user_id', uid)
+            .eq('is_completed', true)
+            .order('completed_at', ascending: false)
+            .limit(5),
+      ]);
+
+      final combined = <Map<String, dynamic>>[];
+      for (final row in results[0] as List) {
+        combined.add({...row as Map<String, dynamic>, 'source': 'free'});
+      }
+      for (final row in results[1] as List) {
+        combined.add({...row as Map<String, dynamic>, 'source': 'club'});
+      }
+      combined.sort((a, b) {
+        final aTs = a['completed_at'] as String? ?? '';
+        final bTs = b['completed_at'] as String? ?? '';
+        return bTs.compareTo(aTs);
+      });
+      final top5 = combined.take(5).toList();
+
+      final workouts = <RecentWorkout>[];
+      await Future.wait(top5.map((row) async {
+        final templateId = row['workout_template_id'] as String?;
+        final source = row['source'] as String;
+        String name = 'Treino';
+
+        if (templateId != null) {
+          try {
+            final table = source == 'club'
+                ? 'club_workout_templates'
+                : 'workout_templates';
+            final tmpl = await _client
+                .from(table)
+                .select('name')
+                .eq('id', templateId)
+                .maybeSingle();
+            name = tmpl?['name'] as String? ?? 'Treino';
+          } catch (_) {}
+        }
+
+        final rawMuscles = row['muscle_groups'];
+        final muscles = rawMuscles is List
+            ? rawMuscles.map((m) => m.toString()).toList()
+            : <String>[];
+
+        final completedAt = row['completed_at'] as String?;
+        workouts.add(RecentWorkout(
+          id: row['id'] as String,
+          name: name,
+          source: source,
+          completedAt:
+              completedAt != null ? DateTime.tryParse(completedAt) : null,
+          volumeKg: (row['volume_kg'] as num?)?.toDouble(),
+          durationSeconds: row['total_duration_seconds'] as int?,
+          muscleGroups: muscles,
+        ));
+      }));
+
+      workouts.sort((a, b) {
+        final aTs = a.completedAt?.toIso8601String() ?? '';
+        final bTs = b.completedAt?.toIso8601String() ?? '';
+        return bTs.compareTo(aTs);
+      });
+
+      return Result.success(workouts);
+    } catch (e) {
+      return Result.failure(ServerFailure(
+        'Não foi possível carregar os treinos recentes.',
+        cause: e,
+      ));
+    }
+  }
+
+  @override
+  Future<Result<List<WorkoutExercise>>> fetchWorkoutExercises({
+    required String workoutId,
+    required String source,
+  }) async {
+    try {
+      final table = source == 'club'
+          ? 'club_workout_exercise_sets'
+          : 'workout_exercise_sets';
+
+      final rows = await _client
+          .from(table)
+          .select('exercise_id, free_name, weight_kg, reps, created_at')
+          .eq('user_workout_id', workoutId)
+          .not('completed_at', 'is', null)
+          .order('created_at');
+
+      final grouped = <String, List<WorkoutSet>>{};
+      final names = <String, String>{};
+      for (final row in rows as List) {
+        final key = (row['exercise_id'] as String?) ??
+            (row['free_name'] as String?) ??
+            'Exercício';
+        names.putIfAbsent(key, () => row['free_name'] as String? ?? key);
+        grouped.putIfAbsent(key, () => []);
+        final weight = (row['weight_kg'] as num?)?.toDouble();
+        final reps = row['reps'] as int?;
+        if (weight != null || reps != null) {
+          grouped[key]!.add(WorkoutSet(weightKg: weight, reps: reps));
+        }
+      }
+
+      final exercises = grouped.entries
+          .map((e) => WorkoutExercise(name: names[e.key]!, sets: e.value))
+          .toList();
+
+      return Result.success(exercises);
+    } catch (e) {
+      return Result.failure(ServerFailure(
+        'Não foi possível carregar os exercícios.',
+        cause: e,
+      ));
+    }
   }
 }

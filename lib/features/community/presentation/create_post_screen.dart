@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
+import 'package:bldr_fitness/features/community/domain/entities/recent_workout.dart';
 import 'package:bldr_fitness/features/community/domain/repositories/community_feed_repository.dart';
 import 'package:bldr_fitness/features/community/presentation/widgets/wearable_import_card.dart';
 import 'package:bldr_fitness/services/user_service.dart';
@@ -28,7 +29,9 @@ class CreatePostScreen extends StatefulWidget {
 
 class _CreatePostScreenState extends State<CreatePostScreen> {
   final _repo = getIt<CommunityFeedRepository>();
-  final _client = Supabase.instance.client;
+  // Supabase direto apenas para upload de foto (operação de storage, não de dados)
+  final _storage = Supabase.instance.client.storage;
+  final _auth = Supabase.instance.client.auth;
   final _captionController = TextEditingController();
 
   // Perfil
@@ -40,11 +43,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   bool _publishing = false;
 
   // Treino
-  List<Map<String, dynamic>> _recentWorkouts = [];
+  List<RecentWorkout> _recentWorkouts = [];
   bool _workoutsLoading = true;
   String? _selectedWorkoutId;
   String? _selectedSource;
-  Map<String, dynamic>? _selectedWorkoutData;
+  RecentWorkout? _selectedWorkout;
   bool _includePrs = true;
 
   // Atividade
@@ -100,119 +103,30 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   Future<void> _loadRecentWorkouts() async {
-    try {
-      final uid = _client.auth.currentUser?.id;
-      if (uid == null) {
-        setState(() => _workoutsLoading = false);
-        return;
-      }
-
-      final results = await Future.wait([
-        _client
-            .from('user_workouts')
-            .select('id, workout_template_id, completed_at, volume_kg, muscle_groups, total_duration_seconds')
-            .eq('user_id', uid)
-            .eq('is_completed', true)
-            .order('completed_at', ascending: false)
-            .limit(5),
-        _client
-            .from('club_user_workouts')
-            .select('id, workout_template_id, completed_at, volume_kg, muscle_groups, total_duration_seconds')
-            .eq('user_id', uid)
-            .eq('is_completed', true)
-            .order('completed_at', ascending: false)
-            .limit(5),
-      ]);
-
-      debugPrint('[CreatePost] free workouts: ${(results[0] as List).length}');
-      debugPrint('[CreatePost] club workouts: ${(results[1] as List).length}');
-
-      final combined = <Map<String, dynamic>>[];
-      for (final row in results[0] as List) {
-        combined.add({...row as Map<String, dynamic>, 'source': 'free'});
-      }
-      for (final row in results[1] as List) {
-        combined.add({...row as Map<String, dynamic>, 'source': 'club'});
-      }
-      combined.sort((a, b) {
-        final aTs = a['completed_at'] as String? ?? '';
-        final bTs = b['completed_at'] as String? ?? '';
-        return bTs.compareTo(aTs);
-      });
-      final top5 = combined.take(5).toList();
-
-      debugPrint('[CreatePost] combined top5: ${top5.length}');
-
-      // Buscar nomes dos templates em paralelo
-      final workouts = <Map<String, dynamic>>[];
-      await Future.wait(top5.map((row) async {
-        final templateId = row['workout_template_id'] as String?;
-        final source = row['source'] as String;
-        String name = 'Treino';
-
-        if (templateId != null) {
-          try {
-            final table = source == 'club'
-                ? 'club_workout_templates'
-                : 'workout_templates';
-            final tmpl = await _client
-                .from(table)
-                .select('name')
-                .eq('id', templateId)
-                .maybeSingle();
-            name = tmpl?['name'] as String? ?? 'Treino';
-          } catch (e) {
-            debugPrint('[CreatePost] erro ao buscar template $templateId: $e');
+    final result = await _repo.fetchRecentWorkouts();
+    if (!mounted) return;
+    result.fold(
+      onSuccess: (workouts) {
+        setState(() {
+          _recentWorkouts = workouts;
+          _workoutsLoading = false;
+          if (widget.preselectedWorkoutId != null) {
+            final match = workouts
+                .where((w) => w.id == widget.preselectedWorkoutId)
+                .firstOrNull;
+            if (match != null) {
+              _selectedWorkoutId = match.id;
+              _selectedSource = match.source;
+              _selectedWorkout = match;
+            }
           }
-        }
-
-        final muscleGroups = row['muscle_groups'];
-        workouts.add({
-          'id': row['id'],
-          'name': name,
-          'source': source,
-          'completed_at': row['completed_at'],
-          'volume_kg': row['volume_kg'],
-          'duration_s': row['total_duration_seconds'],
-          'muscle_groups': muscleGroups is List
-              ? muscleGroups
-              : (muscleGroups != null
-                  ? [muscleGroups.toString()]
-                  : <String>[]),
-          'date_label': _formatDate(row['completed_at'] as String?),
         });
-      }));
-
-      // Reordenar pois Future.wait não garante ordem
-      workouts.sort((a, b) {
-        final aTs = a['completed_at'] as String? ?? '';
-        final bTs = b['completed_at'] as String? ?? '';
-        return bTs.compareTo(aTs);
-      });
-
-      debugPrint('[CreatePost] workouts com nome: ${workouts.length}');
-
-      if (!mounted) return;
-      setState(() {
-        _recentWorkouts = workouts;
-        _workoutsLoading = false;
-
-        if (widget.preselectedWorkoutId != null) {
-          final match = workouts
-              .where((w) => w['id'] == widget.preselectedWorkoutId)
-              .firstOrNull;
-          if (match != null) {
-            _selectedWorkoutId = widget.preselectedWorkoutId;
-            _selectedSource = widget.preselectedSource ?? 'free';
-            _selectedWorkoutData = match;
-          }
-        }
-      });
-    } catch (e, st) {
-      debugPrint('[CreatePost] erro em _loadRecentWorkouts: $e\n$st');
-      if (!mounted) return;
-      setState(() => _workoutsLoading = false);
-    }
+      },
+      onFailure: (failure) {
+        debugPrint('[CreatePost] fetchRecentWorkouts: ${failure.message}');
+        setState(() => _workoutsLoading = false);
+      },
+    );
   }
 
   Future<void> _detectWearable() async {
@@ -235,12 +149,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   Future<String?> _uploadPhoto() async {
     if (_photoFile == null) return null;
     try {
-      final uid = _client.auth.currentUser?.id ?? 'anon';
+      final uid = _auth.currentUser?.id ?? 'anon';
       final ts = DateTime.now().millisecondsSinceEpoch;
       final path = '$uid/$ts.jpg';
       final bytes = await _photoFile!.readAsBytes();
-      await _client.storage.from('community-posts').uploadBinary(path, bytes);
-      return _client.storage.from('community-posts').getPublicUrl(path);
+      await _storage.from('community-posts').uploadBinary(path, bytes);
+      return _storage.from('community-posts').getPublicUrl(path);
     } catch (_) {
       return null;
     }
@@ -261,9 +175,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       if (_selectedWorkoutId != null) {
         payload['workout_id'] = _selectedWorkoutId;
         payload['source'] = _selectedSource ?? 'free';
-        if (_selectedWorkoutData != null) {
-          payload['workout_name'] = _selectedWorkoutData!['name'];
-          payload['volume_kg'] = _selectedWorkoutData!['volume_kg'];
+        if (_selectedWorkout != null) {
+          payload['workout_name'] = _selectedWorkout!.name;
+          payload['volume_kg'] = _selectedWorkout!.volumeKg;
         }
         if (_includePrs) payload['include_prs'] = true;
       }
@@ -523,7 +437,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       );
     }
 
-    if (_selectedWorkoutData != null) {
+    if (_selectedWorkout != null) {
       return _buildWorkoutPreview();
     }
 
@@ -548,31 +462,21 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     );
   }
 
-  Widget _buildWorkoutItem(Map<String, dynamic> w) {
-    final isSelected = _selectedWorkoutId == w['id'];
-    final dateLabel = w['date_label'] as String? ?? '';
-    final volLabel = _formatVolume(w['volume_kg']);
-    final durLabel = _formatDuration(w['duration_s'] as int?);
+  Widget _buildWorkoutItem(RecentWorkout w) {
+    final isSelected = _selectedWorkoutId == w.id;
+    final volLabel = _formatVolume(w.volumeKg);
+    final durLabel = _formatDuration(w.durationSeconds);
     final subtitle = [
-      if (dateLabel.isNotEmpty) dateLabel,
+      if (w.dateLabel.isNotEmpty) w.dateLabel,
       if (volLabel != '—') volLabel,
       if (durLabel != '—') durLabel,
     ].join(' · ');
 
     return GestureDetector(
       onTap: () => setState(() {
-        _selectedWorkoutId = w['id'] as String;
-        _selectedSource = w['source'] as String? ?? 'free';
-        _selectedWorkoutData = {
-          'id': w['id'],
-          'name': w['name'],
-          'source': w['source'],
-          'volume_kg': w['volume_kg'],
-          'duration_s': w['duration_s'],
-          'sets_count': w['sets_count'],
-          'muscle_groups': w['muscle_groups'] ?? [],
-          'date_label': dateLabel,
-        };
+        _selectedWorkoutId = w.id;
+        _selectedSource = w.source;
+        _selectedWorkout = w;
       }),
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
@@ -596,8 +500,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(w['name'] as String? ?? 'Treino',
-                      style: BldrText.cardTitle),
+                  Text(w.name, style: BldrText.cardTitle),
                   if (subtitle.isNotEmpty)
                     Text(subtitle, style: BldrText.meta),
                 ],
@@ -613,8 +516,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   Widget _buildWorkoutPreview() {
-    final w = _selectedWorkoutData!;
-    final muscles = (w['muscle_groups'] as List?) ?? [];
+    final w = _selectedWorkout!;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -643,10 +545,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(w['name'] as String? ?? 'Treino',
-                        style: BldrText.cardTitle),
-                    if ((w['date_label'] as String?)?.isNotEmpty == true)
-                      Text(w['date_label'] as String,
+                    Text(w.name, style: BldrText.cardTitle),
+                    if (w.dateLabel.isNotEmpty)
+                      Text(w.dateLabel,
                           style: BldrText.meta.copyWith(
                               color: BldrColors.textSecondary)),
                   ],
@@ -655,7 +556,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               GestureDetector(
                 onTap: () => setState(() {
                   _selectedWorkoutId = null;
-                  _selectedWorkoutData = null;
+                  _selectedWorkout = null;
                 }),
                 child: Text('Trocar',
                     style: BldrText.meta.copyWith(
@@ -667,21 +568,20 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           // Stats row
           Row(
             children: [
-              _previewStat(
-                  _formatDuration(w['duration_s'] as int?), 'DURAÇÃO'),
+              _previewStat(_formatDuration(w.durationSeconds), 'DURAÇÃO'),
               const SizedBox(width: 8),
-              _previewStat(_formatVolume(w['volume_kg']), 'VOLUME'),
+              _previewStat(_formatVolume(w.volumeKg), 'VOLUME'),
               const SizedBox(width: 8),
-              _previewStat('${w['sets_count'] ?? '—'}', 'SÉRIES'),
+              _previewStat('—', 'SÉRIES'),
             ],
           ),
-          if (muscles.isNotEmpty) ...[
+          if (w.muscleGroups.isNotEmpty) ...[
             const SizedBox(height: 10),
             Wrap(
               spacing: 5,
               runSpacing: 5,
               children: [
-                for (final m in muscles)
+                for (final m in w.muscleGroups)
                   Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 8, vertical: 3),
@@ -691,7 +591,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                           color: Colors.white.withValues(alpha: 0.08)),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: Text(m.toString(),
+                    child: Text(m,
                         style: BldrText.meta.copyWith(
                             color: BldrColors.textSecondary)),
                   ),
@@ -760,12 +660,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     final v = (kg as num).toDouble();
     if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)} T';
     return '${v.toStringAsFixed(0)} KG';
-  }
-
-  String _formatDate(String? iso) {
-    if (iso == null) return '';
-    final d = DateTime.parse(iso).toLocal();
-    return '${d.day}/${d.month.toString().padLeft(2, '0')} · treino';
   }
 
   Widget _previewStat(String value, String label) => Expanded(
