@@ -306,15 +306,19 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
   }
 
   Widget _buildFab() {
-    return FloatingActionButton(
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const CreatePostScreen()),
-        ).then((_) => _loadFeed(refresh: true));
-      },
-      backgroundColor: BldrColors.goldSolid,
-      child: const Icon(TablerIcons.plus, color: Colors.black),
+    return Padding(
+      padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).padding.bottom + 72),
+      child: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const CreatePostScreen()),
+          ).then((_) => _loadFeed(refresh: true));
+        },
+        backgroundColor: BldrColors.goldSolid,
+        child: const Icon(TablerIcons.plus, color: Colors.black),
+      ),
     );
   }
 
