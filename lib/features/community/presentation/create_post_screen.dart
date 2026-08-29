@@ -108,14 +108,14 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       final results = await Future.wait([
         _client
             .from('user_workouts')
-            .select('id, workout_template_id, completed_at, volume_kg, duration_s, total_duration_seconds, sets_count')
+            .select('id, workout_template_id, completed_at, volume_kg')
             .eq('user_id', uid)
             .eq('is_completed', true)
             .order('completed_at', ascending: false)
             .limit(5),
         _client
             .from('club_user_workouts')
-            .select('id, workout_template_id, completed_at, volume_kg, duration_s, total_duration_seconds, sets_count')
+            .select('id, workout_template_id, completed_at, volume_kg')
             .eq('user_id', uid)
             .eq('is_completed', true)
             .order('completed_at', ascending: false)
@@ -162,8 +162,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           'name': name,
           'completed_at': completedAt,
           'volume_kg': row['volume_kg'],
-          'duration_s': row['duration_s'] ?? row['total_duration_seconds'],
-          'sets_count': row['sets_count'],
+          'duration_s': null,
+          'sets_count': null,
           'muscle_groups': muscleGroups,
           'source': source,
           'date_label': _formatDate(completedAt),
