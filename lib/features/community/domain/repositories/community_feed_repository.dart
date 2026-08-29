@@ -1,11 +1,15 @@
 import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_post.dart';
+import 'package:bldr_fitness/features/community/domain/entities/ranking_entry.dart';
 import 'package:bldr_fitness/features/community/domain/entities/recent_workout.dart';
 import 'package:bldr_fitness/features/community/domain/entities/workout_exercise.dart';
 
 abstract class CommunityFeedRepository {
   /// Feed público — paginado por cursor (created_at DESC).
-  Future<List<CommunityPost>> fetchFeed({
+  ///
+  /// Retorna [Result.failure] em caso de erro de rede/servidor.
+  /// Lista vazia com [Result.success] significa que não há posts públicos.
+  Future<Result<List<CommunityPost>>> fetchFeed({
     int limit = 20,
     DateTime? before,
   });
@@ -40,5 +44,17 @@ abstract class CommunityFeedRepository {
   Future<Result<List<WorkoutExercise>>> fetchWorkoutExercises({
     required String workoutId,
     required String source,
+  });
+
+  /// Ranking por categoria e período.
+  ///
+  /// [category] — 'volume' | 'consistency' | 'progression'
+  /// [period]   — 'week' | 'month' | 'all'
+  ///
+  /// Nota: os valores de [period] são assumidos como 'week', 'month', 'all'.
+  /// Confirmar contra a assinatura real das RPCs no Supabase antes de alterar.
+  Future<Result<List<RankingEntry>>> fetchRanking({
+    required String category,
+    required String period,
   });
 }

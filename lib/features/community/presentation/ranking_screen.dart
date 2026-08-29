@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
+import 'package:bldr_fitness/features/community/domain/entities/ranking_entry.dart';
+import 'package:bldr_fitness/features/community/domain/repositories/community_feed_repository.dart';
 import 'package:bldr_fitness/features/subscription/domain/usecases/subscription_usecases.dart'
     as subUc;
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
@@ -19,38 +20,23 @@ enum _Period { week, month, all }
 
 enum _Category { volume, consistency, progression }
 
-class _RankingEntry {
-  final int position;
-  final String userId;
-  final String displayName;
-  final String? avatarUrl;
-  final double value;
-  final bool isMe;
-
-  const _RankingEntry({
-    required this.position,
-    required this.userId,
-    required this.displayName,
-    this.avatarUrl,
-    required this.value,
-    this.isMe = false,
-  });
-}
-
 class _RankingScreenState extends State<RankingScreen> {
+  late final CommunityFeedRepository _repo;
+
   _Period _period = _Period.week;
   _Category _category = _Category.volume;
 
   bool _loading = true;
+  bool _hasError = false;
+  String _errorMessage = '';
   bool _isClub = false;
-  List<_RankingEntry> _entries = [];
-  _RankingEntry? _myEntry;
-
-  final _client = Supabase.instance.client;
+  List<RankingEntry> _entries = [];
+  RankingEntry? _myEntry;
 
   @override
   void initState() {
     super.initState();
+    _repo = getIt<CommunityFeedRepository>();
     _init();
   }
 
@@ -60,71 +46,51 @@ class _RankingScreenState extends State<RankingScreen> {
     await _load();
   }
 
+  // D3: usa p_period (correto) em vez de p_start (incorreto)
+  // D5: valores de period são 'week', 'month', 'all' — requer confirmação
+  String _periodValue() => switch (_period) {
+        _Period.week => 'week',
+        _Period.month => 'month',
+        _Period.all => 'all',
+      };
+
+  String _categoryValue() => switch (_category) {
+        _Category.volume => 'volume',
+        _Category.consistency => 'consistency',
+        _Category.progression => 'progression',
+      };
+
   Future<void> _load() async {
     if (!mounted) return;
-    setState(() => _loading = true);
-    try {
-      final uid = _client.auth.currentUser?.id;
-      final rpcName = _rpcName();
-      final params = _rpcParams();
+    setState(() {
+      _loading = true;
+      _hasError = false;
+    });
 
-      final rows = await _client.rpc(rpcName, params: params) as List;
+    final result = await _repo.fetchRanking(
+      category: _categoryValue(),
+      period: _periodValue(),
+    );
 
-      final limit = _isClub ? 50 : 10;
-      final all = <_RankingEntry>[];
-      _RankingEntry? mine;
-
-      for (final row in rows) {
-        final pos = (row['position'] as num).toInt();
-        final userId = row['user_id'] as String;
-        final isMe = userId == uid;
-        final entry = _RankingEntry(
-          position: pos,
-          userId: userId,
-          displayName: (row['display_name'] as String?) ?? 'Atleta',
-          avatarUrl: row['avatar_url'] as String?,
-          value: (row['value'] as num).toDouble(),
-          isMe: isMe,
-        );
-        if (isMe) mine = entry;
-        if (pos <= limit) all.add(entry);
-      }
-
-      if (!mounted) return;
-      setState(() {
-        _entries = all;
-        _myEntry = mine;
+    if (!mounted) return;
+    result.fold(
+      onSuccess: (entries) {
+        final limit = _isClub ? 50 : 10;
+        final visible = entries.where((e) => e.position <= limit).toList();
+        final mine = entries.where((e) => e.isMe).firstOrNull;
+        setState(() {
+          _entries = visible;
+          _myEntry = mine;
+          _loading = false;
+          _hasError = false;
+        });
+      },
+      onFailure: (failure) => setState(() {
         _loading = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-    }
-  }
-
-  String _rpcName() {
-    switch (_category) {
-      case _Category.volume:
-        return 'ranking_volume';
-      case _Category.consistency:
-        return 'ranking_consistency';
-      case _Category.progression:
-        return 'ranking_progression';
-    }
-  }
-
-  Map<String, dynamic> _rpcParams() {
-    final now = DateTime.now();
-    switch (_period) {
-      case _Period.week:
-        final start = now.subtract(const Duration(days: 7));
-        return {'p_start': start.toUtc().toIso8601String()};
-      case _Period.month:
-        final start = DateTime(now.year, now.month, 1);
-        return {'p_start': start.toUtc().toIso8601String()};
-      case _Period.all:
-        return {'p_start': '2020-01-01T00:00:00Z'};
-    }
+        _hasError = true;
+        _errorMessage = failure.message;
+      }),
+    );
   }
 
   String _valueLabel(double value) {
@@ -151,7 +117,13 @@ class _RankingScreenState extends State<RankingScreen> {
               _buildHeader(),
               _buildPeriodSelector(),
               _buildCategoryChips(),
-              Expanded(child: _loading ? _buildLoader() : _buildBody()),
+              Expanded(
+        child: _loading
+            ? _buildLoader()
+            : _hasError
+                ? _buildError()
+                : _buildBody(),
+      ),
             ],
           ),
         ),
@@ -313,6 +285,39 @@ class _RankingScreenState extends State<RankingScreen> {
     );
   }
 
+  Widget _buildError() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(TablerIcons.trophy_off,
+                size: 48, color: BldrColors.textTertiary),
+            const SizedBox(height: 16),
+            Text('Erro ao carregar o ranking', style: BldrText.sectionTitle),
+            const SizedBox(height: 8),
+            Text(_errorMessage,
+                style: BldrText.description, textAlign: TextAlign.center),
+            const SizedBox(height: 20),
+            TextButton(
+              onPressed: _load,
+              style: TextButton.styleFrom(
+                backgroundColor: BldrColors.goldSolid,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(BldrRadius.button),
+                ),
+              ),
+              child: const Text('Tentar novamente'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildBody() {
     if (_entries.isEmpty) {
       return Center(
@@ -361,7 +366,7 @@ class _RankingScreenState extends State<RankingScreen> {
     );
   }
 
-  Widget _buildMyPositionCard(_RankingEntry entry) {
+  Widget _buildMyPositionCard(RankingEntry entry) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -391,7 +396,7 @@ class _RankingScreenState extends State<RankingScreen> {
     );
   }
 
-  Widget _buildPodium(List<_RankingEntry> top) {
+  Widget _buildPodium(List<RankingEntry> top) {
     // Sempre renderiza exatamente 3 colunas para manter o layout estável.
     // Posições sem dados ficam como SizedBox.shrink().
     const medals = ['🥇', '🥈', '🥉'];
@@ -451,7 +456,7 @@ class _RankingScreenState extends State<RankingScreen> {
     );
   }
 
-  Widget _buildListEntry(_RankingEntry entry) {
+  Widget _buildListEntry(RankingEntry entry) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -494,7 +499,7 @@ class _RankingScreenState extends State<RankingScreen> {
     );
   }
 
-  Widget _buildAvatar(_RankingEntry entry, {required double size}) {
+  Widget _buildAvatar(RankingEntry entry, {required double size}) {
     if (entry.avatarUrl != null) {
       return CircleAvatar(
         radius: size / 2,

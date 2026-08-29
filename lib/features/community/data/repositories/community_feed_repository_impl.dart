@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:bldr_fitness/core/errors/failure.dart';
 import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_post.dart';
+import 'package:bldr_fitness/features/community/domain/entities/ranking_entry.dart';
 import 'package:bldr_fitness/features/community/domain/entities/recent_workout.dart';
 import 'package:bldr_fitness/features/community/domain/entities/workout_exercise.dart';
 import 'package:bldr_fitness/features/community/domain/repositories/community_feed_repository.dart';
@@ -14,70 +15,99 @@ class CommunityFeedRepositoryImpl implements CommunityFeedRepository {
 
   String get _uid => _client.auth.currentUser!.id;
 
+  // ── fetchFeed ──────────────────────────────────────────────────────────────
+  //
+  // Correções em relação à versão anterior:
+  //  D1: removido 'comment_count' (coluna não existe em community_feed)
+  //  D2: removido join 'user_profiles!community_feed_user_id_fkey' (FK inexistente).
+  //      Perfis são buscados em lote após os posts e mesclados em memória.
+  //  D7: erros retornam Result.failure em vez de serem silenciados.
   @override
-  Future<List<CommunityPost>> fetchFeed({
+  Future<Result<List<CommunityPost>>> fetchFeed({
     int limit = 20,
     DateTime? before,
   }) async {
-    var query = _client
-        .from('community_feed')
-        .select('''
-          id,
-          user_id,
-          event_type,
-          payload,
-          visibility,
-          created_at,
-          comment_count,
-          user_profiles!community_feed_user_id_fkey (
-            username,
-            full_name,
-            avatar_url
-          ),
-          reactions:community_reactions (
-            emoji,
-            user_id
-          )
-        ''')
-        .eq('visibility', 'public');
+    try {
+      // 1. Buscar posts sem join de perfil
+      var query = _client
+          .from('community_feed')
+          .select('''
+            id,
+            user_id,
+            event_type,
+            payload,
+            visibility,
+            created_at,
+            reactions:community_reactions (
+              emoji,
+              user_id
+            )
+          ''')
+          .eq('visibility', 'public');
 
-    if (before != null) {
-      query = query.lt('created_at', before.toUtc().toIso8601String());
-    }
-
-    final rows = await query
-        .order('created_at', ascending: false)
-        .limit(limit);
-
-    return (rows as List).map((row) {
-      final json = Map<String, dynamic>.from(row as Map);
-
-      // Agrupar reactions por emoji e calcular minha reação
-      final rawReactions = (json['reactions'] as List?) ?? [];
-      final reactionMap = <String, int>{};
-      String? myEmoji;
-      for (final r in rawReactions) {
-        final m = r as Map;
-        final emoji = m['emoji'] as String;
-        reactionMap[emoji] = (reactionMap[emoji] ?? 0) + 1;
-        if (m['user_id'] == _uid) myEmoji = emoji;
+      if (before != null) {
+        query = query.lt('created_at', before.toUtc().toIso8601String());
       }
-      json['reactions'] = reactionMap.entries
-          .map((e) => {'emoji': e.key, 'count': e.value})
+
+      final rows = await query
+          .order('created_at', ascending: false)
+          .limit(limit) as List;
+
+      if (rows.isEmpty) return const Result.success([]);
+
+      // 2. Coletar user_ids distintos
+      final userIds = rows
+          .map((r) => (r as Map)['user_id'] as String)
+          .toSet()
           .toList();
-      json['my_reaction'] = myEmoji;
 
-      // user_profiles pode vir como lista em FK joins do Supabase
-      final profiles = json['user_profiles'];
-      if (profiles is List && profiles.isNotEmpty) {
-        json['user_profiles'] = profiles.first;
-      } else if (profiles is List) {
-        json['user_profiles'] = null;
+      // 3. Buscar perfis em lote (uma única query)
+      final profileRows = await _client
+          .from('user_profiles')
+          .select('id, username, full_name, avatar_url')
+          .inFilter('id', userIds) as List;
+
+      final profilesById = <String, Map<String, dynamic>>{
+        for (final p in profileRows)
+          (p as Map<String, dynamic>)['id'] as String: p,
+      };
+
+      // 4. Montar entidades
+      final posts = <CommunityPost>[];
+      for (final row in rows) {
+        final json = Map<String, dynamic>.from(row as Map);
+
+        // Agregar reactions por emoji e detectar minha reação
+        final rawReactions = (json['reactions'] as List?) ?? [];
+        final reactionMap = <String, int>{};
+        String? myEmoji;
+        for (final r in rawReactions) {
+          final m = r as Map;
+          final emoji = m['emoji'] as String;
+          reactionMap[emoji] = (reactionMap[emoji] ?? 0) + 1;
+          if (m['user_id'] == _uid) myEmoji = emoji;
+        }
+        json['reactions'] = reactionMap.entries
+            .map((e) => {'emoji': e.key, 'count': e.value})
+            .toList();
+        json['my_reaction'] = myEmoji;
+
+        // Injetar perfil buscado em lote
+        final profile = profilesById[json['user_id'] as String];
+        json['user_profiles'] = profile; // null é tratado com segurança em fromJson
+
+        posts.add(CommunityPost.fromJson(json));
       }
 
-      return CommunityPost.fromJson(json);
-    }).toList();
+      return Result.success(posts);
+    } catch (e) {
+      return Result.failure(
+        ServerFailure('Não foi possível carregar o feed.', cause: e),
+      );
+    }
   }
+
+  // ── createPost ─────────────────────────────────────────────────────────────
 
   @override
   Future<void> createPost({
@@ -93,6 +123,8 @@ class CommunityFeedRepositoryImpl implements CommunityFeedRepository {
       'created_at': DateTime.now().toUtc().toIso8601String(),
     });
   }
+
+  // ── toggleReaction ─────────────────────────────────────────────────────────
 
   @override
   Future<void> toggleReaction({
@@ -123,6 +155,8 @@ class CommunityFeedRepositoryImpl implements CommunityFeedRepository {
     }
   }
 
+  // ── copyWorkout ────────────────────────────────────────────────────────────
+
   @override
   Future<String> copyWorkout({
     required String workoutId,
@@ -135,6 +169,8 @@ class CommunityFeedRepositoryImpl implements CommunityFeedRepository {
     return result as String;
   }
 
+  // ── postStreakMilestone ────────────────────────────────────────────────────
+
   @override
   Future<void> postStreakMilestone({required int days}) async {
     await _client.from('community_feed').insert({
@@ -145,6 +181,8 @@ class CommunityFeedRepositoryImpl implements CommunityFeedRepository {
       'created_at': DateTime.now().toUtc().toIso8601String(),
     });
   }
+
+  // ── fetchRecentWorkouts ────────────────────────────────────────────────────
 
   @override
   Future<Result<List<RecentWorkout>>> fetchRecentWorkouts() async {
@@ -238,6 +276,8 @@ class CommunityFeedRepositoryImpl implements CommunityFeedRepository {
     }
   }
 
+  // ── fetchWorkoutExercises ──────────────────────────────────────────────────
+
   @override
   Future<Result<List<WorkoutExercise>>> fetchWorkoutExercises({
     required String workoutId,
@@ -253,11 +293,11 @@ class CommunityFeedRepositoryImpl implements CommunityFeedRepository {
           .select('exercise_id, free_name, weight_kg, reps, created_at')
           .eq('user_workout_id', workoutId)
           .not('completed_at', 'is', null)
-          .order('created_at');
+          .order('created_at') as List;
 
       final grouped = <String, List<WorkoutSet>>{};
       final names = <String, String>{};
-      for (final row in rows as List) {
+      for (final row in rows) {
         final key = (row['exercise_id'] as String?) ??
             (row['free_name'] as String?) ??
             'Exercício';
@@ -280,6 +320,45 @@ class CommunityFeedRepositoryImpl implements CommunityFeedRepository {
         'Não foi possível carregar os exercícios.',
         cause: e,
       ));
+    }
+  }
+
+  // ── fetchRanking ───────────────────────────────────────────────────────────
+  //
+  // D3: usa p_period (correto) em vez de p_start (incorreto).
+  // D5: valores de period assumidos como 'week', 'month', 'all'.
+  //     Requer confirmação contra assinatura real das RPCs no Supabase.
+  @override
+  Future<Result<List<RankingEntry>>> fetchRanking({
+    required String category,
+    required String period,
+  }) async {
+    try {
+      final uid = _client.auth.currentUser?.id;
+      final rpcName = switch (category) {
+        'volume' => 'ranking_volume',
+        'consistency' => 'ranking_consistency',
+        'progression' => 'ranking_progression',
+        _ => throw ArgumentError('Categoria inválida: $category'),
+      };
+
+      final rows = await _client.rpc(
+        rpcName,
+        params: {'p_period': period},
+      ) as List;
+
+      final entries = rows
+          .map((r) => RankingEntry.fromRow(
+                Map<String, dynamic>.from(r as Map),
+                currentUserId: uid,
+              ))
+          .toList();
+
+      return Result.success(entries);
+    } catch (e) {
+      return Result.failure(
+        ServerFailure('Não foi possível carregar o ranking.', cause: e),
+      );
     }
   }
 }

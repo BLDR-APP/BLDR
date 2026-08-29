@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
+import 'package:bldr_fitness/core/errors/failure.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/features/club/domain/repositories/arena_repository.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/arena_details_screen.dart';
@@ -34,6 +35,7 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
   List<CommunityPost> _posts = [];
   bool _loading = true;
   bool _loadingMore = false;
+  Failure? _feedError;
   DateTime? _cursor;
   bool _hasMore = true;
 
@@ -57,26 +59,27 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
         _posts = [];
         _cursor = null;
         _hasMore = true;
+        _feedError = null;
         _loading = true;
       });
     }
-    try {
-      final posts = await _repo.fetchFeed(limit: 20, before: _cursor);
-      if (!mounted) return;
-      setState(() {
+    final result = await _repo.fetchFeed(limit: 20, before: _cursor);
+    if (!mounted) return;
+    result.fold(
+      onSuccess: (posts) => setState(() {
         _posts.addAll(posts);
         if (posts.isNotEmpty) _cursor = posts.last.createdAt;
         _hasMore = posts.length == 20;
+        _feedError = null;
         _loading = false;
         _loadingMore = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
+      }),
+      onFailure: (failure) => setState(() {
+        _feedError = failure;
         _loading = false;
         _loadingMore = false;
-      });
-    }
+      }),
+    );
   }
 
   Future<void> _loadMore() async {
@@ -198,10 +201,12 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
                     posts: _posts,
                     loading: _loading,
                     loadingMore: _loadingMore,
+                    feedError: _feedError,
                     onScroll: _onScroll,
                     onReaction: _toggleReaction,
                     onOpenWorkout: _openWorkoutDetail,
                     onRefresh: () => _loadFeed(refresh: true),
+                    onRetry: () => _loadFeed(refresh: true),
                     relativeTime: _relativeTime,
                   ),
                   _SeguindoTab(
@@ -337,10 +342,12 @@ class _ExplorarTab extends StatelessWidget {
   final List<CommunityPost> posts;
   final bool loading;
   final bool loadingMore;
+  final Failure? feedError;
   final void Function(ScrollNotification) onScroll;
   final Future<void> Function(CommunityPost, String) onReaction;
   final void Function(CommunityPost) onOpenWorkout;
   final VoidCallback onRefresh;
+  final VoidCallback onRetry;
   final String Function(DateTime) relativeTime;
 
   const _ExplorarTab({
@@ -351,7 +358,9 @@ class _ExplorarTab extends StatelessWidget {
     required this.onReaction,
     required this.onOpenWorkout,
     required this.onRefresh,
+    required this.onRetry,
     required this.relativeTime,
+    this.feedError,
   });
 
   @override
@@ -375,6 +384,8 @@ class _ExplorarTab extends StatelessWidget {
                       color: BldrColors.goldBright, strokeWidth: 2),
                 ),
               )
+            else if (feedError != null)
+              SliverFillRemaining(child: _buildError(feedError!.message))
             else if (posts.isEmpty)
               SliverFillRemaining(child: _buildEmpty())
             else
@@ -443,6 +454,38 @@ class _ExplorarTab extends StatelessWidget {
           const SizedBox(height: 8),
           Text('Seja o primeiro a compartilhar!', style: BldrText.description),
         ],
+      ),
+    );
+  }
+
+  Widget _buildError(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(TablerIcons.wifi_off, size: 48, color: BldrColors.textTertiary),
+            const SizedBox(height: 16),
+            Text('Erro ao carregar o feed', style: BldrText.sectionTitle),
+            const SizedBox(height: 8),
+            Text(message,
+                style: BldrText.description, textAlign: TextAlign.center),
+            const SizedBox(height: 20),
+            TextButton(
+              onPressed: onRetry,
+              style: TextButton.styleFrom(
+                backgroundColor: BldrColors.goldSolid,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(BldrRadius.button),
+                ),
+              ),
+              child: const Text('Tentar novamente'),
+            ),
+          ],
+        ),
       ),
     );
   }
