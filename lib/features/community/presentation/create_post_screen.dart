@@ -64,6 +64,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   @override
   void initState() {
     super.initState();
+    debugPrint('[CreatePostScreen] initState');
     _loadRecentWorkouts();
     _detectWearable();
     if (widget.preselectedWorkoutId != null) {
@@ -120,14 +121,18 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       });
       final top5 = combined.take(5).toList();
 
-      // Buscar nomes dos templates
+      // Buscar nomes dos templates — tabela depende da source
       final List<Map<String, dynamic>> workouts = [];
       for (final row in top5) {
         final templateId = row['workout_template_id'] as String?;
+        final source = row['source'] as String;
         String name = 'Treino';
         if (templateId != null) {
+          final table = source == 'club'
+              ? 'club_workout_templates'
+              : 'workout_templates';
           final tmpl = await _client
-              .from('workout_templates')
+              .from(table)
               .select('name')
               .eq('id', templateId)
               .maybeSingle();
@@ -138,7 +143,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           'name': name,
           'completed_at': row['completed_at'],
           'volume_kg': row['volume_kg'],
-          'source': row['source'],
+          'source': source,
         });
       }
 
@@ -259,17 +264,18 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('[CreatePostScreen] build activeIcon=$_activeIcon');
     return BldrBackground(
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: BldrColors.bgBase,
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: BldrColors.bgBase,
           elevation: 0,
           leading: IconButton(
             icon: const Icon(TablerIcons.x,
                 color: BldrColors.textPrimary),
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.of(context).pop(),
           ),
           title: Text('Criar post', style: BldrText.screenTitle),
           actions: [
