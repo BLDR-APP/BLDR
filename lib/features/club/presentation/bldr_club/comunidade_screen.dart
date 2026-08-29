@@ -3,7 +3,11 @@ import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
-import 'package:bldr_fitness/features/community/data/repositories/community_feed_repository_impl.dart';
+import 'package:bldr_fitness/features/club/domain/repositories/arena_repository.dart';
+import 'package:bldr_fitness/features/club/presentation/bldr_club/arena_details_screen.dart';
+import 'package:bldr_fitness/features/club/presentation/bldr_club/competition_hub_screen.dart';
+import 'package:bldr_fitness/features/club/presentation/bldr_club/create_arena_screen.dart';
+import 'package:bldr_fitness/features/club/presentation/bldr_club/join_squad_sheet.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_post.dart';
 import 'package:bldr_fitness/features/community/domain/repositories/community_feed_repository.dart';
 import 'package:bldr_fitness/features/community/presentation/create_post_screen.dart';
@@ -23,19 +27,29 @@ class ComunidadeScreen extends StatefulWidget {
 class _ComunidadeScreenState extends State<ComunidadeScreen> {
   late final CommunityFeedRepository _repo;
 
+  // ── Tab state ──────────────────────────────────────────────────────────────
+  int _activeTab = 0;
+
+  // ── Explorar / Seguindo: feed compartilhado ────────────────────────────────
   List<CommunityPost> _posts = [];
   bool _loading = true;
   bool _loadingMore = false;
   DateTime? _cursor;
   bool _hasMore = true;
-  int _activeTab = 0;
+
+  // ── Squads ─────────────────────────────────────────────────────────────────
+  List<Map<String, dynamic>> _squads = [];
+  bool _squadsLoading = true;
 
   @override
   void initState() {
     super.initState();
     _repo = getIt<CommunityFeedRepository>();
     _loadFeed();
+    _loadSquads();
   }
+
+  // ── Feed ───────────────────────────────────────────────────────────────────
 
   Future<void> _loadFeed({bool refresh = false}) async {
     if (refresh) {
@@ -56,7 +70,7 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
         _loading = false;
         _loadingMore = false;
       });
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
       setState(() {
         _loading = false;
@@ -73,26 +87,38 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
 
   void _onScroll(ScrollNotification n) {
     if (n is ScrollUpdateNotification) {
-      final metrics = n.metrics;
-      if (metrics.pixels >= metrics.maxScrollExtent * 0.85) {
-        _loadMore();
-      }
+      final m = n.metrics;
+      if (m.pixels >= m.maxScrollExtent * 0.85) _loadMore();
     }
   }
 
+  // ── Squads ─────────────────────────────────────────────────────────────────
+
+  Future<void> _loadSquads() async {
+    try {
+      final result = await getIt<ArenaRepository>().mySquads();
+      if (!mounted) return;
+      setState(() {
+        _squads = result.valueOrNull ?? [];
+        _squadsLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _squadsLoading = false);
+    }
+  }
+
+  // ── Reactions ──────────────────────────────────────────────────────────────
+
   Future<void> _toggleReaction(CommunityPost post, String emoji) async {
-    // Otimista: atualizar estado localmente
     setState(() {
       final idx = _posts.indexWhere((p) => p.id == post.id);
       if (idx == -1) return;
       final p = _posts[idx];
       final isActive = p.myReactionEmoji == emoji;
-
       final newReactions = List<CommunityReaction>.from(p.reactions);
       final rxIdx = newReactions.indexWhere((r) => r.emoji == emoji);
-
       if (isActive) {
-        // Remover reação
         if (rxIdx != -1) {
           final r = newReactions[rxIdx];
           if (r.count > 1) {
@@ -110,7 +136,6 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
           myReactionEmoji: null,
         );
       } else {
-        // Adicionar reação
         if (rxIdx != -1) {
           final r = newReactions[rxIdx];
           newReactions[rxIdx] = CommunityReaction(emoji: emoji, count: r.count + 1);
@@ -127,11 +152,9 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
         );
       }
     });
-
     try {
       await _repo.toggleReaction(feedId: post.id, emoji: emoji);
     } catch (_) {
-      // Em caso de falha, recarregar o feed
       _loadFeed(refresh: true);
     }
   }
@@ -139,14 +162,13 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
   void _openWorkoutDetail(CommunityPost post) {
     final workoutId = post.payload['workout_id'] as String?;
     if (workoutId == null) return;
-    final source = post.payload['source'] as String? ?? 'free';
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => WorkoutDetailSheet(
         workoutId: workoutId,
-        source: source,
+        source: post.payload['source'] as String? ?? 'free',
         workoutName: post.workoutName,
       ),
     );
@@ -161,90 +183,108 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
         backgroundColor: Colors.transparent,
         extendBody: true,
         floatingActionButton: _activeTab == 0 ? _buildFab() : null,
-        body: NotificationListener<ScrollNotification>(
-          onNotification: (n) {
-            _onScroll(n);
-            return false;
-          },
-          child: CustomScrollView(
-            slivers: [
-              _buildAppBar(),
-              SliverToBoxAdapter(child: _buildTabRow()),
-              SliverToBoxAdapter(child: _buildSearchBar()),
-              if (_loading)
-                const SliverFillRemaining(
-                  child: Center(
-                    child: CircularProgressIndicator(
-                      color: BldrColors.goldBright,
-                      strokeWidth: 2,
-                    ),
+        body: Column(
+          children: [
+            // AppBar + tabs fora do scroll — não recriam ao trocar de tab
+            SizedBox(height: MediaQuery.of(context).padding.top),
+            _buildHeader(),
+            _buildTabRow(),
+            // Body por tab — IndexedStack mantém estado de scroll de cada tab
+            Expanded(
+              child: IndexedStack(
+                index: _activeTab,
+                children: [
+                  _ExplorarTab(
+                    posts: _posts,
+                    loading: _loading,
+                    loadingMore: _loadingMore,
+                    onScroll: _onScroll,
+                    onReaction: _toggleReaction,
+                    onOpenWorkout: _openWorkoutDetail,
+                    onRefresh: () => _loadFeed(refresh: true),
+                    relativeTime: _relativeTime,
                   ),
-                )
-              else if (_posts.isEmpty)
-                SliverFillRemaining(child: _buildEmptyState())
-              else
-                _buildFeedList(),
-              if (_loadingMore)
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Center(
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          color: BldrColors.goldBright,
-                          strokeWidth: 2,
-                        ),
-                      ),
-                    ),
+                  _SeguindoTab(
+                    posts: _posts,
+                    loading: _loading,
+                    onReaction: _toggleReaction,
+                    onOpenWorkout: _openWorkoutDetail,
+                    onExplorar: () => setState(() => _activeTab = 0),
+                    relativeTime: _relativeTime,
                   ),
-                ),
-              const SliverToBoxAdapter(
-                child: SizedBox(height: BldrSpacing.navClearance),
+                  _SquadsTab(
+                    squads: _squads,
+                    loading: _squadsLoading,
+                    onRefresh: _loadSquads,
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildAppBar() {
-    return SliverAppBar(
-      floating: true,
-      pinned: false,
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      automaticallyImplyLeading: false,
-      titleSpacing: 0,
-      title: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: BldrSpacing.pageX),
-        child: Row(
-          children: [
-            if (widget.onBack != null)
-              GestureDetector(
-                onTap: widget.onBack,
-                child: const Icon(TablerIcons.chevron_left,
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(BldrSpacing.pageX, 14, BldrSpacing.pageX, 0),
+      child: Row(
+        children: [
+          if (widget.onBack != null)
+            GestureDetector(
+              onTap: widget.onBack,
+              child: const Padding(
+                padding: EdgeInsets.only(right: 8),
+                child: Icon(TablerIcons.chevron_left,
                     color: BldrColors.textPrimary, size: 24),
               ),
-            Expanded(
-              child: Text('Comunidade', style: BldrText.screenTitle),
             ),
-            _iconBtn(TablerIcons.trophy, onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const RankingScreen()),
-              );
-            }),
-            const SizedBox(width: 8),
-            _iconBtn(TablerIcons.bell, onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Notificações em breve')),
-              );
-            }),
-          ],
-        ),
+          Expanded(child: Text('Comunidade', style: BldrText.screenTitle)),
+          _iconBtn(TablerIcons.trophy, onTap: () {
+            Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const RankingScreen()));
+          }),
+          const SizedBox(width: 8),
+          _iconBtn(TablerIcons.bell, onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Notificações em breve')));
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabRow() {
+    const tabs = ['Explorar', 'Seguindo', 'Squads'];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(BldrSpacing.pageX, 10, BldrSpacing.pageX, 0),
+      child: Row(
+        children: List.generate(tabs.length, (i) {
+          final active = _activeTab == i;
+          return GestureDetector(
+            onTap: () => setState(() => _activeTab = i),
+            child: Container(
+              margin: const EdgeInsets.only(right: 24),
+              padding: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: active ? BldrColors.goldBright : Colors.transparent,
+                    width: 2,
+                  ),
+                ),
+              ),
+              child: Text(
+                tabs[i],
+                style: BldrText.body.copyWith(
+                  color: active ? BldrColors.goldBright : BldrColors.textTertiary,
+                  fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                ),
+              ),
+            ),
+          );
+        }),
       ),
     );
   }
@@ -265,110 +305,6 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
     );
   }
 
-  Widget _buildTabRow() {
-    const tabs = ['Explorar', 'Seguindo', 'Squads'];
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-          BldrSpacing.pageX, 4, BldrSpacing.pageX, 12),
-      child: Row(
-        children: List.generate(tabs.length, (i) {
-          final active = _activeTab == i;
-          return GestureDetector(
-            onTap: () {
-              if (i != 0) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Em breve')),
-                );
-                return;
-              }
-              setState(() => _activeTab = i);
-            },
-            child: Container(
-              margin: const EdgeInsets.only(right: 24),
-              padding: const EdgeInsets.only(bottom: 6),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: active
-                        ? BldrColors.goldBright
-                        : Colors.transparent,
-                    width: 2,
-                  ),
-                ),
-              ),
-              child: Text(
-                tabs[i],
-                style: BldrText.body.copyWith(
-                  color: active
-                      ? BldrColors.goldBright
-                      : BldrColors.textTertiary,
-                  fontWeight:
-                      active ? FontWeight.w600 : FontWeight.w400,
-                ),
-              ),
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-          BldrSpacing.pageX, 0, BldrSpacing.pageX, 14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: BldrColors.surface,
-          border: Border.all(color: BldrColors.border),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            const Icon(TablerIcons.search, size: 15,
-                color: BldrColors.textTertiary),
-            const SizedBox(width: 8),
-            Text('Buscar na comunidade', style: BldrText.body.copyWith(
-              color: BldrColors.textTertiary,
-            )),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFeedList() {
-    // Inserir rivalry card após o 2º post (índice 2)
-    final items = <Widget>[];
-    for (int i = 0; i < _posts.length; i++) {
-      items.add(_buildFeedCard(_posts[i]));
-    }
-
-    return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) => items[index],
-        childCount: items.length,
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(TablerIcons.users, size: 48, color: BldrColors.textTertiary),
-          const SizedBox(height: 16),
-          Text('Nenhum post ainda', style: BldrText.sectionTitle),
-          const SizedBox(height: 8),
-          Text('Seja o primeiro a compartilhar!',
-              style: BldrText.description),
-        ],
-      ),
-    );
-  }
-
   Widget _buildFab() {
     return FloatingActionButton(
       onPressed: () {
@@ -382,30 +318,547 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
     );
   }
 
-  // ── Feed cards ─────────────────────────────────────────────────────────────
+  String _relativeTime(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 1) return 'agora';
+    if (diff.inMinutes < 60) return 'há ${diff.inMinutes}min';
+    if (diff.inHours < 24) return 'há ${diff.inHours}h';
+    return 'há ${diff.inDays}d';
+  }
+}
 
-  Widget _buildFeedCard(CommunityPost post) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-          BldrSpacing.pageX, 0, BldrSpacing.pageX, 12),
-      child: BldrGlassCard(
-        padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildCardHeader(post),
-            const SizedBox(height: 12),
-            _buildCardBody(post),
+// ── Tab Explorar ─────────────────────────────────────────────────────────────
+
+class _ExplorarTab extends StatelessWidget {
+  final List<CommunityPost> posts;
+  final bool loading;
+  final bool loadingMore;
+  final void Function(ScrollNotification) onScroll;
+  final Future<void> Function(CommunityPost, String) onReaction;
+  final void Function(CommunityPost) onOpenWorkout;
+  final VoidCallback onRefresh;
+  final String Function(DateTime) relativeTime;
+
+  const _ExplorarTab({
+    required this.posts,
+    required this.loading,
+    required this.loadingMore,
+    required this.onScroll,
+    required this.onReaction,
+    required this.onOpenWorkout,
+    required this.onRefresh,
+    required this.relativeTime,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return NotificationListener<ScrollNotification>(
+      onNotification: (n) {
+        onScroll(n);
+        return false;
+      },
+      child: RefreshIndicator(
+        color: BldrColors.goldBright,
+        backgroundColor: BldrColors.surface,
+        onRefresh: () async => onRefresh(),
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(child: _buildSearchBar()),
+            if (loading)
+              const SliverFillRemaining(
+                child: Center(
+                  child: CircularProgressIndicator(
+                      color: BldrColors.goldBright, strokeWidth: 2),
+                ),
+              )
+            else if (posts.isEmpty)
+              SliverFillRemaining(child: _buildEmpty())
+            else
+              SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (_, i) => _FeedCard(
+                    post: posts[i],
+                    onReaction: onReaction,
+                    onOpenWorkout: onOpenWorkout,
+                    relativeTime: relativeTime,
+                  ),
+                  childCount: posts.length,
+                ),
+              ),
+            if (loadingMore)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(
+                    child: SizedBox(
+                      width: 20, height: 20,
+                      child: CircularProgressIndicator(
+                          color: BldrColors.goldBright, strokeWidth: 2),
+                    ),
+                  ),
+                ),
+              ),
+            const SliverToBoxAdapter(
+                child: SizedBox(height: BldrSpacing.navClearance)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCardHeader(CommunityPost post) {
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(BldrSpacing.pageX, 12, BldrSpacing.pageX, 14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: BldrColors.surface,
+          border: Border.all(color: BldrColors.border),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const Icon(TablerIcons.search, size: 15, color: BldrColors.textTertiary),
+            const SizedBox(width: 8),
+            Text('Buscar na comunidade',
+                style: BldrText.body.copyWith(color: BldrColors.textTertiary)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmpty() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(TablerIcons.users, size: 48, color: BldrColors.textTertiary),
+          const SizedBox(height: 16),
+          Text('Nenhum post ainda', style: BldrText.sectionTitle),
+          const SizedBox(height: 8),
+          Text('Seja o primeiro a compartilhar!', style: BldrText.description),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Tab Seguindo ─────────────────────────────────────────────────────────────
+
+class _SeguindoTab extends StatelessWidget {
+  final List<CommunityPost> posts;
+  final bool loading;
+  final Future<void> Function(CommunityPost, String) onReaction;
+  final void Function(CommunityPost) onOpenWorkout;
+  final VoidCallback onExplorar;
+  final String Function(DateTime) relativeTime;
+
+  const _SeguindoTab({
+    required this.posts,
+    required this.loading,
+    required this.onReaction,
+    required this.onOpenWorkout,
+    required this.onExplorar,
+    required this.relativeTime,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(BldrSpacing.pageX, 12, BldrSpacing.pageX, 16),
+            child: _CtaFollowCard(onExplorar: onExplorar),
+          ),
+        ),
+        if (loading)
+          const SliverFillRemaining(
+            child: Center(
+              child: CircularProgressIndicator(
+                  color: BldrColors.goldBright, strokeWidth: 2),
+            ),
+          )
+        else
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (_, i) => _FeedCard(
+                post: posts[i],
+                onReaction: onReaction,
+                onOpenWorkout: onOpenWorkout,
+                relativeTime: relativeTime,
+              ),
+              childCount: posts.length,
+            ),
+          ),
+        const SliverToBoxAdapter(child: SizedBox(height: BldrSpacing.navClearance)),
+      ],
+    );
+  }
+}
+
+class _CtaFollowCard extends StatelessWidget {
+  final VoidCallback onExplorar;
+  const _CtaFollowCard({required this.onExplorar});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: BldrColors.goldTint,
+        border: Border.all(color: BldrColors.goldBorder),
+        borderRadius: BorderRadius.circular(BldrRadius.card),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0x1FE0B830),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(TablerIcons.users,
+                size: 20, color: BldrColors.goldBright),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Siga atletas',
+                    style: BldrText.cardTitle
+                        .copyWith(color: BldrColors.goldBright)),
+                const SizedBox(height: 2),
+                Text('Veja o feed personalizado de quem você segue',
+                    style: BldrText.description),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          GestureDetector(
+            onTap: onExplorar,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              decoration: BoxDecoration(
+                color: BldrColors.goldSolid,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text('Explorar',
+                  style: BldrText.meta.copyWith(
+                      color: Colors.black, fontWeight: FontWeight.w600)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Tab Squads ────────────────────────────────────────────────────────────────
+
+class _SquadsTab extends StatelessWidget {
+  final List<Map<String, dynamic>> squads;
+  final bool loading;
+  final VoidCallback onRefresh;
+
+  const _SquadsTab({
+    required this.squads,
+    required this.loading,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (loading) {
+      return const Center(
+        child: CircularProgressIndicator(
+            color: BldrColors.goldBright, strokeWidth: 2),
+      );
+    }
+
+    return RefreshIndicator(
+      color: BldrColors.goldBright,
+      backgroundColor: BldrColors.surface,
+      onRefresh: () async => onRefresh(),
+      child: ListView(
+        padding: EdgeInsets.fromLTRB(
+          BldrSpacing.pageX,
+          12,
+          BldrSpacing.pageX,
+          BldrSpacing.navClearance,
+        ),
+        children: [
+          // ── Meus Squads ──
+          Text('MEUS SQUADS', style: BldrText.label),
+          const SizedBox(height: 12),
+          if (squads.isEmpty) _buildEmptySquads(context),
+          ...squads.map((s) => _SquadCard(squad: s)),
+
+          const SizedBox(height: 24),
+
+          // ── Descobrir ──
+          Text('DESCOBRIR', style: BldrText.label),
+          const SizedBox(height: 12),
+          _ActionCard(
+            icon: TablerIcons.key,
+            title: 'Tenho um código de convite',
+            subtitle: 'Entre em um squad com código',
+            onTap: () => showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (_) => const JoinSquadSheet(),
+            ),
+          ),
+          const SizedBox(height: 10),
+          _ActionCard(
+            icon: TablerIcons.plus,
+            title: 'Criar novo squad',
+            subtitle: 'Monte seu grupo e convide atletas',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CreateArenaScreen()),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptySquads(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: BldrColors.surface,
+            border: Border.all(color: BldrColors.border),
+            borderRadius: BorderRadius.circular(BldrRadius.card),
+          ),
+          child: Column(
+            children: [
+              const Icon(TablerIcons.shield, size: 40,
+                  color: BldrColors.textTertiary),
+              const SizedBox(height: 12),
+              Text('Você não está em nenhum squad',
+                  style: BldrText.cardTitle
+                      .copyWith(color: BldrColors.textSecondary),
+                  textAlign: TextAlign.center),
+              const SizedBox(height: 8),
+              Text('Crie ou entre em um squad para competir com amigos',
+                  style: BldrText.description, textAlign: TextAlign.center),
+              const SizedBox(height: 16),
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const CompetitionHubScreen()),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 20, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: BldrColors.goldSolid,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text('Criar squad',
+                      style: BldrText.body.copyWith(
+                          color: Colors.black, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+}
+
+class _SquadCard extends StatelessWidget {
+  final Map<String, dynamic> squad;
+  const _SquadCard({required this.squad});
+
+  @override
+  Widget build(BuildContext context) {
+    final name = squad['name'] as String? ?? 'Squad';
+    final gameMode = squad['game_mode'] as String? ?? 'alpha';
+    final memberCount = squad['member_count'] as int? ?? 0;
+    final activeDays = squad['active_days'] as int?;
+    final gameModeLabel = switch (gameMode) {
+      'survivor' => 'Survivor',
+      'roadrunner' => 'Roadrunner',
+      'hustle' => 'Hustle',
+      _ => 'Alpha',
+    };
+
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              ArenaDetailsScreen(arenaId: squad['id'] as String),
+        ),
+      ),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: BldrColors.goldTint,
+          border: Border.all(color: BldrColors.goldBorder),
+          borderRadius: BorderRadius.circular(BldrRadius.card),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: const Color(0x1FE0B830),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(TablerIcons.shield_filled,
+                  size: 22, color: BldrColors.goldBright),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name,
+                      style: BldrText.cardTitle
+                          .copyWith(color: BldrColors.textPrimary),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      Text(gameModeLabel, style: BldrText.description),
+                      const SizedBox(width: 6),
+                      const Text('·',
+                          style: TextStyle(
+                              color: BldrColors.textTertiary, fontSize: 10)),
+                      const SizedBox(width: 6),
+                      Text('$memberCount membros',
+                          style: BldrText.description),
+                      if (activeDays != null) ...[
+                        const SizedBox(width: 6),
+                        const Text('·',
+                            style: TextStyle(
+                                color: BldrColors.textTertiary, fontSize: 10)),
+                        const SizedBox(width: 6),
+                        Text('${activeDays}d ativos',
+                            style: BldrText.description),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const Icon(TablerIcons.chevron_right,
+                size: 16, color: BldrColors.textTertiary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _ActionCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: BldrColors.surface,
+          border: Border.all(color: BldrColors.border),
+          borderRadius: BorderRadius.circular(BldrRadius.card),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: BldrColors.goldTint,
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: Icon(icon, size: 19, color: BldrColors.goldBright),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: BldrText.cardTitle),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: BldrText.description),
+                ],
+              ),
+            ),
+            const Icon(TablerIcons.chevron_right,
+                size: 16, color: BldrColors.textTertiary),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Feed card (compartilhado entre Explorar e Seguindo) ───────────────────────
+
+class _FeedCard extends StatelessWidget {
+  final CommunityPost post;
+  final Future<void> Function(CommunityPost, String) onReaction;
+  final void Function(CommunityPost) onOpenWorkout;
+  final String Function(DateTime) relativeTime;
+
+  const _FeedCard({
+    required this.post,
+    required this.onReaction,
+    required this.onOpenWorkout,
+    required this.relativeTime,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(BldrSpacing.pageX, 0, BldrSpacing.pageX, 12),
+      child: BldrGlassCard(
+        padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(),
+            const SizedBox(height: 12),
+            _buildBody(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
     return Row(
       children: [
-        _buildAvatar(post),
+        _buildAvatar(),
         const SizedBox(width: 10),
         Expanded(
           child: Column(
@@ -415,49 +868,44 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
               Row(
                 children: [
                   Text(post.displayName,
-                      style: BldrText.description.copyWith(
-                          color: BldrColors.goldBright)),
+                      style:
+                          BldrText.description.copyWith(color: BldrColors.goldBright)),
                   const SizedBox(width: 6),
                   Text('·', style: BldrText.meta),
                   const SizedBox(width: 6),
-                  Text(_relativeTime(post.createdAt), style: BldrText.meta),
+                  Text(relativeTime(post.createdAt), style: BldrText.meta),
                 ],
               ),
             ],
           ),
         ),
         if (post.eventType == CommunityEventType.prBeaten)
-          _eventBadge('🏆 NOVO PR', const Color(0xFFE0B830),
+          _badge('🏆 NOVO PR', const Color(0xFFE0B830),
               const Color(0x47C9A227), const Color(0x47C9A227)),
         if (post.eventType == CommunityEventType.streakMilestone)
-          _eventBadge('🔥 STREAK', const Color(0xFFFF6432),
+          _badge('🔥 STREAK', const Color(0xFFFF6432),
               const Color(0x14FF6432), const Color(0x40FF6432)),
       ],
     );
   }
 
-  Widget _buildAvatar(CommunityPost post) {
-    final initials = (post.authorName.isNotEmpty
-            ? post.authorName[0]
-            : '?')
-        .toUpperCase();
+  Widget _buildAvatar() {
+    final initial =
+        (post.authorName.isNotEmpty ? post.authorName[0] : '?').toUpperCase();
     return Container(
       width: 36,
       height: 36,
-      decoration: const BoxDecoration(
-        color: BldrColors.goldTint,
-        shape: BoxShape.circle,
-      ),
+      decoration:
+          const BoxDecoration(color: BldrColors.goldTint, shape: BoxShape.circle),
       child: Center(
-        child: Text(initials,
-            style: BldrText.cardTitle.copyWith(
-                color: BldrColors.goldBright, fontSize: 13)),
+        child: Text(initial,
+            style: BldrText.cardTitle
+                .copyWith(color: BldrColors.goldBright, fontSize: 13)),
       ),
     );
   }
 
-  Widget _eventBadge(
-      String text, Color textColor, Color bg, Color border) {
+  Widget _badge(String text, Color textColor, Color bg, Color border) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -466,25 +914,25 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(text,
-          style: BldrText.metaSm.copyWith(
-              color: textColor, fontWeight: FontWeight.w600)),
+          style: BldrText.metaSm
+              .copyWith(color: textColor, fontWeight: FontWeight.w600)),
     );
   }
 
-  Widget _buildCardBody(CommunityPost post) {
+  Widget _buildBody(BuildContext context) {
     switch (post.eventType) {
       case CommunityEventType.workoutCompleted:
-        return _buildWorkoutCard(post);
+        return _buildWorkoutBody(context);
       case CommunityEventType.prBeaten:
-        return _buildPrCard(post);
+        return _buildPrBody(context);
       case CommunityEventType.streakMilestone:
-        return _buildStreakCard(post);
+        return _buildStreakBody(context);
       default:
-        return _buildManualCard(post);
+        return _buildManualBody(context);
     }
   }
 
-  Widget _buildWorkoutCard(CommunityPost post) {
+  Widget _buildWorkoutBody(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -497,30 +945,26 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
           const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              post.photoUrl!,
-              width: double.infinity,
-              height: 160,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-            ),
+            child: Image.network(post.photoUrl!,
+                width: double.infinity, height: 160, fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink()),
           ),
         ],
         const SizedBox(height: 10),
-        _buildStatsRow(post),
+        _buildStats(),
         if (post.muscleGroups.isNotEmpty) ...[
           const SizedBox(height: 8),
-          _buildMuscleTags(post.muscleGroups),
+          _buildMuscleTags(),
         ],
         const SizedBox(height: 10),
-        _buildViewWorkoutBtn(post),
+        _buildViewWorkoutBtn(context),
         const SizedBox(height: 2),
-        _buildReactionsRow(post),
+        _buildReactions(),
       ],
     );
   }
 
-  Widget _buildPrCard(CommunityPost post) {
+  Widget _buildPrBody(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -548,15 +992,12 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
                       post.prWeightKg != null
                           ? '${post.prWeightKg!.toStringAsFixed(1)} kg'
                           : '—',
-                      style: BldrText.kpiMd.copyWith(
-                          color: BldrColors.goldBright),
+                      style: BldrText.kpiMd.copyWith(color: BldrColors.goldBright),
                     ),
                     if (post.prReps != null)
-                      Text('${post.prReps} reps',
-                          style: BldrText.description),
+                      Text('${post.prReps} reps', style: BldrText.description),
                     if (post.e1rm != null)
-                      Text(
-                          'e1RM: ${post.e1rm!.toStringAsFixed(1)} kg',
+                      Text('e1RM: ${post.e1rm!.toStringAsFixed(1)} kg',
                           style: BldrText.meta),
                   ],
                 ),
@@ -565,12 +1006,12 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
           ),
         ),
         const SizedBox(height: 10),
-        _buildReactionsRow(post),
+        _buildReactions(),
       ],
     );
   }
 
-  Widget _buildStreakCard(CommunityPost post) {
+  Widget _buildStreakBody(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -578,8 +1019,8 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
           children: [
             Text(
               '${post.streakDays ?? 0}',
-              style: BldrText.kpiLg.copyWith(
-                  color: const Color(0xFFFF6432), fontSize: 48),
+              style: BldrText.kpiLg
+                  .copyWith(color: const Color(0xFFFF6432), fontSize: 48),
             ),
             const SizedBox(width: 14),
             Column(
@@ -592,45 +1033,39 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
           ],
         ),
         const SizedBox(height: 10),
-        _buildReactionsRow(post),
+        _buildReactions(),
       ],
     );
   }
 
-  Widget _buildManualCard(CommunityPost post) {
+  Widget _buildManualBody(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (post.caption != null)
-          Text(post.caption!, style: BldrText.body),
+        if (post.caption != null) Text(post.caption!, style: BldrText.body),
         if (post.photoUrl != null) ...[
           const SizedBox(height: 8),
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
-            child: Image.network(
-              post.photoUrl!,
-              width: double.infinity,
-              height: 160,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-            ),
+            child: Image.network(post.photoUrl!,
+                width: double.infinity, height: 160, fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const SizedBox.shrink()),
           ),
         ],
         if (post.payload['workout_id'] != null) ...[
           const SizedBox(height: 10),
-          _buildViewWorkoutBtn(post),
+          _buildViewWorkoutBtn(context),
         ],
         const SizedBox(height: 10),
-        _buildReactionsRow(post),
+        _buildReactions(),
       ],
     );
   }
 
-  Widget _buildStatsRow(CommunityPost post) {
-    final chips = <(String val, String lbl)>[];
+  Widget _buildStats() {
+    final chips = <(String, String)>[];
     if (post.durationSeconds != null) {
-      final min = (post.durationSeconds! / 60).round();
-      chips.add(('${min}min', 'DURAÇÃO'));
+      chips.add(('${(post.durationSeconds! / 60).round()}min', 'DURAÇÃO'));
     }
     if (post.volumeKg != null) {
       chips.add(('${post.volumeKg!.toStringAsFixed(0)}kg', 'VOLUME'));
@@ -643,8 +1078,8 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
       children: chips
           .map((c) => Container(
                 margin: const EdgeInsets.only(right: 8),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
                   color: const Color(0x08FFFFFF),
                   border: Border.all(color: const Color(0x0DFFFFFF)),
@@ -664,18 +1099,17 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
     );
   }
 
-  Widget _buildMuscleTags(List<String> muscles) {
+  Widget _buildMuscleTags() {
     return Wrap(
       spacing: 5,
       runSpacing: 4,
-      children: muscles
+      children: post.muscleGroups
           .map((m) => Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 3),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: const Color(0x0AFFFFFF),
-                  border:
-                      Border.all(color: const Color(0x0FFFFFFF)),
+                  border: Border.all(color: const Color(0x0FFFFFFF)),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(m, style: BldrText.meta),
@@ -684,9 +1118,9 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
     );
   }
 
-  Widget _buildViewWorkoutBtn(CommunityPost post) {
+  Widget _buildViewWorkoutBtn(BuildContext context) {
     return GestureDetector(
-      onTap: () => _openWorkoutDetail(post),
+      onTap: () => onOpenWorkout(post),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
@@ -707,71 +1141,49 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
     );
   }
 
-  Widget _buildReactionsRow(CommunityPost post) {
+  Widget _buildReactions() {
     const emojis = ['🔥', '💪', '⚡', '🏆'];
-    return Row(
-      children: [
-        ...emojis.map((emoji) {
-          final isActive = post.myReactionEmoji == emoji;
-          final rx = post.reactions
-              .where((r) => r.emoji == emoji)
-              .firstOrNull;
-          final count = rx?.count ?? 0;
-          return GestureDetector(
-            onTap: () => _toggleReaction(post, emoji),
-            child: Container(
-              margin: const EdgeInsets.only(right: 6),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: isActive
-                    ? const Color(0x1FC9A227)
-                    : const Color(0x08FFFFFF),
-                border: Border.all(
+    return Builder(builder: (context) {
+      return Row(
+        children: [
+          ...emojis.map((emoji) {
+            final isActive = post.myReactionEmoji == emoji;
+            final rx = post.reactions.where((r) => r.emoji == emoji).firstOrNull;
+            final count = rx?.count ?? 0;
+            return GestureDetector(
+              onTap: () => onReaction(post, emoji),
+              child: Container(
+                margin: const EdgeInsets.only(right: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
                   color: isActive
-                      ? const Color(0x4DC9A227)
-                      : const Color(0x0DFFFFFF),
+                      ? const Color(0x1FC9A227)
+                      : const Color(0x08FFFFFF),
+                  border: Border.all(
+                    color: isActive
+                        ? const Color(0x4DC9A227)
+                        : const Color(0x0DFFFFFF),
+                  ),
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                count > 0 ? '$emoji $count' : emoji,
-                style: const TextStyle(fontSize: 12),
-              ),
-            ),
-          );
-        }),
-        const Spacer(),
-        GestureDetector(
-          onTap: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                    'Comentários disponíveis para membros Club'),
+                child: Text(
+                  count > 0 ? '$emoji $count' : emoji,
+                  style: const TextStyle(fontSize: 12),
+                ),
               ),
             );
-          },
-          child: Row(
+          }),
+          const Spacer(),
+          Row(
             children: [
-              const Icon(TablerIcons.message_circle, size: 13,
-                  color: BldrColors.textTertiary),
+              const Icon(TablerIcons.message_circle,
+                  size: 13, color: BldrColors.textTertiary),
               const SizedBox(width: 4),
-              Text('${post.commentCount}',
-                  style: BldrText.meta),
+              Text('${post.commentCount}', style: BldrText.meta),
             ],
           ),
-        ),
-      ],
-    );
-  }
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
-
-  String _relativeTime(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1) return 'agora';
-    if (diff.inMinutes < 60) return 'há ${diff.inMinutes}min';
-    if (diff.inHours < 24) return 'há ${diff.inHours}h';
-    return 'há ${diff.inDays}d';
+        ],
+      );
+    });
   }
 }
