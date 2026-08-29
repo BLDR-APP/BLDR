@@ -321,8 +321,11 @@ class _RankingScreenState extends State<RankingScreen> {
       );
     }
 
+    // Pódio: posições 1–3, ordenadas, pode ter menos de 3 entradas
     final podium = _entries.where((e) => e.position <= 3).toList()
       ..sort((a, b) => a.position.compareTo(b.position));
+
+    // Lista 4+: só renderizar se existirem entradas além do pódio
     final rest = _entries.where((e) => e.position > 3).toList();
 
     final myPos = _myEntry;
@@ -331,15 +334,19 @@ class _RankingScreenState extends State<RankingScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
       children: [
+        // "Minha posição" — exibe normalmente mesmo que o usuário seja o único
         if (myPos != null) ...[
           _buildMyPositionCard(myPos),
           const SizedBox(height: 16),
         ],
+        // Pódio: só mostra se houver ao menos 1 entrada; colunas vazias viram SizedBox.shrink
         if (podium.isNotEmpty) ...[
           _buildPodium(podium),
           const SizedBox(height: 16),
         ],
-        ...rest.map(_buildListEntry),
+        // Posições 4+ (lista)
+        if (rest.isNotEmpty) ...rest.map(_buildListEntry),
+        // Se o usuário não aparece no top e está fora da lista visible, mostrar abaixo
         if (!_isClub && !myInList && myPos != null) ...[
           const SizedBox(height: 8),
           _buildDivider(),
@@ -385,58 +392,62 @@ class _RankingScreenState extends State<RankingScreen> {
   }
 
   Widget _buildPodium(List<_RankingEntry> top) {
-    final medals = ['🥇', '🥈', '🥉'];
+    // Sempre renderiza exatamente 3 colunas para manter o layout estável.
+    // Posições sem dados ficam como SizedBox.shrink().
+    const medals = ['🥇', '🥈', '🥉'];
+    const heights = [100.0, 80.0, 65.0];
+
+    Widget podiumColumn(int idx) {
+      if (idx >= top.length) return const Expanded(child: SizedBox.shrink());
+      final entry = top[idx];
+      final isFirst = idx == 0;
+      return Expanded(
+        child: Column(
+          children: [
+            Text(medals[idx], style: const TextStyle(fontSize: 22)),
+            const SizedBox(height: 6),
+            _buildAvatar(entry, size: isFirst ? 44 : 36),
+            const SizedBox(height: 6),
+            Text(
+              entry.displayName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: BldrText.meta.copyWith(
+                color: entry.isMe ? BldrColors.goldBright : BldrColors.textPrimary,
+                fontWeight: isFirst ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+            Text(_valueLabel(entry.value),
+                style: BldrText.metaSm.copyWith(color: BldrColors.textSecondary)),
+            const SizedBox(height: 8),
+            Container(
+              height: heights[idx],
+              decoration: BoxDecoration(
+                color: idx == 0 ? BldrColors.goldTint : BldrColors.surface,
+                border: Border.all(
+                    color: idx == 0 ? BldrColors.goldBorder : BldrColors.border),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+              ),
+              child: Center(
+                child: Text('#${entry.position}',
+                    style: BldrText.label.copyWith(
+                        color: idx == 0
+                            ? BldrColors.goldBright
+                            : BldrColors.textSecondary)),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
-      children: top.asMap().entries.map((e) {
-        final idx = e.key;
-        final entry = e.value;
-        final heights = [100.0, 80.0, 65.0];
-        final isFirst = idx == 0;
-        return Expanded(
-          child: Column(
-            children: [
-              Text(medals[idx], style: const TextStyle(fontSize: 22)),
-              const SizedBox(height: 6),
-              _buildAvatar(entry, size: isFirst ? 44 : 36),
-              const SizedBox(height: 6),
-              Text(entry.displayName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: BldrText.meta.copyWith(
-                      color: entry.isMe
-                          ? BldrColors.goldBright
-                          : BldrColors.textPrimary,
-                      fontWeight: isFirst ? FontWeight.bold : FontWeight.normal)),
-              Text(_valueLabel(entry.value),
-                  style: BldrText.metaSm
-                      .copyWith(color: BldrColors.textSecondary)),
-              const SizedBox(height: 8),
-              Container(
-                height: heights[idx],
-                decoration: BoxDecoration(
-                  color: idx == 0
-                      ? BldrColors.goldTint
-                      : BldrColors.surface,
-                  border: Border.all(
-                      color: idx == 0
-                          ? BldrColors.goldBorder
-                          : BldrColors.border),
-                  borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(8)),
-                ),
-                child: Center(
-                  child: Text('#${entry.position}',
-                      style: BldrText.label.copyWith(
-                          color: idx == 0
-                              ? BldrColors.goldBright
-                              : BldrColors.textSecondary)),
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
+      children: [
+        podiumColumn(1), // 🥈 esquerda
+        podiumColumn(0), // 🥇 centro
+        podiumColumn(2), // 🥉 direita
+      ],
     );
   }
 
