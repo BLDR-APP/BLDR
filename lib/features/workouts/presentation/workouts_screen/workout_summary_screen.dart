@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 
+import 'package:bldr_fitness/features/community/presentation/create_post_screen.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/bldr_muscle.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_share_data.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_summary_data.dart';
@@ -109,6 +111,26 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                   ),
                   icon: const Icon(Icons.ios_share_rounded),
                   label: const Text('Compartilhar treino'),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => CreatePostScreen(
+                        preselectedWorkoutId: widget.data.workoutId,
+                        preselectedSource: widget.data.source,
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(TablerIcons.users, size: 18),
+                  label: const Text('Compartilhar na comunidade'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: BldrColors.goldBright,
+                    side: const BorderSide(color: BldrColors.goldBorder),
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    minimumSize: const Size(double.infinity, 0),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 TextButton(

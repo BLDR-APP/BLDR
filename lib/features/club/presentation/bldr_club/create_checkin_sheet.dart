@@ -1,8 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/features/club/domain/repositories/arena_repository.dart';
+import 'package:bldr_fitness/features/community/presentation/widgets/wearable_import_card.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 
 class CreateCheckinSheet extends StatefulWidget {
   final String arenaId;
@@ -32,6 +34,7 @@ class _CreateCheckinSheetState extends State<CreateCheckinSheet> {
 
   File? _imageFile;
   bool _isLoading = false;
+  Map<String, dynamic>? _wearableData;
 
   String _selectedActivity = 'gym';
   final Map<String, IconData> _activities = {
@@ -43,6 +46,25 @@ class _CreateCheckinSheetState extends State<CreateCheckinSheet> {
     'cardio': Icons.monitor_heart,
     'sport': Icons.sports_soccer,
   };
+
+  @override
+  void initState() {
+    super.initState();
+    _detectWearable();
+  }
+
+  Future<void> _detectWearable() async {
+    final data = await WearableImportCard.detectRecentActivity();
+    if (mounted && data != null) setState(() => _wearableData = data);
+  }
+
+  void _applyWearableData(Map<String, dynamic> data) {
+    final duration = data['duration_minutes'];
+    final calories = data['calories'];
+    if (duration != null) _durationController.text = duration.toString();
+    if (calories != null) _caloriesController.text = calories.toString();
+    setState(() => _wearableData = null);
+  }
 
   Future<void> _pickImage() async {
     try {
@@ -192,6 +214,17 @@ class _CreateCheckinSheetState extends State<CreateCheckinSheet> {
                 textAlign: TextAlign.center
             ),
             const SizedBox(height: 24),
+
+            if (_wearableData != null) ...[
+              WearableImportCard(
+                data: _wearableData!,
+                onImport: () {
+                  _applyWearableData(_wearableData!);
+                },
+                onDismiss: () => setState(() => _wearableData = null),
+              ),
+              const SizedBox(height: 16),
+            ],
 
             if (widget.gameMode != 'alpha') ...[
               _ModeBanner(gameMode: widget.gameMode),
