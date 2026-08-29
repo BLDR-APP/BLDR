@@ -237,7 +237,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       );
 
       if (!mounted) return;
-      Navigator.of(context, rootNavigator: true).pop();
+      _close();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -262,42 +262,44 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     );
   }
 
+  void _close() => ModalRoute.of(context)?.navigator?.pop();
+
   @override
   Widget build(BuildContext context) {
-    debugPrint('[CreatePostScreen] build activeIcon=$_activeIcon');
-    return BldrBackground(
-      child: Scaffold(
+    return Scaffold(
+      backgroundColor: BldrColors.bgBase,
+      resizeToAvoidBottomInset: true,
+      appBar: AppBar(
         backgroundColor: BldrColors.bgBase,
-        resizeToAvoidBottomInset: true,
-        appBar: AppBar(
-          backgroundColor: BldrColors.bgBase,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(TablerIcons.x,
-                color: BldrColors.textPrimary),
-            onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
-          ),
-          title: Text('Criar post', style: BldrText.screenTitle),
-          actions: [
-            TextButton(
-              onPressed: _canPublish && !_publishing ? _publish : null,
-              child: Text(
-                'Publicar',
-                style: BldrText.buttonPrimary.copyWith(
-                  color: _canPublish
-                      ? BldrColors.goldBright
-                      : BldrColors.textTertiary,
-                ),
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(TablerIcons.x, color: BldrColors.textPrimary),
+          onPressed: _close,
+        ),
+        title: Text('Criar post', style: BldrText.screenTitle),
+        actions: [
+          TextButton(
+            onPressed: _canPublish && !_publishing ? _publish : null,
+            child: Text(
+              'Publicar',
+              style: BldrText.buttonPrimary.copyWith(
+                color: _canPublish
+                    ? BldrColors.goldBright
+                    : BldrColors.textTertiary,
               ),
             ),
-          ],
-        ),
-        body: Column(
+          ),
+        ],
+      ),
+      body: SafeArea(
+        top: false,
+        child: Column(
           children: [
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(
-                    BldrSpacing.pageX, 0, BldrSpacing.pageX, 0),
+                    BldrSpacing.pageX, 12, BldrSpacing.pageX, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -900,11 +902,25 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             ),
           ),
           const Spacer(),
-          SizedBox(
-            height: 40,
-            child: BldrPrimaryButton(
-              label: _publishing ? 'Publicando…' : 'Publicar',
-              onPressed: _canPublish && !_publishing ? _publish : null,
+          TextButton(
+            onPressed: _canPublish && !_publishing ? _publish : null,
+            style: TextButton.styleFrom(
+              backgroundColor: _canPublish && !_publishing
+                  ? BldrColors.goldSolid
+                  : BldrColors.surface,
+              foregroundColor: BldrColors.bgBase,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(BldrRadius.button)),
+              minimumSize: const Size(0, 40),
+            ),
+            child: Text(
+              _publishing ? 'Publicando…' : 'Publicar',
+              style: BldrText.buttonPrimary.copyWith(
+                color: _canPublish && !_publishing
+                    ? BldrColors.bgBase
+                    : BldrColors.textTertiary,
+              ),
             ),
           ),
         ],
