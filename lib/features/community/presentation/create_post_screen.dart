@@ -102,27 +102,31 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   Future<void> _loadRecentWorkouts() async {
     try {
       final uid = _client.auth.currentUser?.id;
-      if (uid == null) return;
+      if (uid == null) {
+        setState(() => _workoutsLoading = false);
+        return;
+      }
 
-      // Buscar das duas fontes em paralelo
       final results = await Future.wait([
         _client
             .from('user_workouts')
-            .select('id, workout_template_id, completed_at, volume_kg')
+            .select('id, workout_template_id, completed_at, volume_kg, muscle_groups, total_duration_seconds')
             .eq('user_id', uid)
             .eq('is_completed', true)
             .order('completed_at', ascending: false)
             .limit(5),
         _client
             .from('club_user_workouts')
-            .select('id, workout_template_id, completed_at, volume_kg')
+            .select('id, workout_template_id, completed_at, volume_kg, muscle_groups, total_duration_seconds')
             .eq('user_id', uid)
             .eq('is_completed', true)
             .order('completed_at', ascending: false)
             .limit(5),
       ]);
 
-      // Unificar, marcar source e ordenar por completed_at desc, pegar top 5
+      debugPrint('[CreatePost] free workouts: ${(results[0] as List).length}');
+      debugPrint('[CreatePost] club workouts: ${(results[1] as List).length}');
+
       final combined = <Map<String, dynamic>>[];
       for (final row in results[0] as List) {
         combined.add({...row as Map<String, dynamic>, 'source': 'free'});
@@ -137,52 +141,75 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       });
       final top5 = combined.take(5).toList();
 
-      // Buscar nomes + muscle_groups dos templates — tabela depende da source
-      final List<Map<String, dynamic>> workouts = [];
-      for (final row in top5) {
+      debugPrint('[CreatePost] combined top5: ${top5.length}');
+
+      // Buscar nomes dos templates em paralelo
+      final workouts = <Map<String, dynamic>>[];
+      await Future.wait(top5.map((row) async {
         final templateId = row['workout_template_id'] as String?;
         final source = row['source'] as String;
         String name = 'Treino';
-        List muscleGroups = [];
+
         if (templateId != null) {
-          final table = source == 'club'
-              ? 'club_workout_templates'
-              : 'workout_templates';
-          final tmpl = await _client
-              .from(table)
-              .select('name, muscle_groups')
-              .eq('id', templateId)
-              .maybeSingle();
-          name = tmpl?['name'] as String? ?? 'Treino';
-          muscleGroups = tmpl?['muscle_groups'] as List? ?? [];
+          try {
+            final table = source == 'club'
+                ? 'club_workout_templates'
+                : 'workout_templates';
+            final tmpl = await _client
+                .from(table)
+                .select('name')
+                .eq('id', templateId)
+                .maybeSingle();
+            name = tmpl?['name'] as String? ?? 'Treino';
+          } catch (e) {
+            debugPrint('[CreatePost] erro ao buscar template $templateId: $e');
+          }
         }
-        final completedAt = row['completed_at'] as String?;
+
+        final muscleGroups = row['muscle_groups'];
         workouts.add({
           'id': row['id'],
           'name': name,
-          'completed_at': completedAt,
-          'volume_kg': row['volume_kg'],
-          'duration_s': null,
-          'sets_count': null,
-          'muscle_groups': muscleGroups,
           'source': source,
-          'date_label': _formatDate(completedAt),
+          'completed_at': row['completed_at'],
+          'volume_kg': row['volume_kg'],
+          'duration_s': row['total_duration_seconds'],
+          'muscle_groups': muscleGroups is List
+              ? muscleGroups
+              : (muscleGroups != null
+                  ? [muscleGroups.toString()]
+                  : <String>[]),
+          'date_label': _formatDate(row['completed_at'] as String?),
         });
-      }
+      }));
+
+      // Reordenar pois Future.wait não garante ordem
+      workouts.sort((a, b) {
+        final aTs = a['completed_at'] as String? ?? '';
+        final bTs = b['completed_at'] as String? ?? '';
+        return bTs.compareTo(aTs);
+      });
+
+      debugPrint('[CreatePost] workouts com nome: ${workouts.length}');
 
       if (!mounted) return;
       setState(() {
         _recentWorkouts = workouts;
         _workoutsLoading = false;
 
-        // Pré-selecionar se veio da WorkoutSummaryScreen
         if (widget.preselectedWorkoutId != null) {
-          final match = workouts.where(
-              (w) => w['id'] == widget.preselectedWorkoutId).firstOrNull;
-          if (match != null) _selectedWorkoutData = match;
+          final match = workouts
+              .where((w) => w['id'] == widget.preselectedWorkoutId)
+              .firstOrNull;
+          if (match != null) {
+            _selectedWorkoutId = widget.preselectedWorkoutId;
+            _selectedSource = widget.preselectedSource ?? 'free';
+            _selectedWorkoutData = match;
+          }
         }
       });
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('[CreatePost] erro em _loadRecentWorkouts: $e\n$st');
       if (!mounted) return;
       setState(() => _workoutsLoading = false);
     }
