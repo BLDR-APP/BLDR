@@ -7,7 +7,8 @@ class SupabasePrivacyDatasource {
   Future<Map<String, dynamic>?> getPrivacy(String userId) async {
     final row = await _client
         .from('user_profiles')
-        .select('display_name, photo_visibility, feed_visible, reactions_enabled, ranking_visible')
+        .select(
+            'display_name, photo_visibility, feed_visible, reactions_enabled, ranking_visible')
         .eq('id', userId)
         .maybeSingle();
     return row != null ? Map<String, dynamic>.from(row) : null;
@@ -22,11 +23,23 @@ class SupabasePrivacyDatasource {
       try {
         await _client
             .from('club_profiles')
-            .update({'display_name': displayName})
-            .eq('user_id', userId);
+            .update({'display_name': displayName}).eq('user_id', userId);
       } catch (_) {
         // club_profiles pode não ter registro (usuário sem squad) — não é erro fatal.
       }
     }
   }
+
+  Future<String?> getTimezone(String userId) async {
+    final row = await _client
+        .from('user_profiles')
+        .select('timezone')
+        .eq('id', userId)
+        .maybeSingle();
+    return row?['timezone'] as String?;
+  }
+
+  Future<void> saveTimezone(String userId, String timezone) => _client
+      .from('user_profiles')
+      .update({'timezone': timezone}).eq('id', userId);
 }

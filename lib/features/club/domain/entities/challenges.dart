@@ -115,7 +115,7 @@ class NewCollectiveChallenge {
   final String title;
   final String description;
   final String challengeType;
-  final num targetValue;
+  final int targetValue;
   final int rewardXp;
   final String? rewardBadge;
   final DateTime endsAt;

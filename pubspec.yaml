@@ -65,6 +65,7 @@ dependencies:
   # 👇 precisa adicionar para compressão e formatação de data
   flutter_image_compress: ^2.2.0
   intl: ^0.20.2
+  timezone: ^0.10.1
   
   # Stripe payment integration
   flutter_stripe: ^10.1.1
@@ -143,6 +144,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/
+    - assets/images/launch/
     - assets/videos/
     - assets/images/whoop/
     - assets/models/

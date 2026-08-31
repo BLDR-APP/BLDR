@@ -432,7 +432,7 @@ class UpdateChallengeSettings {
   Future<Result<void>> call(
     String challengeId, {
     required List<String>? allowedSources,
-    num? targetValue,
+    int? targetValue,
   }) =>
       _repo.updateChallengeSettings(challengeId,
           allowedSources: allowedSources, targetValue: targetValue);

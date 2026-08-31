@@ -155,8 +155,8 @@ class _CollectiveChallengeDetailScreenState
   }
 
   Future<void> _fetchRecentFeed() async {
-    final since = DateTime.tryParse(
-        (_challenge?['created_at'] as String?) ?? '');
+    final since =
+        DateTime.tryParse((_challenge?['created_at'] as String?) ?? '');
     final result =
         await getIt<GetChallengeFeed>()(widget.challengeId, since: since);
     final items = result.valueOrNull;
@@ -217,8 +217,7 @@ class _CollectiveChallengeDetailScreenState
     final messenger = ScaffoldMessenger.of(context);
     setState(() => _joiningLeaving = true);
     try {
-      final result =
-          await getIt<JoinCollectiveChallenge>()(widget.challengeId);
+      final result = await getIt<JoinCollectiveChallenge>()(widget.challengeId);
       final failure = result.failureOrNull;
       if (failure != null) throw Exception(failure.message);
 
@@ -257,14 +256,13 @@ class _CollectiveChallengeDetailScreenState
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar',
-                style: TextStyle(color: Colors.white54)),
+            child:
+                const Text('Cancelar', style: TextStyle(color: Colors.white54)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Sair',
-                style: TextStyle(
-                    color: _red, fontWeight: FontWeight.bold)),
+                style: TextStyle(color: _red, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -382,8 +380,8 @@ class _CollectiveChallengeDetailScreenState
               TextButton(
                   onPressed: () => Navigator.pop(ctx, selected),
                   child: const Text('Denunciar',
-                      style: TextStyle(
-                          color: _red, fontWeight: FontWeight.bold))),
+                      style:
+                          TextStyle(color: _red, fontWeight: FontWeight.bold))),
             ],
           ),
         );
@@ -393,8 +391,7 @@ class _CollectiveChallengeDetailScreenState
     if (reason == null) return;
     final messenger = ScaffoldMessenger.of(context);
     try {
-      final result =
-          await getIt<ReportChallenge>()(widget.challengeId, reason);
+      final result = await getIt<ReportChallenge>()(widget.challengeId, reason);
       final failure = result.failureOrNull;
       if (failure != null) throw Exception(failure.message);
       messenger.showSnackBar(const SnackBar(
@@ -413,25 +410,34 @@ class _CollectiveChallengeDetailScreenState
 
   String _typeSuffix(String type) {
     switch (type) {
-      case 'workouts': return 'treinos';
-      case 'streak': return 'dias';
-      default: return 'XP';
+      case 'workouts':
+        return 'treinos';
+      case 'streak':
+        return 'dias';
+      default:
+        return 'XP';
     }
   }
 
   String _typeLabel(String type) {
     switch (type) {
-      case 'workouts': return 'Treinos';
-      case 'streak': return 'Streak';
-      default: return 'XP Total';
+      case 'workouts':
+        return 'Treinos';
+      case 'streak':
+        return 'Streak';
+      default:
+        return 'XP Total';
     }
   }
 
   IconData _typeIcon(String type) {
     switch (type) {
-      case 'workouts': return Icons.fitness_center;
-      case 'streak': return Icons.local_fire_department;
-      default: return Icons.bolt;
+      case 'workouts':
+        return Icons.fitness_center;
+      case 'streak':
+        return Icons.local_fire_department;
+      default:
+        return Icons.bolt;
     }
   }
 
@@ -463,12 +469,18 @@ class _CollectiveChallengeDetailScreenState
 
   String _feedLabel(String reason) {
     switch (reason) {
-      case 'workout_complete': return 'completou um treino';
-      case 'progress_photo': return 'enviou uma foto de progresso';
-      case 'streak': return 'manteve a sequência';
-      case 'run_complete': return 'completou uma corrida';
-      case 'achievement': return 'conquistou uma conquista';
-      default: return 'contribuiu com +XP';
+      case 'workout_complete':
+        return 'completou um treino';
+      case 'progress_photo':
+        return 'enviou uma foto de progresso';
+      case 'streak':
+        return 'manteve a sequência';
+      case 'run_complete':
+        return 'completou uma corrida';
+      case 'achievement':
+        return 'conquistou uma conquista';
+      default:
+        return 'contribuiu com +XP';
     }
   }
 
@@ -505,8 +517,7 @@ class _CollectiveChallengeDetailScreenState
     final endsAt = DateTime.tryParse(c['ends_at'] as String? ?? '');
     if (createdAt == null || endsAt == null) return '';
 
-    final daysElapsed =
-        DateTime.now().difference(createdAt).inSeconds / 86400;
+    final daysElapsed = DateTime.now().difference(createdAt).inSeconds / 86400;
     final daysRemaining = endsAt.difference(DateTime.now()).inDays;
     if (daysRemaining <= 0) return 'Prazo encerrado.';
 
@@ -528,8 +539,7 @@ class _CollectiveChallengeDetailScreenState
           '${daysToComplete.ceil()} dias. 🚀';
     } else {
       final neededRate = remaining / daysRemaining;
-      final pctMore =
-          ((neededRate - dailyRate) / dailyRate * 100).round();
+      final pctMore = ((neededRate - dailyRate) / dailyRate * 100).round();
       return 'Atrasados — seria necessário $pctMore% a mais de ritmo para cumprir o prazo.';
     }
   }
@@ -565,8 +575,8 @@ class _CollectiveChallengeDetailScreenState
             foregroundColor: Colors.white,
             title: const Text('Desafio')),
         body: const Center(
-            child:
-                Text('Desafio não encontrado.', style: TextStyle(color: Colors.white54))),
+            child: Text('Desafio não encontrado.',
+                style: TextStyle(color: Colors.white54))),
       );
     }
 
@@ -576,7 +586,8 @@ class _CollectiveChallengeDetailScreenState
     final target = (c['target_value'] as num?)?.toInt() ?? 1;
     final current = (c['current_value'] as num?)?.toInt() ?? 0;
     final progress = (current / target).clamp(0.0, 1.0);
-    final myProgress = (target > 0) ? (_myContribution / target).clamp(0.0, 1.0) : 0.0;
+    final myProgress =
+        (target > 0) ? (_myContribution / target).clamp(0.0, 1.0) : 0.0;
     final status = _calcStatus();
     final participantCount = c['participant_count'] as int? ?? 0;
     final rewardXp = (c['reward_xp'] as num?)?.toInt() ?? 0;
@@ -618,9 +629,8 @@ class _CollectiveChallengeDetailScreenState
             slivers: [
               // ── Cover image + app bar ─────────────────────────────────────
               SliverAppBar(
-                expandedHeight: coverUrl != null && coverUrl.isNotEmpty
-                    ? 240.0
-                    : 0.0,
+                expandedHeight:
+                    coverUrl != null && coverUrl.isNotEmpty ? 240.0 : 0.0,
                 pinned: true,
                 backgroundColor: Colors.black,
                 foregroundColor: Colors.white,
@@ -659,15 +669,15 @@ class _CollectiveChallengeDetailScreenState
                           color: Colors.black54,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(Icons.tune,
-                            size: 16, color: _gold),
+                        child: const Icon(Icons.tune, size: 16, color: _gold),
                       ),
                       onPressed: () => _showEditSheet(
-                          currentSources: List<String>.from(
-                              (c['allowed_sources'] as List?)?.cast<String>() ?? []),
-                          currentTarget: target,
-                          currentType: challengeType,
-                        ),
+                        currentSources: List<String>.from(
+                            (c['allowed_sources'] as List?)?.cast<String>() ??
+                                []),
+                        currentTarget: target,
+                        currentType: challengeType,
+                      ),
                     ),
                   // Report (user-created) or nothing (official)
                   if (!isOfficial && createdBy != _myUserId)
@@ -868,7 +878,9 @@ class _CollectiveChallengeDetailScreenState
                         Text(
                           c['description'] as String,
                           style: TextStyle(
-                              color: Colors.grey[400], fontSize: 13, height: 1.5),
+                              color: Colors.grey[400],
+                              fontSize: 13,
+                              height: 1.5),
                         ),
                       ],
 
@@ -953,8 +965,7 @@ class _CollectiveChallengeDetailScreenState
                         decoration: BoxDecoration(
                           color: _gold.withOpacity(0.06),
                           borderRadius: BorderRadius.circular(12),
-                          border:
-                              Border.all(color: _gold.withOpacity(0.25)),
+                          border: Border.all(color: _gold.withOpacity(0.25)),
                         ),
                         child: Row(
                           children: [
@@ -971,16 +982,14 @@ class _CollectiveChallengeDetailScreenState
                               Flexible(
                                 child: Text('· $badge',
                                     style: TextStyle(
-                                        color: Colors.grey[400],
-                                        fontSize: 13),
+                                        color: Colors.grey[400], fontSize: 13),
                                     overflow: TextOverflow.ellipsis),
                               ),
                             ],
                             const Spacer(),
                             Text('para todos os participantes',
                                 style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 10)),
+                                    color: Colors.grey[600], fontSize: 10)),
                           ],
                         ),
                       ),
@@ -1007,8 +1016,7 @@ class _CollectiveChallengeDetailScreenState
                               labelColor: _gold,
                               unselectedLabelColor: Colors.white38,
                               labelStyle: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold),
+                                  fontSize: 12, fontWeight: FontWeight.bold),
                               tabs: const [
                                 Tab(text: 'Ranking'),
                                 Tab(text: 'Feed'),
@@ -1045,8 +1053,7 @@ class _CollectiveChallengeDetailScreenState
               right: 0,
               bottom: 0,
               child: Container(
-                padding:
-                    const EdgeInsets.fromLTRB(16, 12, 16, 28),
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
                 decoration: BoxDecoration(
                   color: Colors.black,
                   border: Border(
@@ -1065,8 +1072,7 @@ class _CollectiveChallengeDetailScreenState
                           : _gold,
                       borderRadius: BorderRadius.circular(14),
                       border: _isJoined
-                          ? Border.all(
-                              color: Colors.redAccent.withOpacity(0.4))
+                          ? Border.all(color: Colors.redAccent.withOpacity(0.4))
                           : null,
                     ),
                     child: Center(
@@ -1076,15 +1082,15 @@ class _CollectiveChallengeDetailScreenState
                               height: 18,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: _isJoined ? Colors.redAccent : Colors.black,
+                                color:
+                                    _isJoined ? Colors.redAccent : Colors.black,
                               ),
                             )
                           : Text(
                               _isJoined ? 'Sair do desafio' : 'Participar',
                               style: TextStyle(
-                                color: _isJoined
-                                    ? Colors.redAccent
-                                    : Colors.black,
+                                color:
+                                    _isJoined ? Colors.redAccent : Colors.black,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 15,
                               ),
@@ -1103,10 +1109,34 @@ class _CollectiveChallengeDetailScreenState
 
   // ── Source groups definition (mirrors comunidade_screen._sourceGroups) ──────
   static const _sourceGroups = [
-    {'key': 'bldr_club',     'label': 'BLDR CLUB',      'icon': Icons.bolt,          'criteria': ['club_workout_completed', 'consecutive_club_workouts', 'monthly_club_workouts']},
-    {'key': 'bldr_run',      'label': 'BLDR RUN',       'icon': Icons.directions_run, 'criteria': ['run_tracker']},
-    {'key': 'nutrition',     'label': 'Nutrição',        'icon': Icons.restaurant,    'criteria': ['meal_logged', 'daily_meals_bonus', 'hydration_log']},
-    {'key': 'free_workouts', 'label': 'Treinos Livres', 'icon': Icons.fitness_center, 'criteria': ['free_workout_completed']},
+    {
+      'key': 'bldr_club',
+      'label': 'BLDR CLUB',
+      'icon': Icons.bolt,
+      'criteria': [
+        'club_workout_completed',
+        'consecutive_club_workouts',
+        'monthly_club_workouts'
+      ]
+    },
+    {
+      'key': 'bldr_run',
+      'label': 'BLDR RUN',
+      'icon': Icons.directions_run,
+      'criteria': ['run_tracker']
+    },
+    {
+      'key': 'nutrition',
+      'label': 'Nutrição',
+      'icon': Icons.restaurant,
+      'criteria': ['meal_logged', 'daily_meals_bonus', 'hydration_log']
+    },
+    {
+      'key': 'free_workouts',
+      'label': 'Treinos Livres',
+      'icon': Icons.fitness_center,
+      'criteria': ['free_workout_completed']
+    },
   ];
 
   Widget _buildSourceChips(Map<String, dynamic> challenge) {
@@ -1220,8 +1250,7 @@ class _CollectiveChallengeDetailScreenState
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide:
-                            BorderSide(color: _gold.withOpacity(0.6)),
+                        borderSide: BorderSide(color: _gold.withOpacity(0.6)),
                       ),
                     ),
                   ),
@@ -1276,8 +1305,7 @@ class _CollectiveChallengeDetailScreenState
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(g['icon'] as IconData,
-                                color: isOn ? _gold : Colors.white54,
-                                size: 18),
+                                color: isOn ? _gold : Colors.white54, size: 18),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -1305,7 +1333,7 @@ class _CollectiveChallengeDetailScreenState
                       Navigator.pop(ctx);
                       final messenger = ScaffoldMessenger.of(context);
                       try {
-                        num? newTarget;
+                        int? newTarget;
                         if (currentType == 'xp_total') {
                           final parsed =
                               int.tryParse(targetController.text.trim());
@@ -1407,8 +1435,8 @@ class _CollectiveChallengeDetailScreenState
             const SizedBox(height: 20),
             if (myEntry != null)
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
                   color: _gold.withOpacity(0.08),
                   borderRadius: BorderRadius.circular(12),
@@ -1418,8 +1446,8 @@ class _CollectiveChallengeDetailScreenState
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text('Sua contribuição  ',
-                        style: TextStyle(
-                            color: Colors.grey[500], fontSize: 13)),
+                        style:
+                            TextStyle(color: Colors.grey[500], fontSize: 13)),
                     Text('${myEntry['contribution']} $suffix',
                         style: const TextStyle(
                             color: _gold,
@@ -1433,8 +1461,8 @@ class _CollectiveChallengeDetailScreenState
             if (myRank != null && myRank > 3 && myEntry != null) ...[
               const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: _gold.withOpacity(0.06),
                   borderRadius: BorderRadius.circular(14),
@@ -1471,8 +1499,8 @@ class _CollectiveChallengeDetailScreenState
                                   fontWeight: FontWeight.bold,
                                   fontSize: 13)),
                           Text('Sua posição final',
-                              style: TextStyle(
-                                  color: Colors.grey, fontSize: 11)),
+                              style:
+                                  TextStyle(color: Colors.grey, fontSize: 11)),
                         ],
                       ),
                     ),
@@ -1520,7 +1548,11 @@ class _CollectiveChallengeDetailScreenState
       } else {
         color = const Color(0xFFCD7C3D);
       }
-      final blockH = rank == 1 ? 72.0 : rank == 2 ? 52.0 : 36.0;
+      final blockH = rank == 1
+          ? 72.0
+          : rank == 2
+              ? 52.0
+              : 36.0;
       final avatarRadius = rank == 1 ? 28.0 : 22.0;
 
       return Column(
@@ -1642,14 +1674,11 @@ class _CollectiveChallengeDetailScreenState
               Text(
                 '$current / $target $suffix',
                 style: TextStyle(
-                    color: color,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold),
+                    color: color, fontSize: 12, fontWeight: FontWeight.bold),
               ),
               const SizedBox(width: 8),
               Text('${(progress * 100).toStringAsFixed(0)}%',
-                  style: TextStyle(
-                      color: Colors.grey[600], fontSize: 11)),
+                  style: TextStyle(color: Colors.grey[600], fontSize: 11)),
             ],
           ),
           const SizedBox(height: 8),
@@ -1676,8 +1705,7 @@ class _CollectiveChallengeDetailScreenState
         // Also check client-side for already-reached based on current progress
         final passedByCurrent = (currentProgress * 100) >= m;
         final isReached = reached || passedByCurrent;
-        final ms = _milestones.firstWhere(
-            (ms) => ms['milestone_pct'] == m,
+        final ms = _milestones.firstWhere((ms) => ms['milestone_pct'] == m,
             orElse: () => {});
         final reachedAt = ms['reached_at'] as String?;
 
@@ -1694,9 +1722,7 @@ class _CollectiveChallengeDetailScreenState
                       ? _gold.withOpacity(0.15)
                       : Colors.white.withOpacity(0.04),
                   border: Border.all(
-                    color: isReached
-                        ? _gold
-                        : Colors.white.withOpacity(0.1),
+                    color: isReached ? _gold : Colors.white.withOpacity(0.1),
                     width: isReached ? 1.5 : 1,
                   ),
                 ),
@@ -1737,8 +1763,8 @@ class _CollectiveChallengeDetailScreenState
       );
     }
 
-    final suffix = _typeSuffix(
-        _challenge?['challenge_type'] as String? ?? 'xp_total');
+    final suffix =
+        _typeSuffix(_challenge?['challenge_type'] as String? ?? 'xp_total');
 
     return ListView.builder(
       padding: const EdgeInsets.all(12),
@@ -1754,14 +1780,11 @@ class _CollectiveChallengeDetailScreenState
           margin: const EdgeInsets.only(bottom: 6),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: isMe
-                ? _gold.withOpacity(0.07)
-                : Colors.white.withOpacity(0.03),
+            color:
+                isMe ? _gold.withOpacity(0.07) : Colors.white.withOpacity(0.03),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-                color: isMe
-                    ? _gold.withOpacity(0.3)
-                    : Colors.transparent),
+                color: isMe ? _gold.withOpacity(0.3) : Colors.transparent),
           ),
           child: Row(
             children: [
@@ -1769,8 +1792,7 @@ class _CollectiveChallengeDetailScreenState
                   width: 28,
                   child: Text(label,
                       style: TextStyle(
-                          fontSize: i < 3 ? 16 : 12,
-                          color: Colors.white54))),
+                          fontSize: i < 3 ? 16 : 12, color: Colors.white54))),
               const SizedBox(width: 8),
               CircleAvatar(
                 radius: 16,
@@ -1792,16 +1814,13 @@ class _CollectiveChallengeDetailScreenState
                   isMe ? 'Você' : entry['name'] as String,
                   style: TextStyle(
                       color: isMe ? _gold : Colors.white,
-                      fontWeight:
-                          isMe ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: isMe ? FontWeight.bold : FontWeight.normal,
                       fontSize: 13),
                 ),
               ),
               Text('$contribution $suffix',
                   style: const TextStyle(
-                      color: _gold,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold)),
+                      color: _gold, fontSize: 12, fontWeight: FontWeight.bold)),
             ],
           ),
         );
@@ -1840,9 +1859,7 @@ class _CollectiveChallengeDetailScreenState
                           ? (item['name'] as String)[0].toUpperCase()
                           : 'B',
                   style: const TextStyle(
-                      color: _gold,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold),
+                      color: _gold, fontSize: 10, fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(width: 10),
@@ -1856,9 +1873,7 @@ class _CollectiveChallengeDetailScreenState
                             color: Colors.white70, fontSize: 12),
                         children: [
                           TextSpan(
-                            text: isMe
-                                ? 'Você'
-                                : item['name'] as String,
+                            text: isMe ? 'Você' : item['name'] as String,
                             style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white),
@@ -1869,15 +1884,13 @@ class _CollectiveChallengeDetailScreenState
                             )
                           else
                             TextSpan(
-                              text:
-                                  ' ${_feedLabel(item['reason'] as String)}',
+                              text: ' ${_feedLabel(item['reason'] as String)}',
                             ),
                           if (item['activity_label'] != null)
                             TextSpan(
                               text: item['activity_label'] as String,
                               style: const TextStyle(
-                                  color: _gold,
-                                  fontWeight: FontWeight.w600),
+                                  color: _gold, fontWeight: FontWeight.w600),
                             ),
                         ],
                       ),
@@ -1887,8 +1900,7 @@ class _CollectiveChallengeDetailScreenState
                       children: [
                         Text(_timeAgo(item['created_at'] as String),
                             style: const TextStyle(
-                                color: Colors.white24,
-                                fontSize: 10)),
+                                color: Colors.white24, fontSize: 10)),
                         const SizedBox(width: 8),
                         Text('+$delta XP',
                             style: const TextStyle(
@@ -1922,8 +1934,7 @@ class _CollectiveChallengeDetailScreenState
                   maxLength: 200,
                   decoration: InputDecoration(
                     hintText: 'Escreva um comentário...',
-                    hintStyle:
-                        TextStyle(color: Colors.grey[600], fontSize: 13),
+                    hintStyle: TextStyle(color: Colors.grey[600], fontSize: 13),
                     counterText: '',
                     filled: true,
                     fillColor: const Color(0xFF1A1A1A),
@@ -1951,8 +1962,7 @@ class _CollectiveChallengeDetailScreenState
                           height: 16,
                           child: CircularProgressIndicator(
                               strokeWidth: 2, color: Colors.black))
-                      : const Icon(Icons.send,
-                          color: Colors.black, size: 16),
+                      : const Icon(Icons.send, color: Colors.black, size: 16),
                 ),
               ),
             ],
@@ -1963,8 +1973,7 @@ class _CollectiveChallengeDetailScreenState
           child: _comments.isEmpty
               ? const Center(
                   child: Text('Seja o primeiro a comentar!',
-                      style: TextStyle(
-                          color: Colors.white38, fontSize: 13)),
+                      style: TextStyle(color: Colors.white38, fontSize: 13)),
                 )
               : ListView.builder(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
@@ -1973,9 +1982,8 @@ class _CollectiveChallengeDetailScreenState
                     final comment = _comments[i];
                     final isMe = comment['user_id'] == _myUserId;
                     final name = comment['name'] as String;
-                    final initial = name.isNotEmpty
-                        ? name[0].toUpperCase()
-                        : 'B';
+                    final initial =
+                        name.isNotEmpty ? name[0].toUpperCase() : 'B';
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 10),
@@ -1985,11 +1993,9 @@ class _CollectiveChallengeDetailScreenState
                           CircleAvatar(
                             radius: 14,
                             backgroundColor: _gold.withOpacity(0.15),
-                            backgroundImage:
-                                comment['avatar_url'] != null
-                                    ? NetworkImage(
-                                        comment['avatar_url'] as String)
-                                    : null,
+                            backgroundImage: comment['avatar_url'] != null
+                                ? NetworkImage(comment['avatar_url'] as String)
+                                : null,
                             child: comment['avatar_url'] == null
                                 ? Text(initial,
                                     style: const TextStyle(
@@ -2001,8 +2007,7 @@ class _CollectiveChallengeDetailScreenState
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   children: [
@@ -2015,11 +2020,9 @@ class _CollectiveChallengeDetailScreenState
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
-                                      _timeAgo(comment['created_at']
-                                          as String),
+                                      _timeAgo(comment['created_at'] as String),
                                       style: const TextStyle(
-                                          color: Colors.white24,
-                                          fontSize: 10),
+                                          color: Colors.white24, fontSize: 10),
                                     ),
                                   ],
                                 ),

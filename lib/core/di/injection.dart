@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get_it/get_it.dart';
 
 import 'package:bldr_fitness/core/providers/locale_provider.dart';
+import 'package:bldr_fitness/core/time/device_timezone_service.dart';
 import 'package:bldr_fitness/features/community/data/repositories/community_feed_repository_impl.dart';
 import 'package:bldr_fitness/features/community/domain/repositories/community_feed_repository.dart';
 import 'package:bldr_fitness/features/profile/data/repositories/feedback_repository_impl.dart';
@@ -79,8 +80,12 @@ import 'package:bldr_fitness/features/workouts/domain/repositories/workout_templ
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart';
 import 'package:bldr_fitness/features/profile/data/datasources/supabase_privacy_datasource.dart';
 import 'package:bldr_fitness/features/profile/data/repositories/privacy_repository_impl.dart';
+import 'package:bldr_fitness/features/profile/data/repositories/user_timezone_repository_impl.dart';
+import 'package:bldr_fitness/features/profile/data/user_timezone_sync_lifecycle.dart';
 import 'package:bldr_fitness/features/profile/domain/repositories/privacy_repository.dart';
+import 'package:bldr_fitness/features/profile/domain/repositories/user_timezone_repository.dart';
 import 'package:bldr_fitness/features/profile/domain/usecases/privacy_usecases.dart';
+import 'package:bldr_fitness/features/profile/domain/usecases/user_timezone_usecases.dart';
 import 'package:bldr_fitness/services/achievement_service.dart';
 import 'package:bldr_fitness/services/auth_service.dart';
 import 'package:bldr_fitness/services/club_workouts_service.dart';
@@ -180,6 +185,14 @@ void setupInjection({Map<String, dynamic> config = const {}}) {
       () => PrivacyRepositoryImpl(getIt<SupabasePrivacyDatasource>()));
   getIt.registerFactory(() => GetPrivacySettings(getIt<PrivacyRepository>()));
   getIt.registerFactory(() => SavePrivacySettings(getIt<PrivacyRepository>()));
+  getIt.registerLazySingleton<DeviceTimezoneService>(DeviceTimezoneService.new);
+  getIt.registerLazySingleton<UserTimezoneRepository>(
+      () => UserTimezoneRepositoryImpl(getIt<SupabasePrivacyDatasource>()));
+  getIt.registerFactory(() => SyncDeviceTimezone(
+      getIt<UserTimezoneRepository>(), getIt<DeviceTimezoneService>()));
+  getIt.registerLazySingleton<UserTimezoneSyncLifecycle>(() =>
+      UserTimezoneSyncLifecycle(
+          getIt<AuthRepository>(), getIt<SyncDeviceTimezone>()));
 
   // --- Feature: Workouts (Fase 4a — domain/data; telas na 4b) ---
   getIt.registerLazySingleton<WorkoutTemplateRepository>(
@@ -246,7 +259,9 @@ void setupInjection({Map<String, dynamic> config = const {}}) {
   getIt.registerFactory(
       () => DeleteCompletedClubWorkout(getIt<WeeklyPlanRepository>()));
   getIt.registerFactory(() => GetCurrentStreak(
-      getIt<WorkoutSessionRepository>(), getIt<ClubWorkoutRepository>()));
+      getIt<WorkoutSessionRepository>(), getIt<ClubWorkoutRepository>(),
+      timezoneRepository: getIt<UserTimezoneRepository>(),
+      userId: () => getIt<AuthRepository>().currentUser?.id));
 
   getIt.registerLazySingleton<ExtraActivityRepository>(
       () => ExtraActivityRepositoryImpl(

@@ -29,7 +29,8 @@ class ChallengeRepositoryImpl implements ChallengeRepository {
     } on TimeoutException catch (e) {
       return Result.failure(NetworkFailure('Tempo de conexão esgotado.', e));
     } catch (e) {
-      return Result.failure(UnexpectedFailure('Ocorreu um erro inesperado.', e));
+      return Result.failure(
+          UnexpectedFailure('Ocorreu um erro inesperado.', e));
     }
   }
 
@@ -40,8 +41,7 @@ class ChallengeRepositoryImpl implements ChallengeRepository {
   }
 
   @override
-  Future<Result<List<XpFeedItem>>> xpFeed({int limit = 50}) =>
-      _guard(() async {
+  Future<Result<List<XpFeedItem>>> xpFeed({int limit = 50}) => _guard(() async {
         final events = await _datasource.xpEvents(limit: limit);
         if (events.isEmpty) return <XpFeedItem>[];
 
@@ -66,7 +66,8 @@ class ChallengeRepositoryImpl implements ChallengeRepository {
         return events.map((e) {
           final uid = (e['user_id'] ?? '').toString();
           final profile = profilesMap[uid];
-          final displayName = (profile?['display_name'] as String?)?.trim() ?? '';
+          final displayName =
+              (profile?['display_name'] as String?)?.trim() ?? '';
           final fullName = (profile?['full_name'] as String?)?.trim() ?? '';
           final resolvedName = displayName.isNotEmpty ? displayName : fullName;
           final id = e['id'].toString();
@@ -102,8 +103,7 @@ class ChallengeRepositoryImpl implements ChallengeRepository {
         return rows
             .map((row) => ClubRankingEntry(
                   userId: row['user_id'].toString(),
-                  displayName:
-                      (row['display_name'] as String?) ?? 'Atleta',
+                  displayName: (row['display_name'] as String?) ?? 'Atleta',
                   avatarUrl: row['avatar_url'] as String?,
                   xpTotal: (row['xp_total'] as num?)?.toInt() ?? 0,
                   currentLevel: (row['current_level'] as num?)?.toInt() ?? 1,
@@ -174,26 +174,29 @@ class ChallengeRepositoryImpl implements ChallengeRepository {
         }
 
         final now = DateTime.now();
-        return rows.map((c) {
-          final id = c['id'].toString();
-          return CollectiveChallenge(
-            id: id,
-            title: (c['title'] as String?) ?? '',
-            description: c['description'] as String?,
-            challengeType: c['challenge_type'] as String?,
-            targetValue: c['target_value'] as num?,
-            currentValue: c['current_value'] as num?,
-            rewardXp: (c['reward_xp'] as num?)?.toInt(),
-            rewardBadge: c['reward_badge'] as String?,
-            coverImageUrl: c['cover_image_url'] as String?,
-            endsAt: DateTime.tryParse(c['ends_at']?.toString() ?? ''),
-            status: (c['status'] as String?) ?? 'active',
-            createdBy: c['created_by']?.toString(),
-            isOfficial: c['is_official'] as bool? ?? false,
-            participantCount: counts[id] ?? 0,
-            joined: joined.contains(id),
-          );
-        }).where((c) => c.endsAt == null || c.endsAt!.isAfter(now)).toList();
+        return rows
+            .map((c) {
+              final id = c['id'].toString();
+              return CollectiveChallenge(
+                id: id,
+                title: (c['title'] as String?) ?? '',
+                description: c['description'] as String?,
+                challengeType: c['challenge_type'] as String?,
+                targetValue: c['target_value'] as num?,
+                currentValue: c['current_value'] as num?,
+                rewardXp: (c['reward_xp'] as num?)?.toInt(),
+                rewardBadge: c['reward_badge'] as String?,
+                coverImageUrl: c['cover_image_url'] as String?,
+                endsAt: DateTime.tryParse(c['ends_at']?.toString() ?? ''),
+                status: (c['status'] as String?) ?? 'active',
+                createdBy: c['created_by']?.toString(),
+                isOfficial: c['is_official'] as bool? ?? false,
+                participantCount: counts[id] ?? 0,
+                joined: joined.contains(id),
+              );
+            })
+            .where((c) => c.endsAt == null || c.endsAt!.isAfter(now))
+            .toList();
       });
 
   @override
@@ -358,8 +361,7 @@ class ChallengeRepositoryImpl implements ChallengeRepository {
 
         return ActiveDuelStatus(
           targetXp: target,
-          opponentName:
-              (oppData['display_name'] as String?) ?? 'Rival',
+          opponentName: (oppData['display_name'] as String?) ?? 'Rival',
           opponentAvatar: oppData['avatar_url'] as String?,
           opponentXp: oppXp,
           myXp: myXp,
@@ -406,16 +408,17 @@ class ChallengeRepositoryImpl implements ChallengeRepository {
           isOfficial: c['is_official'] as bool? ?? false,
           participantCount: count,
           createdAt: DateTime.tryParse(c['created_at']?.toString() ?? ''),
-          allowedSources:
-              (c['allowed_sources'] as List?)?.map((e) => e.toString()).toList(),
+          allowedSources: (c['allowed_sources'] as List?)
+              ?.map((e) => e.toString())
+              .toList(),
         );
       });
 
   @override
   Future<Result<ChallengeParticipation>> myParticipation(String challengeId) =>
       _guard(() async {
-        final row = await _datasource.myParticipation(
-            challengeId, _requireUser());
+        final row =
+            await _datasource.myParticipation(challengeId, _requireUser());
         return ChallengeParticipation(
           joined: row != null,
           contribution: (row?['contribution'] as num?)?.toInt() ?? 0,
@@ -423,8 +426,8 @@ class ChallengeRepositoryImpl implements ChallengeRepository {
       });
 
   @override
-  Future<Result<List<ChallengeContributor>>> topContributors(
-          String challengeId, {int limit = 10}) =>
+  Future<Result<List<ChallengeContributor>>> topContributors(String challengeId,
+          {int limit = 10}) =>
       _guard(() async {
         final participants =
             await _datasource.topContributors(challengeId, limit: limit);
@@ -495,8 +498,7 @@ class ChallengeRepositoryImpl implements ChallengeRepository {
               if (eventTime.difference(completedAt).abs().inSeconds <= 30) {
                 final wName = (w['name'] as String? ?? '').trim();
                 final durMin =
-                    (((w['total_duration_seconds'] as num?)?.toInt() ?? 0) /
-                            60)
+                    (((w['total_duration_seconds'] as num?)?.toInt() ?? 0) / 60)
                         .round();
                 if (wName.isNotEmpty && durMin > 0) {
                   activityLabel = '$wName · $durMin min';
@@ -560,20 +562,19 @@ class ChallengeRepositoryImpl implements ChallengeRepository {
       });
 
   @override
-  Future<Result<void>> addComment(String challengeId, String content) =>
-      _guard(() =>
-          _datasource.insertComment(challengeId, _requireUser(), content));
+  Future<Result<void>> addComment(String challengeId, String content) => _guard(
+      () => _datasource.insertComment(challengeId, _requireUser(), content));
 
   @override
   Future<Result<void>> reportChallenge(String challengeId, String reason) =>
-      _guard(() =>
-          _datasource.insertReport(challengeId, _requireUser(), reason));
+      _guard(
+          () => _datasource.insertReport(challengeId, _requireUser(), reason));
 
   @override
   Future<Result<void>> updateChallengeSettings(
     String challengeId, {
     required List<String>? allowedSources,
-    num? targetValue,
+    int? targetValue,
   }) =>
       _guard(() => _datasource.updateChallenge(challengeId, {
             'allowed_sources':
@@ -582,15 +583,14 @@ class ChallengeRepositoryImpl implements ChallengeRepository {
           }));
 
   @override
-  Future<Result<void>> createCollectiveChallenge(
-          NewCollectiveChallenge data) =>
+  Future<Result<void>> createCollectiveChallenge(NewCollectiveChallenge data) =>
       _guard(() async {
         final uid = _requireUser();
 
         String? coverUrl;
         if (data.coverImagePath != null) {
-          coverUrl = await _datasource.uploadChallengeCover(
-              uid, data.coverImagePath!);
+          coverUrl =
+              await _datasource.uploadChallengeCover(uid, data.coverImagePath!);
         }
 
         await _datasource.insertCollectiveChallenge({
@@ -598,12 +598,12 @@ class ChallengeRepositoryImpl implements ChallengeRepository {
           'description': data.description,
           'challenge_type': data.challengeType,
           'target_value': data.targetValue,
-          'reward_xp': data.rewardXp,
-          'reward_badge':
-              (data.rewardBadge?.isNotEmpty ?? false) ? data.rewardBadge : null,
+          // O fluxo de usuários nunca cria recompensas. A RPC também rejeita
+          // valores arbitrários para proteger o pipeline de XP legado.
+          'reward_xp': 0,
+          'reward_badge': null,
           'cover_image_url': coverUrl,
           'ends_at': data.endsAt.toIso8601String(),
-          'created_by': uid,
           'allowed_sources': (data.allowedSources?.isEmpty ?? true)
               ? null
               : data.allowedSources,
@@ -611,8 +611,7 @@ class ChallengeRepositoryImpl implements ChallengeRepository {
       });
 
   @override
-  Future<Result<List<PastChallengeEntry>>> pastChallenges(
-          {int limit = 20}) =>
+  Future<Result<List<PastChallengeEntry>>> pastChallenges({int limit = 20}) =>
       _guard(() async {
         final uid = _requireUser();
         final rows = await _datasource.pastChallenges(uid, limit: limit);

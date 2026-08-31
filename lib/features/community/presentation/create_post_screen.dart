@@ -184,12 +184,58 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     await _loadWearableActivities(provider);
   }
 
-  Future<void> _pickPhoto() async {
-    final picked = await ImagePicker()
-        .pickImage(source: ImageSource.gallery, imageQuality: 80);
+  Future<void> _pickPhoto(ImageSource source) async {
+    final picked =
+        await ImagePicker().pickImage(source: source, imageQuality: 80);
     if (picked != null && mounted) {
-      setState(() => _photoFile = File(picked.path));
+      setState(() {
+        _photoFile = File(picked.path);
+        _photoError = null;
+      });
     }
+  }
+
+  Future<void> _showPhotoSourceSheet() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: BldrColors.sheetBg,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _photoFile == null ? 'Adicionar foto' : 'Trocar foto',
+                style: BldrText.sectionTitle,
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(
+                  TablerIcons.photo,
+                  color: BldrColors.goldBright,
+                ),
+                title: Text('Escolher da galeria', style: BldrText.body),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(
+                  TablerIcons.camera,
+                  color: BldrColors.goldBright,
+                ),
+                title: Text('Tirar foto', style: BldrText.body),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (!mounted || source == null) return;
+    await _pickPhoto(source);
   }
 
   Future<String?> _uploadPhoto() async {
@@ -414,33 +460,32 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   Widget _buildComposer() {
     final initial =
         _userFullName.isNotEmpty ? _userFullName[0].toUpperCase() : '?';
-    return Row(
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [BldrColors.goldSolid, BldrColors.goldBright],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+        Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [BldrColors.goldSolid, BldrColors.goldBright],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  initial,
+                  style: BldrText.cardTitle.copyWith(color: Colors.black),
+                ),
+              ),
             ),
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Text(
-              initial,
-              style: BldrText.cardTitle.copyWith(color: Colors.black),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
                 _userUsername != null
                     ? '@$_userUsername'
                     : _userFullName.isNotEmpty
@@ -453,24 +498,29 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   fontSize: 13,
                 ),
               ),
-              const SizedBox(height: 6),
-              TextField(
-                controller: _captionController,
-                maxLines: null,
-                style: BldrText.body,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  hintText: 'O que você quer compartilhar?',
-                  hintStyle:
-                      BldrText.body.copyWith(color: BldrColors.textTertiary),
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          key: const ValueKey('create_post_caption'),
+          controller: _captionController,
+          autofocus: true,
+          minLines: 2,
+          maxLines: null,
+          textInputAction: TextInputAction.newline,
+          style: BldrText.body,
+          decoration: InputDecoration(
+            hintText: 'O que você quer compartilhar?',
+            hintStyle: BldrText.body.copyWith(
+              color: BldrColors.textTertiary,
+              fontSize: 17,
+            ),
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            isDense: true,
+            contentPadding: EdgeInsets.zero,
           ),
         ),
       ],
@@ -481,13 +531,6 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8),
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-      decoration: const BoxDecoration(
-        color: BldrColors.surface,
-        border: Border(
-          top: BorderSide(color: BldrColors.border),
-          bottom: BorderSide(color: BldrColors.border),
-        ),
-      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
@@ -505,8 +548,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     final active = _activeIcon == index;
     return GestureDetector(
       onTap: () {
-        if (index == 3) _pickPhoto();
         setState(() => _activeIcon = index);
+        if (index == 3) _showPhotoSourceSheet();
         if (index == 2) _showWearableProviderSheet();
       },
       child: Container(
@@ -763,6 +806,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 12),
+          _buildPostPhotoAttachment(),
         ],
       ),
     );
@@ -811,35 +856,38 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   // ── Atividade ──────────────────────────────────────────────────────────────
 
-  static const _activities = [
-    ('🏋️', 'Musculação'),
-    ('🏃', 'Corrida'),
-    ('🚴', 'Ciclismo'),
-    ('🤸', 'Calistenia'),
-    ('⚡', 'HIIT'),
-    ('🥊', 'Boxe'),
-    ('🤼', 'Jiu-Jitsu'),
-    ('🏊', 'Natação'),
-    ('🧘', 'Yoga'),
-    ('🏀', 'Basquete'),
-    ('🎾', 'Tênis'),
-    ('🏄', 'Surf'),
-    ('⚽', 'Futebol'),
-    ('🚶', 'Caminhada'),
-    ('🔥', 'Crossfit'),
-    ('🧩', 'Pilates'),
-    ('💪', 'Funcional'),
-    ('🏐', 'Vôlei'),
-    ('🏓', 'Padel'),
-    ('🏔️', 'Trilha'),
-    ('🧗', 'Escalada'),
+  static const _activities = <(IconData, String)>[
+    (TablerIcons.barbell, 'Musculação'),
+    (TablerIcons.run, 'Corrida'),
+    (TablerIcons.bike, 'Ciclismo'),
+    (TablerIcons.gymnastics, 'Calistenia'),
+    (TablerIcons.bolt, 'HIIT'),
+    (TablerIcons.karate, 'Boxe'),
+    (TablerIcons.karate, 'Jiu-Jitsu'),
+    (TablerIcons.swimming, 'Natação'),
+    (TablerIcons.yoga, 'Yoga'),
+    (TablerIcons.ball_basketball, 'Basquete'),
+    (TablerIcons.ball_tennis, 'Tênis'),
+    (TablerIcons.waves_electricity, 'Surf'),
+    (TablerIcons.ball_football, 'Futebol'),
+    (TablerIcons.walk, 'Caminhada'),
+    (TablerIcons.flame, 'Crossfit'),
+    (TablerIcons.stretching, 'Pilates'),
+    (TablerIcons.gymnastics, 'Funcional'),
+    (TablerIcons.ball_volleyball, 'Vôlei'),
+    (TablerIcons.ball_tennis, 'Padel'),
+    (TablerIcons.mountain, 'Trilha'),
+    (TablerIcons.mountain, 'Escalada'),
+    (TablerIcons.run, 'Hyrox'),
+    (TablerIcons.karate, 'Muay Thai'),
+    (TablerIcons.karate, 'Kickboxing'),
   ];
 
   Widget _buildActivitySelector() {
     if (_selectedActivity != null) {
       final act = _activities.firstWhere(
         (a) => a.$2 == _selectedActivity,
-        orElse: () => ('🏋️', _selectedActivity!),
+        orElse: () => (TablerIcons.barbell, _selectedActivity!),
       );
       final isCardio = ['Corrida', 'Ciclismo', 'Natação', 'Caminhada', 'Trilha']
           .contains(_selectedActivity);
@@ -852,7 +900,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               children: [
                 Row(
                   children: [
-                    Text(act.$1, style: const TextStyle(fontSize: 24)),
+                    Icon(
+                      act.$1,
+                      size: 24,
+                      color: BldrColors.goldBright,
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(act.$2, style: BldrText.cardTitleLg),
@@ -899,7 +951,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           ),
           itemCount: _activities.length,
           itemBuilder: (_, i) {
-            final (emoji, name) = _activities[i];
+            final (icon, name) = _activities[i];
             return GestureDetector(
               onTap: () => setState(() => _selectedActivity = name),
               child: Container(
@@ -911,7 +963,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(emoji, style: const TextStyle(fontSize: 22)),
+                    Icon(
+                      icon,
+                      size: 22,
+                      color: BldrColors.goldBright,
+                    ),
                     const SizedBox(height: 4),
                     Text(name,
                         style: BldrText.metaSm, textAlign: TextAlign.center),
@@ -1077,7 +1133,41 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   // ── Foto ───────────────────────────────────────────────────────────────────
 
   Widget _buildPhotoPreview() {
-    if (_photoFile == null) return const SizedBox.shrink();
+    return _buildPostPhotoAttachment();
+  }
+
+  Widget _buildPostPhotoAttachment() {
+    if (_photoFile == null) {
+      return InkWell(
+        key: const ValueKey('create_post_add_photo'),
+        onTap: _showPhotoSourceSheet,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            border: Border.all(color: BldrColors.border),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                TablerIcons.photo_plus,
+                size: 19,
+                color: BldrColors.goldBright,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Adicionar foto ao post',
+                style: BldrText.body.copyWith(color: BldrColors.goldBright),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     return Stack(
       children: [
         ClipRRect(
@@ -1087,20 +1177,55 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         ),
         Positioned(
           top: 8,
+          right: 44,
+          child: _photoAction(
+            key: const ValueKey('create_post_replace_photo'),
+            icon: TablerIcons.replace,
+            onTap: _showPhotoSourceSheet,
+          ),
+        ),
+        Positioned(
+          top: 8,
           right: 8,
-          child: GestureDetector(
-            onTap: () => setState(() => _photoFile = null),
-            child: Container(
-              padding: const EdgeInsets.all(6),
-              decoration: const BoxDecoration(
-                color: Colors.black54,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(TablerIcons.x, size: 14, color: Colors.white),
-            ),
+          child: _photoAction(
+            key: const ValueKey('create_post_remove_photo'),
+            icon: TablerIcons.x,
+            onTap: () => setState(() {
+              _photoFile = null;
+              _photoError = null;
+            }),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _photoAction({
+    required Key key,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return Semantics(
+      button: true,
+      child: InkWell(
+        key: key,
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Container(
+          width: 32,
+          height: 32,
+          alignment: Alignment.center,
+          decoration: const BoxDecoration(
+            color: Colors.black54,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            size: 16,
+            color: Colors.white,
+          ),
+        ),
+      ),
     );
   }
 

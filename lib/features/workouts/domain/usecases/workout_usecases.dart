@@ -1,4 +1,8 @@
+import 'package:timezone/data/latest.dart' as tz_data;
+import 'package:timezone/timezone.dart' as tz;
+
 import 'package:bldr_fitness/core/errors/result.dart';
+import 'package:bldr_fitness/features/profile/domain/repositories/user_timezone_repository.dart';
 import 'package:bldr_fitness/features/club/domain/repositories/club_workout_repository.dart';
 import 'package:bldr_fitness/features/onboarding/domain/entities/onboarding_plan.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/activity_type.dart';
@@ -291,7 +295,16 @@ class DeleteCompletedClubWorkout {
 class GetCurrentStreak {
   final WorkoutSessionRepository _personal;
   final ClubWorkoutRepository _club;
-  const GetCurrentStreak(this._personal, this._club);
+  final UserTimezoneRepository? _timezoneRepository;
+  final String? Function()? _userId;
+
+  const GetCurrentStreak(
+    this._personal,
+    this._club, {
+    UserTimezoneRepository? timezoneRepository,
+    String? Function()? userId,
+  })  : _timezoneRepository = timezoneRepository,
+        _userId = userId;
 
   Future<Result<int>> call() async {
     final personalResult =
@@ -304,23 +317,45 @@ class GetCurrentStreak {
     final clubFailure = clubResult.failureOrNull;
     if (clubFailure != null) return Result.failure(clubFailure);
 
+    final timezone = await _resolveTimezone();
     final workedDays = <DateTime>{};
     for (final w in [
       ...personalResult.valueOrNull!,
       ...clubResult.valueOrNull!
     ]) {
-      final dt = w.completedAt?.toLocal();
+      final dt = _localInTimezone(w.completedAt, timezone);
       if (dt != null) workedDays.add(DateTime(dt.year, dt.month, dt.day));
     }
 
     int streak = 0;
-    var day = DateTime.now();
-    day = DateTime(day.year, day.month, day.day);
+    final now = _localInTimezone(DateTime.now().toUtc(), timezone)!;
+    var day = DateTime(now.year, now.month, now.day);
     while (workedDays.contains(day)) {
       streak++;
       day = day.subtract(const Duration(days: 1));
     }
     return Result.success(streak);
+  }
+
+  Future<String> _resolveTimezone() async {
+    final userId = _userId?.call();
+    if (_timezoneRepository == null || userId == null) return 'UTC';
+    final result = await _timezoneRepository.getTimezone(userId);
+    final value = result.valueOrNull?.trim();
+    return value?.contains('/') == true ? value! : 'UTC';
+  }
+
+  DateTime? _localInTimezone(DateTime? timestamp, String timezone) {
+    if (timestamp == null) return null;
+    tz_data.initializeTimeZones();
+    try {
+      final local =
+          tz.TZDateTime.from(timestamp.toUtc(), tz.getLocation(timezone));
+      return DateTime(local.year, local.month, local.day);
+    } catch (_) {
+      final utc = timestamp.toUtc();
+      return DateTime.utc(utc.year, utc.month, utc.day);
+    }
   }
 }
 

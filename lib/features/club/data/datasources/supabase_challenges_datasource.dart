@@ -60,13 +60,12 @@ class SupabaseChallengesDatasource {
       });
 
   /// F7: remove reação (toggle off).
-  Future<void> removeReaction(String userId, String eventId) =>
-      _client
-          .schema('bldr_club')
-          .from('xp_reactions')
-          .delete()
-          .eq('user_id', userId)
-          .eq('event_id', eventId);
+  Future<void> removeReaction(String userId, String eventId) => _client
+      .schema('bldr_club')
+      .from('xp_reactions')
+      .delete()
+      .eq('user_id', userId)
+      .eq('event_id', eventId);
 
   Future<List<Map<String, dynamic>>> ranking({int limit = 100}) async {
     final rows = await _client
@@ -164,10 +163,8 @@ class SupabaseChallengesDatasource {
     return List<Map<String, dynamic>>.from(rows)
         .where((r) {
           final status = r['status'] as String? ?? 'active';
-          final endsAt =
-              DateTime.tryParse(r['ends_at']?.toString() ?? '');
-          return status != 'active' ||
-              (endsAt != null && endsAt.isBefore(now));
+          final endsAt = DateTime.tryParse(r['ends_at']?.toString() ?? '');
+          return status != 'active' || (endsAt != null && endsAt.isBefore(now));
         })
         .map((r) => {
               ...r,
@@ -201,16 +198,14 @@ class SupabaseChallengesDatasource {
     return (rows as List).map((j) => j['challenge_id'].toString()).toSet();
   }
 
+  /// A contribuição inicial é definida exclusivamente no RPC server-side.
   Future<void> joinChallenge(String userId, String challengeId) =>
-      _client.schema('bldr_club').from('collective_challenge_participants')
-          .insert({'challenge_id': challengeId, 'user_id': userId});
+      _client.schema('bldr_club').rpc('join_collective_challenge',
+          params: {'p_challenge_id': challengeId});
 
-  Future<void> leaveChallenge(String userId, String challengeId) => _client
-      .schema('bldr_club')
-      .from('collective_challenge_participants')
-      .delete()
-      .eq('challenge_id', challengeId)
-      .eq('user_id', userId);
+  Future<void> leaveChallenge(String userId, String challengeId) =>
+      _client.schema('bldr_club').rpc('leave_collective_challenge',
+          params: {'p_challenge_id': challengeId});
 
   /// Sobe a capa para o storage e retorna a URL pública (null em erro,
   /// como no comportamento original).
@@ -230,10 +225,19 @@ class SupabaseChallengesDatasource {
     }
   }
 
-  Future<void> insertCollectiveChallenge(Map<String, dynamic> data) => _client
-      .schema('bldr_club')
-      .from('collective_challenges')
-      .insert(data);
+  /// Validação de tipo, autor e estado ativo acontece no banco.
+  Future<void> insertCollectiveChallenge(Map<String, dynamic> data) =>
+      _client.schema('bldr_club').rpc('create_collective_challenge', params: {
+        'p_title': data['title'],
+        'p_description': data['description'],
+        'p_challenge_type': data['challenge_type'],
+        'p_target_value': data['target_value'],
+        'p_reward_xp': data['reward_xp'],
+        'p_reward_badge': data['reward_badge'],
+        'p_cover_image_url': data['cover_image_url'],
+        'p_ends_at': data['ends_at'],
+        'p_allowed_sources': data['allowed_sources'],
+      });
 
   Future<Map<String, dynamic>?> pendingDuelInvite(String userId) async {
     final row = await _client
@@ -494,16 +498,18 @@ class SupabaseChallengesDatasource {
         'content': content,
       });
 
+  /// Alterações do criador passam pela RPC; o cliente não recebe UPDATE direto
+  /// na tabela de desafios coletivos.
   Future<void> updateChallenge(
           String challengeId, Map<String, dynamic> updates) =>
-      _client
-          .schema('bldr_club')
-          .from('collective_challenges')
-          .update(updates)
-          .eq('id', challengeId);
+      _client.schema('bldr_club').rpc('update_collective_challenge_settings',
+          params: {
+            'p_challenge_id': challengeId,
+            'p_allowed_sources': updates['allowed_sources'],
+            'p_target_value': updates['target_value'],
+          });
 
-  Future<void> insertReport(
-          String challengeId, String userId, String reason) =>
+  Future<void> insertReport(String challengeId, String userId, String reason) =>
       _client.schema('bldr_club').from('challenge_reports').insert({
         'challenge_id': challengeId,
         'reported_by': userId,

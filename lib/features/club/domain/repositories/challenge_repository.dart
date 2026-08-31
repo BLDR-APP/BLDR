@@ -63,8 +63,8 @@ abstract class ChallengeRepository {
 
   Future<Result<ChallengeParticipation>> myParticipation(String challengeId);
 
-  Future<Result<List<ChallengeContributor>>> topContributors(
-      String challengeId, {int limit = 10});
+  Future<Result<List<ChallengeContributor>>> topContributors(String challengeId,
+      {int limit = 10});
 
   /// Feed recente dos participantes, com treino correlacionado (±30 s).
   Future<Result<List<ChallengeFeedItem>>> challengeFeed(String challengeId,
@@ -86,6 +86,6 @@ abstract class ChallengeRepository {
   Future<Result<void>> updateChallengeSettings(
     String challengeId, {
     required List<String>? allowedSources,
-    num? targetValue,
+    int? targetValue,
   });
 }

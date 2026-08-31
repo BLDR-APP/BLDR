@@ -10,6 +10,7 @@ import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/arena_details_screen.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/competition_hub_screen.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/create_arena_screen.dart';
+import 'package:bldr_fitness/features/club/presentation/bldr_club/create_collective_challenge_screen.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/join_squad_sheet.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/notifications_screen.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_post.dart';
@@ -496,6 +497,16 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
                 ),
               ),
             );
+          }),
+          const SizedBox(width: 8),
+          _iconBtn(TablerIcons.target_arrow, onTap: () async {
+            final created = await Navigator.push<bool>(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const CreateCollectiveChallengeScreen(),
+              ),
+            );
+            if (created == true) _loadFeed(refresh: true);
           }),
           const SizedBox(width: 8),
           _iconBtn(TablerIcons.trophy, onTap: () {

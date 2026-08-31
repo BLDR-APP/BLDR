@@ -25,6 +25,7 @@ import 'package:bldr_fitness/features/integrations/data/live_activity_service.da
 import 'package:bldr_fitness/features/integrations/data/watch_service.dart';
 import 'package:bldr_fitness/features/integrations/data/widget_data_service.dart';
 import 'package:bldr_fitness/features/subscription/data/revenue_cat_lifecycle.dart';
+import 'package:bldr_fitness/features/profile/data/user_timezone_sync_lifecycle.dart';
 import 'package:bldr_fitness/features/subscription/data/revenue_cat_config.dart';
 import 'package:bldr_fitness/firebase_options.dart';
 import 'package:bldr_fitness/core/providers/locale_provider.dart';
@@ -104,6 +105,7 @@ class AppLoader extends StatefulWidget {
 class _AppLoaderState extends State<AppLoader> {
   bool _ready = false;
   bool _initializationFailed = false;
+  bool _startupVideoCompleted = false;
   AchievementProvider? _achievementProvider;
   LocaleProvider? _localeProvider;
 
@@ -131,6 +133,10 @@ class _AppLoaderState extends State<AppLoader> {
       await SupabaseService.initialize();
       await FlutterMuscleAnatomy.initialize();
       setupInjection(config: appConfig);
+
+      // Não bloqueia o bootstrap: usuários legados ficam em UTC até a primeira
+      // sincronização bem-sucedida do timezone IANA do dispositivo.
+      unawaited(getIt<UserTimezoneSyncLifecycle>().start());
 
       // Fundação RevenueCat em paralelo. A flag permanece OFF por padrão e,
       // portanto, não substitui nem interfere no billing Apple/Stripe atual.
@@ -174,13 +180,17 @@ class _AppLoaderState extends State<AppLoader> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_ready) {
-      // Keep a branded Flutter surface on screen while services initialize.
-      // This replaces the old intermediate loading circle without delaying
-      // runApp or native-launch removal.
-      return const MaterialApp(
+    if (!_startupVideoCompleted && !_initializationFailed) {
+      // Mantém a mesma superfície visual até vídeo e bootstrap terminarem.
+      // O vídeo nunca é descartado somente porque o bootstrap foi mais rápido.
+      return MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: StartupVideoSplash(),
+        home: StartupVideoSplash(
+          bootstrapReady: _ready,
+          onCompleted: () {
+            if (mounted) setState(() => _startupVideoCompleted = true);
+          },
+        ),
       );
     }
     if (_initializationFailed) {

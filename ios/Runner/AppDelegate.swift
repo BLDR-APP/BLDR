@@ -103,6 +103,17 @@ import FirebaseMessaging
           result(FlutterMethodNotImplemented)
         }
       }
+
+      let timezoneChannel = FlutterMethodChannel(
+        name: "bldr/device_timezone",
+        binaryMessenger: controller.binaryMessenger)
+      timezoneChannel.setMethodCallHandler { call, result in
+        guard call.method == "getIanaTimezone" else {
+          result(FlutterMethodNotImplemented)
+          return
+        }
+        result(TimeZone.current.identifier)
+      }
     }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
