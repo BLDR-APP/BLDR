@@ -19,7 +19,7 @@ class LanguageSelectorSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final localeProvider = context.watch<LocaleProvider>();
     final current = localeProvider.locale.languageCode;
 
@@ -56,7 +56,9 @@ class LanguageSelectorSheet extends StatelessWidget {
                   name: 'Português',
                   region: l10n.language_pt_region,
                   selected: current == 'pt',
-                  onTap: () => context.read<LocaleProvider>().setLocale(const Locale('pt')),
+                  onTap: () => context
+                      .read<LocaleProvider>()
+                      .setLocale(const Locale('pt')),
                 ),
                 const SizedBox(height: 10),
                 _LanguageCard(
@@ -64,20 +66,23 @@ class LanguageSelectorSheet extends StatelessWidget {
                   name: 'English',
                   region: l10n.language_en_region,
                   selected: current == 'en',
-                  onTap: () => context.read<LocaleProvider>().setLocale(const Locale('en')),
+                  onTap: () => context
+                      .read<LocaleProvider>()
+                      .setLocale(const Locale('en')),
                 ),
                 const SizedBox(height: 10),
                 _LanguageCard(
                   flag: '🇮🇹',
                   name: 'Italiano',
                   region: l10n.language_it_region,
-                  selected: current == 'it',
-                  onTap: () => context.read<LocaleProvider>().setLocale(const Locale('it')),
+                  selected: false,
+                  unavailableLabel: l10n.language_soon_badge,
                 ),
                 const SizedBox(height: 20),
                 Text(
                   l10n.language_havok_note,
-                  style: BldrText.meta.copyWith(color: BldrColors.textSecondary),
+                  style:
+                      BldrText.meta.copyWith(color: BldrColors.textSecondary),
                 ),
               ],
             ),
@@ -93,14 +98,16 @@ class _LanguageCard extends StatelessWidget {
   final String name;
   final String region;
   final bool selected;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final String? unavailableLabel;
 
   const _LanguageCard({
     required this.flag,
     required this.name,
     required this.region,
     required this.selected,
-    required this.onTap,
+    this.onTap,
+    this.unavailableLabel,
   });
 
   @override
@@ -111,9 +118,11 @@ class _LanguageCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: selected
-              ? BldrColors.goldBright.withOpacity(0.08)
-              : BldrColors.surface,
+          color: unavailableLabel != null
+              ? BldrColors.surface.withOpacity(0.6)
+              : selected
+                  ? BldrColors.goldBright.withOpacity(0.08)
+                  : BldrColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: selected ? BldrColors.goldBright : BldrColors.border,
@@ -135,7 +144,25 @@ class _LanguageCard extends StatelessWidget {
                 ],
               ),
             ),
-            if (selected)
+            if (unavailableLabel != null)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(
+                  color: BldrColors.goldBright.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: BldrColors.goldBright.withOpacity(0.45),
+                  ),
+                ),
+                child: Text(
+                  unavailableLabel!,
+                  style: BldrText.meta.copyWith(
+                    color: BldrColors.goldBright,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              )
+            else if (selected)
               const Icon(Icons.check_circle_rounded,
                   color: BldrColors.goldBright, size: 20)
             else

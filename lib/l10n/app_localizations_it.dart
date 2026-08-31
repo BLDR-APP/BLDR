@@ -33,7 +33,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get common_or => 'or';
 
   @override
-  String get common_retry => 'Try Again';
+  String get common_retry => 'Riprova';
 
   @override
   String get common_start_btn => 'Start';
@@ -2749,6 +2749,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get language_it_region => 'Italy';
 
   @override
+  String get language_soon_badge => 'Presto';
+
+  @override
   String get edit_profile_dialog_title => 'Edit Profile';
 
   @override
@@ -3774,4 +3777,146 @@ class AppLocalizationsIt extends AppLocalizations {
   String feedback_chars_remaining(int count) {
     return '$count / 500';
   }
+
+  @override
+  String get paywall_club_logo_semantics => 'Logo BLDR CLUB';
+
+  @override
+  String get paywall_elevate_performance => 'ELEVA LE TUE PRESTAZIONI';
+
+  @override
+  String get paywall_performance_subtitle =>
+      'Allenamento, nutrizione e intelligenza connessi per aiutarti a migliorare davvero.';
+
+  @override
+  String get paywall_choose_plan => 'Scegli il tuo piano';
+
+  @override
+  String get paywall_weekly_description => 'Accesso completo per una settimana';
+
+  @override
+  String get paywall_monthly_description => 'Accesso completo, mese per mese';
+
+  @override
+  String get paywall_annual_description =>
+      'Il modo migliore per migliorare tutto l\'anno';
+
+  @override
+  String get paywall_per_month => 'al mese';
+
+  @override
+  String get paywall_per_year => 'all\'anno';
+
+  @override
+  String get paywall_join_cta => 'Abbonati a BLDR CLUB';
+
+  @override
+  String paywall_selected_price_caption(String price) {
+    return '$price · Annulla quando vuoi';
+  }
+
+  @override
+  String get paywall_load_error_title =>
+      'Non è stato possibile caricare i piani.';
+
+  @override
+  String get paywall_load_error_body => 'Riprova tra qualche istante.';
+
+  @override
+  String get paywall_feature => 'FUNZIONE';
+
+  @override
+  String get paywall_free => 'GRATIS';
+
+  @override
+  String get paywall_club => 'CLUB';
+
+  @override
+  String get paywall_comparison_semantics =>
+      'Confronto tra il piano gratuito e BLDR CLUB';
+
+  @override
+  String get paywall_benefit_community => 'Community BLDR';
+
+  @override
+  String get paywall_benefit_havok => 'HAVOK AI';
+
+  @override
+  String get paywall_benefit_photo_workout => 'Allenamento da foto';
+
+  @override
+  String get paywall_benefit_analytics => 'Analisi';
+
+  @override
+  String get paywall_benefit_library => 'Libreria';
+
+  @override
+  String get paywall_benefit_nutrition => 'Nutrizione';
+
+  @override
+  String get paywall_limited => 'Limitato';
+
+  @override
+  String get paywall_complete => 'Completo';
+
+  @override
+  String get paywall_unavailable => '—';
+
+  @override
+  String get paywall_available => 'Disponibile';
+
+  @override
+  String get paywall_basic => 'Base';
+
+  @override
+  String get paywall_advanced => 'Avanzato';
+
+  @override
+  String get paywall_terms => 'Termini di utilizzo';
+
+  @override
+  String get paywall_privacy => 'Informativa sulla privacy';
+
+  @override
+  String get bootstrap_init_failed_title =>
+      'Non è stato possibile avviare BLDR.';
+
+  @override
+  String get bootstrap_init_failed_body =>
+      'Controlla la connessione e riprova.';
+
+  @override
+  String get paywall_sign_in_required => 'Accedi per continuare.';
+
+  @override
+  String get paywall_options_unavailable =>
+      'Le opzioni di abbonamento non sono ancora disponibili.';
+
+  @override
+  String get paywall_options_retry_later =>
+      'Le opzioni di abbonamento non sono ancora disponibili. Riprova più tardi.';
+
+  @override
+  String get paywall_option_unavailable =>
+      'Questa opzione di abbonamento non è disponibile.';
+
+  @override
+  String get paywall_access_confirmation_failed =>
+      'Non è stato possibile confermare l\'accesso a BLDR CLUB.';
+
+  @override
+  String get paywall_payment_pending =>
+      'Il pagamento è in attesa della conferma dello store.';
+
+  @override
+  String get paywall_redeem_unavailable =>
+      'Il riscatto del codice sarà disponibile quando le opzioni di abbonamento saranno caricate.';
+
+  @override
+  String get paywall_restore_unavailable =>
+      'Il ripristino sarà disponibile quando le opzioni di abbonamento saranno caricate.';
+
+  @override
+  String get paywall_restore_after_update =>
+      'Il ripristino sarà disponibile dopo l\'aggiornamento degli abbonamenti.';
 }

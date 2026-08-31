@@ -2763,6 +2763,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get language_it_region => 'Italia';
 
   @override
+  String get language_soon_badge => 'Em breve';
+
+  @override
   String get edit_profile_dialog_title => 'Editar Perfil';
 
   @override
@@ -3789,4 +3792,145 @@ class AppLocalizationsPt extends AppLocalizations {
   String feedback_chars_remaining(int count) {
     return '$count / 500';
   }
+
+  @override
+  String get paywall_club_logo_semantics => 'Logo do BLDR CLUB';
+
+  @override
+  String get paywall_elevate_performance => 'ELEVE SUA PERFORMANCE';
+
+  @override
+  String get paywall_performance_subtitle =>
+      'Treino, nutrição e inteligência conectados para você evoluir de verdade.';
+
+  @override
+  String get paywall_choose_plan => 'Escolha seu plano';
+
+  @override
+  String get paywall_weekly_description => 'Acesso completo por uma semana';
+
+  @override
+  String get paywall_monthly_description => 'Acesso completo mês a mês';
+
+  @override
+  String get paywall_annual_description =>
+      'A melhor forma de evoluir o ano todo';
+
+  @override
+  String get paywall_per_month => 'por mês';
+
+  @override
+  String get paywall_per_year => 'por ano';
+
+  @override
+  String get paywall_join_cta => 'Assinar BLDR CLUB';
+
+  @override
+  String paywall_selected_price_caption(String price) {
+    return '$price · Cancele quando quiser';
+  }
+
+  @override
+  String get paywall_load_error_title =>
+      'Não foi possível carregar os planos agora.';
+
+  @override
+  String get paywall_load_error_body => 'Tente novamente em instantes.';
+
+  @override
+  String get paywall_feature => 'RECURSO';
+
+  @override
+  String get paywall_free => 'GRÁTIS';
+
+  @override
+  String get paywall_club => 'CLUB';
+
+  @override
+  String get paywall_comparison_semantics =>
+      'Comparação entre o plano grátis e o BLDR CLUB';
+
+  @override
+  String get paywall_benefit_community => 'Comunidade BLDR';
+
+  @override
+  String get paywall_benefit_havok => 'HAVOK AI';
+
+  @override
+  String get paywall_benefit_photo_workout => 'Treino por foto';
+
+  @override
+  String get paywall_benefit_analytics => 'Analytics';
+
+  @override
+  String get paywall_benefit_library => 'Biblioteca';
+
+  @override
+  String get paywall_benefit_nutrition => 'Nutrição';
+
+  @override
+  String get paywall_limited => 'Limitada';
+
+  @override
+  String get paywall_complete => 'Completa';
+
+  @override
+  String get paywall_unavailable => '—';
+
+  @override
+  String get paywall_available => 'Disponível';
+
+  @override
+  String get paywall_basic => 'Básico';
+
+  @override
+  String get paywall_advanced => 'Avançado';
+
+  @override
+  String get paywall_terms => 'Termos de uso';
+
+  @override
+  String get paywall_privacy => 'Política de privacidade';
+
+  @override
+  String get bootstrap_init_failed_title => 'Não foi possível iniciar o BLDR.';
+
+  @override
+  String get bootstrap_init_failed_body =>
+      'Verifique sua conexão e tente novamente.';
+
+  @override
+  String get paywall_sign_in_required => 'Entre na sua conta para continuar.';
+
+  @override
+  String get paywall_options_unavailable =>
+      'As opções de assinatura ainda não estão disponíveis.';
+
+  @override
+  String get paywall_options_retry_later =>
+      'As opções de assinatura ainda não estão disponíveis. Tente novamente mais tarde.';
+
+  @override
+  String get paywall_option_unavailable =>
+      'Esta opção de assinatura não está disponível.';
+
+  @override
+  String get paywall_access_confirmation_failed =>
+      'Não foi possível confirmar o acesso ao BLDR CLUB.';
+
+  @override
+  String get paywall_payment_pending =>
+      'Seu pagamento está pendente de confirmação pela loja.';
+
+  @override
+  String get paywall_redeem_unavailable =>
+      'O resgate de código estará disponível quando as opções de assinatura carregarem.';
+
+  @override
+  String get paywall_restore_unavailable =>
+      'A restauração estará disponível quando as opções de assinatura carregarem.';
+
+  @override
+  String get paywall_restore_after_update =>
+      'A restauração estará disponível após a atualização de assinaturas.';
 }

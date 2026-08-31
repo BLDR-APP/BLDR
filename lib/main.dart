@@ -25,6 +25,7 @@ import 'package:bldr_fitness/features/integrations/data/live_activity_service.da
 import 'package:bldr_fitness/features/integrations/data/watch_service.dart';
 import 'package:bldr_fitness/features/integrations/data/widget_data_service.dart';
 import 'package:bldr_fitness/features/subscription/data/revenue_cat_lifecycle.dart';
+import 'package:bldr_fitness/features/subscription/data/revenue_cat_config.dart';
 import 'package:bldr_fitness/firebase_options.dart';
 import 'package:bldr_fitness/core/providers/locale_provider.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -50,6 +51,32 @@ const Map<String, dynamic> appConfig = {
       String.fromEnvironment('REVENUECAT_ANDROID_PUBLIC_SDK_KEY'),
 };
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
+
+bool _isValidStripePublishableKey(String key) => key.startsWith('pk_');
+
+Future<void> _initializeLegacyStripeIfNeeded() async {
+  // RevenueCat é o checkout canônico após o cutover. O cliente Stripe só é
+  // necessário quando uma build legada desliga explicitamente o RevenueCat.
+  if (RevenueCatConfig.fromMap(appConfig).billingEnabled) return;
+
+  final configuredKey = PaymentService.isTestMode
+      ? (appConfig['STRIPE_TEST_PUBLISHABLE_KEY'] as String? ?? '')
+      : (appConfig['STRIPE_PUBLISHABLE_KEY'] as String? ?? '');
+  final stripeKey = configuredKey.trim();
+
+  // Nunca entregue uma chave vazia/privada ao SDK nativo: isso causa fatal
+  // error no iOS antes de qualquer tela Flutter poder recuperar o app.
+  if (!_isValidStripePublishableKey(stripeKey)) {
+    if (kDebugMode) {
+      debugPrint(
+          'Stripe legado indisponível: publishable key ausente ou inválida.');
+    }
+    return;
+  }
+
+  Stripe.publishableKey = stripeKey;
+  await Stripe.instance.applySettings();
+}
 
 void main() {
   // O Flutter precisa renderizar uma frame antes de qualquer inicialização
@@ -108,10 +135,7 @@ class _AppLoaderState extends State<AppLoader> {
       // portanto, não substitui nem interfere no billing Apple/Stripe atual.
       unawaited(getIt<RevenueCatLifecycle>().start());
 
-      Stripe.publishableKey = PaymentService.isTestMode
-          ? (appConfig['STRIPE_TEST_PUBLISHABLE_KEY'] ?? '')
-          : (appConfig['STRIPE_PUBLISHABLE_KEY'] ?? '');
-      await Stripe.instance.applySettings();
+      await _initializeLegacyStripeIfNeeded();
 
       await getIt<NotificationService>().initialize();
       await getIt<PushNotificationService>()
@@ -195,42 +219,53 @@ class _BootstrapFailureScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        backgroundColor: const Color(0xFF050505),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'Não foi possível iniciar o BLDR.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                  ),
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('pt'), Locale('en'), Locale('it')],
+      home: Builder(
+        builder: (context) {
+          final l10n = AppLocalizations.of(context);
+          return Scaffold(
+            backgroundColor: const Color(0xFF050505),
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.bootstrap_init_failed_title,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.bootstrap_init_failed_body,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Color(0xFFB8B8B8)),
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton(
+                      onPressed: onRetry,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFFE8C12E),
+                        foregroundColor: Colors.black,
+                      ),
+                      child: Text(l10n.common_retry),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Verifique sua conexão e tente novamente.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Color(0xFFB8B8B8)),
-                ),
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: onRetry,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFFE8C12E),
-                    foregroundColor: Colors.black,
-                  ),
-                  child: const Text('Tentar novamente'),
-                ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

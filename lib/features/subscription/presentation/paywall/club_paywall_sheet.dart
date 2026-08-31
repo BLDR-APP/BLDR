@@ -5,6 +5,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
+import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import 'package:provider/provider.dart';
@@ -100,6 +101,8 @@ class _ClubPaywallSheetState extends State<ClubPaywallSheet> {
   StreamSubscription<bool>? _purchaseSub;
   StreamSubscription<String>? _purchaseErrorSub;
 
+  AppLocalizations get _l10n => AppLocalizations.of(context);
+
   @override
   void initState() {
     super.initState();
@@ -138,7 +141,7 @@ class _ClubPaywallSheetState extends State<ClubPaywallSheet> {
         _revenueCatBillingRequired = true;
         final userId = getIt<AuthRepository>().currentUser?.id;
         if (userId == null) {
-          throw Exception('Entre na sua conta para continuar.');
+          throw Exception(_l10n.paywall_sign_in_required);
         }
         final identity = await revenueCat.identify(userId);
         final offering = identity.isFailure
@@ -149,8 +152,7 @@ class _ClubPaywallSheetState extends State<ClubPaywallSheet> {
           for (final package in packages) package.period: package,
         };
         if (byPeriod.isEmpty) {
-          throw Exception(
-              'As opções de assinatura ainda não estão disponíveis.');
+          throw Exception(_l10n.paywall_options_unavailable);
         }
         if (mounted) {
           setState(() {
@@ -219,8 +221,7 @@ class _ClubPaywallSheetState extends State<ClubPaywallSheet> {
       return;
     }
     if (_revenueCatBillingRequired) {
-      setState(() => _errorMessage =
-          'As opções de assinatura ainda não estão disponíveis. Tente novamente mais tarde.');
+      setState(() => _errorMessage = _l10n.paywall_options_retry_later);
       return;
     }
     if (_plan == null) return;
@@ -234,8 +235,7 @@ class _ClubPaywallSheetState extends State<ClubPaywallSheet> {
   Future<void> _processRevenueCatPurchase() async {
     final package = _revenueCatPackages[_revenueCatPeriod];
     if (package == null) {
-      setState(() =>
-          _errorMessage = 'Esta opção de assinatura não está disponível.');
+      setState(() => _errorMessage = _l10n.paywall_option_unavailable);
       return;
     }
     setState(() {
@@ -253,8 +253,7 @@ class _ClubPaywallSheetState extends State<ClubPaywallSheet> {
             } else {
               setState(() {
                 _isProcessing = false;
-                _errorMessage =
-                    'Não foi possível confirmar o acesso ao BLDR Club.';
+                _errorMessage = _l10n.paywall_access_confirmation_failed;
               });
             }
             return;
@@ -264,8 +263,7 @@ class _ClubPaywallSheetState extends State<ClubPaywallSheet> {
           case RevenueCatPurchaseStatus.pending:
             setState(() {
               _isProcessing = false;
-              _errorMessage =
-                  'Seu pagamento está pendente de confirmação pela loja.';
+              _errorMessage = _l10n.paywall_payment_pending;
             });
             return;
         }
@@ -361,8 +359,7 @@ class _ClubPaywallSheetState extends State<ClubPaywallSheet> {
     try {
       if (_revenueCatBillingRequired) {
         if (!_revenueCatPurchaseFlow) {
-          setState(() => _errorMessage =
-              'O resgate de código estará disponível quando as opções de assinatura carregarem.');
+          setState(() => _errorMessage = _l10n.paywall_redeem_unavailable);
           return;
         }
         final result =
@@ -384,8 +381,8 @@ class _ClubPaywallSheetState extends State<ClubPaywallSheet> {
     if (_isProcessing) return;
     if (!_revenueCatPurchaseFlow) {
       setState(() => _errorMessage = _revenueCatBillingRequired
-          ? 'A restauração estará disponível quando as opções de assinatura carregarem.'
-          : 'A restauração estará disponível após a atualização de assinaturas.');
+          ? _l10n.paywall_restore_unavailable
+          : _l10n.paywall_restore_after_update);
       return;
     }
     setState(() {
@@ -426,12 +423,13 @@ class _ClubPaywallSheetState extends State<ClubPaywallSheet> {
 
   String _displayPrice(RevenueCatPackagePeriod period) {
     if (_revenueCatBillingRequired) {
-      return _revenueCatPackages[period]?.localizedPrice ?? 'Indisponível';
+      return _revenueCatPackages[period]?.localizedPrice ??
+          _l10n.paywall_unavailable;
     }
     return switch (period) {
       RevenueCatPackagePeriod.monthly => _plan?.monthlyPriceText ?? '—',
       RevenueCatPackagePeriod.annual => _plan?.annualPriceText ?? '—',
-      RevenueCatPackagePeriod.weekly => 'Indisponível',
+      RevenueCatPackagePeriod.weekly => _l10n.paywall_unavailable,
     };
   }
 
@@ -494,6 +492,7 @@ class _ClubPaywallSheetState extends State<ClubPaywallSheet> {
   }
 
   Widget _buildErrorState() {
+    final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(BldrSpacing.pageX),
@@ -504,14 +503,14 @@ class _ClubPaywallSheetState extends State<ClubPaywallSheet> {
               const Icon(Icons.cloud_off_outlined,
                   color: BldrColors.goldBright, size: 24),
               const SizedBox(height: 12),
-              Text('Não foi possível carregar os planos agora.',
+              Text(l10n.paywall_load_error_title,
                   style: BldrText.cardTitle, textAlign: TextAlign.center),
               const SizedBox(height: 6),
-              Text('Tente novamente em instantes.',
+              Text(l10n.paywall_load_error_body,
                   style: BldrText.description, textAlign: TextAlign.center),
               const SizedBox(height: 16),
               BldrSecondaryButton(
-                  label: 'Tentar novamente', onPressed: _loadPlan),
+                  label: l10n.common_retry, onPressed: _loadPlan),
             ],
           ),
         ),
@@ -522,6 +521,7 @@ class _ClubPaywallSheetState extends State<ClubPaywallSheet> {
   // ── Etapa 1 — escolha do plano ──────────────────────────────────────────────
 
   Widget _buildPlanStep() {
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
           BldrSpacing.pageX, 22, BldrSpacing.pageX, 28),
@@ -532,7 +532,7 @@ class _ClubPaywallSheetState extends State<ClubPaywallSheet> {
           const SizedBox(height: BldrSpacing.gapSection),
           _buildComparison(),
           const SizedBox(height: BldrSpacing.gapSection),
-          Text('Escolha seu plano', style: BldrText.sectionTitle),
+          Text(l10n.paywall_choose_plan, style: BldrText.sectionTitle),
           const SizedBox(height: BldrSpacing.gapCard),
           for (var index = 0; index < _visiblePeriods.length; index++) ...[
             _buildPlanCard(_visiblePeriods[index]),
@@ -547,20 +547,27 @@ class _ClubPaywallSheetState extends State<ClubPaywallSheet> {
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context);
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const BldrChip(
-          label: 'BLDR CLUB',
-          active: true,
-          icon: Icons.workspace_premium_outlined,
+        Semantics(
+          image: true,
+          label: l10n.paywall_club_logo_semantics,
+          child: Image.asset(
+            'assets/images/bldr_club_paywall.png',
+            width: 190,
+            fit: BoxFit.contain,
+          ),
         ),
-        const SizedBox(height: 14),
-        Text('Eleve sua performance.', style: BldrText.screenTitle),
+        const SizedBox(height: 8),
+        Text(l10n.paywall_elevate_performance,
+            style: BldrText.screenTitle, textAlign: TextAlign.center),
         const SizedBox(height: 8),
         Text(
-          'Desbloqueie a experiência completa para treinar, evoluir e competir.',
+          l10n.paywall_performance_subtitle,
           style: BldrText.description,
+          textAlign: TextAlign.center,
         ),
       ],
     );
@@ -575,35 +582,38 @@ class _ClubPaywallSheetState extends State<ClubPaywallSheet> {
       };
 
   Widget _buildWeeklyCard() {
+    final l10n = AppLocalizations.of(context);
     return _PlanCard(
       selected: _period == _BillingPeriod.weekly,
-      planName: 'Semanal',
-      description: 'Acesso completo por uma semana',
+      planName: l10n.paywall_plan_weekly,
+      description: l10n.paywall_weekly_description,
       priceMain: _displayPrice(RevenueCatPackagePeriod.weekly),
-      priceUnit: 'por semana',
+      priceUnit: l10n.paywall_per_week,
       onTap: () => setState(() => _period = _BillingPeriod.weekly),
     );
   }
 
   Widget _buildMonthlyCard() {
+    final l10n = AppLocalizations.of(context);
     return _PlanCard(
       selected: _period == _BillingPeriod.monthly,
-      planName: 'Mensal',
-      description: 'Acesso completo mês a mês',
+      planName: l10n.paywall_plan_monthly,
+      description: l10n.paywall_monthly_description,
       priceMain: _displayPrice(RevenueCatPackagePeriod.monthly),
-      priceUnit: 'por mês',
+      priceUnit: l10n.paywall_per_month,
       onTap: () => setState(() => _period = _BillingPeriod.monthly),
     );
   }
 
   Widget _buildAnnualCard() {
+    final l10n = AppLocalizations.of(context);
     return _PlanCard(
       selected: _period == _BillingPeriod.annual,
-      planName: 'Anual',
-      description: 'A melhor forma de evoluir o ano todo',
+      planName: l10n.paywall_plan_annual,
+      description: l10n.paywall_annual_description,
       priceMain: _displayPrice(RevenueCatPackagePeriod.annual),
-      priceUnit: 'por ano',
-      badge: 'MELHOR VALOR',
+      priceUnit: l10n.paywall_per_year,
+      badge: l10n.paywall_best_value,
       onTap: () => setState(() => _period = _BillingPeriod.annual),
     );
   }
@@ -611,16 +621,11 @@ class _ClubPaywallSheetState extends State<ClubPaywallSheet> {
   Widget _buildFooter() {
     final l10n = AppLocalizations.of(context);
     final ctaLabel =
-        _isProcessing ? l10n.paywall_processing : 'Começar com BLDR Club';
+        _isProcessing ? l10n.paywall_processing : l10n.paywall_join_cta;
 
-    final subText = switch (_period) {
-      _BillingPeriod.weekly =>
-        '${_displayPrice(RevenueCatPackagePeriod.weekly)} · cancele quando quiser',
-      _BillingPeriod.monthly =>
-        '${_displayPrice(RevenueCatPackagePeriod.monthly)} · cancele quando quiser',
-      _BillingPeriod.annual =>
-        '${_displayPrice(RevenueCatPackagePeriod.annual)} · cancele quando quiser',
-    };
+    final subText = l10n.paywall_selected_price_caption(
+      _displayPrice(_revenueCatPeriod),
+    );
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -765,30 +770,69 @@ class _ClubPaywallSheetState extends State<ClubPaywallSheet> {
 class _ClubBenefitsComparison extends StatelessWidget {
   const _ClubBenefitsComparison();
 
-  static const _benefits = <({String label, String free, String club})>[
-    (label: 'Comunidade BLDR', free: 'Limitada', club: 'Completa'),
-    (label: 'IA de performance', free: '—', club: 'Completa'),
-    (label: 'Treino por foto', free: '—', club: 'Disponível'),
-    (label: 'Analytics', free: 'Básico', club: 'Avançado'),
-    (label: 'Biblioteca', free: 'Limitada', club: 'Completa'),
-    (label: 'Nutrição', free: 'Básico', club: 'Avançado'),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final benefits =
+        <({IconData icon, String label, String free, String club})>[
+      (
+        icon: TablerIcons.users,
+        label: l10n.paywall_benefit_community,
+        free: l10n.paywall_limited,
+        club: l10n.paywall_complete,
+      ),
+      (
+        icon: TablerIcons.brain,
+        label: l10n.paywall_benefit_havok,
+        free: l10n.paywall_limited,
+        club: l10n.paywall_complete,
+      ),
+      (
+        icon: TablerIcons.camera,
+        label: l10n.paywall_benefit_photo_workout,
+        free: l10n.paywall_unavailable,
+        club: l10n.paywall_available,
+      ),
+      (
+        icon: TablerIcons.chart_line,
+        label: l10n.paywall_benefit_analytics,
+        free: l10n.paywall_basic,
+        club: l10n.paywall_advanced,
+      ),
+      (
+        icon: TablerIcons.barbell,
+        label: l10n.paywall_benefit_library,
+        free: l10n.paywall_limited,
+        club: l10n.paywall_complete,
+      ),
+      (
+        icon: TablerIcons.apple,
+        label: l10n.paywall_benefit_nutrition,
+        free: l10n.paywall_basic,
+        club: l10n.paywall_advanced,
+      ),
+    ];
     return Semantics(
-      label: 'Comparação entre o plano grátis e o BLDR Club',
+      label: l10n.paywall_comparison_semantics,
       child: BldrGlassCard(
         padding: const EdgeInsets.symmetric(
             horizontal: BldrSpacing.padCard, vertical: 14),
         child: Column(
           children: [
-            const Row(
+            Row(
               children: [
-                Expanded(flex: 5, child: Text('GRÁTIS', style: BldrText.label)),
                 Expanded(
-                  flex: 4,
-                  child: Text('CLUB',
+                    flex: 5,
+                    child: Text(l10n.paywall_feature, style: BldrText.label)),
+                Expanded(
+                  flex: 2,
+                  child: Text(l10n.paywall_free,
+                      textAlign: TextAlign.center, style: BldrText.label),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(l10n.paywall_club,
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                           fontFamily: BldrText.family,
                           fontSize: 11,
@@ -799,9 +843,9 @@ class _ClubBenefitsComparison extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            for (var index = 0; index < _benefits.length; index++) ...[
-              _BenefitComparisonRow(benefit: _benefits[index]),
-              if (index != _benefits.length - 1)
+            for (var index = 0; index < benefits.length; index++) ...[
+              _BenefitComparisonRow(benefit: benefits[index]),
+              if (index != benefits.length - 1)
                 const Divider(height: 16, color: BldrColors.borderSubtle),
             ],
           ],
@@ -812,7 +856,7 @@ class _ClubBenefitsComparison extends StatelessWidget {
 }
 
 class _BenefitComparisonRow extends StatelessWidget {
-  final ({String label, String free, String club}) benefit;
+  final ({IconData icon, String label, String free, String club}) benefit;
 
   const _BenefitComparisonRow({required this.benefit});
 
@@ -821,31 +865,31 @@ class _BenefitComparisonRow extends StatelessWidget {
         children: [
           Expanded(
             flex: 5,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(benefit.label, style: BldrText.metaSm),
-                const SizedBox(height: 2),
-                Text(benefit.free,
-                    style:
-                        BldrText.metaSm.copyWith(color: BldrColors.textMuted)),
+                Icon(benefit.icon, size: 16, color: BldrColors.goldBright),
+                const SizedBox(width: 8),
+                Expanded(child: Text(benefit.label, style: BldrText.metaSm)),
               ],
             ),
           ),
           Expanded(
-            flex: 4,
-            child: Row(
-              children: [
-                const Icon(Icons.check_circle_outline,
-                    color: BldrColors.goldBright, size: 14),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(benefit.club,
-                      style: BldrText.metaSm.copyWith(
-                          color: BldrColors.textPrimary,
-                          fontWeight: FontWeight.w500)),
-                ),
-              ],
+            flex: 2,
+            child: Text(
+              benefit.free,
+              textAlign: TextAlign.center,
+              style: BldrText.metaSm.copyWith(color: BldrColors.textMuted),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              benefit.club,
+              textAlign: TextAlign.center,
+              style: BldrText.metaSm.copyWith(
+                color: BldrColors.goldBright,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -858,22 +902,25 @@ class _LegalLinks extends StatelessWidget {
   const _LegalLinks({required this.onOpen});
 
   @override
-  Widget build(BuildContext context) => Wrap(
-        alignment: WrapAlignment.center,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          _LegalLink(
-            label: 'Termos de uso',
-            onTap: () => onOpen(Uri.parse('https://www.bldrapp.com.br/termos')),
-          ),
-          const Text('  ·  ', style: BldrText.metaSm),
-          _LegalLink(
-            label: 'Política de privacidade',
-            onTap: () =>
-                onOpen(Uri.parse('https://www.bldrapp.com.br/privacidade')),
-          ),
-        ],
-      );
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        _LegalLink(
+          label: l10n.paywall_terms,
+          onTap: () => onOpen(Uri.parse('https://www.bldrapp.com.br/termos')),
+        ),
+        const Text('  ·  ', style: BldrText.metaSm),
+        _LegalLink(
+          label: l10n.paywall_privacy,
+          onTap: () =>
+              onOpen(Uri.parse('https://www.bldrapp.com.br/privacidade')),
+        ),
+      ],
+    );
+  }
 }
 
 class _LegalLink extends StatelessWidget {
@@ -972,8 +1019,7 @@ class _PlanCard extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label:
-          '$planName, $priceMain $priceUnit${selected ? ', selecionado' : ''}',
+      label: '$planName, $priceMain $priceUnit',
       child: GestureDetector(
         onTap: onTap,
         child: Stack(

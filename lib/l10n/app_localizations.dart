@@ -5021,6 +5021,12 @@ abstract class AppLocalizations {
   /// **'Italia'**
   String get language_it_region;
 
+  /// No description provided for @language_soon_badge.
+  ///
+  /// In pt, this message translates to:
+  /// **'Em breve'**
+  String get language_soon_badge;
+
   /// No description provided for @edit_profile_dialog_title.
   ///
   /// In pt, this message translates to:
@@ -6880,6 +6886,258 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'{count} / 500'**
   String feedback_chars_remaining(int count);
+
+  /// No description provided for @paywall_club_logo_semantics.
+  ///
+  /// In pt, this message translates to:
+  /// **'Logo do BLDR CLUB'**
+  String get paywall_club_logo_semantics;
+
+  /// No description provided for @paywall_elevate_performance.
+  ///
+  /// In pt, this message translates to:
+  /// **'ELEVE SUA PERFORMANCE'**
+  String get paywall_elevate_performance;
+
+  /// No description provided for @paywall_performance_subtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Treino, nutrição e inteligência conectados para você evoluir de verdade.'**
+  String get paywall_performance_subtitle;
+
+  /// No description provided for @paywall_choose_plan.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolha seu plano'**
+  String get paywall_choose_plan;
+
+  /// No description provided for @paywall_weekly_description.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acesso completo por uma semana'**
+  String get paywall_weekly_description;
+
+  /// No description provided for @paywall_monthly_description.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acesso completo mês a mês'**
+  String get paywall_monthly_description;
+
+  /// No description provided for @paywall_annual_description.
+  ///
+  /// In pt, this message translates to:
+  /// **'A melhor forma de evoluir o ano todo'**
+  String get paywall_annual_description;
+
+  /// No description provided for @paywall_per_month.
+  ///
+  /// In pt, this message translates to:
+  /// **'por mês'**
+  String get paywall_per_month;
+
+  /// No description provided for @paywall_per_year.
+  ///
+  /// In pt, this message translates to:
+  /// **'por ano'**
+  String get paywall_per_year;
+
+  /// No description provided for @paywall_join_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'Assinar BLDR CLUB'**
+  String get paywall_join_cta;
+
+  /// No description provided for @paywall_selected_price_caption.
+  ///
+  /// In pt, this message translates to:
+  /// **'{price} · Cancele quando quiser'**
+  String paywall_selected_price_caption(String price);
+
+  /// No description provided for @paywall_load_error_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível carregar os planos agora.'**
+  String get paywall_load_error_title;
+
+  /// No description provided for @paywall_load_error_body.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tente novamente em instantes.'**
+  String get paywall_load_error_body;
+
+  /// No description provided for @paywall_feature.
+  ///
+  /// In pt, this message translates to:
+  /// **'RECURSO'**
+  String get paywall_feature;
+
+  /// No description provided for @paywall_free.
+  ///
+  /// In pt, this message translates to:
+  /// **'GRÁTIS'**
+  String get paywall_free;
+
+  /// No description provided for @paywall_club.
+  ///
+  /// In pt, this message translates to:
+  /// **'CLUB'**
+  String get paywall_club;
+
+  /// No description provided for @paywall_comparison_semantics.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comparação entre o plano grátis e o BLDR CLUB'**
+  String get paywall_comparison_semantics;
+
+  /// No description provided for @paywall_benefit_community.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comunidade BLDR'**
+  String get paywall_benefit_community;
+
+  /// No description provided for @paywall_benefit_havok.
+  ///
+  /// In pt, this message translates to:
+  /// **'HAVOK AI'**
+  String get paywall_benefit_havok;
+
+  /// No description provided for @paywall_benefit_photo_workout.
+  ///
+  /// In pt, this message translates to:
+  /// **'Treino por foto'**
+  String get paywall_benefit_photo_workout;
+
+  /// No description provided for @paywall_benefit_analytics.
+  ///
+  /// In pt, this message translates to:
+  /// **'Analytics'**
+  String get paywall_benefit_analytics;
+
+  /// No description provided for @paywall_benefit_library.
+  ///
+  /// In pt, this message translates to:
+  /// **'Biblioteca'**
+  String get paywall_benefit_library;
+
+  /// No description provided for @paywall_benefit_nutrition.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nutrição'**
+  String get paywall_benefit_nutrition;
+
+  /// No description provided for @paywall_limited.
+  ///
+  /// In pt, this message translates to:
+  /// **'Limitada'**
+  String get paywall_limited;
+
+  /// No description provided for @paywall_complete.
+  ///
+  /// In pt, this message translates to:
+  /// **'Completa'**
+  String get paywall_complete;
+
+  /// No description provided for @paywall_unavailable.
+  ///
+  /// In pt, this message translates to:
+  /// **'—'**
+  String get paywall_unavailable;
+
+  /// No description provided for @paywall_available.
+  ///
+  /// In pt, this message translates to:
+  /// **'Disponível'**
+  String get paywall_available;
+
+  /// No description provided for @paywall_basic.
+  ///
+  /// In pt, this message translates to:
+  /// **'Básico'**
+  String get paywall_basic;
+
+  /// No description provided for @paywall_advanced.
+  ///
+  /// In pt, this message translates to:
+  /// **'Avançado'**
+  String get paywall_advanced;
+
+  /// No description provided for @paywall_terms.
+  ///
+  /// In pt, this message translates to:
+  /// **'Termos de uso'**
+  String get paywall_terms;
+
+  /// No description provided for @paywall_privacy.
+  ///
+  /// In pt, this message translates to:
+  /// **'Política de privacidade'**
+  String get paywall_privacy;
+
+  /// No description provided for @bootstrap_init_failed_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível iniciar o BLDR.'**
+  String get bootstrap_init_failed_title;
+
+  /// No description provided for @bootstrap_init_failed_body.
+  ///
+  /// In pt, this message translates to:
+  /// **'Verifique sua conexão e tente novamente.'**
+  String get bootstrap_init_failed_body;
+
+  /// No description provided for @paywall_sign_in_required.
+  ///
+  /// In pt, this message translates to:
+  /// **'Entre na sua conta para continuar.'**
+  String get paywall_sign_in_required;
+
+  /// No description provided for @paywall_options_unavailable.
+  ///
+  /// In pt, this message translates to:
+  /// **'As opções de assinatura ainda não estão disponíveis.'**
+  String get paywall_options_unavailable;
+
+  /// No description provided for @paywall_options_retry_later.
+  ///
+  /// In pt, this message translates to:
+  /// **'As opções de assinatura ainda não estão disponíveis. Tente novamente mais tarde.'**
+  String get paywall_options_retry_later;
+
+  /// No description provided for @paywall_option_unavailable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta opção de assinatura não está disponível.'**
+  String get paywall_option_unavailable;
+
+  /// No description provided for @paywall_access_confirmation_failed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível confirmar o acesso ao BLDR CLUB.'**
+  String get paywall_access_confirmation_failed;
+
+  /// No description provided for @paywall_payment_pending.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seu pagamento está pendente de confirmação pela loja.'**
+  String get paywall_payment_pending;
+
+  /// No description provided for @paywall_redeem_unavailable.
+  ///
+  /// In pt, this message translates to:
+  /// **'O resgate de código estará disponível quando as opções de assinatura carregarem.'**
+  String get paywall_redeem_unavailable;
+
+  /// No description provided for @paywall_restore_unavailable.
+  ///
+  /// In pt, this message translates to:
+  /// **'A restauração estará disponível quando as opções de assinatura carregarem.'**
+  String get paywall_restore_unavailable;
+
+  /// No description provided for @paywall_restore_after_update.
+  ///
+  /// In pt, this message translates to:
+  /// **'A restauração estará disponível após a atualização de assinaturas.'**
+  String get paywall_restore_after_update;
 }
 
 class _AppLocalizationsDelegate

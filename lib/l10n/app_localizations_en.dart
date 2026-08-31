@@ -2749,6 +2749,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get language_it_region => 'Italy';
 
   @override
+  String get language_soon_badge => 'Coming soon';
+
+  @override
   String get edit_profile_dialog_title => 'Edit Profile';
 
   @override
@@ -3774,4 +3777,143 @@ class AppLocalizationsEn extends AppLocalizations {
   String feedback_chars_remaining(int count) {
     return '$count / 500';
   }
+
+  @override
+  String get paywall_club_logo_semantics => 'BLDR CLUB logo';
+
+  @override
+  String get paywall_elevate_performance => 'ELEVATE YOUR PERFORMANCE';
+
+  @override
+  String get paywall_performance_subtitle =>
+      'Training, nutrition and intelligence connected so you can make real progress.';
+
+  @override
+  String get paywall_choose_plan => 'Choose your plan';
+
+  @override
+  String get paywall_weekly_description => 'Full access for one week';
+
+  @override
+  String get paywall_monthly_description => 'Full access, month to month';
+
+  @override
+  String get paywall_annual_description => 'The best way to progress all year';
+
+  @override
+  String get paywall_per_month => 'per month';
+
+  @override
+  String get paywall_per_year => 'per year';
+
+  @override
+  String get paywall_join_cta => 'Join BLDR CLUB';
+
+  @override
+  String paywall_selected_price_caption(String price) {
+    return '$price · Cancel anytime';
+  }
+
+  @override
+  String get paywall_load_error_title => 'We couldn\'t load plans right now.';
+
+  @override
+  String get paywall_load_error_body => 'Please try again in a moment.';
+
+  @override
+  String get paywall_feature => 'FEATURE';
+
+  @override
+  String get paywall_free => 'FREE';
+
+  @override
+  String get paywall_club => 'CLUB';
+
+  @override
+  String get paywall_comparison_semantics =>
+      'Comparison between the free plan and BLDR CLUB';
+
+  @override
+  String get paywall_benefit_community => 'BLDR Community';
+
+  @override
+  String get paywall_benefit_havok => 'HAVOK AI';
+
+  @override
+  String get paywall_benefit_photo_workout => 'Workout from photo';
+
+  @override
+  String get paywall_benefit_analytics => 'Analytics';
+
+  @override
+  String get paywall_benefit_library => 'Library';
+
+  @override
+  String get paywall_benefit_nutrition => 'Nutrition';
+
+  @override
+  String get paywall_limited => 'Limited';
+
+  @override
+  String get paywall_complete => 'Full';
+
+  @override
+  String get paywall_unavailable => '—';
+
+  @override
+  String get paywall_available => 'Available';
+
+  @override
+  String get paywall_basic => 'Basic';
+
+  @override
+  String get paywall_advanced => 'Advanced';
+
+  @override
+  String get paywall_terms => 'Terms of use';
+
+  @override
+  String get paywall_privacy => 'Privacy policy';
+
+  @override
+  String get bootstrap_init_failed_title => 'BLDR couldn\'t start.';
+
+  @override
+  String get bootstrap_init_failed_body =>
+      'Check your connection and try again.';
+
+  @override
+  String get paywall_sign_in_required => 'Sign in to continue.';
+
+  @override
+  String get paywall_options_unavailable =>
+      'Subscription options aren\'t available yet.';
+
+  @override
+  String get paywall_options_retry_later =>
+      'Subscription options aren\'t available yet. Please try again later.';
+
+  @override
+  String get paywall_option_unavailable =>
+      'This subscription option isn\'t available.';
+
+  @override
+  String get paywall_access_confirmation_failed =>
+      'We couldn\'t confirm your BLDR CLUB access.';
+
+  @override
+  String get paywall_payment_pending =>
+      'Your payment is pending confirmation from the store.';
+
+  @override
+  String get paywall_redeem_unavailable =>
+      'Code redemption will be available once subscription options finish loading.';
+
+  @override
+  String get paywall_restore_unavailable =>
+      'Restore will be available once subscription options finish loading.';
+
+  @override
+  String get paywall_restore_after_update =>
+      'Restore will be available after subscriptions are updated.';
 }
