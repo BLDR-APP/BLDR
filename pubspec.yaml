@@ -143,6 +143,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/images/
+    - assets/videos/
     - assets/images/whoop/
     - assets/models/
     - assets/images/categories/
@@ -204,14 +205,15 @@ flutter_launcher_icons:
   # see https://flutter.dev/custom-fonts/#from-packages
 
 # ── Flutter Native Splash ────────────────────────────────────────────────────
-# Cor idêntica ao AppTheme.primaryBlack e ao LaunchScreen iOS — zero flash.
+# Preto puro compartilhado pela Launch Screen nativa e pela primeira superfície
+# Flutter. O mesmo PNG também é o fallback até o primeiro frame do vídeo.
 # Rodar após alterar: dart run flutter_native_splash:create
 flutter_native_splash:
-  color: "#0D0D0D"
-  image: assets/images/BLDR_CLEAN_BGLESS.png
+  color: "#000000"
+  image: assets/images/launch/bldr_launch.png
   android: true
   ios: true
   fullscreen: true
   android_12:
-    color: "#0D0D0D"
-    image: assets/images/BLDR_CLEAN_BGLESS.png
+    color: "#000000"
+    image: assets/images/launch/bldr_launch.png

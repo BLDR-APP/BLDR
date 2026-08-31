@@ -107,12 +107,23 @@ class _FakeCommunityFeedRepository implements CommunityFeedRepository {
       const Result.success([]);
 
   @override
-  Future<Result<void>> addComment({
+  Future<Result<CommunityProfile>> fetchCurrentCommentProfile() async =>
+      const Result.success(CommunityProfile(id: 'current-user'));
+
+  @override
+  Future<Result<CommunityComment>> addComment({
     required String feedId,
     required String body,
     String? parentId,
   }) async =>
-      const Result.success(null);
+      Result.success(CommunityComment(
+        id: 'comment-id',
+        feedId: feedId,
+        userId: 'current-user',
+        parentId: parentId,
+        body: body,
+        createdAt: DateTime(2026),
+      ));
 
   @override
   Future<Result<void>> editComment(

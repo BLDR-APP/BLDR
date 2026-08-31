@@ -50,7 +50,14 @@ abstract class CommunityFeedRepository {
   Future<Result<List<CommunityPost>>> searchPublicPosts(String query);
 
   Future<Result<List<CommunityComment>>> fetchComments(String feedId);
-  Future<Result<void>> addComment({
+
+  /// Perfil do atleta autenticado para renderização local/otimista de comentários.
+  /// A consulta é única por sheet; nunca é feita por item da lista.
+  Future<Result<CommunityProfile>> fetchCurrentCommentProfile();
+
+  /// Persiste e devolve o comentário canônico, permitindo reconciliar o item
+  /// otimista sem duplicá-lo após a resposta do backend.
+  Future<Result<CommunityComment>> addComment({
     required String feedId,
     required String body,
     String? parentId,

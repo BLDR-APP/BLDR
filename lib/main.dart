@@ -30,6 +30,7 @@ import 'package:bldr_fitness/firebase_options.dart';
 import 'package:bldr_fitness/core/providers/locale_provider.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:bldr_fitness/shared/providers/workout_session_provider.dart';
+import 'package:bldr_fitness/shared/presentation/splash_screen/startup_video_splash.dart';
 import 'package:flutter_muscle_anatomy/flutter_muscle_anatomy.dart';
 
 // Handler de background — delegado ao PushNotificationService para evitar duplicação
@@ -174,7 +175,13 @@ class _AppLoaderState extends State<AppLoader> {
   @override
   Widget build(BuildContext context) {
     if (!_ready) {
-      return const _BootstrapLoadingScreen();
+      // Keep a branded Flutter surface on screen while services initialize.
+      // This replaces the old intermediate loading circle without delaying
+      // runApp or native-launch removal.
+      return const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: StartupVideoSplash(),
+      );
     }
     if (_initializationFailed) {
       return _BootstrapFailureScreen(onRetry: _initialize);
@@ -189,23 +196,6 @@ class _AppLoaderState extends State<AppLoader> {
             value: _localeProvider ?? getIt<LocaleProvider>()),
       ],
       child: const MyApp(),
-    );
-  }
-}
-
-class _BootstrapLoadingScreen extends StatelessWidget {
-  const _BootstrapLoadingScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        backgroundColor: Color(0xFF050505),
-        body: Center(
-          child: CircularProgressIndicator(color: Color(0xFFE8C12E)),
-        ),
-      ),
     );
   }
 }

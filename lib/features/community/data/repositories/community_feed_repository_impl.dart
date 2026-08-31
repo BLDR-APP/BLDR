@@ -436,7 +436,32 @@ class CommunityFeedRepositoryImpl implements CommunityFeedRepository {
   }
 
   @override
-  Future<Result<void>> addComment({
+  Future<Result<CommunityProfile>> fetchCurrentCommentProfile() async {
+    try {
+      final row = await _client
+          .from('user_profiles')
+          .select('id, username, full_name, avatar_url')
+          .eq('id', _uid)
+          .maybeSingle();
+      if (row == null) {
+        return Result.success(CommunityProfile(id: _uid));
+      }
+      return Result.success(CommunityProfile(
+        id: row['id'] as String,
+        username: row['username'] as String?,
+        fullName: row['full_name'] as String?,
+        avatarUrl: row['avatar_url'] as String?,
+      ));
+    } catch (e) {
+      return Result.failure(ServerFailure(
+        'Não foi possível carregar seu perfil para comentar.',
+        cause: e,
+      ));
+    }
+  }
+
+  @override
+  Future<Result<CommunityComment>> addComment({
     required String feedId,
     required String body,
     String? parentId,
@@ -448,13 +473,33 @@ class CommunityFeedRepositoryImpl implements CommunityFeedRepository {
       );
     }
     try {
-      await _client.from('community_comments').insert({
-        'feed_id': feedId,
-        'user_id': _uid,
-        'body': text,
-        if (parentId != null) 'parent_id': parentId,
-      });
-      return const Result.success(null);
+      final inserted = await _client
+          .from('community_comments')
+          .insert({
+            'feed_id': feedId,
+            'user_id': _uid,
+            'body': text,
+            if (parentId != null) 'parent_id': parentId,
+          })
+          .select(
+              'id, feed_id, user_id, parent_id, body, created_at, updated_at')
+          .single();
+      final profile = await fetchCurrentCommentProfile();
+      final ownProfile = profile.valueOrNull;
+      return Result.success(CommunityComment(
+        id: inserted['id'] as String,
+        feedId: inserted['feed_id'] as String,
+        userId: inserted['user_id'] as String,
+        parentId: inserted['parent_id'] as String?,
+        body: inserted['body'] as String,
+        createdAt: DateTime.parse(inserted['created_at'] as String),
+        updatedAt: DateTime.tryParse(inserted['updated_at'] as String? ?? ''),
+        username: ownProfile?.username,
+        fullName: ownProfile?.fullName,
+        avatarUrl: ownProfile?.avatarUrl,
+        canEdit: true,
+        canDelete: true,
+      ));
     } catch (e) {
       return Result.failure(ServerFailure(
         'Não foi possível enviar o comentário.',

@@ -221,7 +221,8 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: BldrColors.surface,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: .62),
       builder: (_) => CommunityCommentsSheet(feedId: post.id),
     ).then((_) {
       _loadFeed(refresh: true);

@@ -205,16 +205,22 @@ async function refreshThreadSummary(client: any, threadId: string, userId: strin
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  // A short, sanitized stage marker makes an authenticated production trace
+  // diagnosable without recording a JWT, user identity, prompt or model output.
+  let stage = 'request'
   try {
+    stage = 'auth'
     const authorization = req.headers.get('Authorization')
     if (!authorization) return new Response(JSON.stringify({ error: 'Usuário não autenticado.' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     const client = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_ANON_KEY') ?? '', { global: { headers: { Authorization: authorization } } })
     const { data: { user } } = await client.auth.getUser()
     if (!user) return new Response(JSON.stringify({ error: 'Usuário não autenticado.' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    stage = 'request_body'
     const body = await req.json(); const threadId = typeof body.threadId === 'string' ? body.threadId : ''; const message = typeof body.userMessage === 'string' ? body.userMessage.trim() : ''
     if (!threadId || !message || message.length > 4000) throw new Error('Entrada inválida.')
     const { data: thread } = await client.schema('bldr_club').from('havok_threads').select('id').eq('id', threadId).eq('user_id', user.id).maybeSingle()
     if (!thread) return new Response(JSON.stringify({ error: 'Thread não encontrada.' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    stage = 'context'
     const intent = routeIntent(message)
     const [history, summary, context] = await Promise.all([
       optional(() => client.schema('bldr_club').from('havok_messages').select('role, content').eq('thread_id', threadId).order('created_at', { ascending: false }).limit(20)),
@@ -223,23 +229,34 @@ serve(async (req) => {
     ])
     const transcript = ((history as any[] | null) ?? []).reverse().map((item) => `${item.role === 'user' ? 'Usuário' : 'HAVOK'}: ${item.content}`).join('\n')
     const prompt = `Intent: ${intent}\nContexto factual:\n${JSON.stringify(context)}\nResumo: ${(summary as any)?.summary ?? '(sem resumo)'}\nHistórico:\n${transcript || '(início)'}\nPergunta: ${message}`
+    stage = 'user_message_persistence'
     const { error: userError } = await client.schema('bldr_club').from('havok_messages').insert({ thread_id: threadId, role: 'user', content: message })
     if (userError) throw new Error('Não foi possível salvar a mensagem.')
-    const response = validateResponseV2(json(await askClaude(prompt, typeof body.locale === 'string' ? body.locale : 'pt')), intent)
+    stage = 'anthropic_request'
+    const rawResponse = await askClaude(prompt, typeof body.locale === 'string' ? body.locale : 'pt')
+    stage = 'v2_response_validation'
+    const response = validateResponseV2(json(rawResponse), intent)
     if (!response) return new Response(JSON.stringify({ error: 'Resposta HAVOK inválida.' }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    stage = 'artifact_resolution'
     const artifact = await resolveWorkout(client, response.artifact)
     if (response.artifact?.type === 'workout' && !artifact) return new Response(JSON.stringify({ error: 'Não consegui resolver os exercícios. Peça nomes mais específicos.' }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    stage = 'action_resolution'
     const actions = await resolveWorkoutActions(client, artifact, response.actions)
     if (!actions) return new Response(JSON.stringify({ error: 'Não consegui validar a substituição de exercício.' }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     const safe = { ...response, artifact, actions }
+    stage = 'memory_persistence'
     await saveMemoryCandidates(client, user.id, safe.memoryCandidates)
+    stage = 'assistant_message_persistence'
     const { data: saved, error } = await client.schema('bldr_club').from('havok_messages').insert({ thread_id: threadId, role: 'assistant', content: safe.message, artifact_type: safe.artifact?.type ?? null, artifact_data: safe.artifact?.data ?? null, response_version: 2, response_data: safe }).select().single()
     if (error) throw new Error('Não foi possível salvar a resposta.')
+    stage = 'thread_update'
     await client.schema('bldr_club').from('havok_threads').update({ last_message_at: new Date().toISOString() }).eq('id', threadId)
+    stage = 'thread_summary'
     await refreshThreadSummary(client, threadId, user.id)
+    stage = 'response'
     return new Response(JSON.stringify(saved), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   } catch (error) {
-    console.error('gerar-resposta-havok:', (error as Error).message)
+    console.error('gerar-resposta-havok failed', { stage, message: (error as Error).message })
     return new Response(JSON.stringify({ error: 'HAVOK indisponível no momento.' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   }
 })
