@@ -72,8 +72,11 @@ class _WorkoutDetailSheetState extends State<WorkoutDetailSheet> {
         return;
       }
 
-      await _repo.copyWorkout(
+      final copyResult = await _repo.copyWorkout(
           workoutId: widget.workoutId, source: widget.source);
+      if (copyResult.isFailure) {
+        throw StateError(copyResult.failureOrNull!.message);
+      }
 
       if (widget.source == 'free') {
         await prefs.setInt(key, count + 1);
@@ -142,12 +145,10 @@ class _WorkoutDetailSheetState extends State<WorkoutDetailSheet> {
                         controller: scrollController,
                         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
                         children: [
-                          Text(widget.workoutName,
-                              style: BldrText.screenTitle),
+                          Text(widget.workoutName, style: BldrText.screenTitle),
                           const SizedBox(height: 20),
                           if (_exercises.isNotEmpty) ...[
-                            Text('Exercícios',
-                                style: BldrText.sectionTitle),
+                            Text('Exercícios', style: BldrText.sectionTitle),
                             const SizedBox(height: 12),
                             ..._exercises.map(_buildExerciseCard),
                           ] else
@@ -179,8 +180,8 @@ class _WorkoutDetailSheetState extends State<WorkoutDetailSheet> {
         children: [
           Row(
             children: [
-              const Icon(TablerIcons.barbell, size: 14,
-                  color: BldrColors.goldBright),
+              const Icon(TablerIcons.barbell,
+                  size: 14, color: BldrColors.goldBright),
               const SizedBox(width: 8),
               Expanded(child: Text(ex.name, style: BldrText.cardTitle)),
             ],
@@ -194,13 +195,12 @@ class _WorkoutDetailSheetState extends State<WorkoutDetailSheet> {
                 final i = e.key;
                 final s = e.value;
                 final label = [
-                  if (s.weightKg != null)
-                    '${s.weightKg!.toStringAsFixed(1)}kg',
+                  if (s.weightKg != null) '${s.weightKg!.toStringAsFixed(1)}kg',
                   if (s.reps != null) '${s.reps} reps',
                 ].join(' × ');
                 return Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0x08FFFFFF),
                     border: Border.all(color: const Color(0x0DFFFFFF)),
@@ -226,4 +226,3 @@ class _WorkoutDetailSheetState extends State<WorkoutDetailSheet> {
     );
   }
 }
-

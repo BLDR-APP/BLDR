@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
+import 'package:bldr_fitness/features/subscription/domain/usecases/resolve_club_access.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 import 'package:bldr_fitness/features/auth/domain/usecases/auth_usecases.dart';
@@ -14,7 +15,6 @@ import 'package:bldr_fitness/features/onboarding/domain/usecases/onboarding_usec
 import 'package:bldr_fitness/features/progress/domain/usecases/progress_usecases.dart';
 import 'package:bldr_fitness/features/integrations/domain/usecases/whoop_usecases.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart';
-import 'package:bldr_fitness/features/subscription/domain/usecases/subscription_usecases.dart' as sub_uc;
 import 'package:bldr_fitness/core/providers/locale_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
@@ -34,7 +34,8 @@ const Map<String, String> kHavokOriginLabels = {
 
 /// Abre o hub de conversa do HAVOK como bottom sheet sobre a tela atual.
 /// [originScreen] é uma das chaves de [kHavokOriginLabels].
-Future<void> showHavokSheet(BuildContext context, {required String originScreen}) {
+Future<void> showHavokSheet(BuildContext context,
+    {required String originScreen}) {
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -69,7 +70,8 @@ class _HavokSheetState extends State<HavokSheet> {
   bool _isClub = false;
 
   bool get _atLimit => !_isClub && _dailyCount >= _dailyLimit;
-  int get _remaining => _isClub ? _dailyLimit : (_dailyLimit - _dailyCount).clamp(0, _dailyLimit);
+  int get _remaining =>
+      _isClub ? _dailyLimit : (_dailyLimit - _dailyCount).clamp(0, _dailyLimit);
 
   @override
   void initState() {
@@ -88,40 +90,64 @@ class _HavokSheetState extends State<HavokSheet> {
   List<String> _suggestionsFor(String originScreen) {
     switch (originScreen) {
       case 'nutrition':
-        return const ['Quanto falta de proteína hoje?', 'Sugere uma refeição dentro da minha meta'];
+        return const [
+          'Quanto falta de proteína hoje?',
+          'Sugere uma refeição dentro da minha meta'
+        ];
       case 'progress':
-        return const ['Como está minha evolução?', 'Minha tendência de peso está boa?'];
+        return const [
+          'Como está minha evolução?',
+          'Minha tendência de peso está boa?'
+        ];
       case 'weekly_plan':
-        return const ['Reorganiza minha semana', 'Por que esse treino está hoje?'];
+        return const [
+          'Reorganiza minha semana',
+          'Por que esse treino está hoje?'
+        ];
       case 'workouts':
-        return const ['Ajusta o volume do meu treino', 'Qual grupo muscular estou negligenciando?'];
+        return const [
+          'Ajusta o volume do meu treino',
+          'Qual grupo muscular estou negligenciando?'
+        ];
       case 'club_treinos':
-        return const ['Como está minha aderência no Club?', 'Sugere um ajuste no meu treino de hoje'];
+        return const [
+          'Como está minha aderência no Club?',
+          'Sugere um ajuste no meu treino de hoje'
+        ];
       case 'club_esportes':
-        return const ['Monta um treino pro meu esporte', 'Como ajusto o protocolo ativo?'];
+        return const [
+          'Monta um treino pro meu esporte',
+          'Como ajusto o protocolo ativo?'
+        ];
       case 'club_comunidade':
-        return const ['Como estou no ranking da semana?', 'Bora bater uma meta em grupo?'];
+        return const [
+          'Como estou no ranking da semana?',
+          'Bora bater uma meta em grupo?'
+        ];
       case 'dashboard':
       default:
-        return const ['Como está minha semana?', 'O que eu ajusto no meu plano hoje?'];
+        return const [
+          'Como está minha semana?',
+          'O que eu ajusto no meu plano hoje?'
+        ];
     }
   }
 
   Future<void> _init() async {
     try {
       final results = await Future.wait([
-        getIt<sub_uc.GetCurrentSubscription>()(),
+        getIt<ResolveClubAccess>()(),
         getIt<GetHavokDailyCount>()(),
         getIt<GetOrCreateTodayThread>()(widget.originScreen),
       ]);
 
-      final sub = (results[0] as dynamic).valueOrNull;
+      final hasClubAccess =
+          (results[0] as dynamic).valueOrNull as bool? ?? false;
       final count = (results[1] as dynamic).valueOrNull as int? ?? 0;
       final thread = (results[2] as dynamic).valueOrNull;
 
-      if (thread == null) throw Exception((results[2] as dynamic).failureOrNull?.message);
-
-      final isClub = sub != null && (sub as dynamic).status == 'active';
+      if (thread == null)
+        throw Exception((results[2] as dynamic).failureOrNull?.message);
 
       final messagesResult = await getIt<GetThreadMessages>()(thread.id);
       final messages = messagesResult.valueOrNull ?? [];
@@ -133,7 +159,7 @@ class _HavokSheetState extends State<HavokSheet> {
 
       if (mounted) {
         setState(() {
-          _isClub = isClub;
+          _isClub = hasClubAccess;
           _dailyCount = count;
           _thread = thread;
           _messages = messages;
@@ -142,7 +168,11 @@ class _HavokSheetState extends State<HavokSheet> {
         });
       }
     } catch (e) {
-      if (mounted) setState(() { _error = AppLocalizations.of(context).havok_error_open; _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = AppLocalizations.of(context).havok_error_open;
+          _loading = false;
+        });
     }
   }
 
@@ -152,14 +182,17 @@ class _HavokSheetState extends State<HavokSheet> {
   Future<String> _buildGreeting() async {
     final ctx = await _buildContext();
     final workoutsDone = ctx['workouts']?['completedThisWeek'] as int? ?? 0;
-    final workoutsPlanned = ctx['planAdherence']?['plannedThisWeek'] as int? ?? 0;
+    final workoutsPlanned =
+        ctx['planAdherence']?['plannedThisWeek'] as int? ?? 0;
     final proteinPct = ctx['nutrition']?['proteinPercentOfGoal'] as int?;
 
     final buffer = StringBuffer();
     if (workoutsPlanned > 0) {
-      buffer.write('Essa semana você fez $workoutsDone de $workoutsPlanned treinos planejados. ');
+      buffer.write(
+          'Essa semana você fez $workoutsDone de $workoutsPlanned treinos planejados. ');
     } else if (workoutsDone > 0) {
-      buffer.write('Essa semana você já fez $workoutsDone treino${workoutsDone == 1 ? '' : 's'}. ');
+      buffer.write(
+          'Essa semana você já fez $workoutsDone treino${workoutsDone == 1 ? '' : 's'}. ');
     } else {
       buffer.write('Ainda não vi treino seu essa semana. ');
     }
@@ -184,7 +217,8 @@ class _HavokSheetState extends State<HavokSheet> {
     final Map<String, dynamic> ctx = {};
 
     try {
-      final weekResult = await getIt<GetWeekCompletedWorkouts>()(weekStart, weekEnd);
+      final weekResult =
+          await getIt<GetWeekCompletedWorkouts>()(weekStart, weekEnd);
       final week = weekResult.valueOrNull;
       final completed = (week?.personal.length ?? 0) + (week?.club.length ?? 0);
       ctx['workouts'] = {'completedThisWeek': completed};
@@ -216,8 +250,8 @@ class _HavokSheetState extends State<HavokSheet> {
     } catch (_) {}
 
     try {
-      final weightResult = await getIt<GetMeasurements>()(
-          measurementType: 'weight', limit: 1);
+      final weightResult =
+          await getIt<GetMeasurements>()(measurementType: 'weight', limit: 1);
       final weights = weightResult.valueOrNull ?? [];
       if (weights.isNotEmpty) {
         ctx['weight'] = {'latestKg': weights.first.value};
@@ -259,12 +293,15 @@ class _HavokSheetState extends State<HavokSheet> {
       if (profile != null && profile.isNotEmpty) {
         ctx['perfil_usuario'] = {
           if (profile['main_goal'] != null) 'objetivo': profile['main_goal'],
-          if (profile['experience_level'] != null) 'nivel': profile['experience_level'],
+          if (profile['experience_level'] != null)
+            'nivel': profile['experience_level'],
           if (profile['workout_frequency_days'] != null)
             'dias_treino_semana': profile['workout_frequency_days'],
-          if (profile['injuries'] is List && (profile['injuries'] as List).isNotEmpty)
+          if (profile['injuries'] is List &&
+              (profile['injuries'] as List).isNotEmpty)
             'lesoes': profile['injuries'],
-          if (profile['muscle_focus'] is List && (profile['muscle_focus'] as List).isNotEmpty)
+          if (profile['muscle_focus'] is List &&
+              (profile['muscle_focus'] as List).isNotEmpty)
             'foco_muscular': profile['muscle_focus'],
           if (profile['workout_environment'] != null)
             'ambiente': profile['workout_environment'],
@@ -279,8 +316,8 @@ class _HavokSheetState extends State<HavokSheet> {
 
   /// true se o treino mais recente (pessoal ou Club) não foi hoje.
   Future<bool> _isStreakAtRisk() async {
-    final lastResult =
-        await getIt<GetConsolidatedWorkoutHistory>()(completedOnly: true, limit: 1);
+    final lastResult = await getIt<GetConsolidatedWorkoutHistory>()(
+        completedOnly: true, limit: 1);
     final last = lastResult.valueOrNull?.firstOrNull;
     final lastDate = last?.completedAt?.toLocal();
     if (lastDate == null) return true;
@@ -310,7 +347,8 @@ class _HavokSheetState extends State<HavokSheet> {
             id: 'limit-reply-${DateTime.now().microsecondsSinceEpoch}',
             threadId: thread.id,
             role: 'assistant',
-            content: 'Limite diário atingido ($_dailyLimit mensagens). Assine o BLDR Club para conversar sem limite.',
+            content:
+                'Limite diário atingido ($_dailyLimit mensagens). Assine o BLDR Club para conversar sem limite.',
             createdAt: DateTime.now(),
           ),
         ];
@@ -382,7 +420,8 @@ class _HavokSheetState extends State<HavokSheet> {
 
   void _expand() {
     Navigator.of(context).pop();
-    Navigator.push(context, MaterialPageRoute(builder: (_) => const HavokHubScreen()));
+    Navigator.push(
+        context, MaterialPageRoute(builder: (_) => const HavokHubScreen()));
   }
 
   @override
@@ -448,7 +487,9 @@ class _HavokSheetState extends State<HavokSheet> {
               children: [
                 Text(AppLocalizations.of(context).havok_sheet_title,
                     style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15)),
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15)),
                 Text(AppLocalizations.of(context).havok_sheet_subtitle,
                     style: TextStyle(
                         color: BldrColors.goldBright,
@@ -461,16 +502,19 @@ class _HavokSheetState extends State<HavokSheet> {
           // "Histórico" — nesta fase a thread é diária e já está toda
           // carregada na tela; o ícone rola até o início da conversa.
           IconButton(
-            icon: const Icon(Icons.bookmark_border, color: BldrColors.textSecondary, size: 20),
+            icon: const Icon(Icons.bookmark_border,
+                color: BldrColors.textSecondary, size: 20),
             onPressed: () {
               if (_scrollController.hasClients) {
                 _scrollController.animateTo(0,
-                    duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut);
               }
             },
           ),
           IconButton(
-            icon: const Icon(Icons.open_in_full, color: BldrColors.textSecondary, size: 18),
+            icon: const Icon(Icons.open_in_full,
+                color: BldrColors.textSecondary, size: 18),
             onPressed: _expand,
           ),
         ],
@@ -480,7 +524,8 @@ class _HavokSheetState extends State<HavokSheet> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator(color: BldrColors.goldBright));
+      return const Center(
+          child: CircularProgressIndicator(color: BldrColors.goldBright));
     }
     if (_error != null) {
       return Center(child: Text(_error!, style: BldrText.description));
@@ -503,20 +548,28 @@ class _HavokSheetState extends State<HavokSheet> {
               : _AssistantBubble(text: m.content, faded: false),
           // B6 — artifact_data sobrevive a reload da thread; o card abre o
           // treino gerado na tela com os botões reais (B5 resolvido).
-          if (!m.isUser && m.artifactType == 'workout' && m.artifactData != null)
+          if (!m.isUser &&
+              m.artifactType == 'workout' &&
+              m.artifactData != null)
             _WorkoutArtifactCard(workoutData: m.artifactData!),
         ],
-        if (showOriginDivider) _SessionDivider(label: 'Agora em ${kHavokOriginLabels[widget.originScreen] ?? widget.originScreen}'),
-        if (_sending) const Padding(
-          padding: EdgeInsets.symmetric(vertical: 8),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: SizedBox(
-              width: 18, height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2, color: BldrColors.goldBright),
+        if (showOriginDivider)
+          _SessionDivider(
+              label:
+                  'Agora em ${kHavokOriginLabels[widget.originScreen] ?? widget.originScreen}'),
+        if (_sending)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: BldrColors.goldBright),
+              ),
             ),
           ),
-        ),
         const SizedBox(height: 8),
         if (!_sending) _buildSuggestions(),
         const SizedBox(height: 12),
@@ -547,7 +600,8 @@ class _HavokSheetState extends State<HavokSheet> {
         children: [
           // Entrada de foto — visual apenas, sem lógica (fora do escopo do L3).
           IconButton(
-            icon: const Icon(Icons.camera_alt_outlined, color: BldrColors.textMuted, size: 20),
+            icon: const Icon(Icons.camera_alt_outlined,
+                color: BldrColors.textMuted, size: 20),
             onPressed: null,
           ),
           Expanded(
@@ -568,9 +622,11 @@ class _HavokSheetState extends State<HavokSheet> {
                   hintText: _atLimit
                       ? 'Limite diário atingido'
                       : AppLocalizations.of(context).havok_input_placeholder,
-                  hintStyle: BldrText.body.copyWith(color: BldrColors.textMuted),
+                  hintStyle:
+                      BldrText.body.copyWith(color: BldrColors.textMuted),
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
               ),
             ),
@@ -601,9 +657,12 @@ class _HavokSheetState extends State<HavokSheet> {
                     : '$_remaining/${_dailyLimit} mensagens restantes hoje',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: _remaining <= 3 ? BldrColors.goldBright : BldrColors.textMuted,
+                  color: _remaining <= 3
+                      ? BldrColors.goldBright
+                      : BldrColors.textMuted,
                   fontSize: 10,
-                  fontWeight: _remaining <= 3 ? FontWeight.w600 : FontWeight.normal,
+                  fontWeight:
+                      _remaining <= 3 ? FontWeight.w600 : FontWeight.normal,
                 ),
               ),
             ),
@@ -640,7 +699,8 @@ class _AssistantBubble extends StatelessWidget {
             const SizedBox(width: 8),
             Flexible(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
                   color: BldrColors.surface,
                   border: Border.all(color: BldrColors.border),
@@ -673,7 +733,8 @@ class _UserBubble extends StatelessWidget {
       child: Align(
         alignment: Alignment.centerRight,
         child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
+          constraints:
+              BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.8),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
             decoration: BoxDecoration(
@@ -709,7 +770,8 @@ class _SessionDivider extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Text(label,
-                style: const TextStyle(color: BldrColors.textMuted, fontSize: 10)),
+                style:
+                    const TextStyle(color: BldrColors.textMuted, fontSize: 10)),
           ),
           const Expanded(child: Divider(color: BldrColors.borderSubtle)),
         ],
@@ -726,13 +788,16 @@ class _WorkoutArtifactCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final name = (workoutData['nome'] ?? workoutData['name'] as String?)
-        ?.toString().trim().isNotEmpty == true
+                ?.toString()
+                .trim()
+                .isNotEmpty ==
+            true
         ? (workoutData['nome'] ?? workoutData['name']).toString()
         : 'Treino gerado';
     final exerciseCount =
         ((workoutData['exercicios'] ?? workoutData['exercises']) as List?)
-            ?.length ??
-        0;
+                ?.length ??
+            0;
 
     return Padding(
       padding: const EdgeInsets.only(left: 34, bottom: 8),
@@ -740,22 +805,28 @@ class _WorkoutArtifactCard extends StatelessWidget {
         borderColor: BldrColors.goldBorder,
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => WorkoutDetailScreen(workoutData: workoutData)),
+          MaterialPageRoute(
+              builder: (_) => WorkoutDetailScreen(workoutData: workoutData)),
         ),
         child: Row(
           children: [
-            const Icon(TablerIcons.barbell, color: BldrColors.goldBright, size: 18),
+            const Icon(TablerIcons.barbell,
+                color: BldrColors.goldBright, size: 18),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(name, style: BldrText.cardTitle),
-                  Text(AppLocalizations.of(context).havok_workout_exercises_tap(exerciseCount), style: BldrText.meta),
+                  Text(
+                      AppLocalizations.of(context)
+                          .havok_workout_exercises_tap(exerciseCount),
+                      style: BldrText.meta),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: BldrColors.textMuted, size: 18),
+            const Icon(Icons.chevron_right,
+                color: BldrColors.textMuted, size: 18),
           ],
         ),
       ),

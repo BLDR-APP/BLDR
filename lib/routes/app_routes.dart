@@ -20,6 +20,7 @@ import 'package:bldr_fitness/features/auth/presentation/login_screen/widgets/ver
 import 'package:bldr_fitness/shared/presentation/onboarding_completion_screen.dart';
 import 'package:bldr_fitness/features/profile/presentation/profile_drawer/profile_screen.dart';
 import 'package:bldr_fitness/features/profile/presentation/settings/settings_screen.dart';
+import 'package:bldr_fitness/features/integrations/presentation/wearable_workout_confirmation_screen.dart';
 
 // BLDR CLUB
 import 'package:bldr_fitness/features/club/presentation/bldr_club/bldr_club_screen.dart';
@@ -29,7 +30,6 @@ import 'package:bldr_fitness/features/club/presentation/bldr_club/esportes_scree
 import 'package:bldr_fitness/features/club/presentation/bldr_club/comunidade_screen.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/notifications_screen.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/public_profile_screen.dart';
-import 'package:bldr_fitness/features/club/presentation/bldr_club/club_types.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/collective_challenge_detail_screen.dart';
 
 // TEMPORÁRIO — vitrine do design system. Remover junto com
@@ -56,6 +56,8 @@ class AppRoutes {
   static const String createWorkoutScreen = '/create-workout';
   static const String weeklyPlanScreen = '/weekly-plan';
   static const String onboardingCompletion = '/onboarding-completion';
+  static const String wearableWorkoutConfirmation =
+      '/wearable-workout-confirmation';
 
   static const String profileScreen = '/profile';
   static const String settingsScreen = '/settings';
@@ -83,6 +85,14 @@ class AppRoutes {
       emailConfirmationScreen: (context) => const EmailConfirmationScreen(),
       onboardingFlow: (context) => const OnboardingFlow(),
       onboardingCompletion: (context) => const OnboardingCompletionScreen(),
+      wearableWorkoutConfirmation: (context) {
+        final args = ModalRoute.of(context)?.settings.arguments;
+        final activityId = args is Map ? args['activity_id'] as String? : null;
+        if (activityId == null || activityId.isEmpty) {
+          return const WorkoutsScreen();
+        }
+        return WearableWorkoutConfirmationScreen(activityId: activityId);
+      },
       dashboard: (context) => const Dashboard(),
       profileScreen: (context) => const ProfileScreen(),
       settingsScreen: (context) => const SettingsScreen(),
@@ -107,14 +117,16 @@ class AppRoutes {
       comunidadeScreen: (context) => const ComunidadeScreen(),
       notificacoesScreen: (context) => const NotificationsScreen(),
       publicProfileScreen: (context) {
-        final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+        final args =
+            ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
         return PublicProfileScreen(
           userId: args['userId'] as String,
           displayName: args['displayName'] as String?,
         );
       },
       collectiveChallengeDetail: (context) {
-        final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+        final args =
+            ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
         return CollectiveChallengeDetailScreen(
           challengeId: args['challengeId'] as String,
         );
@@ -123,8 +135,8 @@ class AppRoutes {
       createWorkoutScreen: (context) => const CreateWorkoutScreen(),
       weeklyPlanScreen: (context) => const WeeklyPlanScreen(),
       activeWorkoutScreen: (context) {
-        final args = ModalRoute.of(context)!.settings.arguments
-            as Map<String, dynamic>;
+        final args =
+            ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
         return ActiveWorkoutScreen(
           workoutId: args['workoutId'] as String,
           workoutName: args['workoutName'] as String,

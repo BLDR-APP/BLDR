@@ -1501,7 +1501,21 @@ PODS:
   - printing (1.0.0):
     - Flutter
   - PromisesObjC (2.4.1)
+  - purchases_flutter (10.10.1):
+    - Flutter
+    - PurchasesHybridCommon (= 18.33.1)
+  - purchases_ui_flutter (10.10.1):
+    - Flutter
+    - PurchasesHybridCommonUI (= 18.33.1)
+  - PurchasesHybridCommon (18.33.1):
+    - RevenueCat (= 5.87.1)
+  - PurchasesHybridCommonUI (18.33.1):
+    - PurchasesHybridCommon (= 18.33.1)
+    - RevenueCatUI (= 5.87.1)
   - RecaptchaInterop (101.0.0)
+  - RevenueCat (5.87.1)
+  - RevenueCatUI (5.87.1):
+    - RevenueCat (= 5.87.1)
   - SDWebImage (5.21.7):
     - SDWebImage/Core (= 5.21.7)
   - SDWebImage/Core (5.21.7)
@@ -1599,6 +1613,8 @@ DEPENDENCIES:
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - printing (from `.symlinks/plugins/printing/ios`)
+  - purchases_flutter (from `.symlinks/plugins/purchases_flutter/ios`)
+  - purchases_ui_flutter (from `.symlinks/plugins/purchases_ui_flutter/ios`)
   - share_plus (from `.symlinks/plugins/share_plus/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - sign_in_with_apple (from `.symlinks/plugins/sign_in_with_apple/ios`)
@@ -1641,7 +1657,11 @@ SPEC REPOS:
     - Mantle
     - nanopb
     - PromisesObjC
+    - PurchasesHybridCommon
+    - PurchasesHybridCommonUI
     - RecaptchaInterop
+    - RevenueCat
+    - RevenueCatUI
     - SDWebImage
     - SDWebImageWebPCoder
     - Stripe
@@ -1707,6 +1727,10 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/permission_handler_apple/ios"
   printing:
     :path: ".symlinks/plugins/printing/ios"
+  purchases_flutter:
+    :path: ".symlinks/plugins/purchases_flutter/ios"
+  purchases_ui_flutter:
+    :path: ".symlinks/plugins/purchases_ui_flutter/ios"
   share_plus:
     :path: ".symlinks/plugins/share_plus/ios"
   shared_preferences_foundation:
@@ -1785,7 +1809,13 @@ SPEC CHECKSUMS:
   permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
   printing: 54ff03f28fe9ba3aa93358afb80a8595a071dd07
   PromisesObjC: 752c3227f599e3467650e47ea36f433eeb10c273
+  purchases_flutter: 58e50cc510341205a065a4e20b0d06f5e2599301
+  purchases_ui_flutter: 1b90f6500e3a83f6878a0f9dff7463d93915bef3
+  PurchasesHybridCommon: 10fa5043609584e834a84b4641f9c1166e69ea55
+  PurchasesHybridCommonUI: 72905af114e6f8f0d089b3b09bb9442ba053a933
   RecaptchaInterop: 11e0b637842dfb48308d242afc3f448062325aba
+  RevenueCat: 7d45133f048270481facf0f7b02530e503a01620
+  RevenueCatUI: 9e9a56493980e8186af3344022a81835b4553413
   SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
   SDWebImageWebPCoder: 0e06e365080397465cc73a7a9b472d8a3bd0f377
   share_plus: 50da8cb520a8f0f65671c6c6a99b3617ed10a58a

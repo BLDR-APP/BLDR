@@ -37,7 +37,8 @@ android {
 
     defaultConfig {
         applicationId = "com.bldr_fitness.app"
-        minSdk = flutter.minSdkVersion
+        // purchases_flutter 10.x exige Android API 24+.
+        minSdk = 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

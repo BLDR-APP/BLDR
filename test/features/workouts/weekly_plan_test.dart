@@ -4,6 +4,7 @@ import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/onboarding/domain/entities/onboarding_plan.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/weekly_plan.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_template.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/today_workout_resolver.dart';
 import 'package:bldr_fitness/features/workouts/domain/repositories/weekly_plan_repository.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart';
@@ -155,6 +156,31 @@ void main() {
         weekday: 1,
       );
       expect(selected, isNull);
+    });
+
+    test('recupera sessão concluída hoje para manter o Hero visível', () {
+      final selected = TodayWorkoutResolver.completedOnDate(
+        sessions: [
+          WorkoutSession(
+            id: 'today',
+            name: 'Pernas',
+            templateId: 'pernas-id',
+            completedAt: DateTime(2026, 8, 30, 10),
+            isCompleted: true,
+          ),
+          WorkoutSession(
+            id: 'yesterday',
+            name: 'Push',
+            templateId: 'push-id',
+            completedAt: DateTime(2026, 8, 29, 10),
+            isCompleted: true,
+          ),
+        ],
+        date: DateTime(2026, 8, 30, 18),
+      );
+
+      expect(selected?.id, 'today');
+      expect(selected?.templateId, 'pernas-id');
     });
   });
 }

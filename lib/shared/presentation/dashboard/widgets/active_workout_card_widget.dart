@@ -9,8 +9,10 @@ import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/features/auth/domain/repositories/auth_repository.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/paused_workout_summary.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
-import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart' as uc;
-import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart' as clubUc;
+import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart'
+    as uc;
+import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart'
+    as clubUc;
 import 'package:bldr_fitness/features/workouts/presentation/mappers/legacy_ui_maps.dart';
 import 'package:bldr_fitness/widgets/continue_workout_card.dart';
 import 'package:bldr_fitness/features/achievements/presentation/achievements/achievement_provider.dart';
@@ -54,15 +56,22 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
 
   Future<void> _loadActiveWorkout() async {
     // Captura o provider antes de qualquer await para evitar uso de context em async gap
-    final sessionProvider = mounted ? context.read<WorkoutSessionProvider>() : null;
+    final sessionProvider =
+        mounted ? context.read<WorkoutSessionProvider>() : null;
     try {
       if (!getIt<AuthRepository>().isAuthenticated) {
-        if (mounted) setState(() { isLoading = false; hasError = false; });
+        if (mounted)
+          setState(() {
+            isLoading = false;
+            hasError = false;
+          });
         return;
       }
 
       final historyResult =
           await getIt<uc.GetWorkoutHistory>()(completedOnly: false, limit: 1);
+      final completedHistoryResult =
+          await getIt<uc.GetWorkoutHistory>()(completedOnly: true, limit: 10);
       final pausedResult = await getIt<uc.GetPausedWorkouts>()(limit: 2);
       final pausedClubResult =
           await getIt<clubUc.GetPausedClubWorkouts>()(limit: 2);
@@ -75,7 +84,8 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
       final planResult = await getIt<uc.GetWeeklyPlan>()();
       final planDays = planResult.valueOrNull ?? [];
       final todayWeekday = DateTime.now().weekday;
-      final todayPlanDay = planDays.where((d) => d.diaSemana == todayWeekday).firstOrNull;
+      final todayPlanDay =
+          planDays.where((d) => d.diaSemana == todayWeekday).firstOrNull;
       final todayTemplate = (todayPlanDay?.treino?.id != null)
           ? {'id': todayPlanDay!.treino!.id!, 'name': todayPlanDay.treino!.name}
           : null;
@@ -88,23 +98,35 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
       final paused = rawPaused.map(pausedToLegacyMap).toList();
 
       if (mounted) {
-        final active = workouts.isNotEmpty &&
-                workouts.first['is_completed'] == false
-            ? workouts.first
-            : null;
+        final active =
+            workouts.isNotEmpty && workouts.first['is_completed'] == false
+                ? workouts.first
+                : null;
 
         // Verifica se o treino mais recente foi concluído hoje.
         WorkoutSession? completedToday;
-        if (active == null && history.isNotEmpty && history.first.isCompleted) {
-          final ct = history.first.completedAt?.toLocal();
+        final completedHistory = completedHistoryResult.valueOrNull ?? const [];
+        if (active == null && completedHistory.isNotEmpty) {
+          final latestCompleted = completedHistory.first;
+          final ct = latestCompleted.completedAt?.toLocal();
           final now = DateTime.now();
           if (ct != null &&
               ct.year == now.year &&
               ct.month == now.month &&
               ct.day == now.day) {
-            completedToday = history.first;
+            completedToday = latestCompleted;
           }
         }
+
+        // O histórico é intencionalmente leve. Para o card concluído, busca os
+        // detalhes uma única vez para calcular séries e volume executados.
+        if (completedToday?.id != null) {
+          final detailsResult =
+              await getIt<uc.GetWorkoutDetails>()(completedToday!.id!);
+          completedToday = detailsResult.valueOrNull ?? completedToday;
+        }
+
+        if (!mounted) return;
 
         // Race condition: a session already picked up as activeWorkout may also
         // appear in pausedSummaries — remove the duplicate.
@@ -126,7 +148,11 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
       }
     } catch (error) {
       debugPrint('Erro ao carregar treino ativo: $error');
-      if (mounted) setState(() { isLoading = false; hasError = true; });
+      if (mounted)
+        setState(() {
+          isLoading = false;
+          hasError = true;
+        });
     }
   }
 
@@ -157,8 +183,8 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
   }
 
   void _resumeWorkout(Map<String, dynamic> summary) {
-    final id     = summary['id'] as String;
-    final name   = (summary['name'] as String?) ?? 'Treino';
+    final id = summary['id'] as String;
+    final name = (summary['name'] as String?) ?? 'Treino';
     final source = (summary['source'] as String?) ?? 'free';
 
     if (source == 'club') {
@@ -170,7 +196,9 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
             workoutName: name,
           ),
         ),
-      ).then((_) { if (mounted) _loadActiveWorkout(); });
+      ).then((_) {
+        if (mounted) _loadActiveWorkout();
+      });
     } else {
       Navigator.push(
         context,
@@ -180,7 +208,9 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
             workoutName: name,
           ),
         ),
-      ).then((_) { if (mounted) _loadActiveWorkout(); });
+      ).then((_) {
+        if (mounted) _loadActiveWorkout();
+      });
     }
   }
 
@@ -228,37 +258,37 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
           ),
           SizedBox(height: 1.5.h),
           ...pausedSummaries.map((s) {
-                final workoutId = s['id'] as String;
-                final source = (s['source'] as String?) ?? 'free';
-                return Padding(
-                  padding: EdgeInsets.fromLTRB(6.w, 0, 6.w, 1.2.h),
-                  child: Dismissible(
-                    key: ValueKey('paused_dash_$workoutId'),
-                    direction: DismissDirection.endToStart,
-                    confirmDismiss: (_) async {
-                      await _confirmAndDelete(workoutId, source);
-                      // _confirmAndDelete already handles setState; tell
-                      // Dismissible not to animate removal itself.
-                      return false;
-                    },
-                    background: Container(
-                      alignment: Alignment.centerRight,
-                      padding: EdgeInsets.only(right: 4.w),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFC84040),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: const Icon(Icons.delete_outline,
-                          color: Colors.white, size: 24),
-                    ),
-                    child: ContinueWorkoutCard(
-                      summary: s,
-                      onResume: () => _resumeWorkout(s),
-                      onDiscard: () => _confirmAndDelete(workoutId, source),
-                    ),
+            final workoutId = s['id'] as String;
+            final source = (s['source'] as String?) ?? 'free';
+            return Padding(
+              padding: EdgeInsets.fromLTRB(6.w, 0, 6.w, 1.2.h),
+              child: Dismissible(
+                key: ValueKey('paused_dash_$workoutId'),
+                direction: DismissDirection.endToStart,
+                confirmDismiss: (_) async {
+                  await _confirmAndDelete(workoutId, source);
+                  // _confirmAndDelete already handles setState; tell
+                  // Dismissible not to animate removal itself.
+                  return false;
+                },
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: EdgeInsets.only(right: 4.w),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFC84040),
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                );
-              }),
+                  child: const Icon(Icons.delete_outline,
+                      color: Colors.white, size: 24),
+                ),
+                child: ContinueWorkoutCard(
+                  summary: s,
+                  onResume: () => _resumeWorkout(s),
+                  onDiscard: () => _confirmAndDelete(workoutId, source),
+                ),
+              ),
+            );
+          }),
         ],
       );
     }
@@ -274,16 +304,11 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
     final durSeconds = session.totalDurationSeconds ?? 0;
     final durMin = durSeconds ~/ 60;
     final durH = durMin ~/ 60;
-    final durLabel = durH > 0
-        ? '${durH}h ${durMin % 60}min'
-        : '${durMin}min';
+    final durLabel = durH > 0 ? '${durH}h ${durMin % 60}min' : '${durMin}min';
 
-    final completedSets = session.sets.where((s) => s.isCompleted).toList();
-    final setsCount = completedSets.length;
-    final volumeKg = completedSets.fold<double>(
-      0,
-      (acc, s) => acc + ((s.reps ?? 0) * (s.weightKg ?? 0)),
-    );
+    final setsCount = session.completedSetCount;
+    final volumeKg = session.completedVolumeKg;
+    final completedViaWhoop = session.completedViaWhoop;
 
     final completedAtLabel = () {
       final ct = session.completedAt?.toLocal();
@@ -332,7 +357,9 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
             ),
             const SizedBox(height: 4),
             Text(
-              AppLocalizations.of(context).dashboard_workout_done_label,
+              completedViaWhoop
+                  ? 'Concluído via WHOOP'
+                  : AppLocalizations.of(context).dashboard_workout_done_label,
               style: BldrText.meta.copyWith(color: AppTheme.successGreen),
             ),
             const SizedBox(height: 14),
@@ -342,11 +369,13 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
                 _DoneStat(
                   icon: Icons.timer_outlined,
                   value: durLabel,
-                  label: AppLocalizations.of(context).dashboard_done_duration_label,
+                  label: AppLocalizations.of(context)
+                      .dashboard_done_duration_label,
                 ),
                 _DoneStat(
                   icon: Icons.fitness_center_rounded,
-                  value: '$setsCount',
+                  value:
+                      completedViaWhoop && setsCount == 0 ? '—' : '$setsCount',
                   label: AppLocalizations.of(context).dashboard_done_sets_label,
                 ),
                 if (volumeKg > 0)
@@ -355,7 +384,8 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
                     value: volumeKg >= 1000
                         ? '${(volumeKg / 1000).toStringAsFixed(1)}t'
                         : '${volumeKg.toStringAsFixed(0)}kg',
-                    label: AppLocalizations.of(context).dashboard_done_volume_label,
+                    label: AppLocalizations.of(context)
+                        .dashboard_done_volume_label,
                   ),
               ],
             ),
@@ -375,9 +405,11 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(AppLocalizations.of(context).dashboard_workout_today_title, style: BldrText.label),
+            Text(AppLocalizations.of(context).dashboard_workout_today_title,
+                style: BldrText.label),
             const SizedBox(height: 6),
-            Text(AppLocalizations.of(context).common_loading, style: BldrText.kpiMd),
+            Text(AppLocalizations.of(context).common_loading,
+                style: BldrText.kpiMd),
             const SizedBox(height: BldrSpacing.padCard),
             const SizedBox(
               width: 22,
@@ -426,14 +458,16 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppLocalizations.of(context).dashboard_workout_load_error_title,
+                      AppLocalizations.of(context)
+                          .dashboard_workout_load_error_title,
                       style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
                         color: AppTheme.textPrimary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
-                      AppLocalizations.of(context).dashboard_workout_load_error_body,
+                      AppLocalizations.of(context)
+                          .dashboard_workout_load_error_body,
                       style: AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
                         color: AppTheme.textSecondary,
                       ),
@@ -571,91 +605,93 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
     return Padding(
       padding: BldrSpacing.pageInsets,
       child: BldrHeroCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(AppLocalizations.of(context).dashboard_workout_in_progress, style: BldrText.label),
-          const SizedBox(height: 6),
-          // Dinâmico: nome real da sessão.
-          Text(
-            workoutName,
-            style: BldrText.kpiMd,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          // G10 — título curto + detalhe no subtítulo.
-          if (templateName != null) ...[
-            const SizedBox(height: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(AppLocalizations.of(context).dashboard_workout_in_progress,
+                style: BldrText.label),
+            const SizedBox(height: 6),
+            // Dinâmico: nome real da sessão.
             Text(
-              templateName,
-              style: BldrText.meta,
+              workoutName,
+              style: BldrText.kpiMd,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-          ],
-          const SizedBox(height: 12),
-
-          // Duração corrente da sessão.
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.timer_outlined,
-                  color: BldrColors.goldBright, size: 15),
-              const SizedBox(width: 6),
-              Text(_formatDuration(startTime), style: BldrText.meta),
-            ],
-          ),
-          const SizedBox(height: BldrSpacing.padCard),
-
-          // Action Buttons
-          Row(
-            children: [
-              // Expanded(
-              //   child: OutlinedButton.icon(
-              //     onPressed: () {
-              //       ScaffoldMessenger.of(context).showSnackBar(
-              //         SnackBar(
-              //           content: Text('Resume workout feature coming soon'),
-              //           backgroundColor: AppTheme.warningAmber,
-              //           behavior: SnackBarBehavior.floating,
-              //         ),
-              //       );
-              //     },
-              //     style: OutlinedButton.styleFrom(
-              //       foregroundColor: AppTheme.accentGold,
-              //       side: BorderSide(color: AppTheme.accentGold, width: 1.5),
-              //       padding: EdgeInsets.symmetric(vertical: 3.w),
-              //       shape: RoundedRectangleBorder(
-              //         borderRadius: BorderRadius.circular(12),
-              //       ),
-              //     ),
-              //     icon: CustomIconWidget(
-              //       iconName: 'play_arrow',
-              //       color: AppTheme.accentGold,
-              //       size: 4.w,
-              //     ),
-              //     label: Text(
-              //       'Resumir',
-              //       style: AppTheme.darkTheme.textTheme.titleSmall?.copyWith(
-              //         color: AppTheme.accentGold,
-              //         fontWeight: FontWeight.w600,
-              //       ),
-              //     ),
-              //   ),
-              // ),
-              // SizedBox(width: 3.w),
-              // G4 — verde eliminado; ação principal em dourado.
-              Expanded(
-                child: BldrPrimaryButton(
-                  label: AppLocalizations.of(context).dashboard_finish_workout_btn,
-                  icon: Icons.check_rounded,
-                  onPressed: _showCompleteWorkoutDialog,
-                ),
+            // G10 — título curto + detalhe no subtítulo.
+            if (templateName != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                templateName,
+                style: BldrText.meta,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
-          ),
-        ],
-      ),
+            const SizedBox(height: 12),
+
+            // Duração corrente da sessão.
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.timer_outlined,
+                    color: BldrColors.goldBright, size: 15),
+                const SizedBox(width: 6),
+                Text(_formatDuration(startTime), style: BldrText.meta),
+              ],
+            ),
+            const SizedBox(height: BldrSpacing.padCard),
+
+            // Action Buttons
+            Row(
+              children: [
+                // Expanded(
+                //   child: OutlinedButton.icon(
+                //     onPressed: () {
+                //       ScaffoldMessenger.of(context).showSnackBar(
+                //         SnackBar(
+                //           content: Text('Resume workout feature coming soon'),
+                //           backgroundColor: AppTheme.warningAmber,
+                //           behavior: SnackBarBehavior.floating,
+                //         ),
+                //       );
+                //     },
+                //     style: OutlinedButton.styleFrom(
+                //       foregroundColor: AppTheme.accentGold,
+                //       side: BorderSide(color: AppTheme.accentGold, width: 1.5),
+                //       padding: EdgeInsets.symmetric(vertical: 3.w),
+                //       shape: RoundedRectangleBorder(
+                //         borderRadius: BorderRadius.circular(12),
+                //       ),
+                //     ),
+                //     icon: CustomIconWidget(
+                //       iconName: 'play_arrow',
+                //       color: AppTheme.accentGold,
+                //       size: 4.w,
+                //     ),
+                //     label: Text(
+                //       'Resumir',
+                //       style: AppTheme.darkTheme.textTheme.titleSmall?.copyWith(
+                //         color: AppTheme.accentGold,
+                //         fontWeight: FontWeight.w600,
+                //       ),
+                //     ),
+                //   ),
+                // ),
+                // SizedBox(width: 3.w),
+                // G4 — verde eliminado; ação principal em dourado.
+                Expanded(
+                  child: BldrPrimaryButton(
+                    label: AppLocalizations.of(context)
+                        .dashboard_finish_workout_btn,
+                    icon: Icons.check_rounded,
+                    onPressed: _showCompleteWorkoutDialog,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -673,12 +709,21 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(AppLocalizations.of(context).dashboard_workout_today_title, style: BldrText.label),
+            Text(AppLocalizations.of(context).dashboard_workout_today_title,
+                style: BldrText.label),
             const SizedBox(height: 6),
-            Text(today != null ? (today['name'] ?? 'Treino') : AppLocalizations.of(context).dashboard_workout_ready,
+            Text(
+                today != null
+                    ? (today['name'] ?? 'Treino')
+                    : AppLocalizations.of(context).dashboard_workout_ready,
                 style: BldrText.kpiMd),
             const SizedBox(height: 4),
-            Text(today != null ? AppLocalizations.of(context).dashboard_workout_havok_generated : AppLocalizations.of(context).dashboard_workout_next_session,
+            Text(
+                today != null
+                    ? AppLocalizations.of(context)
+                        .dashboard_workout_havok_generated
+                    : AppLocalizations.of(context)
+                        .dashboard_workout_next_session,
                 style: BldrText.meta),
             const SizedBox(height: BldrSpacing.padCard),
             BldrPrimaryButton(
@@ -722,10 +767,8 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
       },
     );
     if (confirmed != true || !mounted) return;
-    setState(() =>
-        pausedSummaries.removeWhere((w) => w['id'] == workoutId));
-    final result =
-        await getIt<uc.DeletePausedWorkout>()(workoutId, source);
+    setState(() => pausedSummaries.removeWhere((w) => w['id'] == workoutId));
+    final result = await getIt<uc.DeletePausedWorkout>()(workoutId, source);
     if (result.isFailure && mounted) _loadActiveWorkout();
   }
 
@@ -738,74 +781,78 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
       builder: (dialogContext) {
         final dl = AppLocalizations.of(dialogContext);
         return AlertDialog(
-        backgroundColor: AppTheme.dialogDark,
-        title: Text(
-          dl.dashboard_finish_workout_dialog_title,
-          style: TextStyle(color: AppTheme.textPrimary),
-        ),
-        content: Text(
-          dl.dashboard_finish_workout_dialog_body,
-          style: TextStyle(color: AppTheme.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child:
-            Text(dl.common_cancel, style: TextStyle(color: AppTheme.textSecondary)),
+          backgroundColor: AppTheme.dialogDark,
+          title: Text(
+            dl.dashboard_finish_workout_dialog_title,
+            style: TextStyle(color: AppTheme.textPrimary),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-
-              try {
-                final result = await getIt<uc.CompleteWorkout>()(
-                  workoutId: activeWorkout!['id'],
-                );
-                final failure = result.failureOrNull;
-                if (failure != null) throw Exception(failure.message);
-
-                // Verificar conquistas desbloqueadas pelo treino concluído
-                if (mounted) {
-                  await stateContext
-                      .read<AchievementProvider>()
-                      .checkAchievements('workout');
-                }
-
-                if (mounted) {
-                  ScaffoldMessenger.of(stateContext).showSnackBar(
-                    SnackBar(
-                      content: Text(AppLocalizations.of(stateContext).dashboard_workout_completed_success),
-                      backgroundColor: AppTheme.successGreen,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-
-                // Refresh the card
-                _loadActiveWorkout();
-              } catch (error) {
-                if (mounted) {
-                  ScaffoldMessenger.of(stateContext).showSnackBar(
-                    SnackBar(
-                      content: Text(AppLocalizations.of(stateContext).dashboard_finish_workout_error(error.toString())),
-                      backgroundColor: AppTheme.errorRed,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.successGreen,
-              foregroundColor: AppTheme.textPrimary,
+          content: Text(
+            dl.dashboard_finish_workout_dialog_body,
+            style: TextStyle(color: AppTheme.textSecondary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(dl.common_cancel,
+                  style: TextStyle(color: AppTheme.textSecondary)),
             ),
-            child: Text(dl.dashboard_complete_workout_btn),
-          ),
-        ],
-      );},
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+
+                try {
+                  final result = await getIt<uc.CompleteWorkout>()(
+                    workoutId: activeWorkout!['id'],
+                  );
+                  final failure = result.failureOrNull;
+                  if (failure != null) throw Exception(failure.message);
+
+                  // Verificar conquistas desbloqueadas pelo treino concluído
+                  if (mounted) {
+                    await stateContext
+                        .read<AchievementProvider>()
+                        .checkAchievements('workout');
+                  }
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(stateContext).showSnackBar(
+                      SnackBar(
+                        content: Text(AppLocalizations.of(stateContext)
+                            .dashboard_workout_completed_success),
+                        backgroundColor: AppTheme.successGreen,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+
+                  // Refresh the card
+                  _loadActiveWorkout();
+                } catch (error) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(stateContext).showSnackBar(
+                      SnackBar(
+                        content: Text(AppLocalizations.of(stateContext)
+                            .dashboard_finish_workout_error(error.toString())),
+                        backgroundColor: AppTheme.errorRed,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.successGreen,
+                foregroundColor: AppTheme.textPrimary,
+              ),
+              child: Text(dl.dashboard_complete_workout_btn),
+            ),
+          ],
+        );
+      },
     );
   }
 }
+
 class _DoneStat extends StatelessWidget {
   final IconData icon;
   final String value;

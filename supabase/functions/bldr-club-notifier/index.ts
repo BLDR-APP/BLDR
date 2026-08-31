@@ -59,6 +59,12 @@ async function getAccessToken() {
 // === SERVIDOR HTTP (AQUI MUDA A LÓGICA DO BLDR CLUB) ===
 serve(async (req) => {
   try {
+    const webhookSecret = Deno.env.get('BLDR_CLUB_WEBHOOK_SECRET')
+    const authorization = req.headers.get('Authorization')
+    if (!webhookSecret || authorization !== `Bearer ${webhookSecret}`) {
+      return new Response('Não autorizado', { status: 401 })
+    }
+
     // 1. Recebe os dados do Webhook do Banco de Dados
     // O Supabase envia um JSON com: { type: 'INSERT', record: { ...dados_da_notificacao } }
     const payload = await req.json()
@@ -126,8 +132,9 @@ serve(async (req) => {
           },
           // Dados extras para o app saber o que fazer ao clicar
           data: {
-             type: 'bldr_club_event',
-             notification_type: record.type // success, error, info
+             type: record.action_type ?? record.type ?? 'bldr_club_event',
+             notification_type: record.type ?? 'info',
+             action_data: JSON.stringify(record.action_data ?? {}),
           }
         },
       }

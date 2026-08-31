@@ -15,14 +15,23 @@ class RankingEntry {
     this.isMe = false,
   });
 
-  factory RankingEntry.fromRow(Map<String, dynamic> row, {String? currentUserId}) {
+  // RPCs retornam: user_id, full_name, username, avatar_url, total
+  // position é calculado externamente pelo índice da lista.
+  factory RankingEntry.fromRow(
+    Map<String, dynamic> row, {
+    String? currentUserId,
+    int position = 0,
+  }) {
     final userId = row['user_id'] as String;
+    final displayName = (row['full_name'] as String?)?.isNotEmpty == true
+        ? row['full_name'] as String
+        : (row['username'] as String?) ?? 'Atleta';
     return RankingEntry(
-      position: (row['position'] as num).toInt(),
+      position: position,
       userId: userId,
-      displayName: (row['display_name'] as String?) ?? 'Atleta',
+      displayName: displayName,
       avatarUrl: row['avatar_url'] as String?,
-      value: (row['value'] as num).toDouble(),
+      value: (row['total'] as num?)?.toDouble() ?? 0.0,
       isMe: currentUserId != null && userId == currentUserId,
     );
   }

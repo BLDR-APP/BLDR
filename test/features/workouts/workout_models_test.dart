@@ -50,8 +50,7 @@ void main() {
   });
 
   group('WorkoutModels.sessionFromMap', () {
-    test('parseia sessão com séries e infere is_completed de completed_at',
-        () {
+    test('parseia sessão com séries e infere is_completed de completed_at', () {
       final session = WorkoutModels.sessionFromMap({
         'id': 'w1',
         'name': 'Treino A',
@@ -96,6 +95,46 @@ void main() {
 
       expect(session.isCompleted, isTrue);
       expect(session.isActive, isFalse);
+    });
+
+    test('resume séries, volume e origem WHOOP somente das séries concluídas',
+        () {
+      final session = WorkoutModels.sessionFromMap({
+        'id': 'w3',
+        'name': 'Treino C',
+        'notes': 'Atividade WHOOP vinculada ao treino planejado.',
+        'completed_at': '2026-08-30T01:12:00Z',
+        'workout_exercise_sets': [
+          {
+            'id': 's1',
+            'user_workout_id': 'w3',
+            'set_number': 1,
+            'reps': 10,
+            'weight_kg': 40,
+            'completed_at': '2026-08-30T00:30:00Z',
+          },
+          {
+            'id': 's2',
+            'user_workout_id': 'w3',
+            'set_number': 2,
+            'reps': 8,
+            'weight_kg': 50,
+            'completed_at': '2026-08-30T00:35:00Z',
+          },
+          {
+            'id': 's3',
+            'user_workout_id': 'w3',
+            'set_number': 3,
+            'reps': 12,
+            'weight_kg': 30,
+            'completed_at': null,
+          },
+        ],
+      });
+
+      expect(session.completedViaWhoop, isTrue);
+      expect(session.completedSetCount, 2);
+      expect(session.completedVolumeKg, 800);
     });
   });
 

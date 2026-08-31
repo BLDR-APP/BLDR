@@ -5,8 +5,7 @@ import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/features/community/domain/entities/ranking_entry.dart';
 import 'package:bldr_fitness/features/community/domain/repositories/community_feed_repository.dart';
-import 'package:bldr_fitness/features/subscription/domain/usecases/subscription_usecases.dart'
-    as subUc;
+import 'package:bldr_fitness/features/subscription/domain/usecases/resolve_club_access.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 
 class RankingScreen extends StatefulWidget {
@@ -41,8 +40,7 @@ class _RankingScreenState extends State<RankingScreen> {
   }
 
   Future<void> _init() async {
-    final sub = (await getIt<subUc.GetCurrentSubscription>()()).valueOrNull;
-    _isClub = sub?.planId == 'club' || sub?.planId == 'club_annual';
+    _isClub = (await getIt<ResolveClubAccess>()()).valueOrNull ?? false;
     await _load();
   }
 
@@ -118,12 +116,12 @@ class _RankingScreenState extends State<RankingScreen> {
               _buildPeriodSelector(),
               _buildCategoryChips(),
               Expanded(
-        child: _loading
-            ? _buildLoader()
-            : _hasError
-                ? _buildError()
-                : _buildBody(),
-      ),
+                child: _loading
+                    ? _buildLoader()
+                    : _hasError
+                        ? _buildError()
+                        : _buildBody(),
+              ),
             ],
           ),
         ),
@@ -146,8 +144,7 @@ class _RankingScreenState extends State<RankingScreen> {
           const Spacer(),
           if (!_isClub)
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: BldrColors.goldTint,
                 border: Border.all(color: BldrColors.goldBorder),
@@ -182,24 +179,20 @@ class _RankingScreenState extends State<RankingScreen> {
                 _load();
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color:
-                      selected ? BldrColors.goldSolid : BldrColors.surface,
+                  color: selected ? BldrColors.goldSolid : BldrColors.surface,
                   borderRadius: BorderRadius.circular(99),
                   border: Border.all(
-                    color: selected
-                        ? BldrColors.goldSolid
-                        : BldrColors.border,
+                    color: selected ? BldrColors.goldSolid : BldrColors.border,
                   ),
                 ),
                 child: Text(
                   labels[p]!,
                   style: BldrText.label.copyWith(
-                    color: selected
-                        ? BldrColors.bgBase
-                        : BldrColors.textSecondary,
+                    color:
+                        selected ? BldrColors.bgBase : BldrColors.textSecondary,
                   ),
                 ),
               ),
@@ -236,17 +229,13 @@ class _RankingScreenState extends State<RankingScreen> {
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 7),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                 decoration: BoxDecoration(
-                  color: selected
-                      ? BldrColors.goldTint
-                      : BldrColors.surface,
+                  color: selected ? BldrColors.goldTint : BldrColors.surface,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: selected
-                        ? BldrColors.goldBorder
-                        : BldrColors.border,
+                    color: selected ? BldrColors.goldBorder : BldrColors.border,
                   ),
                 ),
                 child: Row(
@@ -263,9 +252,8 @@ class _RankingScreenState extends State<RankingScreen> {
                         color: selected
                             ? BldrColors.goldBright
                             : BldrColors.textSecondary,
-                        fontWeight: selected
-                            ? FontWeight.bold
-                            : FontWeight.normal,
+                        fontWeight:
+                            selected ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                   ],
@@ -305,7 +293,8 @@ class _RankingScreenState extends State<RankingScreen> {
               style: TextButton.styleFrom(
                 backgroundColor: BldrColors.goldSolid,
                 foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(BldrRadius.button),
                 ),
@@ -376,15 +365,16 @@ class _RankingScreenState extends State<RankingScreen> {
       ),
       child: Row(
         children: [
-          const Icon(TablerIcons.trophy, color: BldrColors.goldBright, size: 20),
+          const Icon(TablerIcons.trophy,
+              color: BldrColors.goldBright, size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Sua posição',
-                    style: BldrText.meta
-                        .copyWith(color: BldrColors.goldBright)),
+                    style:
+                        BldrText.meta.copyWith(color: BldrColors.goldBright)),
                 Text('#${entry.position} · ${_valueLabel(entry.value)}',
                     style: BldrText.cardTitle
                         .copyWith(color: BldrColors.goldBright)),
@@ -418,20 +408,24 @@ class _RankingScreenState extends State<RankingScreen> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: BldrText.meta.copyWith(
-                color: entry.isMe ? BldrColors.goldBright : BldrColors.textPrimary,
+                color:
+                    entry.isMe ? BldrColors.goldBright : BldrColors.textPrimary,
                 fontWeight: isFirst ? FontWeight.bold : FontWeight.normal,
               ),
             ),
             Text(_valueLabel(entry.value),
-                style: BldrText.metaSm.copyWith(color: BldrColors.textSecondary)),
+                style:
+                    BldrText.metaSm.copyWith(color: BldrColors.textSecondary)),
             const SizedBox(height: 8),
             Container(
               height: heights[idx],
               decoration: BoxDecoration(
                 color: idx == 0 ? BldrColors.goldTint : BldrColors.surface,
                 border: Border.all(
-                    color: idx == 0 ? BldrColors.goldBorder : BldrColors.border),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                    color:
+                        idx == 0 ? BldrColors.goldBorder : BldrColors.border),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(8)),
               ),
               child: Center(
                 child: Text('#${entry.position}',
@@ -463,8 +457,7 @@ class _RankingScreenState extends State<RankingScreen> {
       decoration: BoxDecoration(
         color: entry.isMe ? BldrColors.goldTint : BldrColors.surface,
         border: Border.all(
-            color:
-                entry.isMe ? BldrColors.goldBorder : BldrColors.border),
+            color: entry.isMe ? BldrColors.goldBorder : BldrColors.border),
         borderRadius: BorderRadius.circular(BldrRadius.cardSm),
       ),
       child: Row(
@@ -511,13 +504,10 @@ class _RankingScreenState extends State<RankingScreen> {
       radius: size / 2,
       backgroundColor: entry.isMe ? BldrColors.goldTint : BldrColors.surface,
       child: Text(
-        entry.displayName.isNotEmpty
-            ? entry.displayName[0].toUpperCase()
-            : '?',
+        entry.displayName.isNotEmpty ? entry.displayName[0].toUpperCase() : '?',
         style: BldrText.label.copyWith(
-            color: entry.isMe
-                ? BldrColors.goldBright
-                : BldrColors.textSecondary,
+            color:
+                entry.isMe ? BldrColors.goldBright : BldrColors.textSecondary,
             fontSize: size * 0.4),
       ),
     );
@@ -530,8 +520,7 @@ class _RankingScreenState extends State<RankingScreen> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: Text('···',
-              style: BldrText.meta
-                  .copyWith(color: BldrColors.textSecondary)),
+              style: BldrText.meta.copyWith(color: BldrColors.textSecondary)),
         ),
         Expanded(child: Container(height: 1, color: BldrColors.border)),
       ],
@@ -548,7 +537,8 @@ class _RankingScreenState extends State<RankingScreen> {
       ),
       child: Row(
         children: [
-          const Icon(TablerIcons.lock, size: 16, color: BldrColors.textSecondary),
+          const Icon(TablerIcons.lock,
+              size: 16, color: BldrColors.textSecondary),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

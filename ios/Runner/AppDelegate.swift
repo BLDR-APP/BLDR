@@ -38,6 +38,14 @@ import FirebaseMessaging
           HealthKitService.shared.checkPermission(result: result)
         case "fetchTodayCaloriesBurned":
           HealthKitService.shared.fetchTodayCaloriesBurned(result: result)
+        case "fetchRecentWorkouts":
+          let args = call.arguments as? [String: Any]
+          let lookbackHours = (args?["lookbackHours"] as? NSNumber)?.doubleValue ?? 168
+          let limit = (args?["limit"] as? NSNumber)?.intValue ?? 20
+          HealthKitService.shared.fetchRecentWorkouts(
+            lookbackHours: lookbackHours,
+            limit: limit,
+            result: result)
         case "saveCalories":
           guard let args = call.arguments as? [String: Any],
                 let calories = args["calories"] as? Double,

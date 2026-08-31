@@ -4,13 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 import 'package:bldr_fitness/core/app_export.dart';
-import 'package:bldr_fitness/models/subscription_plan.dart';
 import 'package:bldr_fitness/models/user_profile.dart';
 import 'package:bldr_fitness/services/popup_service.dart';
 import 'package:bldr_fitness/services/user_service.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
-import 'package:bldr_fitness/features/subscription/domain/usecases/subscription_usecases.dart'
-    as subUc;
+import 'package:bldr_fitness/features/subscription/domain/usecases/resolve_club_access.dart';
 import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart'
     as clubUc;
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart'
@@ -53,8 +51,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
   late TabController _tabController;
 
   UserProfile? _userProfile;
-  UserSubscription? _userSubscription; // VARIÁVEL ADICIONADA
+  bool _hasClubAccess = false;
   bool _isLoading = true;
+  int _activeWorkoutCardRevision = 0;
+  int _workoutsScreenRevision = 0;
 
   @override
   void initState() {
@@ -85,7 +85,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       setState(() => _isLoading = true);
     }
     try {
-      // Busca o perfil e a assinatura em paralelo para mais performance.
+      // Busca o perfil e o acesso canônico em paralelo para mais performance.
       // Timeout de 8s POR CHAMADA (não no Future.wait): se uma travar, a
       // outra continua valendo e a tela renderiza com o que chegou — nunca
       // fica presa no spinner esperando uma chamada que nunca retorna.
@@ -93,15 +93,15 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
         UserService.instance
             .getCurrentUserProfile()
             .timeout(const Duration(seconds: 8), onTimeout: () => null),
-        getIt<subUc.GetCurrentSubscription>()()
+        getIt<ResolveClubAccess>()()
             .then((r) => r.valueOrNull)
-            .timeout(const Duration(seconds: 8), onTimeout: () => null),
+            .timeout(const Duration(seconds: 8), onTimeout: () => false),
       ]);
 
       if (mounted) {
         setState(() {
           _userProfile = results[0] as UserProfile?;
-          _userSubscription = results[1] as UserSubscription?;
+          _hasClubAccess = results[1] as bool? ?? false;
           _isLoading = false;
         });
       }
@@ -129,7 +129,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
       final shouldShow = await PopupService.shouldShowReviewPopup();
       if (!shouldShow || !mounted) return;
 
-      final workoutsResult = await getIt<clubUc.GetConsolidatedWorkoutHistory>()(
+      final workoutsResult =
+          await getIt<clubUc.GetConsolidatedWorkoutHistory>()(
         completedOnly: true,
         limit: 30,
       );
@@ -170,11 +171,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     } catch (_) {}
   }
 
-  // NOVO GETTER PARA VERIFICAR SE O USUÁRIO É PREMIUM
-  bool get _isPremium {
-    if (_userSubscription == null) return false;
-    return _userSubscription!.status == 'active';
-  }
+  bool get _isPremium => _hasClubAccess;
 
   // FUNÇÃO ATUALIZADA PARA BLOQUEAR A ABA BLDR CLUB
   void _onTabSelected(int index) {
@@ -188,6 +185,8 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
 
     setState(() {
       _selectedIndex = index;
+      if (index == 0) _activeWorkoutCardRevision++;
+      if (index == 1) _workoutsScreenRevision++;
     });
     _tabController.animateTo(index);
   }
@@ -419,7 +418,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
             physics: const NeverScrollableScrollPhysics(),
             children: [
               _buildDashboardTab(), // 0
-              const WorkoutsScreen(), // 1
+              WorkoutsScreen(key: ValueKey(_workoutsScreenRevision)), // 1
               ComunidadeScreen(onBack: () => _onTabSelected(0)), // 2
               const BldrClubScreen(), // 3
               const NutritionScreen(), // 4
@@ -452,7 +451,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                 child: CircularProgressIndicator(color: BldrColors.goldBright),
               )
             : RefreshIndicator(
-                onRefresh: _loadUserData,
+                onRefresh: () async {
+                  setState(() => _activeWorkoutCardRevision++);
+                  await _loadUserData();
+                },
                 color: BldrColors.goldBright,
                 backgroundColor: BldrColors.surface,
                 child: SingleChildScrollView(
@@ -485,7 +487,10 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                       const SizedBox(height: BldrSpacing.gapSection),
 
                       // D4 — card hero "Treino de hoje" com botão interno.
-                      ActiveWorkoutCardWidget(onStartPressed: _startWorkout),
+                      ActiveWorkoutCardWidget(
+                        key: ValueKey(_activeWorkoutCardRevision),
+                        onStartPressed: _startWorkout,
+                      ),
 
                       const SizedBox(height: BldrSpacing.gapSection),
 

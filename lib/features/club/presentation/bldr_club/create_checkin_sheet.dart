@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/features/club/domain/repositories/arena_repository.dart';
+import 'package:bldr_fitness/features/community/domain/repositories/community_feed_repository.dart';
 import 'package:bldr_fitness/features/community/presentation/widgets/wearable_import_card.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -54,8 +55,11 @@ class _CreateCheckinSheetState extends State<CreateCheckinSheet> {
   }
 
   Future<void> _detectWearable() async {
-    final data = await WearableImportCard.detectRecentActivity();
-    if (mounted && data != null) setState(() => _wearableData = data);
+    final result =
+        await getIt<CommunityFeedRepository>().detectRecentWearableActivity();
+    if (!mounted) return;
+    final data = result.valueOrNull;
+    if (data != null) setState(() => _wearableData = data);
   }
 
   void _applyWearableData(Map<String, dynamic> data) {
@@ -94,14 +98,14 @@ class _CreateCheckinSheetState extends State<CreateCheckinSheet> {
     // --- 2. VALIDAÇÃO DE TÍTULO ---
     if (_titleController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Dê um título ao treino!"))
-      );
+          const SnackBar(content: Text("Dê um título ao treino!")));
       return;
     }
 
     // --- 3. VALIDAÇÃO DE KM (ROADRUNNER) ---
     if (widget.gameMode == 'roadrunner') {
-      final km = double.tryParse(_distanceController.text.replaceAll(',', '.')) ?? 0;
+      final km =
+          double.tryParse(_distanceController.text.replaceAll(',', '.')) ?? 0;
       if (km <= 0) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -116,21 +120,23 @@ class _CreateCheckinSheetState extends State<CreateCheckinSheet> {
     setState(() => _isLoading = true);
 
     try {
-
       // Tratamento dos Números
       final int minutes = int.tryParse(_durationController.text) ?? 0;
       final int calories = int.tryParse(_caloriesController.text) ?? 0;
-      final double km = double.tryParse(_distanceController.text.replaceAll(',', '.')) ?? 0;
+      final double km =
+          double.tryParse(_distanceController.text.replaceAll(',', '.')) ?? 0;
 
       // --- 3. CÁLCULO DE XP BASE ---
       int xpEarned = 10;
       xpEarned += minutes;
-      if (_selectedActivity == 'run' || _selectedActivity == 'cycle') xpEarned += (km * 10).round();
+      if (_selectedActivity == 'run' || _selectedActivity == 'cycle')
+        xpEarned += (km * 10).round();
 
       // --- 4. BÔNUS DE VARIEDADE + TRAVA DIÁRIA (apenas ALPHA) ---
       if (widget.gameMode == 'alpha') {
         final now = DateTime.now().toUtc();
-        final startOfDay = DateTime(now.year, now.month, now.day).toIso8601String();
+        final startOfDay =
+            DateTime(now.year, now.month, now.day).toIso8601String();
 
         final todayPosts =
             (await getIt<ArenaRepository>().myTodayPosts(widget.arenaId))
@@ -186,8 +192,7 @@ class _CreateCheckinSheetState extends State<CreateCheckinSheet> {
     } catch (e) {
       print("ERRO AO POSTAR: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Erro: $e"), backgroundColor: Colors.red)
-      );
+          SnackBar(content: Text("Erro: $e"), backgroundColor: Colors.red));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -210,9 +215,12 @@ class _CreateCheckinSheetState extends State<CreateCheckinSheet> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Text("REGISTRAR ATIVIDADE",
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1),
-                textAlign: TextAlign.center
-            ),
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1),
+                textAlign: TextAlign.center),
             const SizedBox(height: 24),
 
             if (_wearableData != null) ...[
@@ -239,25 +247,39 @@ class _CreateCheckinSheetState extends State<CreateCheckinSheet> {
                 decoration: BoxDecoration(
                   color: Colors.grey[900],
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: _imageFile != null ? gold : (isPhotoMandatory ? Colors.redAccent.withOpacity(0.3) : Colors.white24)),
-                  image: _imageFile != null ? DecorationImage(image: FileImage(_imageFile!), fit: BoxFit.cover) : null,
+                  border: Border.all(
+                      color: _imageFile != null
+                          ? gold
+                          : (isPhotoMandatory
+                              ? Colors.redAccent.withOpacity(0.3)
+                              : Colors.white24)),
+                  image: _imageFile != null
+                      ? DecorationImage(
+                          image: FileImage(_imageFile!), fit: BoxFit.cover)
+                      : null,
                 ),
                 child: _imageFile == null
                     ? Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.add_a_photo, color: isPhotoMandatory ? Colors.redAccent : gold, size: 40),
-                    const SizedBox(height: 8),
-                    Text(
-                        isPhotoMandatory ? "FOTO OBRIGATÓRIA" : "FOTO (OPCIONAL)",
-                        style: TextStyle(
-                            color: isPhotoMandatory ? Colors.redAccent : Colors.white54,
-                            fontWeight: isPhotoMandatory ? FontWeight.bold : FontWeight.normal,
-                            fontSize: 12
-                        )
-                    )
-                  ],
-                )
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add_a_photo,
+                              color: isPhotoMandatory ? Colors.redAccent : gold,
+                              size: 40),
+                          const SizedBox(height: 8),
+                          Text(
+                              isPhotoMandatory
+                                  ? "FOTO OBRIGATÓRIA"
+                                  : "FOTO (OPCIONAL)",
+                              style: TextStyle(
+                                  color: isPhotoMandatory
+                                      ? Colors.redAccent
+                                      : Colors.white54,
+                                  fontWeight: isPhotoMandatory
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  fontSize: 12))
+                        ],
+                      )
                     : null,
               ),
             ),
@@ -270,8 +292,10 @@ class _CreateCheckinSheetState extends State<CreateCheckinSheet> {
               decoration: const InputDecoration(
                 labelText: "TÍTULO (Ex: Costas e Bíceps)",
                 labelStyle: TextStyle(color: gold),
-                enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: gold)),
+                enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white24)),
+                focusedBorder:
+                    OutlineInputBorder(borderSide: BorderSide(color: gold)),
               ),
             ),
             const SizedBox(height: 16),
@@ -287,11 +311,15 @@ class _CreateCheckinSheetState extends State<CreateCheckinSheet> {
                     child: ChoiceChip(
                       label: Text(e.key.toUpperCase()),
                       selected: isSelected,
-                      onSelected: (val) => setState(() => _selectedActivity = e.key),
-                      avatar: Icon(e.value, size: 16, color: isSelected ? Colors.black : Colors.white),
+                      onSelected: (val) =>
+                          setState(() => _selectedActivity = e.key),
+                      avatar: Icon(e.value,
+                          size: 16,
+                          color: isSelected ? Colors.black : Colors.white),
                       backgroundColor: Colors.black,
                       selectedColor: gold,
-                      labelStyle: TextStyle(color: isSelected ? Colors.black : Colors.white),
+                      labelStyle: TextStyle(
+                          color: isSelected ? Colors.black : Colors.white),
                     ),
                   );
                 }).toList(),
@@ -323,12 +351,16 @@ class _CreateCheckinSheetState extends State<CreateCheckinSheet> {
               ),
             ),
 
-            if (_selectedActivity == 'run' || _selectedActivity == 'cycle' || widget.gameMode == 'roadrunner')
+            if (_selectedActivity == 'run' ||
+                _selectedActivity == 'cycle' ||
+                widget.gameMode == 'roadrunner')
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: _NumberInput(
                   controller: _distanceController,
-                  label: widget.gameMode == 'roadrunner' ? "DISTÂNCIA (km) — OBRIGATÓRIO" : "DISTÂNCIA (km)",
+                  label: widget.gameMode == 'roadrunner'
+                      ? "DISTÂNCIA (km) — OBRIGATÓRIO"
+                      : "DISTÂNCIA (km)",
                   icon: Icons.map,
                   color: Colors.cyanAccent,
                 ),
@@ -340,15 +372,22 @@ class _CreateCheckinSheetState extends State<CreateCheckinSheet> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: gold,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: _isLoading ? null : _submit,
               child: _isLoading
                   ? const CircularProgressIndicator(color: Colors.black)
-                  : const Text("POSTAR NO FEED", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16)),
+                  : const Text("POSTAR NO FEED",
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16)),
             ),
 
-            Padding(padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom)),
+            Padding(
+                padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom)),
           ],
         ),
       ),
@@ -363,9 +402,21 @@ class _ModeBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Map<String, Map<String, dynamic>> config = {
-      'survivor':   {'color': Colors.redAccent,    'icon': Icons.favorite,       'text': 'Este check-in mantém suas vidas. Foto rejeitada = −1 vida.'},
-      'roadrunner': {'color': Colors.cyanAccent,   'icon': Icons.directions_run, 'text': 'Informe seus km — é o que conta no ranking.'},
-      'hustle':     {'color': Colors.orangeAccent, 'icon': Icons.bolt,           'text': 'Registrar hoje = +1 dia no ranking. Só conta 1 por dia.'},
+      'survivor': {
+        'color': Colors.redAccent,
+        'icon': Icons.favorite,
+        'text': 'Este check-in mantém suas vidas. Foto rejeitada = −1 vida.'
+      },
+      'roadrunner': {
+        'color': Colors.cyanAccent,
+        'icon': Icons.directions_run,
+        'text': 'Informe seus km — é o que conta no ranking.'
+      },
+      'hustle': {
+        'color': Colors.orangeAccent,
+        'icon': Icons.bolt,
+        'text': 'Registrar hoje = +1 dia no ranking. Só conta 1 por dia.'
+      },
     };
     final cfg = config[gameMode];
     if (cfg == null) return const SizedBox.shrink();
@@ -384,7 +435,8 @@ class _ModeBanner extends StatelessWidget {
           Expanded(
             child: Text(
               cfg['text'] as String,
-              style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: color, fontSize: 11, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -419,7 +471,9 @@ class _NumberInput extends StatelessWidget {
         prefixIcon: Icon(icon, color: color, size: 20),
         filled: true,
         fillColor: Colors.white.withOpacity(0.05),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none),
         contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
       ),
     );

@@ -5,6 +5,7 @@ class RecentWorkout {
   final DateTime? completedAt;
   final double? volumeKg;
   final int? durationSeconds;
+  final int? completedSetCount;
   final List<String> muscleGroups;
 
   const RecentWorkout({
@@ -14,6 +15,7 @@ class RecentWorkout {
     this.completedAt,
     this.volumeKg,
     this.durationSeconds,
+    this.completedSetCount,
     this.muscleGroups = const [],
   });
 

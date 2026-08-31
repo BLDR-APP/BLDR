@@ -35,10 +35,33 @@ class HealthKitService {
 
   Future<double> fetchTodayCaloriesBurned() async {
     try {
-      return await _channel.invokeMethod<double>('fetchTodayCaloriesBurned') ?? 0;
+      return await _channel.invokeMethod<double>('fetchTodayCaloriesBurned') ??
+          0;
     } catch (_) {
       return 0;
     }
+  }
+
+  /// Retorna treinos recentes disponibilizados pelo Apple Health.
+  ///
+  /// Exceções do canal são preservadas para que o repository possa convertê-las
+  /// em [Failure] e exibir um erro observável na interface.
+  Future<List<Map<String, dynamic>>> fetchRecentWorkouts({
+    Duration lookback = const Duration(days: 7),
+    int limit = 20,
+  }) async {
+    final raw = await _channel.invokeMethod<List<dynamic>>(
+          'fetchRecentWorkouts',
+          {
+            'lookbackHours': lookback.inHours,
+            'limit': limit,
+          },
+        ) ??
+        const <dynamic>[];
+
+    return raw
+        .map((item) => Map<String, dynamic>.from(item as Map))
+        .toList(growable: false);
   }
 
   Future<bool> saveCalories({

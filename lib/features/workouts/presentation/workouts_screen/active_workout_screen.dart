@@ -12,8 +12,7 @@ import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/routes/app_routes.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
-import 'package:bldr_fitness/features/subscription/domain/usecases/subscription_usecases.dart'
-    as subUc;
+import 'package:bldr_fitness/features/subscription/domain/usecases/resolve_club_access.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
 import 'package:bldr_fitness/features/achievements/domain/usecases/achievement_usecases.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart'
@@ -130,11 +129,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
 
   Future<void> _loadSubscription() async {
     try {
-      final sub = (await getIt<subUc.GetCurrentSubscription>()()).valueOrNull;
+      final access = (await getIt<ResolveClubAccess>()()).valueOrNull ?? false;
       if (mounted) {
-        final active =
-            sub != null && (sub.status == 'active' || sub.status == 'trialing');
-        setState(() => _isPro = active);
+        setState(() => _isPro = access);
       }
     } catch (_) {}
   }

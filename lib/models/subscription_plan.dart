@@ -109,6 +109,10 @@ class UserSubscription {
     required this.updatedAt,
   });
 
+  /// Fonte única para gates do BLDR Club. `planId` é um identificador do
+  /// registro no banco e não deve ser comparado com nomes comerciais.
+  bool get hasClubAccess => status == 'active' || status == 'trialing';
+
   factory UserSubscription.fromJson(Map<String, dynamic> json) {
     return UserSubscription(
       id: json['id'],
@@ -125,7 +129,7 @@ class UserSubscription {
           ? DateTime.parse(json['current_period_end'])
           : null,
       trialEnd:
-      json['trial_end'] != null ? DateTime.parse(json['trial_end']) : null,
+          json['trial_end'] != null ? DateTime.parse(json['trial_end']) : null,
       canceledAt: json['canceled_at'] != null
           ? DateTime.parse(json['canceled_at'])
           : null,

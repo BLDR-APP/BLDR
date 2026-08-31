@@ -496,7 +496,6 @@ class WorkoutService {
         params: {
           'p_workout_id': workoutId,
           'p_source': source,
-          if (notes != null) 'p_notes': notes,
         },
       );
       final raw = (result as Map<String, dynamic>?) ?? {};
@@ -517,7 +516,8 @@ class WorkoutService {
       // (PostgrestException, StateError etc.) atrás de "Ocorreu um erro
       // inesperado" no repository, tornando o bug impossível de diagnosticar
       // a partir do que o usuário via na tela.
-      debugPrint('[WorkoutService] completeWorkoutWithAnalytics falhou: $error');
+      debugPrint(
+          '[WorkoutService] completeWorkoutWithAnalytics falhou: $error');
       rethrow;
     }
   }
@@ -654,7 +654,7 @@ class WorkoutService {
       final targetUserId = userId ?? currentUser.id;
 
       var query = _client.from('user_workouts').select('''
-        id, name, started_at, completed_at, total_duration_seconds,
+        id, name, workout_template_id, started_at, completed_at, total_duration_seconds,
         notes, is_completed,
         workout_templates(name, workout_type, estimated_duration_minutes)
       ''').eq('user_id', targetUserId);

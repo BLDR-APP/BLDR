@@ -1,110 +1,150 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  type AppleReceiptResponse,
+  assertCanonicalUser,
+  bearerToken,
+  RequestFailure,
+  validateAppleSubscription,
+  verifyWithApple,
+} from "./logic.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+
+type Dependencies = {
+  authenticate: (accessToken: string) => Promise<string>;
+  verifyReceipt: (receiptData: string) => Promise<AppleReceiptResponse>;
+  persist: (input: {
+    userId: string;
+    productId: string;
+    billingPeriod: string;
+    expirationDate: string;
+  }) => Promise<void>;
+  now: () => number;
+};
+
+export function createHandler(dependencies: Dependencies) {
+  return async (req: Request): Promise<Response> => {
+    if (req.method === "OPTIONS") {
+      return new Response("ok", { headers: corsHeaders });
+    }
+    if (req.method !== "POST") {
+      return jsonResponse(405, {
+        success: false,
+        error: "Método não permitido.",
+      });
+    }
+
+    try {
+      const accessToken = bearerToken(req.headers.get("authorization"));
+      const authenticatedUserId = await dependencies.authenticate(accessToken);
+
+      let body: Record<string, unknown>;
+      try {
+        body = await req.json();
+      } catch (_) {
+        throw new RequestFailure(400, "Corpo da requisição inválido.");
+      }
+
+      const receiptData = body.receipt_data;
+      if (typeof receiptData !== "string" || receiptData.length === 0) {
+        throw new RequestFailure(400, "Recibo Apple obrigatório.");
+      }
+      const canonicalUserId = assertCanonicalUser(
+        authenticatedUserId,
+        body.user_id,
+      );
+      const appleResponse = await dependencies.verifyReceipt(receiptData);
+      const subscription = validateAppleSubscription(
+        appleResponse,
+        body.product_id,
+        dependencies.now(),
+      );
+
+      await dependencies.persist({
+        userId: canonicalUserId,
+        productId: subscription.productId,
+        billingPeriod: subscription.billingPeriod,
+        expirationDate: subscription.expirationDate,
+      });
+
+      return jsonResponse(200, {
+        success: true,
+        message: "Assinatura Apple validada.",
+      });
+    } catch (error) {
+      if (error instanceof RequestFailure) {
+        return jsonResponse(error.statusCode, {
+          success: false,
+          error: error.publicMessage,
+        });
+      }
+      console.error("verify-apple-receipt falhou sem conceder acesso.");
+      return jsonResponse(500, {
+        success: false,
+        error: "Não foi possível validar a assinatura Apple.",
+      });
+    }
+  };
 }
 
-serve(async (req) => {
-  // Lidar com requisições OPTIONS (CORS)
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+function jsonResponse(status: number, body: Record<string, unknown>): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
 
-  try {
-    // 1. Pegar dados enviados pelo Flutter
-    const { receipt_data, user_id, product_id } = await req.json()
+function requiredEnvironment(name: string): string {
+  const value = Deno.env.get(name);
+  if (!value) throw new Error(`${name} não configurado.`);
+  return value;
+}
 
-    if (!receipt_data || !user_id) {
-      throw new Error('Dados incompletos: receipt_data e user_id são obrigatórios.')
-    }
+const legacyPlanId = "d082af8c-216a-4499-a1f6-1fb84ac08a5f";
 
-    // 2. Pegar o Segredo que salvamos no Supabase
-    const sharedSecret = Deno.env.get('APPLE_SHARED_SECRET')
-    if (!sharedSecret) {
-      throw new Error('APPLE_SHARED_SECRET não configurado no Supabase.')
-    }
+function productionHandler() {
+  const supabaseUrl = requiredEnvironment("SUPABASE_URL");
+  const supabaseAnonKey = requiredEnvironment("SUPABASE_ANON_KEY");
+  const serviceRoleKey = requiredEnvironment("SUPABASE_SERVICE_ROLE_KEY");
+  const appleSharedSecret = requiredEnvironment("APPLE_SHARED_SECRET");
 
-    // 3. Função para validar com a Apple (Lógica de Retry Prod -> Sandbox)
-    const verifyReceipt = async (isSandbox = false) => {
-      const url = isSandbox
-        ? 'https://sandbox.itunes.apple.com/verifyReceipt'
-        : 'https://buy.itunes.apple.com/verifyReceipt';
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          'receipt-data': receipt_data,
-          'password': sharedSecret,
-          'exclude-old-transactions': true
-        })
-      })
-      return await response.json()
-    }
-
-    // Tenta Produção primeiro
-    let appleResponse = await verifyReceipt(false)
-
-    // Se a Apple retornar Status 21007, significa que é um recibo de teste (Sandbox)
-    // Então tentamos novamente na URL de Sandbox
-    if (appleResponse.status === 21007) {
-      console.log('Recibo de Sandbox detectado. Retentando no ambiente de teste...')
-      appleResponse = await verifyReceipt(true)
-    }
-
-    // 4. Verificar se a validação passou
-    // Status 0 significa sucesso.
-    if (appleResponse.status !== 0) {
-      console.error('Erro na validação Apple:', appleResponse)
-      throw new Error(`Falha na validação da Apple. Status: ${appleResponse.status}`)
-    }
-
-    // 5. Validar se o Produto comprado bate com o esperado (Opcional, mas recomendado)
-    // A Apple retorna um array 'latest_receipt_info'. Pegamos o mais recente.
-    const latestTransaction = appleResponse.latest_receipt_info
-      ? appleResponse.latest_receipt_info[0]
-      : appleResponse.receipt;
-
-    // Aqui você pode checar se latestTransaction.product_id == product_id se quiser ser estrito.
-
-    // 6. Atualizar o Banco de Dados (Supabase)
-    // Inicia o cliente Supabase (usando a Service Role Key para ter permissão de escrita total)
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-    )
-
-    // Calculando data de expiração (converte de milissegundos da Apple para ISO string)
-    const expirationDate = new Date(parseInt(latestTransaction.expires_date_ms)).toISOString()
-
-    // Atualiza ou insere na tabela user_subscriptions
-    const { error: dbError } = await supabaseClient
-      .from('user_subscriptions')
-      .upsert({
-        user_id: user_id,
-        plan_id: latestTransaction.product_id, // Usa o ID da Apple como Plan ID
-        status: 'active',
+  return createHandler({
+    authenticate: async (accessToken) => {
+      const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: `Bearer ${accessToken}` } },
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+      const { data, error } = await authClient.auth.getUser(accessToken);
+      if (error || !data.user?.id) {
+        throw new RequestFailure(401, "Sessão inválida ou expirada.");
+      }
+      return data.user.id;
+    },
+    verifyReceipt: (receiptData) =>
+      verifyWithApple(receiptData, appleSharedSecret, fetch),
+    persist: async ({ userId, productId, billingPeriod, expirationDate }) => {
+      const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+      const { error } = await adminClient.from("user_subscriptions").upsert({
+        user_id: userId,
+        plan_id: legacyPlanId,
+        apple_product_id: productId,
+        status: "active",
         current_period_end: expirationDate,
-        payment_provider: 'apple_iap', // Importante para saber a origem depois
-        updated_at: new Date().toISOString()
-      })
+        payment_provider: "apple_iap",
+        billing_period: billingPeriod,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "user_id" });
+      if (error) throw error;
+    },
+    now: () => Date.now(),
+  });
+}
 
-    if (dbError) {
-      throw dbError
-    }
-
-    // 7. Retornar Sucesso para o Flutter
-    return new Response(
-      JSON.stringify({ success: true, message: 'Assinatura validada e ativada.' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    )
-
-  } catch (error) {
-    return new Response(
-      JSON.stringify({ success: false, error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 },
-    )
-  }
-})
+if (import.meta.main) serve(productionHandler());

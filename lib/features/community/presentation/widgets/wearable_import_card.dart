@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 
@@ -16,47 +15,9 @@ class WearableImportCard extends StatelessWidget {
     required this.onDismiss,
   });
 
-  bool get _isWhoop => data['source'] == 'whoop';
+  bool get _isWhoop => data['provider'] == 'whoop' || data['source'] == 'whoop';
 
   // ── Detecção estática ──────────────────────────────────────────────────────
-
-  /// Detecta atividade recente de wearables conectados.
-  /// Retorna map com source + dados, ou null se não encontrar nada.
-  static Future<Map<String, dynamic>?> detectRecentActivity() async {
-    try {
-      final client = Supabase.instance.client;
-      final uid = client.auth.currentUser?.id;
-      if (uid == null) return null;
-
-      // 1. Whoop: buscar dados do dia
-      final today = DateTime.now().toUtc();
-      final dateStr =
-          '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
-
-      final whoopRow = await client
-          .from('whoop_daily_data')
-          .select('strain_score, avg_heart_rate, calories_burned')
-          .eq('user_id', uid)
-          .eq('date', dateStr)
-          .maybeSingle();
-
-      if (whoopRow != null) {
-        final strain = (whoopRow['strain_score'] as num?)?.toDouble() ?? 0;
-        if (strain > 0) {
-          return {
-            'source': 'whoop',
-            'strain': strain,
-            'fc_media': (whoopRow['avg_heart_rate'] as num?)?.toInt(),
-            'calorias': (whoopRow['calories_burned'] as num?)?.toInt(),
-          };
-        }
-      }
-    } catch (_) {
-      // Se a tabela não existe ou sem permissão, ignorar silenciosamente.
-    }
-
-    return null;
-  }
 
   // ── Build ──────────────────────────────────────────────────────────────────
 
@@ -108,7 +69,13 @@ class WearableImportCard extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        Text('Última atividade', style: BldrText.meta),
+        Flexible(
+          child: Text(
+            data['activity_type']?.toString() ?? 'Atividade recente',
+            style: BldrText.meta,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ],
     );
   }
@@ -118,11 +85,11 @@ class WearableImportCard extends StatelessWidget {
 
     if (_isWhoop) {
       final strain = data['strain'];
-      final fc = data['fc_media'];
-      final kcal = data['calorias'];
+      final duration = (data['duration_s'] as num?)?.toInt();
+      final averageHr = data['average_heart_rate'];
       if (strain != null) metrics.add(('STRAIN', strain.toStringAsFixed(1)));
-      if (fc != null) metrics.add(('FC MÉD.', '${fc}bpm'));
-      if (kcal != null) metrics.add(('KCAL', '$kcal'));
+      if (duration != null) metrics.add(('DURAÇÃO', '${duration ~/ 60}min'));
+      if (averageHr != null) metrics.add(('FC MÉD.', '${averageHr}bpm'));
     } else {
       final dur = data['duration_min'];
       final kcal = data['calorias'];
@@ -162,9 +129,8 @@ class WearableImportCard extends StatelessWidget {
     final btnBg = _isWhoop
         ? const Color(0x26FF0000) // rgba(255,0,0,0.15)
         : const Color(0x1FE0B830);
-    final btnBorder = _isWhoop
-        ? const Color(0x4DFF0000)
-        : const Color(0x33E0B830);
+    final btnBorder =
+        _isWhoop ? const Color(0x4DFF0000) : const Color(0x33E0B830);
 
     return Row(
       children: [

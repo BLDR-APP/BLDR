@@ -20,8 +20,7 @@ import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/wi
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/Firebase/firebase_add_food_modal_widget.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/food_categories_modal.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
-import 'package:bldr_fitness/features/subscription/domain/usecases/subscription_usecases.dart'
-    as subUc;
+import 'package:bldr_fitness/features/subscription/domain/usecases/resolve_club_access.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/daily_nutrition_summary.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/nutrition_goals.dart';
 import 'package:bldr_fitness/features/nutrition/domain/usecases/nutrition_usecases.dart';
@@ -99,17 +98,12 @@ class _NutritionScreenState extends State<NutritionScreen> {
         _goals = NutritionGoals.defaults;
       }
 
-      // 3. Checagem de Membro (Lógica Original)
-      final subscription =
-          (await getIt<subUc.GetCurrentSubscription>()()).valueOrNull;
+      // 3. Checagem de acesso canônico. A assinatura legada é apenas fallback
+      // de transição dentro de ResolveClubAccess, nunca uma decisão da tela.
+      final hasClubAccess =
+          (await getIt<ResolveClubAccess>()()).valueOrNull ?? false;
       if (!mounted) return;
-      if (subscription != null &&
-          subscription.status == 'active' &&
-          subscription.planId == 'd082af8c-216a-4499-a1f6-1fb84ac08a5f') {
-        _isClubMember = true;
-      } else {
-        _isClubMember = false;
-      }
+      _isClubMember = hasClubAccess;
 
       // 4. Busca Dados de Nutrição (Totais Consumidos - Firebase)
       // TODO: Adicionar busca do waterIntake
@@ -280,7 +274,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              isToday ? AppLocalizations.of(context).common_today : '${_selectedDate.day}/${_selectedDate.month}',
+              isToday
+                  ? AppLocalizations.of(context).common_today
+                  : '${_selectedDate.day}/${_selectedDate.month}',
               style: BldrText.body
                   .copyWith(fontSize: 13, fontWeight: FontWeight.w500),
             ),

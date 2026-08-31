@@ -6,6 +6,7 @@
 
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
@@ -870,8 +871,10 @@ class BldrNavBar extends StatelessWidget {
                       _navItem(1, items),
                       const SizedBox(width: 4),
                       _navItem(2, items),
-                      const SizedBox(width: 4),
-                      _clubButton(context),
+                      // Acesso central ao BLDR CLUB temporariamente oculto.
+                      // O Club permanece acessível por Treinos > Explorar.
+                      // const SizedBox(width: 4),
+                      // _clubButton(context),
                       const SizedBox(width: 4),
                       _navItem(3, items),
                       const SizedBox(width: 4),
@@ -887,6 +890,8 @@ class BldrNavBar extends StatelessWidget {
     );
   }
 
+  // Mantido para reativação futura do acesso central na navbar.
+  // ignore: unused_element
   Widget _clubButton(BuildContext context) {
     return Semantics(
       label: AppLocalizations.of(context).nav_club_label,
@@ -2243,11 +2248,16 @@ class HavokEntryIcon extends StatelessWidget {
                 height: 36,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: BldrColors.goldTint,
+                  color: Colors.black,
                   border: Border.all(color: BldrColors.goldBorderChip),
                 ),
-                child: const Icon(TablerIcons.paw_filled,
-                    color: BldrColors.goldBright, size: 17),
+                child: Padding(
+                  padding: const EdgeInsets.all(7),
+                  child: SvgPicture.asset(
+                    'assets/images/havok_vector.svg',
+                    fit: BoxFit.contain,
+                  ),
+                ),
               ),
               if (hasNewInsight)
                 Positioned(

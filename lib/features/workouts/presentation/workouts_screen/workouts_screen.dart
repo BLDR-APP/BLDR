@@ -8,9 +8,9 @@ import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
-import 'package:bldr_fitness/features/subscription/domain/usecases/subscription_usecases.dart'
-    as subUc;
+import 'package:bldr_fitness/features/subscription/domain/usecases/resolve_club_access.dart';
 import 'package:bldr_fitness/features/subscription/presentation/paywall/club_paywall_sheet.dart';
+import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart';
 import 'package:bldr_fitness/features/workouts/presentation/mappers/legacy_ui_maps.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
@@ -26,6 +26,7 @@ import 'package:bldr_fitness/features/club/programs_page.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/havok/havok_sheet.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/bldr_muscle.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_template.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/muscle_normalizer.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/today_workout_resolver.dart';
 import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/widgets/current_week_card_widget.dart';
@@ -50,6 +51,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
   Map<String, BldrMuscleMapData> _muscleDataByTemplateId = {};
   Map<String, dynamic>? _todayWorkout;
   BldrMuscleMapData? _todayMuscleData;
+  WorkoutSession? _completedTodayWorkout;
   bool _isLoading = true;
   bool _hasError = false;
   bool _hasActiveWorkout = false;
@@ -90,6 +92,8 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
       final weeklyPlanResult = await getIt<GetWeeklyPlan>()();
       final activeResult = await getIt<HasActiveWorkout>()();
       final pausedResult = await getIt<GetPausedWorkouts>()(limit: 2);
+      final completedResult =
+          await getIt<GetWorkoutHistory>()(completedOnly: true, limit: 20);
 
       if (!mounted) return;
 
@@ -98,6 +102,12 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
         throw Exception(templatesResult.failureOrNull?.message);
       }
       final plan = weeklyPlanResult.valueOrNull ?? const [];
+      final completedSessions = completedResult.valueOrNull ?? const [];
+      final now = DateTime.now();
+      final completedOnDate = TodayWorkoutResolver.completedOnDate(
+        sessions: completedSessions,
+        date: now,
+      );
       var todayTemplate = TodayWorkoutResolver.resolve(
         plan: plan,
         templates: templates,
@@ -108,8 +118,16 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
           .firstOrNull
           ?.treino;
       if (todayTemplate == null && assignedToday?.id != null) {
+        final assignedResult = assignedToday!.source == 'club'
+            ? await getIt<GetClubTemplateWithExercises>()(assignedToday.id!)
+            : await getIt<GetTemplateWithExercises>()(assignedToday.id!);
+        todayTemplate = assignedResult.valueOrNull;
+      }
+      // Um treino confirmado hoje (inclusive via wearable) continua sendo o
+      // treino do dia mesmo se o plano legado não tiver template_id preenchido.
+      if (todayTemplate == null && completedOnDate?.templateId != null) {
         todayTemplate = (await getIt<GetTemplateWithExercises>()(
-          assignedToday!.id!,
+          completedOnDate!.templateId!,
         ))
             .valueOrNull;
       }
@@ -142,6 +160,14 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
           .where((w) => w.source == 'free')
           .map(pausedToLegacyMap)
           .toList();
+      final completedToday = completedSessions.where((session) {
+        final completedAt = session.completedAt?.toLocal();
+        return completedAt != null &&
+            completedAt.year == now.year &&
+            completedAt.month == now.month &&
+            completedAt.day == now.day &&
+            session.templateId == todayTemplate?.id;
+      }).firstOrNull;
 
       // Load subscription in parallel (non-blocking for main list)
       _loadSubscription();
@@ -154,6 +180,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
         _todayWorkout =
             todayTemplate == null ? null : templateToLegacyMap(todayTemplate);
         _todayMuscleData = todayData;
+        _completedTodayWorkout = completedToday;
         _hasActiveWorkout = isActive;
         _isLoading = false;
       });
@@ -855,6 +882,8 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
     final exerciseCount =
         ((todayWorkout['workout_template_exercises'] as List?) ?? const [])
             .length;
+    final completedToday = _completedTodayWorkout;
+    final completedViaWhoop = completedToday?.completedViaWhoop ?? false;
     if (kDebugMode) {
       debugPrint('[MuscleMapView] Hero received view=${mapData.view.name} '
           'workout=${todayWorkout['name']}');
@@ -885,7 +914,12 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                       style: BldrText.kpiLg.copyWith(fontSize: 27)),
                   const SizedBox(height: 4),
                   Text(
-                      AppLocalizations.of(context).workouts_today_hero_subtitle,
+                      completedToday == null
+                          ? AppLocalizations.of(context)
+                              .workouts_today_hero_subtitle
+                          : completedViaWhoop
+                              ? 'Concluído via WHOOP'
+                              : 'Treino concluído',
                       style: BldrText.description,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis),
@@ -899,9 +933,15 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                     width: 170,
                     height: 44,
                     child: BldrPrimaryButton(
-                      label: 'Iniciar treino',
-                      icon: Icons.play_arrow_rounded,
-                      onPressed: () => _startWorkout(todayWorkout),
+                      label: completedToday == null
+                          ? 'Iniciar treino'
+                          : 'Treino concluído',
+                      icon: completedToday == null
+                          ? Icons.play_arrow_rounded
+                          : Icons.check_rounded,
+                      onPressed: completedToday == null
+                          ? () => _startWorkout(todayWorkout)
+                          : null,
                     ),
                   ),
                 ],
@@ -1297,13 +1337,10 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
   // ── Explorar ─────────────────────────────────────────────────────────────
 
   Future<void> _loadSubscription() async {
-    final result = await getIt<subUc.GetCurrentSubscription>()();
-    final subscription = result.valueOrNull;
+    final access = (await getIt<ResolveClubAccess>()()).valueOrNull ?? false;
     if (!mounted) return;
     setState(() {
-      _isPro = subscription != null &&
-          (subscription.status == 'active' ||
-              subscription.status == 'trialing');
+      _isPro = access;
     });
   }
 

@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
-import 'package:flutter/services.dart';
-import 'dart:convert';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -26,6 +24,7 @@ import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/features/integrations/data/live_activity_service.dart';
 import 'package:bldr_fitness/features/integrations/data/watch_service.dart';
 import 'package:bldr_fitness/features/integrations/data/widget_data_service.dart';
+import 'package:bldr_fitness/features/subscription/data/revenue_cat_lifecycle.dart';
 import 'package:bldr_fitness/firebase_options.dart';
 import 'package:bldr_fitness/core/providers/locale_provider.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -34,7 +33,22 @@ import 'package:flutter_muscle_anatomy/flutter_muscle_anatomy.dart';
 
 // Handler de background — delegado ao PushNotificationService para evitar duplicação
 
-late final Map<String, dynamic> appConfig;
+/// Configuração exclusivamente de build time. Arquivos locais de defines não
+/// são assets e devem ser passados ao Flutter com `--dart-define-from-file`.
+const Map<String, dynamic> appConfig = {
+  'SUPABASE_URL': String.fromEnvironment('SUPABASE_URL'),
+  'SUPABASE_ANON_KEY': String.fromEnvironment('SUPABASE_ANON_KEY'),
+  'STRIPE_PUBLISHABLE_KEY': String.fromEnvironment('STRIPE_PUBLISHABLE_KEY'),
+  'STRIPE_TEST_PUBLISHABLE_KEY':
+      String.fromEnvironment('STRIPE_TEST_PUBLISHABLE_KEY'),
+  'WHOOP_CLIENT_ID': String.fromEnvironment('WHOOP_CLIENT_ID'),
+  'REVENUECAT_BILLING_ENABLED':
+      String.fromEnvironment('REVENUECAT_BILLING_ENABLED'),
+  'REVENUECAT_IOS_PUBLIC_SDK_KEY':
+      String.fromEnvironment('REVENUECAT_IOS_PUBLIC_SDK_KEY'),
+  'REVENUECAT_ANDROID_PUBLIC_SDK_KEY':
+      String.fromEnvironment('REVENUECAT_ANDROID_PUBLIC_SDK_KEY'),
+};
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
@@ -44,10 +58,6 @@ void main() async {
 
   // 2. Background handler após o binding, antes do Firebase.initializeApp.
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
-  // Mínimo absoluto antes de runApp: config + Firebase.
-  final configString = await rootBundle.loadString('dart_defines.dev.json');
-  appConfig = json.decode(configString);
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -80,7 +90,11 @@ class _AppLoaderState extends State<AppLoader> {
     try {
       await SupabaseService.initialize();
       await FlutterMuscleAnatomy.initialize();
-      setupInjection();
+      setupInjection(config: appConfig);
+
+      // Fundação RevenueCat em paralelo. A flag permanece OFF por padrão e,
+      // portanto, não substitui nem interfere no billing Apple/Stripe atual.
+      unawaited(getIt<RevenueCatLifecycle>().start());
 
       Stripe.publishableKey = PaymentService.isTestMode
           ? (appConfig['STRIPE_TEST_PUBLISHABLE_KEY'] ?? '')
@@ -172,8 +186,9 @@ class _DeepLinkHandlerState extends State<_DeepLinkHandler> {
     if (nav == null) return;
 
     // bldr://workout/start/{templateId}
-    if (uri.host == 'workout' && uri.pathSegments.length == 2
-        && uri.pathSegments[0] == 'start') {
+    if (uri.host == 'workout' &&
+        uri.pathSegments.length == 2 &&
+        uri.pathSegments[0] == 'start') {
       final templateId = uri.pathSegments[1];
       nav.pushNamed(
         AppRoutes.activeWorkoutScreen,
@@ -234,7 +249,8 @@ class MyApp extends StatelessWidget {
               return GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-                child: AchievementOverlay(child: child ?? const SizedBox.shrink()),
+                child:
+                    AchievementOverlay(child: child ?? const SizedBox.shrink()),
               );
             },
           ),

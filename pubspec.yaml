@@ -96,6 +96,8 @@ dependencies:
   crypto: ^3.0.7
   in_app_purchase: ^3.3.0
   in_app_purchase_storekit: ^0.4.11
+  purchases_flutter: ^10.10.1
+  purchases_ui_flutter: ^10.10.1
   flutter_map: ^8.2.2
   latlong2: ^0.9.1
   geolocator: ^14.0.2
@@ -140,7 +142,6 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - dart_defines.dev.json
     - assets/images/
     - assets/images/whoop/
     - assets/models/

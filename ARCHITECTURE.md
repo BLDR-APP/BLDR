@@ -113,7 +113,9 @@ WorkoutsScreen
   do repository na Fase 4.
 - `lib/features/professional_portal/` e `lib/features/club/` já seguem parcialmente o
   layout de features — usar como referência de destino, completando o `domain/`.
-- Config em `dart_defines.dev.json` (carregado via `rootBundle` no `main.dart`).
+- Configuração client-safe via `--dart-define-from-file` (lida por
+  `String.fromEnvironment` no `main.dart`); os JSONs locais `dart_defines.*.json`
+  são ignorados e não são assets.
 
 ## Mini-player global — treino pausado (2026-08-20)
 

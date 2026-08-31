@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BLDR — Criar Post</title>
+<style>
+  :root {
+    --bg: #050505;
+    --bg2: #0D0D0D;
+    --gold: #C9A227;
+    --gold-bright: #E0B830;
+    --gold-tint: rgba(201,162,39,0.13);
+    --gold-tint-strong: rgba(201,162,39,0.18);
+    --gold-border: rgba(201,162,39,0.28);
+    --surface: rgba(255,255,255,0.05);
+    --surface2: rgba(255,255,255,0.03);
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.05);
+    --text: #FFFFFF;
+    --text-sec: rgba(255,255,255,0.45);
+    --text-ter: rgba(255,255,255,0.28);
+    --streak: #FF6432;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #080808;
+    font-family: 'Inter', -apple-system, sans-serif;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 28px;
+    padding: 32px 20px 60px;
+  }
+
+  /* ── Phone shell ── */
+  .col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .label {
+    font-size: 10px; letter-spacing: .10em; font-weight: 600;
+    color: rgba(255,255,255,.3); text-transform: uppercase; font-family: 'Inter', sans-serif;
+  }
+  .phone {
+    width: 375px; height: 812px;
+    background: var(--bg);
+    border-radius: 50px;
+    border: 1.5px solid rgba(255,255,255,.09);
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 40px 80px rgba(0,0,0,.75), 0 0 0 1px rgba(255,255,255,.03);
+    display: flex; flex-direction: column;
+  }
+
+  /* Glow */
+  .glow {
+    position: absolute; top: 0; left: 0; right: 0; height: 280px;
+    background: radial-gradient(ellipse at 50% -10%, rgba(201,162,39,.20), transparent 60%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* Status bar */
+  .sb {
+    position: relative; z-index: 10; flex-shrink: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 14px 28px 0;
+    font-size: 12px; font-weight: 600; color: var(--text);
+  }
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 126px; height: 34px; background: #000;
+    border-radius: 0 0 22px 22px;
+  }
+
+  /* Scroll body */
+  .body {
+    position: relative; z-index: 5; flex: 1;
+    overflow-y: auto; scrollbar-width: none;
+  }
+  .body::-webkit-scrollbar { display: none; }
+
+  /* ─────────────── TELA 1 — estado vazio ─────────────── */
+  .post-header {
+    display: flex; align-items: center;
+    padding: 14px 20px 12px;
+    border-bottom: 1px solid var(--border2);
+    gap: 12px;
+  }
+  .close-btn {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--surface); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .close-btn svg { width: 16px; height: 16px; color: rgba(255,255,255,.6); }
+  .post-title { flex: 1; text-align: center; font-size: 15px; font-weight: 600; color: var(--text); }
+  .pub-btn {
+    background: var(--gold);
+    border-radius: 20px; padding: 7px 16px;
+    font-size: 13px; font-weight: 600; color: #000; cursor: pointer;
+  }
+  .pub-btn.disabled { background: rgba(255,255,255,.12); color: rgba(255,255,255,.3); cursor: default; }
+
+  .composer-area { padding: 16px 20px 0; display: flex; gap: 12px; }
+  .avatar-sm {
+    width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, #C9A227, #E0B830);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; color: #000;
+  }
+  .composer-right { flex: 1; }
+  .composer-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+  .composer-input {
+    font-size: 15px; color: var(--text-sec); line-height: 1.5;
+    min-height: 60px;
+  }
+  .composer-input.typed { color: var(--text); }
+
+  /* Icon bar */
+  .icon-bar {
+    display: flex; gap: 0;
+    padding: 14px 20px 0 70px;
+    border-top: 1px solid var(--border2);
+    margin-top: 14px;
+  }
+  .icon-pill {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 8px 10px; border-radius: 12px; cursor: pointer;
+    transition: background .15s;
+  }
+  .icon-pill:hover { background: var(--surface); }
+  .icon-pill.active { background: var(--gold-tint); }
+  .icon-pill svg { width: 22px; height: 22px; }
+  .icon-pill span { font-size: 9px; font-weight: 500; letter-spacing: .03em; }
+  .icon-pill .ic-treino { color: var(--gold-bright); }
+  .icon-pill .ic-ativ { color: rgba(255,255,255,.5); }
+  .icon-pill .ic-wear { color: rgba(255,255,255,.5); }
+  .icon-pill .ic-foto { color: rgba(255,255,255,.5); }
+  .icon-pill .ic-mais { color: rgba(255,255,255,.5); }
+  .icon-pill.active .ic-treino,
+  .icon-pill.active .ic-ativ,
+  .icon-pill.active .ic-wear,
+  .icon-pill.active .ic-foto { color: var(--gold-bright); }
+  .icon-label { color: rgba(255,255,255,.4); font-size: 9px; }
+  .icon-label.active-label { color: var(--gold-bright); }
+
+  /* Content area */
+  .content-area { padding: 16px 20px; }
+
+  /* Empty state */
+  .empty-card {
+    border: 1.5px dashed rgba(255,255,255,.12);
+    border-radius: 18px; padding: 32px 20px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    text-align: center;
+  }
+  .empty-icon {
+    width: 52px; height: 52px; border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,.15);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .empty-icon svg { width: 24px; height: 24px; color: rgba(255,255,255,.4); }
+  .empty-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .empty-sub { font-size: 12px; color: var(--text-sec); }
+
+  /* Footer */
+  .post-footer {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: rgba(5,5,5,.92);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border2);
+    padding: 12px 20px 32px;
+    display: flex; align-items: center; gap: 10px;
+    z-index: 20;
+  }
+  .visibility-pill {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 8px 14px;
+    font-size: 13px; color: var(--text-sec); cursor: pointer;
+  }
+  .visibility-pill svg { width: 14px; height: 14px; }
+  .visibility-pill .chevron { width: 12px; height: 12px; opacity: .5; }
+  .footer-pub {
+    flex: 1; background: rgba(255,255,255,.08);
+    border-radius: 20px; padding: 10px;
+    text-align: center; font-size: 14px; font-weight: 600;
+    color: rgba(255,255,255,.3);
+  }
+  .footer-pub.active {
+    background: linear-gradient(135deg, #C9A227, #E0B830);
+    color: #000;
+  }
+
+  /* ─────────────── TELA 2 — treino selecionado ─────────────── */
+  .workout-list { display: flex; flex-direction: column; gap: 10px; }
+  .workout-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 14px 14px;
+    cursor: pointer; transition: border-color .15s, background .15s;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .workout-item:hover { border-color: var(--gold-border); background: var(--gold-tint); }
+  .workout-item.selected { border-color: var(--gold-bright); background: var(--gold-tint-strong); }
+  .wo-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: var(--gold-tint); border: 1px solid var(--gold-border);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    font-size: 18px;
+  }
+  .wo-info { flex: 1; }
+  .wo-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .wo-meta { font-size: 11px; color: var(--text-sec); margin-top: 2px; }
+  .wo-stats { display: flex; gap: 8px; margin-top: 6px; }
+  .wo-stat {
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 6px; padding: 3px 8px;
+    font-size: 10px; font-weight: 600; color: var(--gold-bright);
+  }
+  .wo-check {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1.5px solid var(--border); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .wo-check.sel {
+    background: var(--gold-bright); border-color: var(--gold-bright);
+  }
+  .wo-check.sel svg { width: 12px; height: 12px; color: #000; }
+
+  /* Selected workout card preview */
+  .selected-preview {
+    background: var(--gold-tint); border: 1px solid var(--gold-border);
+    border-radius: 18px; padding: 16px; margin-bottom: 12px;
+  }
+  .preview-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+  }
+  .preview-wo-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: rgba(224,184,48,.15);
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+  }
+  .preview-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .preview-date { font-size: 11px; color: var(--text-sec); margin-top: 1px; }
+  .preview-stats { display: flex; gap: 8px; margin-bottom: 12px; }
+  .preview-stat {
+    flex: 1; background: rgba(0,0,0,.25); border-radius: 10px; padding: 8px;
+    text-align: center;
+  }
+  .preview-stat-val { font-size: 15px; font-weight: 600; color: var(--gold-bright); }
+  .preview-stat-lbl { font-size: 9px; color: var(--text-ter); letter-spacing: .07em; margin-top: 2px; }
+  .preview-muscles { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+  .muscle-tag {
+    background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.07);
+    border-radius: 6px; padding: 3px 8px; font-size: 10px; color: var(--text-sec);
+  }
+  .preview-pr {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(0,0,0,.2); border-radius: 10px; padding: 8px 10px;
+  }
+  .preview-pr-text { font-size: 12px; color: var(--gold-bright); }
+  .preview-pr-toggle {
+    margin-left: auto; font-size: 10px; color: var(--text-ter); cursor: pointer;
+  }
+
+  /* Toggle switch */
+  .toggle {
+    width: 34px; height: 20px; border-radius: 10px;
+    background: var(--gold-bright); position: relative; cursor: pointer; flex-shrink: 0;
+  }
+  .toggle::after {
+    content: ''; position: absolute; top: 3px; right: 3px;
+    width: 14px; height: 14px; border-radius: 50%; background: #000;
+  }
+  .toggle.off { background: rgba(255,255,255,.15); }
+  .toggle.off::after { right: auto; left: 3px; background: rgba(255,255,255,.5); }
+
+  /* ─────────────── TELA 3 — atividade ─────────────── */
+  .activity-search {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 14px; margin-bottom: 16px;
+  }
+  .activity-search svg { width: 16px; height: 16px; color: var(--text-ter); }
+  .activity-search span { font-size: 13px; color: var(--text-ter); }
+  .activity-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .activity-cell {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 14px 10px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    cursor: pointer; transition: border-color .15s, background .15s;
+  }
+  .activity-cell:hover { border-color: var(--gold-border); background: var(--gold-tint); }
+  .activity-cell.selected { border-color: var(--gold-bright); background: var(--gold-tint-strong); }
+  .activity-icon {
+    width: 44px; height: 44px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .activity-name { font-size: 11px; font-weight: 500; color: var(--text); text-align: center; }
+
+  /* ─────────────── TELA 4 — wearable sheet ─────────────── */
+  .sheet-handle {
+    width: 36px; height: 4px; border-radius: 2px;
+    background: rgba(255,255,255,.15); margin: 10px auto 16px;
+  }
+  .sheet-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .sheet-sub { font-size: 12px; color: var(--text-sec); margin-bottom: 20px; }
+
+  .wearable-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 0; border-bottom: 1px solid var(--border2); cursor: pointer;
+  }
+  .wearable-row:last-child { border-bottom: none; }
+  .wearable-icon {
+    width: 44px; height: 44px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+    flex-shrink: 0;
+  }
+  .wearable-icon.whoop { background: #FF0000; }
+  .wearable-icon.apple { background: #1C1C1E; border: 1px solid rgba(255,255,255,.1); }
+  .wearable-icon.garmin { background: #005B99; }
+  .wearable-info { flex: 1; }
+  .wearable-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .wearable-meta { font-size: 12px; color: var(--text-sec); margin-top: 2px; }
+  .wearable-badge {
+    font-size: 10px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+  }
+  .wearable-badge.connected {
+    background: var(--gold-tint); border: 1px solid var(--gold-border); color: var(--gold-bright);
+  }
+  .wearable-badge.soon {
+    background: var(--surface); border: 1px solid var(--border); color: var(--text-ter);
+  }
+
+  /* Whoop data preview */
+  .whoop-preview {
+    background: rgba(255,0,0,.08); border: 1px solid rgba(255,0,0,.2);
+    border-radius: 14px; padding: 14px; margin-top: 12px;
+  }
+  .whoop-preview-header {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+  }
+  .whoop-dot { width: 8px; height: 8px; border-radius: 50%; background: #FF0000; }
+  .whoop-preview-title { font-size: 12px; font-weight: 600; color: rgba(255,80,80,.9); }
+  .whoop-preview-time { font-size: 11px; color: var(--text-ter); margin-left: auto; }
+  .whoop-metrics { display: flex; gap: 8px; }
+  .whoop-metric { flex: 1; text-align: center; }
+  .whoop-metric-val { font-size: 18px; font-weight: 600; color: var(--text); }
+  .whoop-metric-lbl { font-size: 9px; color: var(--text-ter); letter-spacing: .07em; margin-top: 2px; }
+  .whoop-import-btn {
+    margin-top: 12px; width: 100%;
+    background: rgba(255,0,0,.15); border: 1px solid rgba(255,0,0,.3);
+    border-radius: 10px; padding: 10px;
+    text-align: center; font-size: 13px; font-weight: 600; color: rgba(255,100,100,.9);
+    cursor: pointer;
+  }
+
+  /* ─────────────── TELA 5 — post final ─────────────── */
+  .final-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; overflow: hidden; margin-bottom: 12px;
+  }
+  .final-card-photo {
+    height: 200px;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .photo-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,.7));
+  }
+  .photo-placeholder {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    color: rgba(255,255,255,.3);
+  }
+  .photo-placeholder svg { width: 32px; height: 32px; }
+  .photo-placeholder span { font-size: 12px; }
+  .final-card-body { padding: 14px; }
+  .final-caption { font-size: 14px; color: var(--text); line-height: 1.5; margin-bottom: 12px; }
+  .final-caption span { color: var(--gold-bright); }
+
+  /* Visibility sheet */
+  .vis-option {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 0; border-bottom: 1px solid var(--border2); cursor: pointer;
+  }
+  .vis-option:last-child { border-bottom: none; }
+  .vis-option-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    background: var(--surface); display: flex; align-items: center; justify-content: center;
+  }
+  .vis-option-icon svg { width: 20px; height: 20px; color: var(--text-sec); }
+  .vis-option-info { flex: 1; }
+  .vis-option-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .vis-option-sub { font-size: 11px; color: var(--text-sec); margin-top: 2px; }
+  .vis-radio {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 2px solid var(--border); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .vis-radio.sel { border-color: var(--gold-bright); }
+  .vis-radio.sel::after {
+    content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--gold-bright);
+  }
+
+  /* Sheet overlay */
+  .sheet-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,.6); z-index: 30;
+    display: flex; align-items: flex-end;
+  }
+  .sheet {
+    background: #111; border-radius: 24px 24px 0 0;
+    border: 1px solid rgba(255,255,255,.08); border-bottom: none;
+    padding: 0 20px 40px; width: 100%;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ TELA 1: Criar post — estado inicial ═══ -->
+<div class="col">
+  <div class="label">1 · Criar post · vazio</div>
+  <div class="phone">
+    <div class="glow"></div>
+    <div class="sb"><span>9:41</span><div class="notch"></div><span>🔋</span></div>
+    <div class="body">
+      <!-- Header -->
+      <div class="post-header">
+        <div class="close-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </div>
+        <div class="post-title">Criar post</div>
+        <div class="pub-btn disabled">Publicar</div>
+      </div>
+
+      <!-- Composer -->
+      <div class="composer-area">
+        <div class="avatar-sm">JV</div>
+        <div class="composer-right">
+          <div class="composer-name">@joaovitor</div>
+          <div class="composer-input">O que você quer compartilhar?</div>
+        </div>
+      </div>
+
+      <!-- Icon bar -->
+      <div class="icon-bar">
+        <div class="icon-pill active">
+          <svg class="ic-treino" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6.5 6.5h11"/><path d="M17.5 6.5v11"/><path d="M6.5 17.5h11"/><path d="M6.5 6.5v11"/><circle cx="12" cy="12" r="2.5"/></svg>
+          <span class="active-label">Treino</span>
+        </div>
+        <div class="icon-pill">
+          <svg class="ic-ativ" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="5" r="2"/><path d="m9 12 1.5 4.5L12 14l1.5 2.5L15 12"/><path d="M12 7v3"/></svg>
+          <span class="icon-label">Atividade</span>
+        </div>
+        <div class="icon-pill">
+          <svg class="ic-wear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="3" width="10" height="18" rx="3"/><path d="M10 3V1h4v2"/><path d="M10 21v2h4v-2"/><circle cx="12" cy="12" r="2"/></svg>
+          <span class="icon-label">Wearable</span>
+        </div>
+        <div class="icon-pill">
+          <svg class="ic-foto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span class="icon-label">Foto</span>
+        </div>
+        <div class="icon-pill">
+          <svg class="ic-mais" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+          <span class="icon-label">Mais</span>
+        </div>
+      </div>
+
+      <!-- Content: empty state treino -->
+      <div class="content-area">
+        <div class="empty-card">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6.5 6.5h11M17.5 6.5v11M6.5 17.5h11M6.5 6.5v11"/><circle cx="12" cy="12" r="2.5"/></svg>
+          </div>
+          <div class="empty-title">Nenhum treino recente</div>
+          <div class="empty-sub">Seus últimos treinos concluídos aparecerão aqui</div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="post-footer">
+        <div class="visibility-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Todos
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+        <div class="footer-pub">Publicar</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TELA 2: Treino selecionado ═══ -->
+<div class="col">
+  <div class="label">2 · Treino selecionado</div>
+  <div class="phone">
+    <div class="glow"></div>
+    <div class="sb"><span>9:41</span><div class="notch"></div><span>🔋</span></div>
+    <div class="body">
+      <div class="post-header">
+        <div class="close-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
+        <div class="post-title">Criar post</div>
+        <div class="pub-btn">Publicar</div>
+      </div>
+
+      <div class="composer-area">
+        <div class="avatar-sm">JV</div>
+        <div class="composer-right">
+          <div class="composer-name">@joaovitor</div>
+          <div class="composer-input typed">Dia de perna pesado 🔥 Batendo PRs!</div>
+        </div>
+      </div>
+
+      <div class="icon-bar">
+        <div class="icon-pill active">
+          <svg class="ic-treino" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6.5 6.5h11M17.5 6.5v11M6.5 17.5h11M6.5 6.5v11"/><circle cx="12" cy="12" r="2.5"/></svg>
+          <span class="active-label">Treino</span>
+        </div>
+        <div class="icon-pill"><svg class="ic-ativ" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="5" r="2"/><path d="m9 12 1.5 4.5L12 14l1.5 2.5L15 12"/><path d="M12 7v3"/></svg><span class="icon-label">Atividade</span></div>
+        <div class="icon-pill"><svg class="ic-wear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="3" width="10" height="18" rx="3"/><path d="M10 3V1h4v2M10 21v2h4v-2"/><circle cx="12" cy="12" r="2"/></svg><span class="icon-label">Wearable</span></div>
+        <div class="icon-pill"><svg class="ic-foto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span class="icon-label">Foto</span></div>
+        <div class="icon-pill"><svg class="ic-mais" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg><span class="icon-label">Mais</span></div>
+      </div>
+
+      <div class="content-area" style="padding-bottom:120px;">
+        <!-- Preview do treino selecionado -->
+        <div class="selected-preview">
+          <div class="preview-header">
+            <div class="preview-wo-icon">🏋️</div>
+            <div>
+              <div class="preview-name">Legs A</div>
+              <div class="preview-date">hoje · 68 min</div>
+            </div>
+            <div style="margin-left:auto;font-size:11px;color:var(--gold-bright);cursor:pointer;">Trocar</div>
+          </div>
+
+          <div class="preview-stats">
+            <div class="preview-stat">
+              <div class="preview-stat-val">68 MIN</div>
+              <div class="preview-stat-lbl">DURAÇÃO</div>
+            </div>
+            <div class="preview-stat">
+              <div class="preview-stat-val">8.4 T</div>
+              <div class="preview-stat-lbl">VOLUME</div>
+            </div>
+            <div class="preview-stat">
+              <div class="preview-stat-val">32</div>
+              <div class="preview-stat-lbl">SÉRIES</div>
+            </div>
+          </div>
+
+          <div class="preview-muscles">
+            <div class="muscle-tag">Quadríceps</div>
+            <div class="muscle-tag">Glúteos</div>
+            <div class="muscle-tag">Posteriores</div>
+            <div class="muscle-tag">Panturrilhas</div>
+          </div>
+
+          <!-- PR toggle -->
+          <div class="preview-pr">
+            <span style="font-size:16px;">🏆</span>
+            <div class="preview-pr-text">2 PRs incluídos no post</div>
+            <div class="toggle" style="margin-left:auto;"></div>
+          </div>
+        </div>
+
+        <!-- Lista de treinos para trocar -->
+        <div style="font-size:10px;font-weight:600;color:var(--text-ter);letter-spacing:.09em;margin-bottom:10px;">OUTROS TREINOS RECENTES</div>
+        <div class="workout-list">
+          <div class="workout-item selected">
+            <div class="wo-icon">🏋️</div>
+            <div class="wo-info">
+              <div class="wo-name">Legs A</div>
+              <div class="wo-meta">hoje · 68 min · 8.4 ton</div>
+            </div>
+            <div class="wo-check sel">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+            </div>
+          </div>
+          <div class="workout-item">
+            <div class="wo-icon">💪</div>
+            <div class="wo-info">
+              <div class="wo-name">Push A</div>
+              <div class="wo-meta">ontem · 55 min · 6.1 ton</div>
+            </div>
+            <div class="wo-check"></div>
+          </div>
+          <div class="workout-item">
+            <div class="wo-icon">🔄</div>
+            <div class="wo-info">
+              <div class="wo-name">Pull B</div>
+              <div class="wo-meta">há 2 dias · 62 min · 5.8 ton</div>
+            </div>
+            <div class="wo-check"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="post-footer">
+        <div class="visibility-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Todos
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+        <div class="footer-pub active">Publicar</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TELA 3: Seletor de atividade ═══ -->
+<div class="col">
+  <div class="label">3 · Seletor de atividade</div>
+  <div class="phone">
+    <div class="glow"></div>
+    <div class="sb"><span>9:41</span><div class="notch"></div><span>🔋</span></div>
+    <div class="body">
+      <div class="post-header">
+        <div class="close-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
+        <div class="post-title">Criar post</div>
+        <div class="pub-btn disabled">Publicar</div>
+      </div>
+
+      <div class="composer-area">
+        <div class="avatar-sm">JV</div>
+        <div class="composer-right">
+          <div class="composer-name">@joaovitor</div>
+          <div class="composer-input">O que você quer compartilhar?</div>
+        </div>
+      </div>
+
+      <div class="icon-bar">
+        <div class="icon-pill"><svg class="ic-treino" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6.5 6.5h11M17.5 6.5v11M6.5 17.5h11M6.5 6.5v11"/><circle cx="12" cy="12" r="2.5"/></svg><span class="icon-label">Treino</span></div>
+        <div class="icon-pill active"><svg class="ic-ativ" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="5" r="2"/><path d="m9 12 1.5 4.5L12 14l1.5 2.5L15 12"/><path d="M12 7v3"/></svg><span class="active-label">Atividade</span></div>
+        <div class="icon-pill"><svg class="ic-wear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="3" width="10" height="18" rx="3"/><path d="M10 3V1h4v2M10 21v2h4v-2"/><circle cx="12" cy="12" r="2"/></svg><span class="icon-label">Wearable</span></div>
+        <div class="icon-pill"><svg class="ic-foto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span class="icon-label">Foto</span></div>
+        <div class="icon-pill"><svg class="ic-mais" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg><span class="icon-label">Mais</span></div>
+      </div>
+
+      <div class="content-area" style="padding-bottom:120px;">
+        <div class="activity-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <span>Buscar atividade</span>
+        </div>
+
+        <div style="font-size:10px;font-weight:600;color:var(--text-ter);letter-spacing:.09em;margin-bottom:12px;">FREQUENTES</div>
+        <div class="activity-grid" style="margin-bottom:16px;">
+          <div class="activity-cell selected">
+            <div class="activity-icon" style="background:rgba(201,162,39,.15);">🏋️</div>
+            <div class="activity-name">Musculação</div>
+          </div>
+          <div class="activity-cell">
+            <div class="activity-icon" style="background:rgba(255,255,255,.05);">🏃</div>
+            <div class="activity-name">Corrida</div>
+          </div>
+          <div class="activity-cell">
+            <div class="activity-icon" style="background:rgba(255,255,255,.05);">🚴</div>
+            <div class="activity-name">Ciclismo</div>
+          </div>
+        </div>
+
+        <div style="font-size:10px;font-weight:600;color:var(--text-ter);letter-spacing:.09em;margin-bottom:12px;">TODAS</div>
+        <div class="activity-grid">
+          <div class="activity-cell">
+            <div class="activity-icon" style="background:rgba(255,255,255,.05);">🥊</div>
+            <div class="activity-name">Boxe</div>
+          </div>
+          <div class="activity-cell">
+            <div class="activity-icon" style="background:rgba(255,255,255,.05);">🤸</div>
+            <div class="activity-name">Calistenia</div>
+          </div>
+          <div class="activity-cell">
+            <div class="activity-icon" style="background:rgba(255,255,255,.05);">⚡</div>
+            <div class="activity-name">HIIT</div>
+          </div>
+          <div class="activity-cell">
+            <div class="activity-icon" style="background:rgba(255,255,255,.05);">🥋</div>
+            <div class="activity-name">Jiu-Jitsu</div>
+          </div>
+          <div class="activity-cell">
+            <div class="activity-icon" style="background:rgba(255,255,255,.05);">🏊</div>
+            <div class="activity-name">Natação</div>
+          </div>
+          <div class="activity-cell">
+            <div class="activity-icon" style="background:rgba(255,255,255,.05);">🧘</div>
+            <div class="activity-name">Yoga</div>
+          </div>
+          <div class="activity-cell">
+            <div class="activity-icon" style="background:rgba(255,255,255,.05);">⛹️</div>
+            <div class="activity-name">Basquete</div>
+          </div>
+          <div class="activity-cell">
+            <div class="activity-icon" style="background:rgba(255,255,255,.05);">🎾</div>
+            <div class="activity-name">Tênis</div>
+          </div>
+          <div class="activity-cell">
+            <div class="activity-icon" style="background:rgba(255,255,255,.05);">🏄</div>
+            <div class="activity-name">Surf</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="post-footer">
+        <div class="visibility-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Todos
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+        <div class="footer-pub">Publicar</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TELA 4: Sheet de wearables ═══ -->
+<div class="col">
+  <div class="label">4 · Importar de wearable</div>
+  <div class="phone">
+    <div class="glow"></div>
+    <div class="sb"><span>9:41</span><div class="notch"></div><span>🔋</span></div>
+    <div class="body">
+      <!-- Tela de fundo -->
+      <div class="post-header">
+        <div class="close-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
+        <div class="post-title">Criar post</div>
+        <div class="pub-btn disabled">Publicar</div>
+      </div>
+      <div class="composer-area">
+        <div class="avatar-sm">JV</div>
+        <div class="composer-right">
+          <div class="composer-name">@joaovitor</div>
+          <div class="composer-input">O que você quer compartilhar?</div>
+        </div>
+      </div>
+
+      <!-- Sheet overlay -->
+      <div class="sheet-overlay">
+        <div class="sheet">
+          <div class="sheet-handle"></div>
+          <div class="sheet-title">Importar de wearable</div>
+          <div class="sheet-sub">Dados das últimas 3 horas</div>
+
+          <!-- Whoop — conectado com dados -->
+          <div class="wearable-row">
+            <div class="wearable-icon whoop" style="font-size:14px;font-weight:800;color:#fff;font-family:sans-serif;">W</div>
+            <div class="wearable-info">
+              <div class="wearable-name">Whoop</div>
+              <div class="wearable-meta">Strain 16.4 · FC 142 bpm detectado</div>
+            </div>
+            <div class="wearable-badge connected">Conectado</div>
+          </div>
+
+          <!-- Whoop data preview -->
+          <div class="whoop-preview">
+            <div class="whoop-preview-header">
+              <div class="whoop-dot"></div>
+              <div class="whoop-preview-title">WHOOP · Última atividade</div>
+              <div class="whoop-preview-time">há 45 min</div>
+            </div>
+            <div class="whoop-metrics">
+              <div class="whoop-metric">
+                <div class="whoop-metric-val">16.4</div>
+                <div class="whoop-metric-lbl">STRAIN</div>
+              </div>
+              <div class="whoop-metric">
+                <div class="whoop-metric-val">142</div>
+                <div class="whoop-metric-lbl">FC MÉD.</div>
+              </div>
+              <div class="whoop-metric">
+                <div class="whoop-metric-val">580</div>
+                <div class="whoop-metric-lbl">KCAL</div>
+              </div>
+              <div class="whoop-metric">
+                <div class="whoop-metric-val">55</div>
+                <div class="whoop-metric-lbl">MIN</div>
+              </div>
+            </div>
+            <div class="whoop-import-btn">Importar esses dados →</div>
+          </div>
+
+          <!-- Apple Health -->
+          <div class="wearable-row">
+            <div class="wearable-icon apple" style="font-size:22px;">❤️</div>
+            <div class="wearable-info">
+              <div class="wearable-name">Apple Health</div>
+              <div class="wearable-meta">FC e calorias sincronizados</div>
+            </div>
+            <div class="wearable-badge connected">Conectado</div>
+          </div>
+
+          <!-- Garmin -->
+          <div class="wearable-row">
+            <div class="wearable-icon garmin" style="font-size:13px;font-weight:700;color:#fff;font-family:sans-serif;">G</div>
+            <div class="wearable-info">
+              <div class="wearable-name">Garmin Connect</div>
+              <div class="wearable-meta">Conecte nas Configurações</div>
+            </div>
+            <div class="wearable-badge soon">Em breve</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TELA 5: Post composto — com foto + treino ═══ -->
+<div class="col">
+  <div class="label">5 · Post composto</div>
+  <div class="phone">
+    <div class="glow"></div>
+    <div class="sb"><span>9:41</span><div class="notch"></div><span>🔋</span></div>
+    <div class="body">
+      <div class="post-header">
+        <div class="close-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
+        <div class="post-title">Criar post</div>
+        <div class="pub-btn">Publicar</div>
+      </div>
+
+      <div class="composer-area">
+        <div class="avatar-sm">JV</div>
+        <div class="composer-right">
+          <div class="composer-name">@joaovitor</div>
+          <div class="composer-input typed">Dia de perna pesado 🔥 Batendo PRs no leg press e agachamento. Quem mais tá na semana de volume?</div>
+        </div>
+      </div>
+
+      <div class="icon-bar">
+        <div class="icon-pill active"><svg class="ic-treino" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6.5 6.5h11M17.5 6.5v11M6.5 17.5h11M6.5 6.5v11"/><circle cx="12" cy="12" r="2.5"/></svg><span class="active-label">Treino</span></div>
+        <div class="icon-pill"><svg class="ic-ativ" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="5" r="2"/><path d="m9 12 1.5 4.5L12 14l1.5 2.5L15 12"/><path d="M12 7v3"/></svg><span class="icon-label">Atividade</span></div>
+        <div class="icon-pill"><svg class="ic-wear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="3" width="10" height="18" rx="3"/><path d="M10 3V1h4v2M10 21v2h4v-2"/><circle cx="12" cy="12" r="2"/></svg><span class="icon-label">Wearable</span></div>
+        <div class="icon-pill active"><svg class="ic-foto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg><span class="active-label">Foto</span></div>
+        <div class="icon-pill"><svg class="ic-mais" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg><span class="icon-label">Mais</span></div>
+      </div>
+
+      <div class="content-area" style="padding-bottom:120px;">
+        <!-- Foto -->
+        <div class="final-card" style="margin-bottom:12px;">
+          <div class="final-card-photo">
+            <div style="position:absolute;inset:0;background:linear-gradient(135deg,#1a1505 0%,#2d2408 50%,#1a1505 100%);"></div>
+            <div class="photo-overlay"></div>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;">
+              <div style="font-size:48px;">📸</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.5);">Foto adicionada</div>
+            </div>
+            <!-- Remove photo button -->
+            <div style="position:absolute;top:10px;right:10px;width:28px;height:28px;background:rgba(0,0,0,.6);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card de treino anexado -->
+        <div class="selected-preview">
+          <div class="preview-header">
+            <div class="preview-wo-icon">🏋️</div>
+            <div>
+              <div class="preview-name">Legs A</div>
+              <div class="preview-date">hoje · 68 min</div>
+            </div>
+            <div style="margin-left:auto;cursor:pointer;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </div>
+          </div>
+
+          <div class="preview-stats">
+            <div class="preview-stat"><div class="preview-stat-val">68 MIN</div><div class="preview-stat-lbl">DURAÇÃO</div></div>
+            <div class="preview-stat"><div class="preview-stat-val">8.4 T</div><div class="preview-stat-lbl">VOLUME</div></div>
+            <div class="preview-stat"><div class="preview-stat-val">32</div><div class="preview-stat-lbl">SÉRIES</div></div>
+          </div>
+
+          <div class="preview-muscles">
+            <div class="muscle-tag">Quadríceps</div>
+            <div class="muscle-tag">Glúteos</div>
+            <div class="muscle-tag">Posteriores</div>
+          </div>
+
+          <div class="preview-pr">
+            <span style="font-size:16px;">🏆</span>
+            <div class="preview-pr-text">2 PRs incluídos</div>
+            <div class="toggle" style="margin-left:auto;"></div>
+          </div>
+        </div>
+
+        <!-- Preview de como vai aparecer no feed -->
+        <div style="font-size:10px;font-weight:600;color:var(--text-ter);letter-spacing:.09em;margin:16px 0 10px;">PRÉVIA NO FEED</div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;">
+          <div style="height:120px;background:linear-gradient(135deg,#1a1505,#2d2408);display:flex;align-items:center;justify-content:center;">
+            <span style="font-size:32px;">📸</span>
+          </div>
+          <div style="padding:12px 14px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+              <div class="avatar-sm" style="width:28px;height:28px;font-size:10px;">JV</div>
+              <div>
+                <div style="font-size:12px;font-weight:600;color:var(--text);">João Vitor</div>
+                <div style="font-size:10px;color:var(--text-sec);">@joaovitor · agora</div>
+              </div>
+            </div>
+            <div style="font-size:12px;color:var(--text);margin-bottom:8px;line-height:1.4;">Dia de perna pesado 🔥 Batendo PRs no leg press...</div>
+            <div style="background:var(--gold-tint);border:1px solid var(--gold-border);border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:8px;">
+              <span style="font-size:14px;">🏋️</span>
+              <div>
+                <div style="font-size:11px;font-weight:600;color:var(--gold-bright);">Legs A · 8.4 ton · 68 min</div>
+                <div style="font-size:10px;color:var(--text-sec);">Quadríceps · Glúteos · Posteriores</div>
+              </div>
+              <div style="margin-left:auto;font-size:10px;color:var(--text-ter);">Ver treino →</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="post-footer">
+        <div class="visibility-pill">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Todos
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+        </div>
+        <div class="footer-pub active">Publicar</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TELA 6: Visibilidade sheet ═══ -->
+<div class="col">
+  <div class="label">6 · Visibilidade</div>
+  <div class="phone">
+    <div class="glow"></div>
+    <div class="sb"><span>9:41</span><div class="notch"></div><span>🔋</span></div>
+    <div class="body">
+      <!-- Fundo -->
+      <div class="post-header">
+        <div class="close-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></div>
+        <div class="post-title">Criar post</div>
+        <div class="pub-btn">Publicar</div>
+      </div>
+      <div class="composer-area">
+        <div class="avatar-sm">JV</div>
+        <div class="composer-right">
+          <div class="composer-name">@joaovitor</div>
+          <div class="composer-input typed">Dia de perna pesado 🔥</div>
+        </div>
+      </div>
+
+      <!-- Sheet -->
+      <div class="sheet-overlay">
+        <div class="sheet">
+          <div class="sheet-handle"></div>
+          <div class="sheet-title" style="margin-bottom:4px;">Quem pode ver?</div>
+          <div style="font-size:12px;color:var(--text-sec);margin-bottom:20px;">Escolha quem verá este post</div>
+
+          <div class="vis-option">
+            <div class="vis-option-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            </div>
+            <div class="vis-option-info">
+              <div class="vis-option-name">Todos</div>
+              <div class="vis-option-sub">Visível para qualquer usuário do BLDR</div>
+            </div>
+            <div class="vis-radio sel"></div>
+          </div>
+
+          <div class="vis-option">
+            <div class="vis-option-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="vis-option-info">
+              <div class="vis-option-name">Só meu squad</div>
+              <div class="vis-option-sub">Visível apenas para membros do Tropa Élite</div>
+            </div>
+            <div class="vis-radio"></div>
+          </div>
+
+          <div class="vis-option">
+            <div class="vis-option-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div class="vis-option-info">
+              <div class="vis-option-name">Só eu</div>
+              <div class="vis-option-sub">Salvo no seu histórico, não aparece no feed</div>
+            </div>
+            <div class="vis-radio"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

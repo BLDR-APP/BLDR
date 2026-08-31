@@ -1413,6 +1413,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.5+1"
+  purchases_flutter:
+    dependency: "direct main"
+    description:
+      name: purchases_flutter
+      sha256: "1a62be1ce31a35614f6ec1a8c52a5b81efbdf3a0d704c5327431583fdc209d7e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "10.10.1"
+  purchases_ui_flutter:
+    dependency: "direct main"
+    description:
+      name: purchases_ui_flutter
+      sha256: aaae371f23ced12a47c68da9eefa503b0047197964cfaa8f36c99d2d9450ca21
+      url: "https://pub.dev"
+    source: hosted
+    version: "10.10.1"
   qr:
     dependency: transitive
     description:

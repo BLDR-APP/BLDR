@@ -1,8 +1,13 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bldr_fitness/core/errors/failure.dart';
 import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_post.dart';
+import 'package:bldr_fitness/features/community/domain/entities/community_comment.dart';
+import 'package:bldr_fitness/features/community/domain/entities/community_profile.dart';
+import 'package:bldr_fitness/features/community/domain/entities/community_post_payload.dart';
 import 'package:bldr_fitness/features/community/domain/entities/ranking_entry.dart';
 import 'package:bldr_fitness/features/community/domain/entities/recent_workout.dart';
 import 'package:bldr_fitness/features/community/domain/entities/workout_exercise.dart';
@@ -15,6 +20,7 @@ class _FakeCommunityFeedRepository implements CommunityFeedRepository {
   bool shouldFail = false;
   List<CommunityPost> feedToReturn = [];
   List<RankingEntry> rankingToReturn = [];
+  List<CommunityPost> followingFeedToReturn = [];
   String? lastRankingCategory;
   String? lastRankingPeriod;
 
@@ -47,23 +53,114 @@ class _FakeCommunityFeedRepository implements CommunityFeedRepository {
   }
 
   @override
-  Future<void> createPost({
+  Future<Result<List<CommunityPost>>> fetchFollowingFeed({
+    int limit = 20,
+    DateTime? before,
+  }) async =>
+      Result.success(followingFeedToReturn);
+
+  @override
+  Future<Result<List<CommunityPost>>> fetchPrivatePosts(
+          {int limit = 50}) async =>
+      const Result.success([]);
+
+  @override
+  Future<Result<List<CommunityPost>>> fetchSquadFeed(String squadId,
+          {int limit = 50}) async =>
+      const Result.success([]);
+
+  @override
+  Future<Result<void>> followUser(String userId) async =>
+      const Result.success(null);
+
+  @override
+  Future<Result<void>> unfollowUser(String userId) async =>
+      const Result.success(null);
+
+  @override
+  Future<Result<void>> deletePost(String postId) async =>
+      const Result.success(null);
+
+  @override
+  Future<Result<void>> blockUser(String userId) async =>
+      const Result.success(null);
+
+  @override
+  Future<Result<void>> reportUser({
+    required String userId,
+    required String feedId,
+    required String reason,
+    String? details,
+  }) async =>
+      const Result.success(null);
+
+  @override
+  Future<Result<List<CommunityProfile>>> searchProfiles(String query) async =>
+      const Result.success([]);
+
+  @override
+  Future<Result<List<CommunityPost>>> searchPublicPosts(String query) async =>
+      const Result.success([]);
+
+  @override
+  Future<Result<List<CommunityComment>>> fetchComments(String feedId) async =>
+      const Result.success([]);
+
+  @override
+  Future<Result<void>> addComment({
+    required String feedId,
+    required String body,
+    String? parentId,
+  }) async =>
+      const Result.success(null);
+
+  @override
+  Future<Result<void>> editComment(
+          {required String id, required String body}) async =>
+      const Result.success(null);
+
+  @override
+  Future<Result<void>> deleteComment(String id) async =>
+      const Result.success(null);
+
+  @override
+  Future<Result<void>> createPost({
     required String eventType,
     required Map<String, dynamic> payload,
     required String visibility,
-  }) async {}
+    String? squadId,
+  }) async =>
+      const Result.success(null);
 
   @override
-  Future<void> toggleReaction({
+  Future<Result<Map<String, dynamic>?>> detectRecentWearableActivity() async =>
+      const Result.success(null);
+
+  @override
+  Future<Result<List<Map<String, dynamic>>>> fetchWearableActivities(
+          String provider) async =>
+      const Result.success([]);
+
+  @override
+  Future<Result<String>> uploadCommunityPhoto({
+    required Uint8List bytes,
+    required String extension,
+  }) async =>
+      const Result.success('https://example.com/photo.jpg');
+
+  @override
+  Future<Result<void>> toggleReaction({
     required String feedId,
     required String emoji,
-  }) async {}
+  }) async =>
+      const Result.success(null);
 
   @override
-  Future<String> copyWorkout({
+  Future<Result<String>> copyWorkout({
     required String workoutId,
     required String source,
-  }) async => 'new-template-id';
+  }) async =>
+      const Result.success('new-template-id');
 
   @override
   Future<void> postStreakMilestone({required int days}) async {}
@@ -126,6 +223,100 @@ RankingEntry _makeEntry({
 // ── Testes ───────────────────────────────────────────────────────────────────
 
 void main() {
+  test('CommunityComment representa somente um nível de respostas', () {
+    final created = DateTime.utc(2026, 8, 29);
+    final reply = CommunityComment(
+      id: 'reply',
+      feedId: 'feed',
+      userId: 'b',
+      parentId: 'root',
+      body: 'Resposta',
+      createdAt: created,
+    );
+    final root = CommunityComment(
+      id: 'root',
+      feedId: 'feed',
+      userId: 'a',
+      body: 'Comentário',
+      createdAt: created,
+      replies: [reply],
+    );
+    expect(root.replies.single.parentId, root.id);
+    expect(root.replies.single.replies, isEmpty);
+  });
+
+  test('CommunityProfile usa nome, username e fallback em ordem', () {
+    expect(
+      const CommunityProfile(id: '1', fullName: 'Ana', username: 'ana')
+          .displayName,
+      'Ana',
+    );
+    expect(
+      const CommunityProfile(id: '2', username: 'bia').displayName,
+      'bia',
+    );
+    expect(const CommunityProfile(id: '3').displayName, 'Atleta');
+  });
+
+  group('CommunityPostPayload', () {
+    test('lê payload legado sem perder compatibilidade', () {
+      final payload = CommunityPostPayload.fromJson({
+        'workout_id': 'workout-1',
+        'workout_name': 'Pernas',
+        'volume_kg': 1200,
+        'set_count': 12,
+      });
+
+      expect(payload.version, 0);
+      expect(payload.kind, CommunityPayloadKind.workout);
+      expect(payload.workoutName, 'Pernas');
+      expect(payload.volumeKg, 1200);
+      expect(payload.completedSetCount, 12);
+    });
+
+    test('serializa payload novo com versão e tipo', () {
+      const payload = CommunityPostPayload(
+        kind: CommunityPayloadKind.activity,
+        activityType: 'corrida',
+        durationSeconds: 1800,
+      );
+
+      expect(payload.toJson(), containsPair('version', 1));
+      expect(payload.toJson(), containsPair('kind', 'activity'));
+    });
+
+    test('serializa a quantidade de séries concluídas do treino', () {
+      const payload = CommunityPostPayload(
+        kind: CommunityPayloadKind.workout,
+        completedSetCount: 9,
+      );
+
+      expect(payload.toJson(), containsPair('set_count', 9));
+    });
+
+    test('expõe origem, atividade e métricas do wearable aninhado', () {
+      final payload = CommunityPostPayload.fromJson({
+        'version': 1,
+        'kind': 'wearable',
+        'wearable': {
+          'provider': 'whoop',
+          'activity_type': 'weightlifting',
+          'duration_s': 3600,
+          'strain': 10.8,
+          'average_heart_rate': 73,
+          'calories': 70,
+        },
+      });
+
+      expect(payload.wearableProvider, 'whoop');
+      expect(payload.wearableActivityType, 'weightlifting');
+      expect(payload.wearableDurationSeconds, 3600);
+      expect(payload.wearableStrain, 10.8);
+      expect(payload.wearableAverageHeartRate, 73);
+      expect(payload.wearableCalories, 70);
+    });
+  });
+
   late _FakeCommunityFeedRepository repo;
 
   setUp(() {
@@ -134,7 +325,10 @@ void main() {
 
   // 1. Feed público carregado com sucesso
   test('fetchFeed retorna lista de posts com sucesso', () async {
-    repo.feedToReturn = [_makePost(), _makePost(id: 'post-2', userId: 'user-B')];
+    repo.feedToReturn = [
+      _makePost(),
+      _makePost(id: 'post-2', userId: 'user-B')
+    ];
 
     final result = await repo.fetchFeed();
 
@@ -161,6 +355,24 @@ void main() {
 
     expect(post.commentCount, equals(0)); // default seguro
     expect(post.username, equals('atleta_a'));
+  });
+
+  test('CommunityPost.fromJson preserva metadados sociais do autor', () {
+    final post = CommunityPost.fromJson({
+      'id': 'post-1',
+      'user_id': 'user-A',
+      'event_type': 'manual',
+      'payload': <String, dynamic>{},
+      'visibility': 'public',
+      'created_at': '2026-08-01T10:00:00Z',
+      'is_club_member': true,
+      'is_following': true,
+      'is_own_post': false,
+    });
+
+    expect(post.isClubMember, isTrue);
+    expect(post.isFollowing, isTrue);
+    expect(post.isOwnPost, isFalse);
   });
 
   // 3. Associação de múltiplos posts a user_profiles distintos
@@ -252,7 +464,8 @@ void main() {
   });
 
   // 9. Ranking envia p_period (não p_start)
-  test('fetchRanking passa p_period (não p_start) para o repositório', () async {
+  test('fetchRanking passa p_period (não p_start) para o repositório',
+      () async {
     repo.rankingToReturn = [_makeEntry()];
 
     await repo.fetchRanking(category: 'volume', period: 'week');
@@ -291,48 +504,56 @@ void main() {
   });
 
   // 12. Mapeamento do retorno real das RPCs via RankingEntry.fromRow
-  test('RankingEntry.fromRow mapeia campos do retorno da RPC', () {
+  // Campos reais: user_id, full_name, username, avatar_url, total (sem position)
+  test('RankingEntry.fromRow mapeia campos do retorno real da RPC', () {
     final row = {
-      'position': 1,
       'user_id': 'user-A',
-      'display_name': 'Atleta A',
+      'full_name': 'Atleta A',
+      'username': 'atletaa',
       'avatar_url': 'https://example.com/avatar.jpg',
-      'value': 12345.6,
+      'total': 12345.6,
     };
 
-    final entry = RankingEntry.fromRow(row, currentUserId: 'user-B');
+    final entry =
+        RankingEntry.fromRow(row, currentUserId: 'user-B', position: 1);
 
     expect(entry.position, equals(1));
     expect(entry.userId, equals('user-A'));
-    expect(entry.displayName, equals('Atleta A'));
+    expect(entry.displayName, equals('Atleta A')); // full_name tem prioridade
     expect(entry.avatarUrl, equals('https://example.com/avatar.jpg'));
     expect(entry.value, closeTo(12345.6, 0.001));
-    expect(entry.isMe, isFalse); // currentUserId é user-B, não user-A
+    expect(entry.isMe, isFalse);
   });
 
-  test('RankingEntry.fromRow marca isMe quando userId == currentUserId', () {
+  test('RankingEntry.fromRow usa username quando full_name está vazio', () {
     final row = {
-      'position': 3,
       'user_id': 'user-A',
-      'display_name': 'Eu mesmo',
-      'value': 500,
+      'full_name': null,
+      'username': 'atletaa',
+      'avatar_url': null,
+      'total': 500,
     };
 
-    final entry = RankingEntry.fromRow(row, currentUserId: 'user-A');
+    final entry =
+        RankingEntry.fromRow(row, currentUserId: 'user-A', position: 3);
 
+    expect(entry.displayName, equals('atletaa'));
     expect(entry.isMe, isTrue);
   });
 
-  test('RankingEntry.fromRow sem display_name usa fallback Atleta', () {
+  test('RankingEntry.fromRow sem full_name nem username usa fallback Atleta',
+      () {
     final row = {
-      'position': 5,
       'user_id': 'user-X',
-      'display_name': null,
-      'value': 0,
+      'full_name': null,
+      'username': null,
+      'avatar_url': null,
+      'total': 0,
     };
 
-    final entry = RankingEntry.fromRow(row);
+    final entry = RankingEntry.fromRow(row, position: 5);
 
     expect(entry.displayName, equals('Atleta'));
+    expect(entry.value, equals(0.0));
   });
 }

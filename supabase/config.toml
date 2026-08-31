@@ -221,6 +221,28 @@ enabled = true
 verify_jwt = true
 import_map = "./functions/whoop-sync/deno.json"
 
+[functions.whoop-workouts]
+enabled = true
+verify_jwt = true
+
+# Webhook externo: autenticação feita pela assinatura HMAC oficial da WHOOP.
+[functions.whoop-webhook]
+enabled = true
+verify_jwt = false
+
+[functions.garmin-auth]
+enabled = true
+verify_jwt = true
+
+[functions.garmin-activities]
+enabled = true
+verify_jwt = true
+
+# Database Webhook autenticado por BLDR_CLUB_WEBHOOK_SECRET dentro da funcao.
+[functions.bldr-club-notifier]
+enabled = true
+verify_jwt = false
+
 [functions.send-feedback]
 enabled = true
 verify_jwt = true
@@ -235,3 +257,9 @@ timeout_seconds = 10
 enabled = true
 verify_jwt = false
 timeout_seconds = 120
+
+# Webhook externo RevenueCat. Autenticação obrigatória pelo header Authorization
+# comparado com o secret REVENUECAT_WEBHOOK_AUTH dentro da função.
+[functions.revenuecat-webhook]
+enabled = true
+verify_jwt = false

@@ -32,7 +32,7 @@ class _WhoopConnectScreenState extends State<WhoopConnectScreen> {
   Future<void> _openAuthUrl() async {
     final clientId = appConfig['WHOOP_CLIENT_ID'] as String? ?? '';
     assert(clientId.isNotEmpty,
-        'WHOOP_CLIENT_ID não está configurado. Verifique dart_defines.dev.json.');
+        'WHOOP_CLIENT_ID não está configurado. Verifique os dart-defines do build.');
 
     if (clientId.isEmpty) {
       setState(() => _error = 'Configuração ausente: WHOOP_CLIENT_ID.');

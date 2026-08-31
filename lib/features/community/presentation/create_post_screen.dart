@@ -3,13 +3,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
+import 'package:bldr_fitness/features/club/domain/repositories/arena_repository.dart';
 import 'package:bldr_fitness/features/community/domain/entities/recent_workout.dart';
+import 'package:bldr_fitness/features/community/domain/entities/community_post_payload.dart';
 import 'package:bldr_fitness/features/community/domain/repositories/community_feed_repository.dart';
-import 'package:bldr_fitness/features/community/presentation/widgets/wearable_import_card.dart';
+import 'package:bldr_fitness/features/community/presentation/widgets/wearable_activity_grid_card.dart';
 import 'package:bldr_fitness/services/user_service.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 
@@ -29,9 +30,6 @@ class CreatePostScreen extends StatefulWidget {
 
 class _CreatePostScreenState extends State<CreatePostScreen> {
   final _repo = getIt<CommunityFeedRepository>();
-  // Supabase direto apenas para upload de foto (operação de storage, não de dados)
-  final _storage = Supabase.instance.client.storage;
-  final _auth = Supabase.instance.client.auth;
   final _captionController = TextEditingController();
 
   // Perfil
@@ -40,6 +38,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   int _activeIcon = 0; // 0=treino 1=atividade 2=wearable 3=foto 4=mais
   String _visibility = 'public';
+  List<Map<String, dynamic>> _squads = [];
+  String? _selectedSquadId;
+  String? _selectedSquadTitle;
   bool _publishing = false;
 
   // Treino
@@ -58,15 +59,21 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   // Wearable
   Map<String, dynamic>? _wearableData;
-  bool _wearableLoading = true;
+  List<Map<String, dynamic>> _wearableActivities = [];
+  bool _wearableImported = false;
+  bool _wearableLoading = false;
+  String? _wearableError;
+  String? _selectedWearableProvider;
 
   // Foto
   File? _photoFile;
+  String? _photoError;
 
   bool get _canPublish =>
       _captionController.text.trim().isNotEmpty ||
       _selectedWorkoutId != null ||
       _selectedActivity != null ||
+      _wearableImported ||
       _photoFile != null;
 
   @override
@@ -74,7 +81,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     super.initState();
     _loadProfile();
     _loadRecentWorkouts();
-    _detectWearable();
+    _loadSquads();
     if (widget.preselectedWorkoutId != null) {
       _selectedWorkoutId = widget.preselectedWorkoutId;
       _selectedSource = widget.preselectedSource ?? 'free';
@@ -129,18 +136,57 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     );
   }
 
-  Future<void> _detectWearable() async {
-    final data = await WearableImportCard.detectRecentActivity();
+  Future<void> _loadSquads() async {
+    final result = await getIt<ArenaRepository>().mySquads();
     if (!mounted) return;
+    result.fold(
+      onSuccess: (squads) => setState(() => _squads = squads),
+      onFailure: (_) {},
+    );
+  }
+
+  Future<void> _loadWearableActivities(String provider) async {
     setState(() {
-      _wearableData = data;
-      _wearableLoading = false;
+      _selectedWearableProvider = provider;
+      _wearableLoading = true;
+      _wearableError = null;
+      _wearableActivities = [];
+      _wearableData = null;
+      _wearableImported = false;
     });
+    final result = await _repo.fetchWearableActivities(provider);
+    if (!mounted) return;
+    result.fold(
+      onSuccess: (activities) => setState(() {
+        _wearableActivities = activities;
+        _wearableData = null;
+        _wearableImported = false;
+        _wearableError = null;
+        _wearableLoading = false;
+      }),
+      onFailure: (failure) => setState(() {
+        _wearableError = failure.message;
+        _wearableLoading = false;
+      }),
+    );
+  }
+
+  Future<void> _showWearableProviderSheet() async {
+    final provider = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _WearableProviderSheet(
+        selectedProvider: _selectedWearableProvider,
+      ),
+    );
+    if (!mounted || provider == null) return;
+    await _loadWearableActivities(provider);
   }
 
   Future<void> _pickPhoto() async {
-    final picked =
-        await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 80);
+    final picked = await ImagePicker()
+        .pickImage(source: ImageSource.gallery, imageQuality: 80);
     if (picked != null && mounted) {
       setState(() => _photoFile = File(picked.path));
     }
@@ -148,16 +194,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   Future<String?> _uploadPhoto() async {
     if (_photoFile == null) return null;
-    try {
-      final uid = _auth.currentUser?.id ?? 'anon';
-      final ts = DateTime.now().millisecondsSinceEpoch;
-      final path = '$uid/$ts.jpg';
-      final bytes = await _photoFile!.readAsBytes();
-      await _storage.from('community-posts').uploadBinary(path, bytes);
-      return _storage.from('community-posts').getPublicUrl(path);
-    } catch (_) {
-      return null;
-    }
+    final result = await _repo.uploadCommunityPhoto(
+      bytes: await _photoFile!.readAsBytes(),
+      extension: _photoFile!.path.split('.').last,
+    );
+    _photoError = result.failureOrNull?.message;
+    return result.valueOrNull;
   }
 
   Future<void> _publish() async {
@@ -166,7 +208,25 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
     try {
       final photoUrl = await _uploadPhoto();
+      if (_photoFile != null && photoUrl == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(
+            _photoError ?? 'Não foi possível enviar a foto.',
+          )),
+        );
+        return;
+      }
       final payload = <String, dynamic>{};
+      payload['version'] = CommunityPostPayload.currentVersion;
+      payload['kind'] = _selectedWorkoutId != null
+          ? CommunityPayloadKind.workout.name
+          : _selectedActivity != null
+              ? CommunityPayloadKind.activity.name
+              : _wearableImported
+                  ? CommunityPayloadKind.wearable.name
+                  : CommunityPayloadKind.manual.name;
 
       final caption = _captionController.text.trim();
       if (caption.isNotEmpty) payload['caption'] = caption;
@@ -178,6 +238,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         if (_selectedWorkout != null) {
           payload['workout_name'] = _selectedWorkout!.name;
           payload['volume_kg'] = _selectedWorkout!.volumeKg;
+          payload['set_count'] = _selectedWorkout!.completedSetCount;
+          payload['duration_s'] = _selectedWorkout!.durationSeconds;
+          payload['muscle_groups'] = _selectedWorkout!.muscleGroups;
         }
         if (_includePrs) payload['include_prs'] = true;
       }
@@ -192,13 +255,30 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         if (kcal != null) payload['calories'] = kcal;
       }
 
-      if (_wearableData != null) payload.addAll(_wearableData!);
+      if (_wearableImported && _wearableData != null) {
+        payload['wearable'] = _wearableData;
+      }
 
-      await _repo.createPost(
-        eventType: 'manual',
+      final eventType = _selectedWorkoutId != null
+          ? 'workout_completed'
+          : _selectedActivity != null
+              ? 'activity_completed'
+              : _wearableImported
+                  ? 'wearable_activity'
+                  : 'manual';
+      final result = await _repo.createPost(
+        eventType: eventType,
         payload: payload,
         visibility: _visibility,
+        squadId: _visibility == 'squad' ? _selectedSquadId : null,
       );
+      if (result.isFailure) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result.failureOrNull!.message)),
+        );
+        return;
+      }
 
       if (!mounted) return;
       _close();
@@ -219,11 +299,57 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       builder: (_) => _VisibilitySheet(
         selected: _visibility,
         onSelect: (v) {
-          setState(() => _visibility = v);
           Navigator.pop(context);
+          if (v == 'squad') {
+            _selectSquad();
+          } else {
+            setState(() {
+              _visibility = v;
+              _selectedSquadId = null;
+              _selectedSquadTitle = null;
+            });
+          }
         },
       ),
     );
+  }
+
+  Future<void> _selectSquad() async {
+    if (_squads.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Você não participa de nenhum squad.')),
+      );
+      return;
+    }
+    final selected = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      backgroundColor: BldrColors.sheetBg,
+      builder: (context) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.all(20),
+          children: [
+            Text('Escolher squad', style: BldrText.sectionTitle),
+            const SizedBox(height: 12),
+            ..._squads.map(
+              (squad) => ListTile(
+                title: Text(
+                  squad['title'] as String? ?? 'Squad',
+                  style: BldrText.body,
+                ),
+                onTap: () => Navigator.pop(context, squad),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || selected == null) return;
+    setState(() {
+      _visibility = 'squad';
+      _selectedSquadId = selected['id'] as String;
+      _selectedSquadTitle = selected['title'] as String? ?? 'Squad';
+    });
   }
 
   void _close() => ModalRoute.of(context)?.navigator?.pop();
@@ -231,7 +357,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   @override
   Widget build(BuildContext context) {
     return BldrBackground(
-      child: Scaffold(
+        child: Scaffold(
       backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
@@ -286,9 +412,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 
   Widget _buildComposer() {
-    final initial = _userFullName.isNotEmpty
-        ? _userFullName[0].toUpperCase()
-        : '?';
+    final initial =
+        _userFullName.isNotEmpty ? _userFullName[0].toUpperCase() : '?';
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -336,8 +461,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
                   hintText: 'O que você quer compartilhar?',
-                  hintStyle: BldrText.body.copyWith(
-                      color: BldrColors.textTertiary),
+                  hintStyle:
+                      BldrText.body.copyWith(color: BldrColors.textTertiary),
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
@@ -382,6 +507,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       onTap: () {
         if (index == 3) _pickPhoto();
         setState(() => _activeIcon = index);
+        if (index == 2) _showWearableProviderSheet();
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -400,11 +526,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             Text(label,
                 style: TextStyle(
                   fontSize: 9,
-                  color: active
-                      ? BldrColors.goldBright
-                      : BldrColors.textTertiary,
-                  fontWeight:
-                      active ? FontWeight.w600 : FontWeight.w400,
+                  color:
+                      active ? BldrColors.goldBright : BldrColors.textTertiary,
+                  fontWeight: active ? FontWeight.w600 : FontWeight.w400,
                 )),
           ],
         ),
@@ -501,8 +625,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(w.name, style: BldrText.cardTitle),
-                  if (subtitle.isNotEmpty)
-                    Text(subtitle, style: BldrText.meta),
+                  if (subtitle.isNotEmpty) Text(subtitle, style: BldrText.meta),
                 ],
               ),
             ),
@@ -548,8 +671,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     Text(w.name, style: BldrText.cardTitle),
                     if (w.dateLabel.isNotEmpty)
                       Text(w.dateLabel,
-                          style: BldrText.meta.copyWith(
-                              color: BldrColors.textSecondary)),
+                          style: BldrText.meta
+                              .copyWith(color: BldrColors.textSecondary)),
                   ],
                 ),
               ),
@@ -559,8 +682,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   _selectedWorkout = null;
                 }),
                 child: Text('Trocar',
-                    style: BldrText.meta.copyWith(
-                        color: BldrColors.goldBright)),
+                    style:
+                        BldrText.meta.copyWith(color: BldrColors.goldBright)),
               ),
             ],
           ),
@@ -572,7 +695,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               const SizedBox(width: 8),
               _previewStat(_formatVolume(w.volumeKg), 'VOLUME'),
               const SizedBox(width: 8),
-              _previewStat('—', 'SÉRIES'),
+              _previewStat(_formatSetCount(w.completedSetCount), 'SÉRIES'),
             ],
           ),
           if (w.muscleGroups.isNotEmpty) ...[
@@ -583,8 +706,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               children: [
                 for (final m in w.muscleGroups)
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.05),
                       border: Border.all(
@@ -592,8 +715,8 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(m,
-                        style: BldrText.meta.copyWith(
-                            color: BldrColors.textSecondary)),
+                        style: BldrText.meta
+                            .copyWith(color: BldrColors.textSecondary)),
                   ),
               ],
             ),
@@ -606,8 +729,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                   size: 16, color: BldrColors.goldBright),
               const SizedBox(width: 8),
               Text('Incluir PRs no post',
-                  style: BldrText.meta.copyWith(
-                      color: BldrColors.goldBright)),
+                  style: BldrText.meta.copyWith(color: BldrColors.goldBright)),
               const Spacer(),
               GestureDetector(
                 onTap: () => setState(() => _includePrs = !_includePrs),
@@ -628,8 +750,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     child: Container(
                       width: 14,
                       height: 14,
-                      margin:
-                          const EdgeInsets.symmetric(horizontal: 3),
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
                       decoration: BoxDecoration(
                         color: _includePrs
                             ? Colors.black
@@ -662,6 +783,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     return '${v.toStringAsFixed(0)} KG';
   }
 
+  String _formatSetCount(int? count) {
+    if (count == null || count == 0) return '—';
+    return count.toString();
+  }
+
   Widget _previewStat(String value, String label) => Expanded(
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -672,13 +798,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           child: Column(
             children: [
               Text(value,
-                  style: BldrText.cardTitle.copyWith(
-                      color: BldrColors.goldBright, fontSize: 14)),
+                  style: BldrText.cardTitle
+                      .copyWith(color: BldrColors.goldBright, fontSize: 14)),
               const SizedBox(height: 2),
               Text(label,
                   style: BldrText.metaSm.copyWith(
-                      color: BldrColors.textTertiary,
-                      letterSpacing: .5)),
+                      color: BldrColors.textTertiary, letterSpacing: .5)),
             ],
           ),
         ),
@@ -687,13 +812,27 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   // ── Atividade ──────────────────────────────────────────────────────────────
 
   static const _activities = [
-    ('🏋️', 'Musculação'), ('🏃', 'Corrida'), ('🚴', 'Ciclismo'),
-    ('🤸', 'Calistenia'), ('⚡', 'HIIT'), ('🥊', 'Boxe'),
-    ('🤼', 'Jiu-Jitsu'), ('🏊', 'Natação'), ('🧘', 'Yoga'),
-    ('🏀', 'Basquete'), ('🎾', 'Tênis'), ('🏄', 'Surf'),
-    ('⚽', 'Futebol'), ('🚶', 'Caminhada'), ('🔥', 'Crossfit'),
-    ('🧩', 'Pilates'), ('💪', 'Funcional'), ('🏐', 'Vôlei'),
-    ('🏓', 'Padel'), ('🏔️', 'Trilha'), ('🧗', 'Escalada'),
+    ('🏋️', 'Musculação'),
+    ('🏃', 'Corrida'),
+    ('🚴', 'Ciclismo'),
+    ('🤸', 'Calistenia'),
+    ('⚡', 'HIIT'),
+    ('🥊', 'Boxe'),
+    ('🤼', 'Jiu-Jitsu'),
+    ('🏊', 'Natação'),
+    ('🧘', 'Yoga'),
+    ('🏀', 'Basquete'),
+    ('🎾', 'Tênis'),
+    ('🏄', 'Surf'),
+    ('⚽', 'Futebol'),
+    ('🚶', 'Caminhada'),
+    ('🔥', 'Crossfit'),
+    ('🧩', 'Pilates'),
+    ('💪', 'Funcional'),
+    ('🏐', 'Vôlei'),
+    ('🏓', 'Padel'),
+    ('🏔️', 'Trilha'),
+    ('🧗', 'Escalada'),
   ];
 
   Widget _buildActivitySelector() {
@@ -720,14 +859,15 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                     ),
                     GestureDetector(
                       onTap: () => setState(() => _selectedActivity = null),
-                      child: Text('Trocar', style: BldrText.body.copyWith(
-                          color: BldrColors.goldBright)),
+                      child: Text('Trocar',
+                          style: BldrText.body
+                              .copyWith(color: BldrColors.goldBright)),
                     ),
                   ],
                 ),
                 const SizedBox(height: 14),
-                _textField('Duração (min)', _durationController,
-                    TextInputType.number),
+                _textField(
+                    'Duração (min)', _durationController, TextInputType.number),
                 if (isCardio) ...[
                   const SizedBox(height: 10),
                   _textField('Distância (km)', _distanceController,
@@ -771,12 +911,10 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(emoji,
-                        style: const TextStyle(fontSize: 22)),
+                    Text(emoji, style: const TextStyle(fontSize: 22)),
                     const SizedBox(height: 4),
                     Text(name,
-                        style: BldrText.metaSm,
-                        textAlign: TextAlign.center),
+                        style: BldrText.metaSm, textAlign: TextAlign.center),
                   ],
                 ),
               ),
@@ -787,16 +925,15 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     );
   }
 
-  Widget _textField(String label, TextEditingController ctrl,
-      TextInputType keyboard) {
+  Widget _textField(
+      String label, TextEditingController ctrl, TextInputType keyboard) {
     return TextField(
       controller: ctrl,
       keyboardType: keyboard,
       style: BldrText.body,
       decoration: InputDecoration(
         labelText: label,
-        labelStyle:
-            BldrText.meta.copyWith(color: BldrColors.textSecondary),
+        labelStyle: BldrText.meta.copyWith(color: BldrColors.textSecondary),
         filled: true,
         fillColor: const Color(0x08FFFFFF),
         border: OutlineInputBorder(
@@ -814,89 +951,124 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   // ── Wearable ───────────────────────────────────────────────────────────────
 
   Widget _buildWearableArea() {
+    if (_selectedWearableProvider == null) {
+      return _wearableEmptyState(
+        icon: TablerIcons.device_watch,
+        title: 'Escolha seu wearable',
+        description: 'Importe uma atividade registrada no seu dispositivo.',
+        actionLabel: 'Selecionar dispositivo',
+        onAction: _showWearableProviderSheet,
+      );
+    }
+
     if (_wearableLoading) {
-      return const Center(
-        child: CircularProgressIndicator(
-            color: BldrColors.goldBright, strokeWidth: 2),
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 32),
+        child: Center(
+          child: CircularProgressIndicator(
+              color: BldrColors.goldBright, strokeWidth: 2),
+        ),
       );
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (_wearableData != null)
-          WearableImportCard(
-            data: _wearableData!,
-            onImport: () {
-              final dur = _wearableData!['duration_min'];
-              final kcal = _wearableData!['calorias'];
-              if (dur != null)
-                _durationController.text = dur.toString();
-              if (kcal != null)
-                _caloriesActivityController.text = kcal.toString();
-              setState(() {
-                _wearableData = null;
-                _activeIcon = 1; // vai para atividade
-              });
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                _selectedWearableProvider == 'whoop'
+                    ? 'Atividades da WHOOP'
+                    : _selectedWearableProvider == 'apple_watch'
+                        ? 'Atividades do Apple Watch'
+                        : 'Atividades do wearable',
+                style: BldrText.sectionTitle,
+              ),
+            ),
+            TextButton(
+              onPressed: _showWearableProviderSheet,
+              child: const Text('Trocar dispositivo'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (_wearableError != null) ...[
+          _wearableEmptyState(
+            icon: TablerIcons.alert_circle,
+            title: 'Não foi possível carregar',
+            description: _wearableError!,
+            actionLabel: 'Tentar novamente',
+            onAction: () => _loadWearableActivities(
+              _selectedWearableProvider!,
+            ),
+          ),
+        ] else if (_wearableActivities.isNotEmpty) ...[
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _wearableActivities.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              childAspectRatio: 0.70,
+            ),
+            itemBuilder: (context, index) {
+              final activity = _wearableActivities[index];
+              final selected = identical(_wearableData, activity);
+              return WearableActivityGridCard(
+                data: activity,
+                selected: selected,
+                onTap: () => setState(() {
+                  _wearableData = selected ? null : activity;
+                  _wearableImported = !selected;
+                }),
+              );
             },
-            onDismiss: () => setState(() => _wearableData = null),
-          )
-        else ...[
-          _buildWearableRow('Whoop', TablerIcons.device_watch,
-              const Color(0xFFFF0000), 'Sem dados recentes'),
-          const SizedBox(height: 8),
-          _buildWearableRow('Apple Health', TablerIcons.heart,
-              BldrColors.goldBright, 'Sem dados recentes'),
-          const SizedBox(height: 8),
-          _buildWearableRow('Garmin', TablerIcons.device_watch,
-              BldrColors.textSecondary, 'Em breve',
-              soon: true),
+          ),
+        ] else ...[
+          _wearableEmptyState(
+            icon: TablerIcons.activity,
+            title: 'Nenhuma atividade recente',
+            description: _selectedWearableProvider == 'apple_watch'
+                ? 'Os treinos recentes do Apple Watch aparecerão aqui. Confira o acesso do BLDR em Saúde > Apps.'
+                : 'Quando a WHOOP processar um treino, ele aparecerá aqui.',
+            actionLabel: 'Atualizar',
+            onAction: () => _loadWearableActivities(
+              _selectedWearableProvider!,
+            ),
+          ),
         ],
       ],
     );
   }
 
-  Widget _buildWearableRow(String name, IconData icon, Color iconColor,
-      String subtitle, {bool soon = false}) {
+  Widget _wearableEmptyState({
+    required IconData icon,
+    required String title,
+    required String description,
+    required String actionLabel,
+    required VoidCallback onAction,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(14),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: BldrColors.surface,
         border: Border.all(color: BldrColors.border),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(18),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: const Color(0x14FFFFFF),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, size: 22, color: iconColor),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: BldrText.cardTitle),
-                Text(subtitle, style: BldrText.meta),
-              ],
-            ),
-          ),
-          if (soon)
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: BldrColors.surface,
-                border: Border.all(color: BldrColors.border),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text('Em breve', style: BldrText.metaSm),
-            ),
+          Icon(icon, size: 32, color: BldrColors.textSecondary),
+          const SizedBox(height: 10),
+          Text(title, style: BldrText.cardTitle),
+          const SizedBox(height: 4),
+          Text(description,
+              style: BldrText.description, textAlign: TextAlign.center),
+          const SizedBox(height: 12),
+          TextButton(onPressed: onAction, child: Text(actionLabel)),
         ],
       ),
     );
@@ -924,8 +1096,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 color: Colors.black54,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(TablerIcons.x,
-                  size: 14, color: Colors.white),
+              child: const Icon(TablerIcons.x, size: 14, color: Colors.white),
             ),
           ),
         ),
@@ -971,7 +1142,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   Widget _buildFooter() {
     final visLabel = switch (_visibility) {
-      'squad' => 'Só meu squad',
+      'squad' => _selectedSquadTitle ?? 'Só meu squad',
       'private' => 'Só eu',
       _ => 'Todos',
     };
@@ -991,13 +1162,13 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             onTap: _showVisibilitySheet,
             child: Row(
               children: [
-                const Icon(TablerIcons.world, size: 16,
-                    color: BldrColors.textSecondary),
+                const Icon(TablerIcons.world,
+                    size: 16, color: BldrColors.textSecondary),
                 const SizedBox(width: 6),
                 Text(visLabel, style: BldrText.body),
                 const SizedBox(width: 4),
-                const Icon(TablerIcons.chevron_down, size: 14,
-                    color: BldrColors.textSecondary),
+                const Icon(TablerIcons.chevron_down,
+                    size: 14, color: BldrColors.textSecondary),
               ],
             ),
           ),
@@ -1029,6 +1200,179 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   }
 }
 
+class _WearableProviderSheet extends StatelessWidget {
+  final String? selectedProvider;
+
+  const _WearableProviderSheet({required this.selectedProvider});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: BldrColors.sheetBg,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border(
+          top: BorderSide(color: BldrColors.border),
+          left: BorderSide(color: BldrColors.border),
+          right: BorderSide(color: BldrColors.border),
+        ),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        20 + MediaQuery.of(context).padding.bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 38,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: BldrColors.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          Text('Importar de wearable', style: BldrText.screenTitle),
+          const SizedBox(height: 6),
+          Text(
+            'Escolha onde sua atividade foi registrada.',
+            style: BldrText.description,
+          ),
+          const SizedBox(height: 18),
+          _WearableProviderRow(
+            name: 'WHOOP',
+            subtitle: 'Treinos e atividades recentes',
+            badge: 'Disponível',
+            selected: selectedProvider == 'whoop',
+            logo: Image.asset(
+              'assets/images/whoop/whoop_puck_white.png',
+              width: 30,
+              height: 30,
+            ),
+            onTap: () => Navigator.pop(context, 'whoop'),
+          ),
+          _WearableProviderRow(
+            name: 'Apple Watch',
+            subtitle: 'Treinos recentes do Apple Health',
+            badge: 'Disponível',
+            selected: selectedProvider == 'apple_watch',
+            logo: const Icon(
+              TablerIcons.brand_apple,
+              size: 26,
+              color: BldrColors.textPrimary,
+            ),
+            onTap: () => Navigator.pop(context, 'apple_watch'),
+          ),
+          const _WearableProviderRow(
+            name: 'Garmin Connect',
+            subtitle: 'Aguardando integração oficial',
+            badge: 'Em breve',
+            logo: Icon(
+              TablerIcons.run,
+              size: 26,
+              color: Color(0xFF00AEEF),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WearableProviderRow extends StatelessWidget {
+  final String name;
+  final String subtitle;
+  final String badge;
+  final Widget logo;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  const _WearableProviderRow({
+    required this.name,
+    required this.subtitle,
+    required this.badge,
+    required this.logo,
+    this.selected = false,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onTap != null;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: BldrColors.border)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: BldrColors.surface,
+                borderRadius: BorderRadius.circular(15),
+                border: Border.all(
+                  color: selected ? BldrColors.goldBorder : BldrColors.border,
+                ),
+              ),
+              child: logo,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: BldrText.cardTitle.copyWith(
+                      color: enabled
+                          ? BldrColors.textPrimary
+                          : BldrColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: BldrText.meta),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+              decoration: BoxDecoration(
+                color: enabled ? BldrColors.goldTint : BldrColors.surface,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                badge,
+                style: BldrText.metaSm.copyWith(
+                  color:
+                      enabled ? BldrColors.goldBright : BldrColors.textTertiary,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              enabled ? TablerIcons.chevron_right : TablerIcons.lock,
+              size: 18,
+              color: BldrColors.textTertiary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ── Visibility sheet ───────────────────────────────────────────────────────
 
 class _VisibilitySheet extends StatelessWidget {
@@ -1044,8 +1388,12 @@ class _VisibilitySheet extends StatelessWidget {
   Widget build(BuildContext context) {
     const options = [
       ('public', TablerIcons.world, 'Todos', 'Qualquer pessoa pode ver'),
-      ('squad', TablerIcons.users, 'Só meu squad',
-          'Apenas membros do seu squad'),
+      (
+        'squad',
+        TablerIcons.users,
+        'Um squad',
+        'Escolha um squad do qual você participa'
+      ),
       ('private', TablerIcons.lock, 'Só eu', 'Visível apenas para você'),
     ];
 
@@ -1098,8 +1446,8 @@ class _VisibilitySheet extends StatelessWidget {
                         color: BldrColors.surface,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(icon, size: 20,
-                          color: BldrColors.textSecondary),
+                      child:
+                          Icon(icon, size: 20, color: BldrColors.textSecondary),
                     ),
                     const SizedBox(width: 14),
                     Expanded(

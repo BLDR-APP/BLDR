@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 import 'package:bldr_fitness/core/di/injection.dart';
-import 'package:bldr_fitness/features/subscription/domain/usecases/subscription_usecases.dart' as subUc;
+import 'package:bldr_fitness/features/subscription/domain/usecases/subscription_usecases.dart'
+    as subUc;
 import 'dart:async'; // Necessário para o Stream
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +18,8 @@ import 'package:bldr_fitness/features/subscription/presentation/checkout_screen/
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/features/subscription/presentation/checkout_screen/widgets/payment_form_widget.dart';
 import 'package:bldr_fitness/features/subscription/presentation/checkout_screen/widgets/plan_card_widget.dart';
+import 'package:bldr_fitness/features/subscription/domain/repositories/revenue_cat_service.dart';
+import 'package:bldr_fitness/features/subscription/presentation/paywall/club_paywall_sheet.dart';
 import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
@@ -54,26 +57,41 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _zipCodeController = TextEditingController(text: '');
   final _couponController = TextEditingController();
   String? _appliedCouponCode;
+  late final bool _revenueCatCheckout;
 
   @override
   void initState() {
     super.initState();
+    _revenueCatCheckout = getIt<RevenueCatService>().billingEnabled;
+    if (_revenueCatCheckout) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        await ClubPaywallSheet.show(context);
+        if (mounted && Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
+      });
+      return;
+    }
     _loadSubscriptionPlans();
     _loadUserData();
 
     // Inicia a escuta do sucesso (Apple)
-    _purchaseSubscription = getIt<subUc.WatchPurchaseSuccess>()().listen((success) {
+    _purchaseSubscription =
+        getIt<subUc.WatchPurchaseSuccess>()().listen((success) {
       if (success && mounted) {
         setState(() {
           _isProcessingPayment = false;
-          _successMessage = AppLocalizations.of(context).checkout_apple_success_message;
+          _successMessage =
+              AppLocalizations.of(context).checkout_apple_success_message;
         });
         _showSuccessDialog(null);
       }
     });
 
     // Inicia a escuta de erros de verificação (Apple)
-    _purchaseErrorSubscription = getIt<subUc.WatchPurchaseError>()().listen((error) {
+    _purchaseErrorSubscription =
+        getIt<subUc.WatchPurchaseError>()().listen((error) {
       if (mounted) {
         setState(() {
           _isProcessingPayment = false;
@@ -86,7 +104,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   // --- AQUI ESTÁ O DISPOSE UNIFICADO (CORREÇÃO) ---
   @override
   void dispose() {
-    _purchaseSubscription?.cancel();      // Cancela o stream de sucesso da Apple
+    _purchaseSubscription?.cancel(); // Cancela o stream de sucesso da Apple
     _purchaseErrorSubscription?.cancel(); // Cancela o stream de erro da Apple
 
     // Cancela os controladores originais
@@ -107,7 +125,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Future<void> _loadSubscriptionPlans() async {
     try {
       setState(() => _isLoadingPlans = true);
-      final plans = (await getIt<subUc.GetSubscriptionPlans>()()).fold(onSuccess: (p) => p, onFailure: (f) => throw Exception(f.message));
+      final plans = (await getIt<subUc.GetSubscriptionPlans>()()).fold(
+          onSuccess: (p) => p, onFailure: (f) => throw Exception(f.message));
       if (mounted) {
         setState(() {
           _plans = plans;
@@ -233,7 +252,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       final billingDetails = stripe.BillingDetails(
         name: _nameController.text,
         email: _emailController.text,
-        );
+      );
 
       if (paymentIntentResponse.clientSecret == null) {
         if (mounted) {
@@ -295,8 +314,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               Text(
                 AppLocalizations.of(context).checkout_success_title,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: AppTheme.textPrimary,
-                ),
+                      color: AppTheme.textPrimary,
+                    ),
               ),
             ],
           ),
@@ -305,26 +324,29 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                _successMessage ?? AppLocalizations.of(context).checkout_success_default_message,
+                _successMessage ??
+                    AppLocalizations.of(context)
+                        .checkout_success_default_message,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textPrimary,
-                ),
+                      color: AppTheme.textPrimary,
+                    ),
               ),
               const SizedBox(height: 16),
               Text(
-                AppLocalizations.of(context).checkout_success_plan(_selectedPlan?.name ?? ''),
+                AppLocalizations.of(context)
+                    .checkout_success_plan(_selectedPlan?.name ?? ''),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textSecondary,
-                ),
+                      color: AppTheme.textSecondary,
+                    ),
               ),
               if (kDebugMode && subscriptionId != null) ...[
                 const SizedBox(height: 8),
                 Text(
                   'Subscription ID: $subscriptionId',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textSecondary,
-                    fontSize: 10,
-                  ),
+                        color: AppTheme.textSecondary,
+                        fontSize: 10,
+                      ),
                 ),
               ],
             ],
@@ -332,12 +354,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           actions: [
             ElevatedButton(
               onPressed: () {
-                Provider.of<ProfileNotifier>(context, listen: false).notifyProfileUpdated();
+                Provider.of<ProfileNotifier>(context, listen: false)
+                    .notifyProfileUpdated();
 
                 Navigator.of(dialogContext).pop();
                 Navigator.of(context).pushNamedAndRemoveUntil(
                   AppRoutes.dashboard,
-                      (route) => false,
+                  (route) => false,
                 );
               },
               child: Text(AppLocalizations.of(context).common_continue_btn),
@@ -350,6 +373,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_revenueCatCheckout) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       backgroundColor: AppTheme.primaryBlack,
       appBar: AppBar(
@@ -359,57 +387,61 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         elevation: 0,
         leading: _currentPageIndex > 0
             ? IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: _previousPage,
-        )
+                icon: const Icon(Icons.arrow_back),
+                onPressed: _previousPage,
+              )
             : IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
       ),
       body: _isLoadingPlans
           ? Center(
-        child: CircularProgressIndicator(color: AppTheme.accentGold),
-      )
+              child: CircularProgressIndicator(color: AppTheme.accentGold),
+            )
           : Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: Row(
               children: [
-                for (int i = 0; i < (Platform.isIOS ? 2 : 3); i++)
-                  Expanded(
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: i <= (Platform.isIOS && _currentPageIndex == 2 ? 1 : _currentPageIndex)
-                            ? AppTheme.accentGold
-                            : AppTheme.dividerGray,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  child: Row(
+                    children: [
+                      for (int i = 0; i < (Platform.isIOS ? 2 : 3); i++)
+                        Expanded(
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 4),
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: i <=
+                                      (Platform.isIOS && _currentPageIndex == 2
+                                          ? 1
+                                          : _currentPageIndex)
+                                  ? AppTheme.accentGold
+                                  : AppTheme.dividerGray,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
+                ),
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    onPageChanged: (index) {
+                      setState(() {
+                        _currentPageIndex = index;
+                      });
+                    },
+                    children: [
+                      _buildPlanSelectionPage(),
+                      _buildBillingInformationPage(),
+                      _buildPaymentPage(),
+                    ],
+                  ),
+                ),
               ],
             ),
-          ),
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentPageIndex = index;
-                });
-              },
-              children: [
-                _buildPlanSelectionPage(),
-                _buildBillingInformationPage(),
-                _buildPaymentPage(),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -422,16 +454,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           Text(
             AppLocalizations.of(context).checkout_choose_plan_title,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: AppTheme.textPrimary,
-              fontWeight: FontWeight.bold,
-            ),
+                  color: AppTheme.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
             AppLocalizations.of(context).checkout_choose_plan_subtitle,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textSecondary,
-            ),
+                  color: AppTheme.textSecondary,
+                ),
           ),
           const SizedBox(height: 24),
           BillingPeriodToggleWidget(
@@ -475,20 +507,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             Text(
               AppLocalizations.of(context).checkout_billing_info_title,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: AppTheme.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
+                    color: AppTheme.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 8),
             Text(
               AppLocalizations.of(context).checkout_billing_info_subtitle,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondary,
-              ),
+                    color: AppTheme.textSecondary,
+                  ),
             ),
             const SizedBox(height: 32),
-            _buildTextField(_nameController, AppLocalizations.of(context).checkout_name_label, true),
-            _buildTextField(_emailController, AppLocalizations.of(context).checkout_email_label, true, keyboardType: TextInputType.emailAddress),
+            _buildTextField(_nameController,
+                AppLocalizations.of(context).checkout_name_label, true),
+            _buildTextField(_emailController,
+                AppLocalizations.of(context).checkout_email_label, true,
+                keyboardType: TextInputType.emailAddress),
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
@@ -499,7 +534,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     _nextPage();
                   }
                 },
-                child: Text(AppLocalizations.of(context).checkout_continue_payment_btn),
+                child: Text(
+                    AppLocalizations.of(context).checkout_continue_payment_btn),
               ),
             ),
           ],
@@ -517,16 +553,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           Text(
             AppLocalizations.of(context).checkout_payment_title,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-              color: AppTheme.textPrimary,
-              fontWeight: FontWeight.bold,
-            ),
+                  color: AppTheme.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           const SizedBox(height: 8),
           Text(
             AppLocalizations.of(context).checkout_payment_subtitle,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTheme.textSecondary,
-            ),
+                  color: AppTheme.textSecondary,
+                ),
           ),
           const SizedBox(height: 24),
           if (_selectedPlan != null)
@@ -543,9 +579,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   Text(
                     AppLocalizations.of(context).checkout_order_summary,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppTheme.textPrimary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                          color: AppTheme.textPrimary,
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -554,41 +590,42 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       Text(
                         _selectedPlan!.name,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.textPrimary,
-                        ),
+                              color: AppTheme.textPrimary,
+                            ),
                       ),
                       Text(
                         _isAnnualBilling
                             ? _selectedPlan!.annualPriceText
                             : _selectedPlan!.monthlyPriceText,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.accentGold,
-                          fontWeight: FontWeight.bold,
-                        ),
+                              color: AppTheme.accentGold,
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _isAnnualBilling ? AppLocalizations.of(context).checkout_billing_annual : AppLocalizations.of(context).checkout_billing_monthly,
+                    _isAnnualBilling
+                        ? AppLocalizations.of(context).checkout_billing_annual
+                        : AppLocalizations.of(context).checkout_billing_monthly,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textSecondary,
-                    ),
+                          color: AppTheme.textSecondary,
+                        ),
                   ),
                 ],
               ),
             ),
           const SizedBox(height: 24),
-
           if (Platform.isIOS) ...[
             _buildApplePaymentArea()
           ] else ...[
             Text(
               AppLocalizations.of(context).checkout_coupon_title,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: AppTheme.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
+                    color: AppTheme.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 16),
             Row(
@@ -601,7 +638,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       controller: _couponController,
                       style: TextStyle(color: AppTheme.textPrimary),
                       decoration: InputDecoration(
-                        labelText: AppLocalizations.of(context).checkout_coupon_label,
+                        labelText:
+                            AppLocalizations.of(context).checkout_coupon_label,
                         labelStyle: TextStyle(color: AppTheme.textSecondary),
                         fillColor: AppTheme.surfaceDark,
                         filled: true,
@@ -615,7 +653,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(color: AppTheme.accentGold, width: 2),
+                          borderSide:
+                              BorderSide(color: AppTheme.accentGold, width: 2),
                         ),
                       ),
                     ),
@@ -632,7 +671,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ScaffoldMessenger.of(context).hideCurrentSnackBar();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(AppLocalizations.of(context).checkout_coupon_applied(_appliedCouponCode ?? '')),
+                          content: Text(AppLocalizations.of(context)
+                              .checkout_coupon_applied(
+                                  _appliedCouponCode ?? '')),
                           backgroundColor: AppTheme.successGreen,
                         ),
                       );
@@ -644,7 +685,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       vertical: 20,
                     ),
                   ),
-                  child: Text(AppLocalizations.of(context).checkout_coupon_apply_btn),
+                  child: Text(
+                      AppLocalizations.of(context).checkout_coupon_apply_btn),
                 ),
               ],
             ),
@@ -695,17 +737,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             Text(
               AppLocalizations.of(context).checkout_apple_payment_title,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: AppTheme.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
+                    color: AppTheme.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 8),
             Text(
               AppLocalizations.of(context).checkout_apple_payment_subtitle,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.textSecondary,
-              ),
+                    color: AppTheme.textSecondary,
+                  ),
             ),
             const SizedBox(height: 24),
             if (_errorMessage != null) ...[
@@ -725,17 +767,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.black,
                 ),
-                child: Text(AppLocalizations.of(context).checkout_subscribe_btn),
+                child:
+                    Text(AppLocalizations.of(context).checkout_subscribe_btn),
               ),
             ),
-        // --- NOVO: BOTÃO DE RESGATAR CÓDIGO ---
+            // --- NOVO: BOTÃO DE RESGATAR CÓDIGO ---
             const SizedBox(height: 16),
             TextButton(
               onPressed: () async {
                 // Chama a tela nativa da Apple para digitar o código
                 try {
                   await InAppPurchase.instance
-                      .getPlatformAddition<InAppPurchaseStoreKitPlatformAddition>()
+                      .getPlatformAddition<
+                          InAppPurchaseStoreKitPlatformAddition>()
                       .presentCodeRedemptionSheet();
                 } catch (e) {
                   print("Erro ao abrir resgate de código: $e");
@@ -794,11 +838,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   Widget _buildTextField(
-      TextEditingController controller,
-      String label,
-      bool required, {
-        TextInputType? keyboardType,
-      }) {
+    TextEditingController controller,
+    String label,
+    bool required, {
+    TextInputType? keyboardType,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: TextFormField(
@@ -825,15 +869,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
         validator: required
             ? (value) {
-          final l10n = AppLocalizations.of(context);
-          if (value == null || value.isEmpty) {
-            return l10n.checkout_field_required(label);
-          }
-          if (label == l10n.checkout_email_label && !value.contains('@')) {
-            return l10n.checkout_email_invalid;
-          }
-          return null;
-        }
+                final l10n = AppLocalizations.of(context);
+                if (value == null || value.isEmpty) {
+                  return l10n.checkout_field_required(label);
+                }
+                if (label == l10n.checkout_email_label &&
+                    !value.contains('@')) {
+                  return l10n.checkout_email_invalid;
+                }
+                return null;
+              }
             : null,
       ),
     );

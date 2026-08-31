@@ -33,12 +33,34 @@ class NotificationRouter {
         nav.pushNamed(AppRoutes.rankingScreen);
       case 'challenge':
         nav.pushNamed(AppRoutes.comunidadeScreen);
+      case 'community_post':
+        nav.pushNamed(
+          AppRoutes.comunidadeScreen,
+          arguments:
+              data['feed_id'] == null ? null : {'feed_id': data['feed_id']},
+        );
+      case 'community_profile':
+        nav.pushNamed(
+          AppRoutes.comunidadeScreen,
+          arguments:
+              data['user_id'] == null ? null : {'user_id': data['user_id']},
+        );
       case 'streak':
         nav.pushNamed(AppRoutes.dashboard);
       case 'level_up':
         nav.pushNamed(AppRoutes.profileScreen);
       case 'run_synced':
         nav.pushNamed(AppRoutes.esportesScreen);
+      case 'wearable_workout_detected':
+        final activityId = data['activity_id'] as String?;
+        if (activityId == null) {
+          nav.pushNamed(AppRoutes.workoutsScreen);
+        } else {
+          nav.pushNamed(
+            AppRoutes.wearableWorkoutConfirmation,
+            arguments: {'activity_id': activityId},
+          );
+        }
       default:
         nav.pushNamed(AppRoutes.notificacoesScreen);
     }
@@ -96,10 +118,12 @@ class PushNotificationService {
     required GlobalKey<NavigatorState> navigatorKey,
   }) {
     final type = data['type'] as String?;
-    final actionData = data['action_data'] as String?;
-    final parsed = actionData != null
-        ? (jsonDecode(actionData) as Map<String, dynamic>)
-        : <String, dynamic>{};
+    final rawActionData = data['action_data'];
+    final parsed = rawActionData is String && rawActionData.isNotEmpty
+        ? (jsonDecode(rawActionData) as Map<String, dynamic>)
+        : rawActionData is Map
+            ? Map<String, dynamic>.from(rawActionData)
+            : <String, dynamic>{};
 
     NotificationRouter.navigate(type, parsed, navigatorKey: navigatorKey);
   }

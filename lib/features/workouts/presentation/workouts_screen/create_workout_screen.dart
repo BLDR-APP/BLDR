@@ -4,10 +4,11 @@ import 'package:flutter/services.dart';
 import 'package:sizer/sizer.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
-import 'package:bldr_fitness/features/subscription/domain/usecases/subscription_usecases.dart' as subUc;
+import 'package:bldr_fitness/features/subscription/domain/usecases/resolve_club_access.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/exercise.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_template.dart';
-import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart' as uc;
+import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart'
+    as uc;
 import 'package:bldr_fitness/services/exercise_db_rapid_service.dart';
 
 // ── Data models ───────────────────────────────────────────────────────────────
@@ -19,7 +20,8 @@ class _ExSet {
 
   _ExSet({this.weight, this.reps = 10, this.rest = 90});
 
-  _ExSet copyWith({double? weight, bool clearWeight = false, int? reps, int? rest}) =>
+  _ExSet copyWith(
+          {double? weight, bool clearWeight = false, int? reps, int? rest}) =>
       _ExSet(
         weight: clearWeight ? null : (weight ?? this.weight),
         reps: reps ?? this.reps,
@@ -81,7 +83,9 @@ class _ExerciseThumbnailState extends State<_ExerciseThumbnail> {
       placeholder: (_, __) => _placeholder(),
       errorWidget: (_, __, ___) {
         // If primary failed and we have a fallback, retry once
-        if (!_useFallback && widget.fallbackUrl.isNotEmpty && widget.fallbackUrl != widget.primaryUrl) {
+        if (!_useFallback &&
+            widget.fallbackUrl.isNotEmpty &&
+            widget.fallbackUrl != widget.primaryUrl) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) setState(() => _useFallback = true);
           });
@@ -134,11 +138,11 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
   static const _categories = ['Força', 'HIIT', 'Cardio', 'Mobilidade', 'Misto'];
   // Maps PT label → DB enum value (workout_type column — enum is in Portuguese)
   static const _categoryToDbValue = {
-    'Força':      'força',
-    'HIIT':       'hiit',
-    'Cardio':     'cardio',
+    'Força': 'força',
+    'HIIT': 'hiit',
+    'Cardio': 'cardio',
     'Mobilidade': 'mobilidade',
-    'Misto':      'misto',
+    'Misto': 'misto',
   };
   static const _difficulties = [1, 2, 3, 4, 5];
   static const _durations = [30, 45, 60, 75, 90];
@@ -151,11 +155,11 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
 
   // ── reverse mapping: DB enum value → display label ────────────────────────
   static const _dbValueToCategory = {
-    'força':      'Força',
-    'hiit':       'HIIT',
-    'cardio':     'Cardio',
+    'força': 'Força',
+    'hiit': 'HIIT',
+    'cardio': 'Cardio',
     'mobilidade': 'Mobilidade',
-    'misto':      'Misto',
+    'misto': 'Misto',
   };
 
   @override
@@ -175,17 +179,15 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
     _category = _dbValueToCategory[t.workoutType ?? ''] ?? 'Força';
 
     _difficulty = t.difficultyLevel ?? 1;
-    _duration   = t.estimatedDurationMinutes ?? 45;
+    _duration = t.estimatedDurationMinutes ?? 45;
   }
 
   Future<void> _loadSubscription() async {
     try {
-      final sub = (await getIt<subUc.GetCurrentSubscription>()()).valueOrNull;
+      final access = (await getIt<ResolveClubAccess>()()).valueOrNull ?? false;
       if (mounted) {
-        final active = sub != null &&
-            (sub.status == 'active' || sub.status == 'trialing');
-        debugPrint('[CreateWorkout] isPro=$active  sub=${sub?.status}');
-        setState(() => _isPro = active);
+        debugPrint('[CreateWorkout] isPro=$access');
+        setState(() => _isPro = access);
       }
       // After subscription is loaded, resolve edit exercises (needs ExerciseDB)
       if (widget.editTemplate != null) await _loadEditExercises();
@@ -216,7 +218,9 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
       final builtSets = List.generate(
         row.sets,
         (_) => _ExSet(
-            weight: row.weightKg, reps: row.reps ?? 10, rest: row.restSeconds ?? 90),
+            weight: row.weightKg,
+            reps: row.reps ?? 10,
+            rest: row.restSeconds ?? 90),
       );
 
       final exDbId = row.exerciseDbId ?? '';
@@ -315,7 +319,7 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
 
       // isEditing = editTemplate exists AND has a real id (not the photo flow)
       final templateId = widget.editTemplate?.id;
-      final isEditing  = widget.editTemplate != null && templateId != null;
+      final isEditing = widget.editTemplate != null && templateId != null;
       final template = WorkoutTemplate(
         id: templateId,
         name: name,
@@ -438,8 +442,7 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
                 ),
               ]),
               SizedBox(height: 1.5.h),
-              Text('Descanso',
-                  style: TextStyle(color: _muted, fontSize: 13)),
+              Text('Descanso', style: TextStyle(color: _muted, fontSize: 13)),
               SizedBox(height: 0.8.h),
               Wrap(
                 spacing: 2.w,
@@ -453,16 +456,17 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
                       decoration: BoxDecoration(
                         color: sel ? _goldBg : _card,
                         borderRadius: BorderRadius.circular(20),
-                        border:
-                            Border.all(color: sel ? _borderGold : Colors.white.withValues(alpha: 0.1)),
+                        border: Border.all(
+                            color: sel
+                                ? _borderGold
+                                : Colors.white.withValues(alpha: 0.1)),
                       ),
                       child: Text('${s}s',
                           style: TextStyle(
                               color: sel ? _gold : Colors.white,
                               fontSize: 13,
-                              fontWeight: sel
-                                  ? FontWeight.w600
-                                  : FontWeight.w400)),
+                              fontWeight:
+                                  sel ? FontWeight.w600 : FontWeight.w400)),
                     ),
                   );
                 }).toList(),
@@ -492,8 +496,8 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
                         borderRadius: BorderRadius.circular(12)),
                   ),
                   child: const Text('Confirmar',
-                      style: TextStyle(
-                          fontWeight: FontWeight.w700, fontSize: 14)),
+                      style:
+                          TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
                 ),
               ),
               SizedBox(height: 3.h),
@@ -517,12 +521,14 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
         SizedBox(height: 0.5.h),
         TextField(
           controller: controller,
-          keyboardType:
-              decimal ? const TextInputType.numberWithOptions(decimal: true) : TextInputType.number,
+          keyboardType: decimal
+              ? const TextInputType.numberWithOptions(decimal: true)
+              : TextInputType.number,
           inputFormatters: decimal
               ? [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))]
               : [FilteringTextInputFormatter.digitsOnly],
-          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+          style: const TextStyle(
+              color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(color: _muted, fontSize: 18),
@@ -578,8 +584,10 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
                               fontWeight: FontWeight.w600,
                               fontSize: 15)),
                       SizedBox(height: 1.5.h),
-                      ..._exercises.asMap().entries.map((e) =>
-                          _buildExerciseCard(e.key, e.value)),
+                      ..._exercises
+                          .asMap()
+                          .entries
+                          .map((e) => _buildExerciseCard(e.key, e.value)),
                     ],
                     _buildAddButton(),
                     SizedBox(height: 10.h),
@@ -613,17 +621,15 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
               decoration: BoxDecoration(
                 color: _card,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.07)),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
               ),
-              child: const Icon(Icons.chevron_left,
-                  color: Colors.white, size: 22),
+              child:
+                  const Icon(Icons.chevron_left, color: Colors.white, size: 22),
             ),
           ),
           Expanded(
             child: Text(
-                (widget.editTemplate != null &&
-                        widget.editTemplate!.id != null)
+                (widget.editTemplate != null && widget.editTemplate!.id != null)
                     ? 'Editar treino'
                     : 'Novo treino',
                 style: TextStyle(
@@ -635,8 +641,7 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
           GestureDetector(
             onTap: _saving ? null : _save,
             child: Container(
-              padding:
-                  EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
+              padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
               decoration: BoxDecoration(
                 color: _saving ? _muted : _gold,
                 borderRadius: BorderRadius.circular(8),
@@ -664,8 +669,8 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
           color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
       decoration: InputDecoration(
         hintText: 'Nome do treino',
-        hintStyle: TextStyle(
-            color: _muted, fontSize: 20, fontWeight: FontWeight.w700),
+        hintStyle:
+            TextStyle(color: _muted, fontSize: 20, fontWeight: FontWeight.w700),
         filled: true,
         fillColor: Colors.transparent,
         border: InputBorder.none,
@@ -683,8 +688,9 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
   Widget _buildMetaRow() {
     return Row(
       children: [
-        Expanded(child: _buildSelect('Categoria', _categories, _category,
-            (v) => setState(() => _category = v!))),
+        Expanded(
+            child: _buildSelect('Categoria', _categories, _category,
+                (v) => setState(() => _category = v!))),
         SizedBox(width: 2.w),
         Expanded(
             child: _buildSelect(
@@ -712,26 +718,22 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
       decoration: BoxDecoration(
         color: _card,
         borderRadius: BorderRadius.circular(10),
-        border:
-            Border.all(color: Colors.white.withValues(alpha: 0.07)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
           isExpanded: true,
           dropdownColor: _surface,
-          icon: Icon(Icons.keyboard_arrow_down,
-              color: _muted, size: 16),
+          icon: Icon(Icons.keyboard_arrow_down, color: _muted, size: 16),
           style: const TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.w500),
+              color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
           items: options
               .map((o) => DropdownMenuItem(
                     value: o,
                     child: Text(o,
-                        style: const TextStyle(
-                            color: Colors.white, fontSize: 13)),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 13)),
                   ))
               .toList(),
           onChanged: onChange,
@@ -800,8 +802,7 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
                       if (ex.muscle.isNotEmpty) ...[
                         SizedBox(height: 0.3.h),
                         Text(ex.muscle,
-                            style:
-                                TextStyle(color: _muted, fontSize: 12)),
+                            style: TextStyle(color: _muted, fontSize: 12)),
                       ],
                     ],
                   ),
@@ -815,8 +816,7 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
                       color: _red.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(Icons.close_rounded,
-                        color: _red, size: 15),
+                    child: Icon(Icons.close_rounded, color: _red, size: 15),
                   ),
                 ),
               ],
@@ -832,8 +832,8 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
                 _setTableHeader(),
                 SizedBox(height: 0.5.h),
                 ...ex.sets.asMap().entries.map(
-                  (e) => _setRow(idx, e.key, e.value, ex.sets.length > 1),
-                ),
+                      (e) => _setRow(idx, e.key, e.value, ex.sets.length > 1),
+                    ),
               ],
             ),
           ),
@@ -843,20 +843,13 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
             padding: EdgeInsets.fromLTRB(3.w, 1.h, 3.w, 1.5.h),
             child: GestureDetector(
               onTap: () => setState(() => ex.sets.add(_ExSet(
-                    reps: ex.sets.isNotEmpty
-                        ? ex.sets.last.reps
-                        : 10,
-                    rest: ex.sets.isNotEmpty
-                        ? ex.sets.last.rest
-                        : 90,
-                    weight: ex.sets.isNotEmpty
-                        ? ex.sets.last.weight
-                        : null,
+                    reps: ex.sets.isNotEmpty ? ex.sets.last.reps : 10,
+                    rest: ex.sets.isNotEmpty ? ex.sets.last.rest : 90,
+                    weight: ex.sets.isNotEmpty ? ex.sets.last.weight : null,
                   ))),
               child: Row(
                 children: [
-                  Icon(Icons.add_circle_outline,
-                      color: _gold, size: 16),
+                  Icon(Icons.add_circle_outline, color: _gold, size: 16),
                   SizedBox(width: 1.5.w),
                   Text('Adicionar série',
                       style: TextStyle(
@@ -878,8 +871,8 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
         SizedBox(
           width: 48,
           child: Text('SÉRIE',
-              style:
-                  TextStyle(color: _muted, fontSize: 11, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                  color: _muted, fontSize: 11, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.visible),
@@ -887,15 +880,15 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
         SizedBox(width: 2.w),
         Expanded(
           child: Text('KG',
-              style:
-                  TextStyle(color: _muted, fontSize: 11, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                  color: _muted, fontSize: 11, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center),
         ),
         SizedBox(width: 2.w),
         Expanded(
           child: Text('REPS',
-              style:
-                  TextStyle(color: _muted, fontSize: 11, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                  color: _muted, fontSize: 11, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center),
         ),
         SizedBox(width: 2.w),
@@ -914,9 +907,7 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
             width: 32,
             child: Text('${setIdx + 1}',
                 style: TextStyle(
-                    color: _muted,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600),
+                    color: _muted, fontSize: 13, fontWeight: FontWeight.w600),
                 textAlign: TextAlign.center),
           ),
           SizedBox(width: 2.w),
@@ -933,9 +924,7 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
                 child: Text(
                   set.weight != null ? '${set.weight}' : '—',
                   style: TextStyle(
-                      color: set.weight != null
-                          ? Colors.white
-                          : _muted,
+                      color: set.weight != null ? Colors.white : _muted,
                       fontSize: 14,
                       fontWeight: FontWeight.w600),
                   textAlign: TextAlign.center,
@@ -971,8 +960,8 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
             width: 24,
             child: canDelete
                 ? GestureDetector(
-                    onTap: () => setState(
-                        () => _exercises[exIdx].sets.removeAt(setIdx)),
+                    onTap: () =>
+                        setState(() => _exercises[exIdx].sets.removeAt(setIdx)),
                     child: Icon(Icons.remove_circle_outline,
                         color: _muted, size: 18),
                   )
@@ -1005,9 +994,7 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
               SizedBox(width: 2.w),
               Text('Adicionar exercício',
                   style: TextStyle(
-                      color: _gold,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14)),
+                      color: _gold, fontWeight: FontWeight.w600, fontSize: 14)),
             ],
           ),
         ),
@@ -1033,8 +1020,8 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
             backgroundColor: _gold,
             foregroundColor: Colors.black,
             padding: EdgeInsets.symmetric(vertical: 1.8.h),
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
           child: Text(
             _saving
@@ -1042,8 +1029,7 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
                 : (widget.editTemplate != null
                     ? 'Salvar alterações'
                     : 'Salvar treino'),
-            style: const TextStyle(
-                fontWeight: FontWeight.w700, fontSize: 15),
+            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
           ),
         ),
       ),
@@ -1083,30 +1069,45 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
   //                   lower legs | shoulders | waist | cardio | neck
   // targetMuscles values: pectorals | lats | quads | glutes | triceps | biceps |
   //                       abs | delts | calves | hamstrings | …
-  static const _bodyParts = ['Peito', 'Costas', 'Pernas', 'Ombros', 'Braços', 'Core'];
+  static const _bodyParts = [
+    'Peito',
+    'Costas',
+    'Pernas',
+    'Ombros',
+    'Braços',
+    'Core'
+  ];
   static const _bodyPartMap = {
-    'Peito':  'chest',
+    'Peito': 'chest',
     'Costas': 'back',
     'Pernas': 'upper legs,lower legs',
     'Ombros': 'shoulders',
     'Braços': 'upper arms,lower arms',
-    'Core':   'waist',
+    'Core': 'waist',
   };
 
   static const _targets = [
-    'Peitoral', 'Dorsais', 'Quadríceps', 'Glúteos',
-    'Tríceps', 'Bíceps', 'Abdômen', 'Ombros', 'Panturrilhas', 'Posteriores',
+    'Peitoral',
+    'Dorsais',
+    'Quadríceps',
+    'Glúteos',
+    'Tríceps',
+    'Bíceps',
+    'Abdômen',
+    'Ombros',
+    'Panturrilhas',
+    'Posteriores',
   ];
   static const _targetMap = {
-    'Peitoral':    'pectorals',
-    'Dorsais':     'lats',
-    'Quadríceps':  'quads',
-    'Glúteos':     'glutes',
-    'Tríceps':     'triceps',
-    'Bíceps':      'biceps',
-    'Abdômen':     'abs',
-    'Ombros':      'delts',
-    'Panturrilhas':'calves',
+    'Peitoral': 'pectorals',
+    'Dorsais': 'lats',
+    'Quadríceps': 'quads',
+    'Glúteos': 'glutes',
+    'Tríceps': 'triceps',
+    'Bíceps': 'biceps',
+    'Abdômen': 'abs',
+    'Ombros': 'delts',
+    'Panturrilhas': 'calves',
     'Posteriores': 'hamstrings',
   };
 
@@ -1118,7 +1119,8 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
   List<ExDbExercise> _allExercises = [];
   List<ExDbExercise> _filteredExercises = [];
   bool _loading = true;
-  final Set<String> _adding = {}; // kept for spinner UI; unused since add is now synchronous
+  final Set<String> _adding =
+      {}; // kept for spinner UI; unused since add is now synchronous
 
   late Set<String> _addedIds;
 
@@ -1172,16 +1174,15 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
               .map((s) => s.trim())
               .where((s) => s.isNotEmpty)
               .toList();
-          matchBody = keywords
-              .any((kw) => ex.bodyParts.any((b) => b == kw));
+          matchBody = keywords.any((kw) => ex.bodyParts.any((b) => b == kw));
         }
 
         // Target-muscle filter: match against targetMuscles field (OSS API)
         bool matchTarget = true;
         if (_target != null) {
           final kw = (_targetMap[_target!] ?? '').toLowerCase().trim();
-          matchTarget = kw.isEmpty ||
-              ex.targetMuscles.any((m) => m.contains(kw));
+          matchTarget =
+              kw.isEmpty || ex.targetMuscles.any((m) => m.contains(kw));
         }
 
         return matchQ && matchBody && matchTarget;
@@ -1244,8 +1245,7 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
                                     style: const TextStyle(color: Colors.white),
                                   ),
                                   TextSpan(
-                                    text:
-                                        '/${_filteredExercises.length}',
+                                    text: '/${_filteredExercises.length}',
                                     style: TextStyle(color: _muted),
                                   ),
                                   TextSpan(
@@ -1283,8 +1283,8 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
                         : null,
                     filled: true,
                     fillColor: _card,
-                    contentPadding: EdgeInsets.symmetric(
-                        horizontal: 3.w, vertical: 1.2.h),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.2.h),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                       borderSide: BorderSide(
@@ -1297,8 +1297,7 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          const BorderSide(color: _gold, width: 1.5),
+                      borderSide: const BorderSide(color: _gold, width: 1.5),
                     ),
                   ),
                 ),
@@ -1332,8 +1331,7 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
           // Exercise list
           Expanded(
             child: _loading
-                ? const Center(
-                    child: CircularProgressIndicator(color: _gold))
+                ? const Center(child: CircularProgressIndicator(color: _gold))
                 : _filteredExercises.isEmpty
                     ? Center(
                         child: Column(
@@ -1342,8 +1340,7 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
                             Icon(Icons.search_off, color: _muted, size: 40),
                             SizedBox(height: 1.h),
                             Text('Nenhum exercício encontrado',
-                                style:
-                                    TextStyle(color: _muted, fontSize: 14)),
+                                style: TextStyle(color: _muted, fontSize: 14)),
                           ],
                         ),
                       )
@@ -1360,8 +1357,7 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
     final visibleCount = widget.isPro
         ? _filteredExercises.length
         : _filteredExercises.length.clamp(0, _freeLimit);
-    final showPaywall =
-        !widget.isPro && _filteredExercises.length > _freeLimit;
+    final showPaywall = !widget.isPro && _filteredExercises.length > _freeLimit;
     // Total items = visible exercises + 1 paywall card (if applicable)
     final itemCount = visibleCount + (showPaywall ? 1 : 0);
 
@@ -1408,16 +1404,14 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
               shape: BoxShape.circle,
               border: Border.all(color: _borderGold),
             ),
-            child: const Icon(Icons.lock_outline_rounded,
-                color: _gold, size: 22),
+            child:
+                const Icon(Icons.lock_outline_rounded, color: _gold, size: 22),
           ),
           SizedBox(height: 1.2.h),
           Text(
             '+$hiddenCount exercícios bloqueados',
             style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                fontSize: 15),
+                color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15),
             textAlign: TextAlign.center,
           ),
           SizedBox(height: 0.5.h),
@@ -1442,8 +1436,7 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
                     borderRadius: BorderRadius.circular(12)),
               ),
               child: const Text('Ver planos PRO',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w700, fontSize: 14)),
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
             ),
           ),
         ],
@@ -1465,8 +1458,7 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
           return GestureDetector(
             onTap: () => onSelect(sel ? null : opt),
             child: Container(
-              padding:
-                  EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.5.h),
+              padding: EdgeInsets.symmetric(horizontal: 3.w, vertical: 0.5.h),
               decoration: BoxDecoration(
                 color: sel ? _goldBg : _card,
                 borderRadius: BorderRadius.circular(20),
@@ -1479,8 +1471,7 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
                   style: TextStyle(
                       color: sel ? _gold : Colors.white,
                       fontSize: 12,
-                      fontWeight:
-                          sel ? FontWeight.w600 : FontWeight.w400)),
+                      fontWeight: sel ? FontWeight.w600 : FontWeight.w400)),
             ),
           );
         },
@@ -1531,8 +1522,7 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
                     overflow: TextOverflow.ellipsis),
                 if (muscle.isNotEmpty) ...[
                   SizedBox(height: 0.3.h),
-                  Text(muscle,
-                      style: TextStyle(color: _muted, fontSize: 12)),
+                  Text(muscle, style: TextStyle(color: _muted, fontSize: 12)),
                 ],
               ],
             ),
@@ -1547,12 +1537,11 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: isAdded
-                    ? _muted.withValues(alpha: 0.15)
-                    : _goldBg,
+                color: isAdded ? _muted.withValues(alpha: 0.15) : _goldBg,
                 shape: BoxShape.circle,
                 border: Border.all(
-                    color: isAdded ? _muted.withValues(alpha: 0.3) : _borderGold),
+                    color:
+                        isAdded ? _muted.withValues(alpha: 0.3) : _borderGold),
               ),
               child: isAdding
                   ? Padding(

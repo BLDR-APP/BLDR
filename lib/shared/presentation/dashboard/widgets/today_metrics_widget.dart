@@ -244,10 +244,19 @@ class _StatCard extends StatelessWidget {
           children: [
             Icon(icon, size: 15, color: BldrColors.goldSolid),
             const SizedBox(height: 6),
-            Text(
-              value,
-              style: BldrText.kpiSm.copyWith(
-                color: valueColor ?? BldrColors.textPrimary,
+            SizedBox(
+              width: double.infinity,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  value,
+                  maxLines: 1,
+                  softWrap: false,
+                  style: BldrText.kpiSm.copyWith(
+                    color: valueColor ?? BldrColors.textPrimary,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 1),

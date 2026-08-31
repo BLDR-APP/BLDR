@@ -4,10 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
-import 'package:bldr_fitness/features/subscription/domain/usecases/subscription_usecases.dart' as subUc;
+import 'package:bldr_fitness/features/subscription/domain/usecases/resolve_club_access.dart';
 import 'package:bldr_fitness/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/havok/havok_sheet.dart';
-import 'package:bldr_fitness/features/onboarding/domain/entities/onboarding_plan.dart' as domain;
+import 'package:bldr_fitness/features/onboarding/domain/entities/onboarding_plan.dart'
+    as domain;
 import 'package:bldr_fitness/features/workouts/domain/entities/activity_type.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_template.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/extra_activity.dart';
@@ -35,16 +36,17 @@ class PlanDay {
   final DateTime date;
   final DayStatus status;
   final String? workoutLabel;
-  final String? workoutId;          // ID de user_workouts (treino pessoal)
-  final String? clubWorkoutId;      // ID de club_user_workouts (treino BLDR Club)
+  final String? workoutId; // ID de user_workouts (treino pessoal)
+  final String? clubWorkoutId; // ID de club_user_workouts (treino BLDR Club)
   final WorkoutSession? completedWorkout;
   final ActivityType? activityType; // F1
-  final int? xpDay;                 // F2 — XP agregado do dia (bldr_club.xp_events)
-  final int? durationMinutes;       // F2
+  final int? xpDay; // F2 — XP agregado do dia (bldr_club.xp_events)
+  final int? durationMinutes; // F2
   final ExtraActivity? extraActivity; // F3
   /// Template atribuído ao dia em weekly_plan_days (pode ser null se não configurado).
   final String? assignedTemplateId;
   final String? assignedTemplateName;
+
   /// Origem do template: 'havok' | 'user' | 'bldr'. Null quando não há template.
   final String? assignedTemplateSource;
 
@@ -133,15 +135,25 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
     n = n.clamp(1, 7);
     if (n >= 7) return List.generate(7, (i) => i);
     return {
-          for (int i = 0; i < n; i++) (i * 7 / n).round() % 7,
-        }.toList()
-        ..sort();
+      for (int i = 0; i < n; i++) (i * 7 / n).round() % 7,
+    }.toList()
+      ..sort();
   }
 
   String _formatDate(DateTime d) {
     const months = [
-      'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
-      'jul', 'ago', 'set', 'out', 'nov', 'dez'
+      'jan',
+      'fev',
+      'mar',
+      'abr',
+      'mai',
+      'jun',
+      'jul',
+      'ago',
+      'set',
+      'out',
+      'nov',
+      'dez'
     ];
     return '${d.day} ${months[d.month - 1]}';
   }
@@ -157,15 +169,12 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
       }
 
       final configFuture = getIt<GetWeeklyPlanConfig>()();
-      final subscriptionFuture =
-          getIt<subUc.GetCurrentSubscription>()().then((r) => r.valueOrNull);
+      final accessFuture =
+          getIt<ResolveClubAccess>()().then((r) => r.valueOrNull ?? false);
 
       final config =
           (await configFuture).valueOrNull ?? const WeeklyPlanConfig();
-      final subscription = await subscriptionFuture;
-      final isPro = subscription != null &&
-          (subscription.status == 'active' ||
-              subscription.status == 'trialing');
+      final isPro = await accessFuture;
 
       final splitPref = config.splitPreference;
       final freqDays = config.frequencyDays;
@@ -184,7 +193,8 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
 
       // ── Treinos concluídos na semana (pessoais + BLDR Club) ───────────────
       // F2: XP por dia + F3: atividades extras — carregados em paralelo
-      final weekResultFuture = getIt<GetWeekCompletedWorkouts>()(weekStart, weekEnd);
+      final weekResultFuture =
+          getIt<GetWeekCompletedWorkouts>()(weekStart, weekEnd);
       final extraResultFuture = getIt<GetExtraActivities>()(weekStart, weekEnd);
       final weeklyPlanFuture = getIt<GetWeeklyPlan>()();
       final xpFutures = List.generate(7, (i) {
@@ -199,13 +209,15 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
       final weeklyPlanResult = await weeklyPlanFuture;
 
       // Mapeia template atribuído por diaSemana (1=Seg…7=Dom → 0-indexed: -1)
-      final assignedByWeekday = <int, ({String id, String name, String? source})>{};
+      final assignedByWeekday =
+          <int, ({String id, String name, String? source})>{};
       for (final d in weeklyPlanResult.valueOrNull ?? <domain.PlanDay>[]) {
         final id = d.treino?.id;
         final name = d.treino?.name;
         if (id != null && name != null && name.isNotEmpty) {
           // diaSemana (1=Seg) → weekdayIndex (0=Seg)
-          assignedByWeekday[d.diaSemana - 1] = (id: id, name: name, source: d.treino?.source);
+          assignedByWeekday[d.diaSemana - 1] =
+              (id: id, name: name, source: d.treino?.source);
         }
       }
 
@@ -340,7 +352,8 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
 
   // ── helpers ───────────────────────────────────────────────────────────────
 
-  Future<int> _fetchDayXp(String uid, DateTime dayStart, DateTime dayEnd) async {
+  Future<int> _fetchDayXp(
+      String uid, DateTime dayStart, DateTime dayEnd) async {
     try {
       final rows = await supabase.Supabase.instance.client
           .schema('bldr_club')
@@ -404,7 +417,8 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                 const Icon(Icons.check_circle_rounded,
                     color: BldrColors.goldBright, size: 18),
                 const SizedBox(width: 8),
-                Text(AppLocalizations.of(sheetCtx).plan_workout_done, style: BldrText.cardTitleLg),
+                Text(AppLocalizations.of(sheetCtx).plan_workout_done,
+                    style: BldrText.cardTitleLg),
                 if (isClubOnly) ...[
                   const SizedBox(width: 8),
                   const BldrBadge(label: 'CLUB'),
@@ -428,8 +442,8 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                              color: Colors.white.withOpacity(0.12)),
+                          border:
+                              Border.all(color: Colors.white.withOpacity(0.12)),
                         ),
                         child: const Center(
                           child: CircularProgressIndicator(
@@ -444,13 +458,13 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                       isPro: _isPro,
                       size: VisualizerSize.full,
                       mode: VisualizerMode.highlight,
-                      paywallMessage:
-                          AppLocalizations.of(sheetCtx).plan_paywall_muscle_message,
-                      paywallButtonLabel: AppLocalizations.of(sheetCtx).plan_paywall_muscle_btn,
+                      paywallMessage: AppLocalizations.of(sheetCtx)
+                          .plan_paywall_muscle_message,
+                      paywallButtonLabel:
+                          AppLocalizations.of(sheetCtx).plan_paywall_muscle_btn,
                       onUpgradeTap: () {
                         Navigator.pop(sheetCtx);
-                        Navigator.pushNamed(
-                            context, AppRoutes.checkoutScreen);
+                        Navigator.pushNamed(context, AppRoutes.checkoutScreen);
                       },
                     );
                   },
@@ -463,29 +477,37 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                   child: TextButton.icon(
                     icon: const Icon(Icons.delete_outline,
                         color: BldrColors.danger, size: 16),
-                    label: Text(AppLocalizations.of(sheetCtx).plan_delete_record_btn,
-                        style: const TextStyle(color: BldrColors.danger, fontSize: 13)),
+                    label: Text(
+                        AppLocalizations.of(sheetCtx).plan_delete_record_btn,
+                        style: const TextStyle(
+                            color: BldrColors.danger, fontSize: 13)),
                     onPressed: () async {
                       final confirm = await showDialog<bool>(
                         context: context,
                         builder: (ctx) => AlertDialog(
                           backgroundColor: BldrColors.sheetBg,
-                          title: Text(AppLocalizations.of(context).plan_delete_record_title,
+                          title: Text(
+                              AppLocalizations.of(context)
+                                  .plan_delete_record_title,
                               style: const TextStyle(color: Colors.white)),
                           content: Text(
-                            AppLocalizations.of(context).plan_delete_record_body,
+                            AppLocalizations.of(context)
+                                .plan_delete_record_body,
                             style: BldrText.description,
                           ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(ctx, false),
-                              child: Text(AppLocalizations.of(context).common_cancel,
+                              child: Text(
+                                  AppLocalizations.of(context).common_cancel,
                                   style: BldrText.description),
                             ),
                             TextButton(
                               onPressed: () => Navigator.pop(ctx, true),
-                              child: Text(AppLocalizations.of(context).common_delete,
-                                  style: const TextStyle(color: BldrColors.danger)),
+                              child: Text(
+                                  AppLocalizations.of(context).common_delete,
+                                  style: const TextStyle(
+                                      color: BldrColors.danger)),
                             ),
                           ],
                         ),
@@ -512,7 +534,8 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text(AppLocalizations.of(context).plan_delete_record_error),
+                              content: Text(AppLocalizations.of(context)
+                                  .plan_delete_record_error),
                               behavior: SnackBarBehavior.floating,
                             ),
                           );
@@ -549,7 +572,8 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                 Icon(Icons.circle_outlined,
                     color: BldrColors.textSecondary, size: 18),
                 const SizedBox(width: 8),
-                Text(AppLocalizations.of(ctx).plan_workout_not_done, style: BldrText.cardTitleLg),
+                Text(AppLocalizations.of(ctx).plan_workout_not_done,
+                    style: BldrText.cardTitleLg),
               ]),
               const SizedBox(height: 4),
               Text('${day.abbrev} · ${day.workoutLabel ?? "Treino"}',
@@ -592,7 +616,8 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                 const Icon(Icons.bolt_rounded,
                     color: BldrColors.goldBright, size: 18),
                 const SizedBox(width: 8),
-                Text(AppLocalizations.of(ctx).plan_today_sheet_title, style: BldrText.cardTitleLg),
+                Text(AppLocalizations.of(ctx).plan_today_sheet_title,
+                    style: BldrText.cardTitleLg),
               ]),
               const SizedBox(height: 4),
               Text('${day.abbrev} · ${day.workoutLabel ?? "Treino"}',
@@ -627,7 +652,13 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
     final clubTemplates = results[1].valueOrNull ?? <WorkoutTemplate>[];
 
     const weekDayNames = [
-      'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'
+      'Segunda',
+      'Terça',
+      'Quarta',
+      'Quinta',
+      'Sexta',
+      'Sábado',
+      'Domingo'
     ];
     final dayName = weekDayNames[day.weekdayIndex];
 
@@ -659,9 +690,8 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
       await _applyTemplateToDay(day.weekdayIndex + 1, null, null);
     } else if (result.templateId != null) {
       if (result.source == 'club') {
-        final clubTpl = clubTemplates
-            .where((t) => t.id == result.templateId)
-            .firstOrNull;
+        final clubTpl =
+            clubTemplates.where((t) => t.id == result.templateId).firstOrNull;
         // Cria WorkoutTemplate com source='club' para gravar corretamente
         final tpl = WorkoutTemplate(
           id: result.templateId,
@@ -670,9 +700,8 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
         );
         await _applyTemplateToDay(day.weekdayIndex + 1, result.templateId, tpl);
       } else {
-        final tpl = allTemplates
-            .where((t) => t.id == result.templateId)
-            .firstOrNull;
+        final tpl =
+            allTemplates.where((t) => t.id == result.templateId).firstOrNull;
         await _applyTemplateToDay(day.weekdayIndex + 1, result.templateId, tpl);
       }
     }
@@ -806,11 +835,13 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                 children: [
                   _sheetHandle(),
                   const SizedBox(height: 16),
-                  Text(AppLocalizations.of(ctx).plan_edit_sheet_title, style: BldrText.cardTitleLg),
+                  Text(AppLocalizations.of(ctx).plan_edit_sheet_title,
+                      style: BldrText.cardTitleLg),
 
                   // ── Split ────────────────────────────────────────────────
                   const SizedBox(height: 16),
-                  Text(AppLocalizations.of(ctx).plan_split_section, style: BldrText.label),
+                  Text(AppLocalizations.of(ctx).plan_split_section,
+                      style: BldrText.label),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -831,9 +862,11 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(AppLocalizations.of(ctx).plan_days_section, style: BldrText.label),
+                      Text(AppLocalizations.of(ctx).plan_days_section,
+                          style: BldrText.label),
                       Text(
-                          AppLocalizations.of(ctx).plan_training_rest_summary(trainingCount, selectedRestDays.length),
+                          AppLocalizations.of(ctx).plan_training_rest_summary(
+                              trainingCount, selectedRestDays.length),
                           style: BldrText.meta),
                     ],
                   ),
@@ -860,9 +893,8 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                               state: isRest
                                   ? BldrDayState.rest
                                   : BldrDayState.done,
-                              icon: isRest
-                                  ? null
-                                  : Icons.fitness_center_rounded,
+                              icon:
+                                  isRest ? null : Icons.fitness_center_rounded,
                             ),
                           ),
                         ),
@@ -924,7 +956,8 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(AppLocalizations.of(context).plan_save_error(e.toString())),
+          content:
+              Text(AppLocalizations.of(context).plan_save_error(e.toString())),
           backgroundColor: BldrColors.danger,
           behavior: SnackBarBehavior.floating,
         ));
@@ -1012,7 +1045,8 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
             const SizedBox(width: 6),
             Text(text,
                 style: BldrText.meta.copyWith(
-                    color: BldrColors.textPrimary, fontWeight: FontWeight.w500)),
+                    color: BldrColors.textPrimary,
+                    fontWeight: FontWeight.w500)),
           ],
         ),
       );
@@ -1046,8 +1080,7 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                                   horizontal: BldrSpacing.pageX),
                               sliver: SliverToBoxAdapter(
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const SizedBox(height: 16),
                                     _buildSplitChip(),
@@ -1093,7 +1126,8 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(AppLocalizations.of(context).plan_title, style: BldrText.cardTitleLg),
+                    Text(AppLocalizations.of(context).plan_title,
+                        style: BldrText.cardTitleLg),
                     if (widget.isClub) ...[
                       const SizedBox(width: 7),
                       const BldrBadge(label: 'CLUB'),
@@ -1104,7 +1138,9 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
               ],
             ),
           ),
-          HavokEntryIcon(onTap: () => showHavokSheet(context, originScreen: 'weekly_plan')),
+          HavokEntryIcon(
+              onTap: () =>
+                  showHavokSheet(context, originScreen: 'weekly_plan')),
         ],
       ),
     );
@@ -1120,7 +1156,8 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
         GestureDetector(
           onTap: _isPro ? _showEditPlanSheet : _showProUpsellSheet,
           behavior: HitTestBehavior.opaque,
-          child: Text(AppLocalizations.of(context).plan_change_btn, style: BldrText.buttonSecondary),
+          child: Text(AppLocalizations.of(context).plan_change_btn,
+              style: BldrText.buttonSecondary),
         ),
       ],
     );
@@ -1139,12 +1176,16 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
               text: '$_doneDays',
               style: BldrText.kpiLg,
               children: [
-                TextSpan(text: ' ${AppLocalizations.of(context).plan_of_total_workouts(_trainingDays)}', style: BldrText.body),
+                TextSpan(
+                    text:
+                        ' ${AppLocalizations.of(context).plan_of_total_workouts(_trainingDays)}',
+                    style: BldrText.body),
               ],
             ),
           ),
           const SizedBox(height: 2),
-          Text(AppLocalizations.of(context).plan_remaining(restantes), style: BldrText.meta),
+          Text(AppLocalizations.of(context).plan_remaining(restantes),
+              style: BldrText.meta),
           const SizedBox(height: 15),
           // P2 — barra segmentada só em dourado: preenchido = feito,
           // resto (não feito, hoje, futuro, descanso) = neutro uniforme.
@@ -1174,8 +1215,11 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
             child: Row(
               children: [
                 Expanded(
-                  child: _statItem('$_streak',
-                      _streak == 1 ? AppLocalizations.of(context).plan_streak_singular : AppLocalizations.of(context).plan_streak_plural),
+                  child: _statItem(
+                      '$_streak',
+                      _streak == 1
+                          ? AppLocalizations.of(context).plan_streak_singular
+                          : AppLocalizations.of(context).plan_streak_plural),
                 ),
                 Expanded(
                   child: _statItem(
@@ -1212,7 +1256,9 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
               DayStatus.done => BldrTimelineDotStyle.done,
               DayStatus.today => BldrTimelineDotStyle.next,
               DayStatus.rest => BldrTimelineDotStyle.rest,
-              DayStatus.pending || DayStatus.lost => BldrTimelineDotStyle.pending,
+              DayStatus.pending ||
+              DayStatus.lost =>
+                BldrTimelineDotStyle.pending,
             },
             isFirst: i == 0,
             isLast: i == _days.length - 1,
@@ -1238,7 +1284,8 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
     }
   }
 
-  String _dateLabel(PlanDay day) => '${day.abbrev} · ${day.date.day}/${day.date.month}';
+  String _dateLabel(PlanDay day) =>
+      '${day.abbrev} · ${day.date.day}/${day.date.month}';
 
   /// P4 — próximo treino destacado: tint dourado + halo na bolinha (no
   /// BldrTimelineItem) + botão "Ver treino" dentro do card.
@@ -1267,7 +1314,8 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                       ],
                     ),
                     const SizedBox(height: 4),
-                    Text(day.workoutLabel ?? 'Treino', style: BldrText.cardTitleLg),
+                    Text(day.workoutLabel ?? 'Treino',
+                        style: BldrText.cardTitleLg),
                   ],
                 ),
               ),
@@ -1327,7 +1375,8 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
             Icon(actType.icon, color: BldrColors.goldBright, size: 18),
             const SizedBox(width: 10),
           ] else ...[
-            Icon(Icons.check_circle_rounded, color: BldrColors.goldBright, size: 18),
+            Icon(Icons.check_circle_rounded,
+                color: BldrColors.goldBright, size: 18),
             const SizedBox(width: 10),
           ],
           Expanded(
@@ -1337,8 +1386,7 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                 Text(_dateLabel(day), style: BldrText.label),
                 const SizedBox(height: 2),
                 Text(day.workoutLabel ?? 'Treino', style: BldrText.cardTitle),
-                if (showMetric || day.xpDay != null)
-                  const SizedBox(height: 3),
+                if (showMetric || day.xpDay != null) const SizedBox(height: 3),
                 if (showMetric || day.xpDay != null)
                   Row(
                     children: [
@@ -1349,7 +1397,9 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                       if (showMetric && day.xpDay != null)
                         const SizedBox(width: 8),
                       if (day.xpDay != null)
-                        Text(AppLocalizations.of(context).plan_xp_earned(day.xpDay!),
+                        Text(
+                            AppLocalizations.of(context)
+                                .plan_xp_earned(day.xpDay!),
                             style: BldrText.metaSm.copyWith(
                                 color: BldrColors.goldBright,
                                 fontSize: 9,
@@ -1391,7 +1441,9 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                     ],
                     if (isLost) ...[
                       const SizedBox(width: 8),
-                      BldrBadge(label: AppLocalizations.of(context).plan_not_done, gold: false),
+                      BldrBadge(
+                          label: AppLocalizations.of(context).plan_not_done,
+                          gold: false),
                     ],
                   ],
                 ),
@@ -1502,7 +1554,9 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                 Text(ex.activityType.label, style: BldrText.cardTitle),
                 const SizedBox(height: 3),
                 Row(children: [
-                  BldrBadge(label: AppLocalizations.of(context).plan_extra_badge, gold: false),
+                  BldrBadge(
+                      label: AppLocalizations.of(context).plan_extra_badge,
+                      gold: false),
                   const SizedBox(width: 8),
                   Text(AppLocalizations.of(context).plan_xp_earned(ex.xpEarned),
                       style: BldrText.metaSm.copyWith(
@@ -1549,7 +1603,8 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.edit_outlined,
-                color: _isPro ? BldrColors.goldBright : BldrColors.textSecondary,
+                color:
+                    _isPro ? BldrColors.goldBright : BldrColors.textSecondary,
                 size: 16),
             const SizedBox(width: 7),
             Flexible(
@@ -1633,13 +1688,15 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                   const Icon(Icons.add_circle_outline,
                       color: BldrColors.goldBright, size: 18),
                   const SizedBox(width: 8),
-                  Text(AppLocalizations.of(ctx).plan_extra_sheet_title, style: BldrText.cardTitleLg),
+                  Text(AppLocalizations.of(ctx).plan_extra_sheet_title,
+                      style: BldrText.cardTitleLg),
                 ]),
                 const SizedBox(height: 4),
-                Text(AppLocalizations.of(ctx).plan_extra_sheet_subtitle, style: BldrText.meta),
+                Text(AppLocalizations.of(ctx).plan_extra_sheet_subtitle,
+                    style: BldrText.meta),
                 const SizedBox(height: 20),
-
-                Text(AppLocalizations.of(ctx).plan_extra_type_label, style: BldrText.label),
+                Text(AppLocalizations.of(ctx).plan_extra_type_label,
+                    style: BldrText.label),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,
@@ -1684,12 +1741,12 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                     );
                   }).toList(),
                 ),
-
                 const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(AppLocalizations.of(ctx).plan_extra_duration_label, style: BldrText.label),
+                    Text(AppLocalizations.of(ctx).plan_extra_duration_label,
+                        style: BldrText.label),
                     Text('${selectedDuration.toInt()} min',
                         style: BldrText.label
                             .copyWith(color: BldrColors.goldBright)),
@@ -1704,9 +1761,9 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                   inactiveColor: BldrColors.border,
                   onChanged: (v) => setSheet(() => selectedDuration = v),
                 ),
-
                 const SizedBox(height: 8),
-                Text(AppLocalizations.of(ctx).plan_extra_notes_label, style: BldrText.label),
+                Text(AppLocalizations.of(ctx).plan_extra_notes_label,
+                    style: BldrText.label),
                 const SizedBox(height: 8),
                 TextField(
                   controller: notesController,
@@ -1732,7 +1789,6 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
                 BldrPrimaryButton(
                   label: AppLocalizations.of(ctx).plan_extra_register_btn,
@@ -1749,14 +1805,16 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                     if (mounted) {
                       if (result.failureOrNull != null) {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content:
-                              Text(AppLocalizations.of(context).plan_extra_register_error(result.failureOrNull!.message)),
+                          content: Text(AppLocalizations.of(context)
+                              .plan_extra_register_error(
+                                  result.failureOrNull!.message)),
                           backgroundColor: BldrColors.danger,
                           behavior: SnackBarBehavior.floating,
                         ));
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text(AppLocalizations.of(context).plan_extra_register_success),
+                          content: Text(AppLocalizations.of(context)
+                              .plan_extra_register_success),
                           backgroundColor: BldrColors.goldSolid,
                           behavior: SnackBarBehavior.floating,
                         ));
@@ -1849,29 +1907,25 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
   List<WorkoutTemplate> get _havok => widget.allTemplates
       .where((t) =>
           t.source == 'havok' &&
-          (_search.isEmpty ||
-              t.name.toLowerCase().contains(_search)))
+          (_search.isEmpty || t.name.toLowerCase().contains(_search)))
       .toList();
 
   List<WorkoutTemplate> get _user => widget.allTemplates
       .where((t) =>
           t.source != 'havok' &&
           !t.isPublic &&
-          (_search.isEmpty ||
-              t.name.toLowerCase().contains(_search)))
+          (_search.isEmpty || t.name.toLowerCase().contains(_search)))
       .toList();
 
   List<WorkoutTemplate> get _club => widget.clubTemplates
-      .where((t) =>
-          _search.isEmpty || t.name.toLowerCase().contains(_search))
+      .where((t) => _search.isEmpty || t.name.toLowerCase().contains(_search))
       .toList();
 
   List<WorkoutTemplate> get _bldr => widget.allTemplates
       .where((t) =>
           t.isPublic &&
           t.source != 'havok' &&
-          (_search.isEmpty ||
-              t.name.toLowerCase().contains(_search)))
+          (_search.isEmpty || t.name.toLowerCase().contains(_search)))
       .toList();
 
   bool get _isEmpty =>
@@ -1880,8 +1934,7 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
       (_showSection('club') ? _club : <WorkoutTemplate>[]).isEmpty &&
       (_showSection('bldr') ? _bldr : <WorkoutTemplate>[]).isEmpty;
 
-  bool _showSection(String section) =>
-      _filter == 'all' || _filter == section;
+  bool _showSection(String section) => _filter == 'all' || _filter == section;
 
   @override
   Widget build(BuildContext context) {
@@ -1922,8 +1975,7 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
           Padding(
             padding: const EdgeInsets.fromLTRB(18, 12, 18, 0),
             child: TextField(
-              onChanged: (v) =>
-                  setState(() => _search = v.toLowerCase()),
+              onChanged: (v) => setState(() => _search = v.toLowerCase()),
               style: BldrText.body,
               decoration: InputDecoration(
                 hintText: 'Buscar treino...',
@@ -1934,21 +1986,17 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
                 fillColor: BldrColors.surface,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      const BorderSide(color: BldrColors.border),
+                  borderSide: const BorderSide(color: BldrColors.border),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      const BorderSide(color: BldrColors.border),
+                  borderSide: const BorderSide(color: BldrColors.border),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(
-                      color: BldrColors.goldBright),
+                  borderSide: const BorderSide(color: BldrColors.goldBright),
                 ),
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 10),
+                contentPadding: const EdgeInsets.symmetric(vertical: 10),
               ),
             ),
           ),
@@ -1983,8 +2031,7 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
                         id: t.id!,
                         name: t.name,
                         exerciseCount: t.exercises.length,
-                        durationMinutes:
-                            t.estimatedDurationMinutes,
+                        durationMinutes: t.estimatedDurationMinutes,
                         source: 'free',
                         badge: 'HAVOK',
                         badgeColor: BldrColors.goldBright,
@@ -2003,8 +2050,7 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
                         id: t.id!,
                         name: t.name,
                         exerciseCount: t.exercises.length,
-                        durationMinutes:
-                            t.estimatedDurationMinutes,
+                        durationMinutes: t.estimatedDurationMinutes,
                         source: 'free',
                       )),
                   _sectionDivider(),
@@ -2020,8 +2066,7 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
                         id: t.id!,
                         name: t.name,
                         exerciseCount: t.exercises.length,
-                        durationMinutes:
-                            t.estimatedDurationMinutes,
+                        durationMinutes: t.estimatedDurationMinutes,
                         source: 'club',
                         badge: 'CLUB',
                         badgeColor: const Color(0xFF64B4FF),
@@ -2040,15 +2085,13 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
                         id: t.id!,
                         name: t.name,
                         exerciseCount: t.exercises.length,
-                        durationMinutes:
-                            t.estimatedDurationMinutes,
+                        durationMinutes: t.estimatedDurationMinutes,
                         source: 'free',
                       )),
                 ],
                 if (_isEmpty)
                   Padding(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 32),
+                    padding: const EdgeInsets.symmetric(vertical: 32),
                     child: Center(
                       child: Text('Nenhum treino encontrado.',
                           style: BldrText.meta),
@@ -2062,8 +2105,7 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
           Container(
             padding: const EdgeInsets.fromLTRB(18, 12, 18, 24),
             decoration: const BoxDecoration(
-              border: Border(
-                  top: BorderSide(color: BldrColors.borderSubtle)),
+              border: Border(top: BorderSide(color: BldrColors.borderSubtle)),
             ),
             child: Column(
               children: [
@@ -2105,27 +2147,18 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
       onTap: () => setState(() => _filter = value),
       child: Container(
         margin: const EdgeInsets.only(right: 6),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         decoration: BoxDecoration(
-          color: isActive
-              ? BldrColors.goldTintChip
-              : Colors.transparent,
+          color: isActive ? BldrColors.goldTintChip : Colors.transparent,
           border: Border.all(
-              color: isActive
-                  ? BldrColors.goldBorderChip
-                  : BldrColors.border),
+              color: isActive ? BldrColors.goldBorderChip : BldrColors.border),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Text(
           label,
           style: BldrText.metaSm.copyWith(
-            color: isActive
-                ? BldrColors.goldBright
-                : BldrColors.textMuted,
-            fontWeight: isActive
-                ? FontWeight.w600
-                : FontWeight.w400,
+            color: isActive ? BldrColors.goldBright : BldrColors.textMuted,
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
           ),
         ),
       ),
@@ -2145,12 +2178,10 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
           Icon(icon, size: 13, color: iconColor),
           const SizedBox(width: 6),
           Text(label,
-              style: BldrText.label
-                  .copyWith(color: BldrColors.textMuted)),
+              style: BldrText.label.copyWith(color: BldrColors.textMuted)),
           const SizedBox(width: 6),
           Text('($count)',
-              style: BldrText.metaSm
-                  .copyWith(color: BldrColors.textMuted)),
+              style: BldrText.metaSm.copyWith(color: BldrColors.textMuted)),
         ],
       ),
     );
@@ -2158,8 +2189,7 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
 
   Widget _sectionDivider() => const Padding(
         padding: EdgeInsets.symmetric(vertical: 8),
-        child: Divider(
-            color: BldrColors.borderSubtle, height: 1),
+        child: Divider(color: BldrColors.borderSubtle, height: 1),
       );
 
   Widget _templateTile({
@@ -2180,16 +2210,12 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
       }),
       child: Container(
         margin: const EdgeInsets.only(bottom: 6),
-        padding: const EdgeInsets.symmetric(
-            horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected
-              ? BldrColors.goldTintChip
-              : BldrColors.surface,
+          color: isSelected ? BldrColors.goldTintChip : BldrColors.surface,
           border: Border.all(
-              color: isSelected
-                  ? BldrColors.goldBorderChip
-                  : BldrColors.border),
+              color:
+                  isSelected ? BldrColors.goldBorderChip : BldrColors.border),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Row(
@@ -2198,13 +2224,12 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: (iconColor ?? BldrColors.textMuted)
-                    .withValues(alpha: 0.1),
+                color:
+                    (iconColor ?? BldrColors.textMuted).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(Icons.fitness_center_rounded,
-                  size: 16,
-                  color: iconColor ?? BldrColors.textMuted),
+                  size: 16, color: iconColor ?? BldrColors.textMuted),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -2224,23 +2249,16 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
                   const SizedBox(height: 3),
                   Row(
                     children: [
-                      const Icon(
-                          Icons.format_list_numbered_rounded,
-                          size: 10,
-                          color: BldrColors.textMuted),
+                      const Icon(Icons.format_list_numbered_rounded,
+                          size: 10, color: BldrColors.textMuted),
                       const SizedBox(width: 3),
-                      Text(
-                          '$exerciseCount ex.',
-                          style: BldrText.metaSm),
+                      Text('$exerciseCount ex.', style: BldrText.metaSm),
                       if (durationMinutes != null) ...[
                         const SizedBox(width: 8),
-                        const Icon(
-                            Icons.access_time_rounded,
-                            size: 10,
-                            color: BldrColors.textMuted),
+                        const Icon(Icons.access_time_rounded,
+                            size: 10, color: BldrColors.textMuted),
                         const SizedBox(width: 3),
-                        Text('~${durationMinutes}min',
-                            style: BldrText.metaSm),
+                        Text('~${durationMinutes}min', style: BldrText.metaSm),
                       ],
                       if (badge != null) ...[
                         const SizedBox(width: 8),
@@ -2248,14 +2266,11 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 5, vertical: 2),
                           decoration: BoxDecoration(
-                            color: (badgeColor ??
-                                    BldrColors.goldBright)
+                            color: (badgeColor ?? BldrColors.goldBright)
                                 .withValues(alpha: 0.12),
-                            borderRadius:
-                                BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(4),
                             border: Border.all(
-                                color: (badgeColor ??
-                                        BldrColors.goldBright)
+                                color: (badgeColor ?? BldrColors.goldBright)
                                     .withValues(alpha: 0.25)),
                           ),
                           child: Text(
@@ -2263,8 +2278,7 @@ class _TemplatePickerSheetState extends State<_TemplatePickerSheet> {
                             style: TextStyle(
                               fontSize: 8,
                               fontWeight: FontWeight.w700,
-                              color: badgeColor ??
-                                  BldrColors.goldBright,
+                              color: badgeColor ?? BldrColors.goldBright,
                               letterSpacing: 0.4,
                             ),
                           ),

@@ -8,7 +8,9 @@ import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.
 import 'package:bldr_fitness/features/progress/domain/entities/body_measurement.dart';
 import 'package:bldr_fitness/features/progress/domain/usecases/progress_usecases.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
-import 'package:bldr_fitness/features/subscription/domain/usecases/subscription_usecases.dart' as subUc;
+import 'package:bldr_fitness/features/subscription/domain/usecases/subscription_usecases.dart'
+    as subUc;
+import 'package:bldr_fitness/features/subscription/domain/usecases/resolve_club_access.dart';
 import 'package:bldr_fitness/features/subscription/presentation/paywall/club_paywall_sheet.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
@@ -53,6 +55,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   UserProfile? _userProfile;
   UserSubscription? _userSubscription;
+  bool _hasClubAccess = false;
   bool _isLoading = true;
   String? _error;
 
@@ -77,6 +80,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
     return level;
   }
+
   int _totalAchievements = 0;
   bool _gamificationLoading = true;
   List<Map<String, dynamic>> _achievementCatalog = [];
@@ -114,8 +118,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         daysPeriod: 30,
       );
 
-      final measurements = measurementsResult.valueOrNull ?? const <BodyMeasurement>[];
-      final progress = progressResult.valueOrNull ?? const MeasurementProgress();
+      final measurements =
+          measurementsResult.valueOrNull ?? const <BodyMeasurement>[];
+      final progress =
+          progressResult.valueOrNull ?? const MeasurementProgress();
 
       if (!mounted) return;
       setState(() {
@@ -155,13 +161,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     try {
       final profile = await UserService.instance.getCurrentUserProfile();
+      final results = await Future.wait([
+        getIt<subUc.GetCurrentSubscription>()(),
+        getIt<ResolveClubAccess>()(),
+      ]);
       final subscription =
-          (await getIt<subUc.GetCurrentSubscription>()()).valueOrNull;
+          (results[0] as dynamic).valueOrNull as UserSubscription?;
+      final hasClubAccess =
+          (results[1] as dynamic).valueOrNull as bool? ?? false;
 
       if (!mounted) return;
       setState(() {
         _userProfile = profile;
         _userSubscription = subscription;
+        _hasClubAccess = hasClubAccess;
         _notificationsEnabled = profile?.notificationsEnabled ?? false;
         _isLoading = false;
       });
@@ -202,12 +215,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       int pos = 0;
       for (int i = 0; i < allRanking.length; i++) {
-        if (allRanking[i]['user_id'] == userId) { pos = i + 1; break; }
+        if (allRanking[i]['user_id'] == userId) {
+          pos = i + 1;
+          break;
+        }
       }
 
       if (mounted) {
         setState(() {
-          _totalXp      = (rankData?['xp_total'] as num?)?.toInt() ?? 0;
+          _totalXp = (rankData?['xp_total'] as num?)?.toInt() ?? 0;
           _currentLevel = _levelFromXp(_totalXp);
           _rankPosition = pos;
           _gamificationLoading = false;
@@ -224,12 +240,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
           userId: userId, completedOnly: true, limit: 1000);
       final streakResult = await getIt<GetCurrentStreak>()();
       final supabaseResults = await Future.wait([
-        supabase.from('achievements').select('name, icon_name, category').order('category'),
-        supabase.from('user_achievements').select('achievement_name').eq('user_id', userId),
+        supabase
+            .from('achievements')
+            .select('name, icon_name, category')
+            .order('category'),
+        supabase
+            .from('user_achievements')
+            .select('achievement_name')
+            .eq('user_id', userId),
       ]);
 
-      final sessions      = historyResult.valueOrNull ?? [];
-      final streak        = streakResult.valueOrNull ?? 0;
+      final sessions = historyResult.valueOrNull ?? [];
+      final streak = streakResult.valueOrNull ?? 0;
       final achievementsRaw = supabaseResults[1] as List;
 
       final totalWorkouts = sessions.length;
@@ -240,19 +262,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
       final totalHours = totalSeconds ~/ 3600;
 
-      final catalog = List<Map<String, dynamic>>.from(supabaseResults[0] as List);
-      final unlockedNames = achievementsRaw
-          .map((a) => a['achievement_name'] as String)
-          .toSet();
+      final catalog =
+          List<Map<String, dynamic>>.from(supabaseResults[0] as List);
+      final unlockedNames =
+          achievementsRaw.map((a) => a['achievement_name'] as String).toSet();
 
       if (mounted) {
         setState(() {
-          _totalWorkouts             = totalWorkouts;
-          _currentStreak             = streak;
-          _horasTreinadas            = totalHours;
-          _totalAchievements         = achievementsRaw.length;
-          _achievementCatalog        = catalog;
-          _unlockedAchievementNames  = unlockedNames;
+          _totalWorkouts = totalWorkouts;
+          _currentStreak = streak;
+          _horasTreinadas = totalHours;
+          _totalAchievements = achievementsRaw.length;
+          _achievementCatalog = catalog;
+          _unlockedAchievementNames = unlockedNames;
         });
       }
     } catch (e) {
@@ -273,7 +295,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         onSave: (name, email, phone, username) async {
           try {
             final updates = <String, dynamic>{'full_name': name};
-            if (username != null && username.isNotEmpty) updates['username'] = username;
+            if (username != null && username.isNotEmpty)
+              updates['username'] = username;
             final updatedProfile =
                 await UserService.instance.updateCurrentUserProfile(
               updates: updates,
@@ -291,7 +314,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           } catch (e) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(AppLocalizations.of(context)!.profile_update_error('$e')),
+                content: Text(
+                    AppLocalizations.of(context)!.profile_update_error('$e')),
                 backgroundColor: AppTheme.errorRed,
               ),
             );
@@ -314,15 +338,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _showImagePickerDialog() {
-    final hasPhoto = _userProfile?.avatarUrl != null &&
-        _userProfile!.avatarUrl!.isNotEmpty;
+    final hasPhoto =
+        _userProfile?.avatarUrl != null && _userProfile!.avatarUrl!.isNotEmpty;
 
     showDialog(
       context: context,
       builder: (context) => Dialog(
         backgroundColor: AppTheme.dialogDark,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(
           padding: EdgeInsets.all(4.w),
           child: Column(
@@ -330,8 +353,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               Text(
                 AppLocalizations.of(context)!.profile_photo_change_title,
-                style:
-                    AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
+                style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
                   color: AppTheme.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
@@ -358,9 +380,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             const Icon(Icons.camera_alt,
                                 color: AppTheme.accentGold, size: 32),
                             SizedBox(height: 1.h),
-                            Text(AppLocalizations.of(context)!.photo_option_camera,
-                                style: AppTheme
-                                    .darkTheme.textTheme.bodyMedium
+                            Text(
+                                AppLocalizations.of(context)!
+                                    .photo_option_camera,
+                                style: AppTheme.darkTheme.textTheme.bodyMedium
                                     ?.copyWith(color: AppTheme.textPrimary)),
                           ],
                         ),
@@ -387,9 +410,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             const Icon(Icons.photo_library,
                                 color: AppTheme.accentGold, size: 32),
                             SizedBox(height: 1.h),
-                            Text(AppLocalizations.of(context)!.photo_option_gallery,
-                                style: AppTheme
-                                    .darkTheme.textTheme.bodyMedium
+                            Text(
+                                AppLocalizations.of(context)!
+                                    .photo_option_gallery,
+                                style: AppTheme.darkTheme.textTheme.bodyMedium
                                     ?.copyWith(color: AppTheme.textPrimary)),
                           ],
                         ),
@@ -412,8 +436,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     decoration: BoxDecoration(
                       color: AppTheme.errorRed.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                          color: AppTheme.errorRed.withOpacity(0.3)),
+                      border:
+                          Border.all(color: AppTheme.errorRed.withOpacity(0.3)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -422,9 +446,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             color: AppTheme.errorRed),
                         SizedBox(width: 2.w),
                         Text(
-                          AppLocalizations.of(context)!.profile_photo_remove_btn,
-                          style: AppTheme.darkTheme.textTheme.bodyMedium
-                              ?.copyWith(
+                          AppLocalizations.of(context)!
+                              .profile_photo_remove_btn,
+                          style:
+                              AppTheme.darkTheme.textTheme.bodyMedium?.copyWith(
                             color: AppTheme.errorRed,
                             fontWeight: FontWeight.w600,
                           ),
@@ -450,13 +475,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final picker = ImagePicker();
       final XFile? photo = await picker.pickImage(
-          source: ImageSource.camera,
-          maxWidth: 1024,
-          imageQuality: 85);
+          source: ImageSource.camera, maxWidth: 1024, imageQuality: 85);
       if (photo != null) await _uploadProfileImage(photo);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(AppLocalizations.of(context)!.profile_camera_error('$e')),
+          content:
+              Text(AppLocalizations.of(context)!.profile_camera_error('$e')),
           backgroundColor: AppTheme.errorRed));
     }
   }
@@ -465,13 +489,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       final picker = ImagePicker();
       final XFile? image = await picker.pickImage(
-          source: ImageSource.gallery,
-          maxWidth: 2048,
-          imageQuality: 90);
+          source: ImageSource.gallery, maxWidth: 2048, imageQuality: 90);
       if (image != null) await _uploadProfileImage(image);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(AppLocalizations.of(context)!.profile_gallery_error('$e')),
+          content:
+              Text(AppLocalizations.of(context)!.profile_gallery_error('$e')),
           backgroundColor: AppTheme.errorRed));
     }
   }
@@ -513,7 +536,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(AppLocalizations.of(context)!.profile_photo_update_error('$e')),
+          content: Text(
+              AppLocalizations.of(context)!.profile_photo_update_error('$e')),
           backgroundColor: AppTheme.errorRed));
     }
   }
@@ -535,7 +559,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(AppLocalizations.of(context)!.profile_photo_remove_error('$e')),
+          content: Text(
+              AppLocalizations.of(context)!.profile_photo_remove_error('$e')),
           backgroundColor: AppTheme.errorRed));
     }
   }
@@ -552,8 +577,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (newValue) {
         final currentSettings =
             await FirebaseMessaging.instance.getNotificationSettings();
-        if (currentSettings.authorizationStatus ==
-            AuthorizationStatus.denied) {
+        if (currentSettings.authorizationStatus == AuthorizationStatus.denied) {
           if (mounted) await _showPermissionDeniedDialog();
           throw Exception('_settings_redirect');
         }
@@ -567,8 +591,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await getIt<PushNotificationService>()
           .syncTokenToProfile(enabled: newValue);
 
-      final updatedProfile =
-          await UserService.instance.getCurrentUserProfile();
+      final updatedProfile = await UserService.instance.getCurrentUserProfile();
       if (updatedProfile != null && mounted) {
         setState(() {
           _userProfile = updatedProfile;
@@ -580,7 +603,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!mounted) return;
       if (!e.toString().contains('_settings_redirect')) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(AppLocalizations.of(context)!.profile_notifications_error('$e')),
+            content: Text(AppLocalizations.of(context)!
+                .profile_notifications_error('$e')),
             backgroundColor: AppTheme.errorRed));
       }
       setState(() => _notificationsEnabled = !newValue);
@@ -646,8 +670,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (context) => Dialog(
         backgroundColor: AppTheme.dialogDark,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Container(
           padding: EdgeInsets.all(4.w),
           child: Column(
@@ -656,20 +679,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               Text(AppLocalizations.of(context)!.profile_measurements_title,
                   style: AppTheme.darkTheme.textTheme.titleMedium?.copyWith(
-                      color: AppTheme.textPrimary,
-                      fontWeight: FontWeight.w600),
+                      color: AppTheme.textPrimary, fontWeight: FontWeight.w600),
                   textAlign: TextAlign.center),
               SizedBox(height: 3.h),
-              _buildMeasurementField(AppLocalizations.of(context)!.profile_measurements_height, heightController),
+              _buildMeasurementField(
+                  AppLocalizations.of(context)!.profile_measurements_height,
+                  heightController),
               SizedBox(height: 2.h),
-              _buildMeasurementField(AppLocalizations.of(context)!.profile_measurements_target_weight, weightController),
+              _buildMeasurementField(
+                  AppLocalizations.of(context)!
+                      .profile_measurements_target_weight,
+                  weightController),
               SizedBox(height: 3.h),
               Row(
                 children: [
                   Expanded(
                     child: TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: Text(AppLocalizations.of(context)!.common_cancel)),
+                        child:
+                            Text(AppLocalizations.of(context)!.common_cancel)),
                   ),
                   SizedBox(width: 2.w),
                   Expanded(
@@ -678,8 +706,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         try {
                           final updates = <String, dynamic>{};
                           if (heightController.text.isNotEmpty) {
-                            final height =
-                                int.tryParse(heightController.text);
+                            final height = int.tryParse(heightController.text);
                             if (height != null) updates['height_cm'] = height;
                           }
                           if (weightController.text.isNotEmpty) {
@@ -697,10 +724,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             }
                           }
                           Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text(AppLocalizations.of(context)!.profile_measurements_saved),
-                                  backgroundColor: AppTheme.successGreen));
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(AppLocalizations.of(context)!
+                                  .profile_measurements_saved),
+                              backgroundColor: AppTheme.successGreen));
                         } catch (e) {
                           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                               content: Text('Erro ao salvar: $e'),
@@ -727,12 +754,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context) => AlertDialog(
         scrollable: true,
         backgroundColor: AppTheme.dialogDark,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: FittedBox(
           fit: BoxFit.scaleDown,
           alignment: Alignment.centerLeft,
-          child: Text(AppLocalizations.of(context)!.profile_cancel_subscription_title,
+          child: Text(
+              AppLocalizations.of(context)!.profile_cancel_subscription_title,
               style: AppTheme.darkTheme.textTheme.titleLarge?.copyWith(
                   color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
         ),
@@ -741,16 +768,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ?.copyWith(color: AppTheme.textSecondary),
           children: [
             TextSpan(
-                text:
-                    AppLocalizations.of(context)!.profile_cancel_subscription_before),
+                text: AppLocalizations.of(context)!
+                    .profile_cancel_subscription_before),
             TextSpan(
                 text: 'contato@bldrapp.com.br',
                 style: TextStyle(
-                    color: AppTheme.accentGold,
-                    fontWeight: FontWeight.bold)),
+                    color: AppTheme.accentGold, fontWeight: FontWeight.bold)),
             TextSpan(
-                text:
-                    AppLocalizations.of(context)!.profile_cancel_subscription_after),
+                text: AppLocalizations.of(context)!
+                    .profile_cancel_subscription_after),
           ],
         )),
         actions: [
@@ -758,8 +784,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () => Navigator.pop(context),
             child: const FittedBox(
               fit: BoxFit.scaleDown,
-              child: Text('Entendi',
-                  style: TextStyle(color: AppTheme.accentGold)),
+              child:
+                  Text('Entendi', style: TextStyle(color: AppTheme.accentGold)),
             ),
           ),
         ],
@@ -795,8 +821,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   String _getCurrentPlanName() {
-    if (_userSubscription == null) return AppLocalizations.of(context)!.profile_plan_free;
-    if (_userSubscription!.status != 'active') return AppLocalizations.of(context)!.profile_plan_free;
+    if (_hasClubAccess) return 'BLDR CLUB';
+    if (_userSubscription == null)
+      return AppLocalizations.of(context)!.profile_plan_free;
+    if (_userSubscription!.status != 'active')
+      return AppLocalizations.of(context)!.profile_plan_free;
     switch (_userSubscription!.planId) {
       case 'ffa05840-0212-46eb-9f80-2dbab9c362a8':
         return 'BLDR CORE';
@@ -807,21 +836,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  bool get _isPremium {
-    if (_userSubscription == null) return false;
-    return _userSubscription!.status == 'active';
-  }
+  bool get _isPremium => _hasClubAccess;
 
-  bool get _isClubMember {
-    if (_userSubscription == null) return false;
-    return _userSubscription!.status == 'active' &&
-        _userSubscription!.planId == 'd082af8c-216a-4499-a1f6-1fb84ac08a5f';
-  }
+  bool get _isClubMember => _hasClubAccess;
 
   String _formatDate(DateTime date) {
     const months = [
-      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+      'Janeiro',
+      'Fevereiro',
+      'Março',
+      'Abril',
+      'Maio',
+      'Junho',
+      'Julho',
+      'Agosto',
+      'Setembro',
+      'Outubro',
+      'Novembro',
+      'Dezembro'
     ];
     return '${months[date.month - 1]} ${date.year}';
   }
@@ -841,10 +873,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   /// nível duplicado — o nível já aparece no card de XP logo abaixo).
   Widget _buildIdentityBlock() {
     final profile = _userProfile!;
-    final hasAvatar = profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty;
+    final hasAvatar =
+        profile.avatarUrl != null && profile.avatarUrl!.isNotEmpty;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(BldrSpacing.pageX, 16, BldrSpacing.pageX, 0),
+      padding: const EdgeInsets.fromLTRB(
+          BldrSpacing.pageX, 16, BldrSpacing.pageX, 0),
       child: Row(
         children: [
           // Avatar
@@ -856,7 +890,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: BldrColors.goldBright, width: 2.5),
+                    border:
+                        Border.all(color: BldrColors.goldBright, width: 2.5),
                     boxShadow: const [
                       BoxShadow(color: Color(0x4DE0B830), blurRadius: 12),
                     ],
@@ -885,7 +920,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       decoration: BoxDecoration(
                         color: BldrColors.goldBright,
                         shape: BoxShape.circle,
-                        border: Border.all(color: BldrColors.bgBase, width: 1.5),
+                        border:
+                            Border.all(color: BldrColors.bgBase, width: 1.5),
                       ),
                       child: const Icon(Icons.verified,
                           color: Color(0xFF0A0A0A), size: 12),
@@ -935,7 +971,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildXpBar() {
-    const Map<int, int> thresholds = {1: 0, 2: 1000, 3: 2500, 4: 5000, 5: 10000};
+    const Map<int, int> thresholds = {
+      1: 0,
+      2: 1000,
+      3: 2500,
+      4: 5000,
+      5: 10000
+    };
     final xpStart = thresholds[_currentLevel] ?? 0;
     final xpNext = thresholds[_currentLevel + 1] ?? (xpStart + 10000);
     final gained = _totalXp - xpStart;
@@ -944,17 +986,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final toNext = xpNext - _totalXp;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(BldrSpacing.pageX, 16, BldrSpacing.pageX, 0),
+      padding: const EdgeInsets.fromLTRB(
+          BldrSpacing.pageX, 16, BldrSpacing.pageX, 0),
       child: BldrGlassCard(
         child: Column(
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(AppLocalizations.of(context)!.profile_xp_bar_level(_currentLevel, _totalXp),
+                Text(
+                    AppLocalizations.of(context)!
+                        .profile_xp_bar_level(_currentLevel, _totalXp),
                     style: BldrText.body.copyWith(
-                        color: BldrColors.goldBright, fontWeight: FontWeight.w600)),
-                Text(AppLocalizations.of(context)!.profile_xp_bar_next_level(_currentLevel + 1, xpNext), style: BldrText.meta),
+                        color: BldrColors.goldBright,
+                        fontWeight: FontWeight.w600)),
+                Text(
+                    AppLocalizations.of(context)!
+                        .profile_xp_bar_next_level(_currentLevel + 1, xpNext),
+                    style: BldrText.meta),
               ],
             ),
             const SizedBox(height: 10),
@@ -962,7 +1011,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerLeft,
-              child: Text(AppLocalizations.of(context)!.profile_xp_bar_to_next(toNext), style: BldrText.meta),
+              child: Text(
+                  AppLocalizations.of(context)!.profile_xp_bar_to_next(toNext),
+                  style: BldrText.meta),
             ),
           ],
         ),
@@ -975,14 +1026,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildStatsGrid() {
     final horasLabel = _horasTreinadas > 0 ? '${_horasTreinadas}h' : '0h';
     final stats = [
-      {'icon': Icons.fitness_center, 'value': '$_totalWorkouts', 'label': AppLocalizations.of(context)!.profile_stat_total_workouts},
-      {'icon': Icons.timer_outlined, 'value': horasLabel, 'label': AppLocalizations.of(context)!.profile_stat_hours_trained},
-      {'icon': Icons.local_fire_department, 'value': '$_currentStreak', 'label': AppLocalizations.of(context)!.profile_stat_current_streak},
-      {'icon': Icons.military_tech, 'value': '$_totalAchievements', 'label': AppLocalizations.of(context)!.profile_stat_achievements},
+      {
+        'icon': Icons.fitness_center,
+        'value': '$_totalWorkouts',
+        'label': AppLocalizations.of(context)!.profile_stat_total_workouts
+      },
+      {
+        'icon': Icons.timer_outlined,
+        'value': horasLabel,
+        'label': AppLocalizations.of(context)!.profile_stat_hours_trained
+      },
+      {
+        'icon': Icons.local_fire_department,
+        'value': '$_currentStreak',
+        'label': AppLocalizations.of(context)!.profile_stat_current_streak
+      },
+      {
+        'icon': Icons.military_tech,
+        'value': '$_totalAchievements',
+        'label': AppLocalizations.of(context)!.profile_stat_achievements
+      },
     ];
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(BldrSpacing.pageX, 12, BldrSpacing.pageX, 0),
+      padding: const EdgeInsets.fromLTRB(
+          BldrSpacing.pageX, 12, BldrSpacing.pageX, 0),
       child: GridView.count(
         crossAxisCount: 2,
         shrinkWrap: true,
@@ -995,7 +1063,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             child: Row(
               children: [
-                Icon(s['icon'] as IconData, color: BldrColors.goldBright, size: 20),
+                Icon(s['icon'] as IconData,
+                    color: BldrColors.goldBright, size: 20),
                 const SizedBox(width: 8),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1027,14 +1096,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final pageCount = (items.length / kPerPage).ceil().clamp(1, 999);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(BldrSpacing.pageX, 12, BldrSpacing.pageX, 0),
+      padding: const EdgeInsets.fromLTRB(
+          BldrSpacing.pageX, 12, BldrSpacing.pageX, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(AppLocalizations.of(context)!.profile_badges_section, style: BldrText.label),
+              Text(AppLocalizations.of(context)!.profile_badges_section,
+                  style: BldrText.label),
               Text(
                 '$_totalAchievements/${items.isEmpty ? '?' : items.length}',
                 style: BldrText.metaSm.copyWith(color: BldrColors.goldBright),
@@ -1045,33 +1116,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
           LayoutBuilder(
             builder: (context, constraints) {
               const kSpacing = 8.0;
-              final cellSize = (constraints.maxWidth - (kCols - 1) * kSpacing) / kCols;
+              final cellSize =
+                  (constraints.maxWidth - (kCols - 1) * kSpacing) / kCols;
               final pageHeight = cellSize * kRows + (kRows - 1) * kSpacing;
               return SizedBox(
                 height: pageHeight,
                 child: PageView.builder(
-              itemCount: pageCount,
-              onPageChanged: (p) => setState(() => _badgesPage = p),
-              itemBuilder: (_, page) {
-                final start = page * kPerPage;
-                final end   = (start + kPerPage).clamp(0, items.length);
-                final pageItems = items.sublist(start, end);
+                  itemCount: pageCount,
+                  onPageChanged: (p) => setState(() => _badgesPage = p),
+                  itemBuilder: (_, page) {
+                    final start = page * kPerPage;
+                    final end = (start + kPerPage).clamp(0, items.length);
+                    final pageItems = items.sublist(start, end);
 
-                return GridView.count(
-                  crossAxisCount: kCols,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                  children: pageItems.map((b) {
-                    final name     = b['name']      as String? ?? '';
-                    final iconName = b['icon_name'] as String? ?? '';
-                    final unlocked = _unlockedAchievementNames.contains(name);
-                    return _buildBadgeCell(iconName, name, unlocked);
-                  }).toList(),
-                );
-              },
-            ),
+                    return GridView.count(
+                      crossAxisCount: kCols,
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                      children: pageItems.map((b) {
+                        final name = b['name'] as String? ?? '';
+                        final iconName = b['icon_name'] as String? ?? '';
+                        final unlocked =
+                            _unlockedAchievementNames.contains(name);
+                        return _buildBadgeCell(iconName, name, unlocked);
+                      }).toList(),
+                    );
+                  },
+                ),
               );
             },
           ),
@@ -1084,7 +1157,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width:  active ? 16 : 5,
+                  width: active ? 16 : 5,
                   height: 5,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(3),
@@ -1124,19 +1197,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
         'workout_count' => remaining == 1
             ? l10n.profile_achievement_do_workout_singular(remaining)
             : l10n.profile_achievement_do_workout_plural(remaining),
-        'consecutive_days' ||
-        'bldr_streak_days' => remaining == 1
+        'consecutive_days' || 'bldr_streak_days' => remaining == 1
             ? l10n.profile_achievement_maintain_streak_singular(remaining)
             : l10n.profile_achievement_maintain_streak_plural(remaining),
         'calorie_goal_reached' ||
-        'calorie_goal_reached_consecutive_days' => remaining == 1
-            ? l10n.profile_achievement_calorie_goal_singular(remaining)
-            : l10n.profile_achievement_calorie_goal_plural(remaining),
+        'calorie_goal_reached_consecutive_days' =>
+          remaining == 1
+              ? l10n.profile_achievement_calorie_goal_singular(remaining)
+              : l10n.profile_achievement_calorie_goal_plural(remaining),
         'meal_logged' => remaining == 1
             ? l10n.profile_achievement_log_meal_singular(remaining)
             : l10n.profile_achievement_log_meal_plural(remaining),
         'total_xp' => l10n.profile_achievement_earn_xp(remaining),
-        'club_level' => l10n.profile_achievement_reach_level(value?.toInt() ?? 0),
+        'club_level' =>
+          l10n.profile_achievement_reach_level(value?.toInt() ?? 0),
         'bldr_workout_total' => remaining == 1
             ? l10n.profile_achievement_complete_workout_singular(remaining)
             : l10n.profile_achievement_complete_workout_plural(remaining),
@@ -1153,7 +1227,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final value = (a['criteria_value'] as num?)?.toDouble() ?? 1.0;
       final current = _currentFor(type).toDouble();
       // Só considera conquistas com critério mapeável
-      if (current == 0 && type != 'workout_count' && type != 'consecutive_days' && type != 'bldr_streak_days') continue;
+      if (current == 0 &&
+          type != 'workout_count' &&
+          type != 'consecutive_days' &&
+          type != 'bldr_streak_days') continue;
       final ratio = value > 0 ? (current / value).clamp(0.0, 0.99) : 0.0;
       if (ratio > bestRatio) {
         bestRatio = ratio;
@@ -1180,16 +1257,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const Icon(Icons.emoji_events_outlined,
                   color: BldrColors.goldBright, size: 15),
               const SizedBox(width: 6),
-              Text(AppLocalizations.of(context)!.profile_next_achievement, style: BldrText.label),
+              Text(AppLocalizations.of(context)!.profile_next_achievement,
+                  style: BldrText.label),
               const Spacer(),
               Text('$pct%',
-                  style: BldrText.metaSm
-                      .copyWith(color: BldrColors.goldBright, fontWeight: FontWeight.w600)),
+                  style: BldrText.metaSm.copyWith(
+                      color: BldrColors.goldBright,
+                      fontWeight: FontWeight.w600)),
             ]),
             const SizedBox(height: 6),
             Text(name,
-                style: BldrText.cardTitle
-                    .copyWith(color: BldrColors.textPrimary)),
+                style:
+                    BldrText.cardTitle.copyWith(color: BldrColors.textPrimary)),
             const SizedBox(height: 2),
             Text(criteriaText, style: BldrText.meta),
             const SizedBox(height: 8),
@@ -1242,11 +1321,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(AppLocalizations.of(context)!.profile_progress_section, style: BldrText.label),
+            Text(AppLocalizations.of(context)!.profile_progress_section,
+                style: BldrText.label),
             GestureDetector(
-              onTap: () => Navigator.pushNamed(context, AppRoutes.progressScreen),
+              onTap: () =>
+                  Navigator.pushNamed(context, AppRoutes.progressScreen),
               behavior: HitTestBehavior.opaque,
-              child: Text(AppLocalizations.of(context)!.profile_see_all, style: BldrText.buttonSecondary),
+              child: Text(AppLocalizations.of(context)!.profile_see_all,
+                  style: BldrText.buttonSecondary),
             ),
           ],
         ),
@@ -1263,7 +1345,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(AppLocalizations.of(context)!.profile_weight_card_title, style: BldrText.meta),
+                        Text(
+                            AppLocalizations.of(context)!
+                                .profile_weight_card_title,
+                            style: BldrText.meta),
                         const SizedBox(height: 4),
                         Text(
                           _weightLatest != null
@@ -1278,7 +1363,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Text(
                       '${_weightChange! > 0 ? '+' : ''}${_weightChange!.toStringAsFixed(1)} kg',
                       style: BldrText.body.copyWith(
-                          color: BldrColors.goldBright, fontWeight: FontWeight.w600),
+                          color: BldrColors.goldBright,
+                          fontWeight: FontWeight.w600),
                     ),
                 ],
               ),
@@ -1298,13 +1384,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: _teaserStat('$_totalWorkouts', AppLocalizations.of(context)!.profile_stat_total_workouts),
+                    child: _teaserStat(
+                        '$_totalWorkouts',
+                        AppLocalizations.of(context)!
+                            .profile_stat_total_workouts),
                   ),
                   Expanded(
-                    child: _teaserStat('${_horasTreinadas}h', AppLocalizations.of(context)!.profile_stat_total_time),
+                    child: _teaserStat('${_horasTreinadas}h',
+                        AppLocalizations.of(context)!.profile_stat_total_time),
                   ),
                   Expanded(
-                    child: _teaserStat('$_totalAchievements', AppLocalizations.of(context)!.profile_stat_achievements),
+                    child: _teaserStat(
+                        '$_totalAchievements',
+                        AppLocalizations.of(context)!
+                            .profile_stat_achievements),
                   ),
                 ],
               ),
@@ -1369,7 +1462,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_isLoading) {
       return const Scaffold(
         backgroundColor: BldrColors.bgBase,
-        body: Center(child: CircularProgressIndicator(color: BldrColors.goldBright)),
+        body: Center(
+            child: CircularProgressIndicator(color: BldrColors.goldBright)),
       );
     }
 
@@ -1380,13 +1474,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, color: BldrColors.danger, size: 48),
+              const Icon(Icons.error_outline,
+                  color: BldrColors.danger, size: 48),
               const SizedBox(height: 16),
               Text(_error ?? AppLocalizations.of(context)!.profile_error,
                   style: BldrText.body, textAlign: TextAlign.center),
               const SizedBox(height: 16),
               BldrPrimaryButton(
-                  label: AppLocalizations.of(context)!.common_retry, onPressed: _loadUserProfile),
+                  label: AppLocalizations.of(context)!.common_retry,
+                  onPressed: _loadUserProfile),
             ],
           ),
         ),
@@ -1402,17 +1498,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // PF8 — engrenagem → Configurações + Compartilhar, ao lado do
               // título.
               Padding(
-                padding: const EdgeInsets.fromLTRB(BldrSpacing.pageX, 8, BldrSpacing.pageX, 0),
+                padding: const EdgeInsets.fromLTRB(
+                    BldrSpacing.pageX, 8, BldrSpacing.pageX, 0),
                 child: Row(
                   children: [
-                    Text(AppLocalizations.of(context)!.profile_title, style: BldrText.screenTitle),
+                    Text(AppLocalizations.of(context)!.profile_title,
+                        style: BldrText.screenTitle),
                     const Spacer(),
                     BldrCircleButton(
                       icon: Icons.settings_outlined,
                       size: 36,
                       filled: false,
-                      onPressed: () =>
-                          Navigator.pushNamed(context, AppRoutes.settingsScreen),
+                      onPressed: () => Navigator.pushNamed(
+                          context, AppRoutes.settingsScreen),
                     ),
                     const SizedBox(width: 8),
                     BldrCircleButton(

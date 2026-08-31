@@ -31,3 +31,13 @@ android/app/src/main/assets/flutter_assets/
 # Logs e arquivos de sistema
 *.log
 .DS_Store
+# RevenueCat import candidates contain complete Stripe subscription tokens.
+docs/billing/revenuecat_stripe_import_candidates.csv
+
+# Local credential for the one-user RevenueCat Stripe migration pilot.
+.env.revenuecat-migration.local
+.env.stripe-migration.local
+
+# Configuração de build local. Nunca inclui segredos server-side e não é versionada.
+dart_defines.dev.json
+dart_defines.release.json

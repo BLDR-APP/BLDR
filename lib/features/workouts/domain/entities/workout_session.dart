@@ -74,4 +74,12 @@ class WorkoutSession {
   });
 
   bool get isActive => !isCompleted && completedAt == null;
+
+  bool get completedViaWhoop => notes?.toLowerCase().contains('whoop') ?? false;
+
+  int get completedSetCount => sets.where((set) => set.isCompleted).length;
+
+  double get completedVolumeKg => sets
+      .where((set) => set.isCompleted)
+      .fold(0, (total, set) => total + ((set.reps ?? 0) * (set.weightKg ?? 0)));
 }

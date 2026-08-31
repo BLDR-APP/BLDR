@@ -19,7 +19,6 @@ class NotificationsScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<NotificationsScreen> {
   static const _gold = Color(0xFFD4AF37);
 
-
   List<Map<String, dynamic>> _notifications = [];
   bool _isLoading = true;
   Timer? _markReadTimer;
@@ -82,9 +81,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
       if (mounted) {
         setState(() {
-          _notifications = _notifications
-              .map((n) => {...n, 'is_read': true})
-              .toList();
+          _notifications =
+              _notifications.map((n) => {...n, 'is_read': true}).toList();
         });
       }
     } catch (_) {}
@@ -184,6 +182,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         bgColor: const Color(0xFF2A0A0A),
       );
     }
+    if (type == 'wearable' || t.contains('treino detectado')) {
+      return const _NotifConfig(
+        icon: Icons.watch_outlined,
+        iconColor: Color(0xFF0093E7),
+        bgColor: Color(0xFF071D29),
+        actions: ['Confirmar treino'],
+      );
+    }
     if (t.contains('bem-vindo') || t.contains('novo membro')) {
       return _NotifConfig(
         icon: Icons.group_add,
@@ -207,7 +213,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       final group = _groupLabel(n['created_at'] ?? '');
       result.putIfAbsent(group, () => []).add(n);
     }
-    const order = ['Agora', 'Hoje', 'Ontem', 'Esta semana', 'Mais antigo', 'Geral'];
+    const order = [
+      'Agora',
+      'Hoje',
+      'Ontem',
+      'Esta semana',
+      'Mais antigo',
+      'Geral'
+    ];
     final sorted = Map.fromEntries(
         order.where(result.containsKey).map((k) => MapEntry(k, result[k]!)));
     return sorted;
@@ -226,7 +239,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 _buildHeader(),
                 if (_isLoading)
                   const Expanded(
-                      child: Center(child: CircularProgressIndicator(color: _gold)))
+                      child: Center(
+                          child: CircularProgressIndicator(color: _gold)))
                 else if (_notifications.isEmpty)
                   _buildEmptyState()
                 else
@@ -253,11 +267,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 final c = _gold.withOpacity(0.18);
                 return Center(
                   child: Container(
-                    width: w, height: w,
+                    width: w,
+                    height: w,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(24),
-                      gradient:
-                          RadialGradient(colors: [c, c.withOpacity(0)], radius: 0.75),
+                      gradient: RadialGradient(
+                          colors: [c, c.withOpacity(0)], radius: 0.75),
                     ),
                   ),
                 );
@@ -270,7 +285,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Widget _buildHeader() {
-    final unreadCount = _notifications.where((n) => n['is_read'] != true).length;
+    final unreadCount =
+        _notifications.where((n) => n['is_read'] != true).length;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
@@ -291,7 +307,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 if (unreadCount > 0) ...[
                   const SizedBox(width: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                     decoration: BoxDecoration(
                         color: _gold, borderRadius: BorderRadius.circular(10)),
                     child: Text('$unreadCount',
@@ -378,7 +395,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           color: isRead ? const Color(0xFF111111) : const Color(0xFF1A1A1A),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isRead ? Colors.white.withOpacity(0.05) : _gold.withOpacity(0.25),
+            color: isRead
+                ? Colors.white.withOpacity(0.05)
+                : _gold.withOpacity(0.25),
           ),
         ),
         child: Row(
@@ -393,7 +412,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               child: Icon(config.icon, color: config.iconColor, size: 18),
             ),
             const SizedBox(width: 12),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -404,7 +422,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         child: Text(title,
                             style: TextStyle(
                                 color: Colors.white,
-                                fontWeight: isRead ? FontWeight.w500 : FontWeight.bold,
+                                fontWeight:
+                                    isRead ? FontWeight.w500 : FontWeight.bold,
                                 fontSize: 13)),
                       ),
                       if (!isRead)
@@ -435,15 +454,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             child: GestureDetector(
                               onTap: () {
                                 _markOneRead(id);
-                                final type = n['type'] as String?;
+                                final type =
+                                    (n['action_type'] ?? n['type']) as String?;
                                 final rawData = n['action_data'];
                                 final Map<String, dynamic> parsed =
                                     rawData is String && rawData.isNotEmpty
                                         ? (jsonDecode(rawData)
                                             as Map<String, dynamic>)
                                         : rawData is Map
-                                            ? Map<String, dynamic>.from(
-                                                rawData)
+                                            ? Map<String, dynamic>.from(rawData)
                                             : {};
                                 NotificationRouter.navigate(
                                   type,
@@ -456,12 +475,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                     horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
                                   color: action.startsWith('👊')
-                                      ? const Color(0xFF4CAF50).withOpacity(0.15)
+                                      ? const Color(0xFF4CAF50)
+                                          .withOpacity(0.15)
                                       : _gold.withOpacity(0.15),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
                                     color: action.startsWith('👊')
-                                        ? const Color(0xFF4CAF50).withOpacity(0.4)
+                                        ? const Color(0xFF4CAF50)
+                                            .withOpacity(0.4)
                                         : _gold.withOpacity(0.4),
                                   ),
                                 ),
