@@ -88,7 +88,8 @@ class FakeClubWorkoutRepository implements ClubWorkoutRepository {
       Result.success(inChallenge);
 
   @override
-  Future<Result<List<WorkoutTemplate>>> publicTemplates({int limit = 50}) async =>
+  Future<Result<List<WorkoutTemplate>>> publicTemplates(
+          {int limit = 50}) async =>
       const Result.success([]);
 
   @override
@@ -155,7 +156,8 @@ class FakeClubWorkoutRepository implements ClubWorkoutRepository {
       const Result.success(null);
 
   @override
-  Future<Result<void>> ensureClubInitialSets(String sessionId, String templateId) async =>
+  Future<Result<void>> ensureClubInitialSets(
+          String sessionId, String templateId) async =>
       const Result.success(null);
 
   @override
@@ -229,7 +231,8 @@ class FakeHavokRepository implements HavokRepository {
       const Result.success([]);
 
   @override
-  Future<Result<HavokThread>> getOrCreateTodayThread(String originScreen) async {
+  Future<Result<HavokThread>> getOrCreateTodayThread(
+      String originScreen) async {
     lastOriginScreen = originScreen;
     return Result.success(existingTodayThread ??
         HavokThread(
@@ -271,6 +274,21 @@ class FakeHavokRepository implements HavokRepository {
 
   @override
   Future<Result<int>> getDailyMessageCount() async => const Result.success(0);
+
+  @override
+  Future<Result<List<HavokMemory>>> getMemories() async =>
+      const Result.success([]);
+
+  @override
+  Future<Result<void>> updateMemory(HavokMemory memory, dynamic value) async =>
+      const Result.success(null);
+
+  @override
+  Future<Result<void>> forgetMemory(String memoryId) async =>
+      const Result.success(null);
+
+  @override
+  Future<Result<void>> clearMemories() async => const Result.success(null);
 }
 
 void main() {
@@ -279,8 +297,8 @@ void main() {
   setUp(() => repo = FakeClubWorkoutRepository());
 
   test('StartClubWorkout repassa nome e template', () async {
-    final result = await StartClubWorkout(repo)(
-        name: 'HIIT Pesado', templateId: 't9');
+    final result =
+        await StartClubWorkout(repo)(name: 'HIIT Pesado', templateId: 't9');
     expect(result.valueOrNull?.id, 'w1');
     expect(repo.lastArgs['templateId'], 't9');
   });
@@ -315,7 +333,8 @@ void main() {
 
     setUp(() => havokRepo = FakeHavokRepository());
 
-    test('retorna o SavedWorkout já devolvido pela edge function, '
+    test(
+        'retorna o SavedWorkout já devolvido pela edge function, '
         'sem precisar de um SELECT adicional', () async {
       final workout = SavedWorkout(
         id: 'hw1',
@@ -429,12 +448,15 @@ void main() {
       expect(result.valueOrNull?.first.isUser, true);
     });
 
-    test('SendHavokMessage repassa o contexto do usuário para o repositório', () async {
+    test('SendHavokMessage repassa o contexto do usuário para o repositório',
+        () async {
       await SendHavokMessage(havokRepo)(
         threadId: 't1',
         userMessage: 'Como está minha semana?',
         originScreen: 'dashboard',
-        context: {'workouts': {'completedThisWeek': 2}},
+        context: {
+          'workouts': {'completedThisWeek': 2}
+        },
       );
       expect(havokRepo.lastContext?['workouts']['completedThisWeek'], 2);
     });

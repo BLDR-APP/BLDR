@@ -645,6 +645,31 @@ class GetHavokDailyCount {
   Future<Result<int>> call() => _repo.getDailyMessageCount();
 }
 
+class GetHavokMemories {
+  final HavokRepository _repo;
+  const GetHavokMemories(this._repo);
+  Future<Result<List<HavokMemory>>> call() => _repo.getMemories();
+}
+
+class UpdateHavokMemory {
+  final HavokRepository _repo;
+  const UpdateHavokMemory(this._repo);
+  Future<Result<void>> call(HavokMemory memory, dynamic value) =>
+      _repo.updateMemory(memory, value);
+}
+
+class ForgetHavokMemory {
+  final HavokRepository _repo;
+  const ForgetHavokMemory(this._repo);
+  Future<Result<void>> call(String id) => _repo.forgetMemory(id);
+}
+
+class ClearHavokMemories {
+  final HavokRepository _repo;
+  const ClearHavokMemories(this._repo);
+  Future<Result<void>> call() => _repo.clearMemories();
+}
+
 class GetClubNotifications {
   final ChallengeRepository _repo;
   const GetClubNotifications(this._repo);

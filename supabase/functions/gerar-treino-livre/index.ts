@@ -46,6 +46,27 @@ async function callClaude(userMessage: string, maxTokens = 2048): Promise<string
   return text;
 }
 
+async function canonicalizeWorkout(client: any, workout: Record<string, unknown>): Promise<any> {
+  const exercises = workout.exercicios;
+  if (!Array.isArray(exercises) || exercises.length < 1 || exercises.length > 12) {
+    throw new Error('Treino HAVOK inválido.');
+  }
+  const canonical = [];
+  for (const raw of exercises) {
+    const exercise = raw as Record<string, unknown>;
+    const name = typeof exercise?.nome === 'string' ? exercise.nome.trim() : '';
+    if (!name) throw new Error('Exercício HAVOK sem nome.');
+    const { data, error } = await client.from('exercises')
+      .select('id, name, exercise_db_id').ilike('name', name).limit(2);
+    if (error || !data || data.length !== 1) {
+      throw new Error(`Exercício não resolvido ou ambíguo: ${name}`);
+    }
+    canonical.push({ ...exercise, nome: data[0].name, exercise_id: data[0].id,
+      exercise_db_id: data[0].exercise_db_id ?? null, resolution: 'RESOLVED' });
+  }
+  return { ...workout, canonical: true, exercicios: canonical };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -84,7 +105,10 @@ Retorne apenas JSON no schema:
 }`;
 
     const rawText = await callClaude(prompt);
-    const workoutJson = JSON.parse(rawText.replace(/```json/g, "").replace(/```/g, "").trim());
+    const workoutJson = await canonicalizeWorkout(
+      supabaseClient,
+      JSON.parse(rawText.replace(/```json/g, "").replace(/```/g, "").trim()),
+    );
 
     const { data: savedWorkout, error: insertError } = await supabaseClient
       .schema("bldr_club")

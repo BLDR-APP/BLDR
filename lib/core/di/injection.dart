@@ -458,6 +458,10 @@ void setupInjection({Map<String, dynamic> config = const {}}) {
   getIt.registerFactory(() => SendHavokMessage(getIt<HavokRepository>()));
   getIt.registerFactory(() => DismissHavokInsight(getIt<HavokRepository>()));
   getIt.registerFactory(() => GetHavokDailyCount(getIt<HavokRepository>()));
+  getIt.registerFactory(() => GetHavokMemories(getIt<HavokRepository>()));
+  getIt.registerFactory(() => UpdateHavokMemory(getIt<HavokRepository>()));
+  getIt.registerFactory(() => ForgetHavokMemory(getIt<HavokRepository>()));
+  getIt.registerFactory(() => ClearHavokMemories(getIt<HavokRepository>()));
   getIt.registerFactory(() => GenerateHavokInsight());
   getIt.registerFactory(
       () => GetClubAnnouncements(getIt<ClubCommunityRepository>()));

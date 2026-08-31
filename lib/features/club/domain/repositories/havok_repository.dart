@@ -54,4 +54,10 @@ abstract class HavokRepository {
   /// Conta as mensagens `role='user'` do usuário atual no HAVOK hoje.
   /// Usado para aplicar o limite de 10 msg/dia no plano Free.
   Future<Result<int>> getDailyMessageCount();
+
+  /// Memórias persistentes do usuário autenticado, nunca métricas voláteis.
+  Future<Result<List<HavokMemory>>> getMemories();
+  Future<Result<void>> updateMemory(HavokMemory memory, dynamic value);
+  Future<Result<void>> forgetMemory(String memoryId);
+  Future<Result<void>> clearMemories();
 }

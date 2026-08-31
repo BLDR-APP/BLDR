@@ -7,6 +7,7 @@ import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/features/integrations/data/widget_data_service.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/havok/havok_hub.dart'; // Importa para usar as cores consistentes
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_template.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/exercise.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart';
 import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/active_workout_screen.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
@@ -19,28 +20,49 @@ int? _parseReps(dynamic raw) {
   return match == null ? null : int.tryParse(match.group(0)!);
 }
 
-/// Converte o JSON schemaless do HAVOK em TemplateExercise com freeName.
-/// Aceita tanto chaves em português ('exercicios', 'nome', 'series',
-/// 'repeticoes') quanto em inglês ('exercises', 'name', 'sets', 'reps'),
-/// pois o chatbot pode gerar qualquer um dos dois formatos.
+/// Converte o artifact do HAVOK em [TemplateExercise]. Artifacts V2 trazem
+/// uma identidade canônica resolvida pelo backend e nunca são persistidos como
+/// `freeName`; o fallback permanece apenas para artifacts V1 já existentes.
 List<TemplateExercise> _exercisesFromWorkoutData(Map<String, dynamic> data) {
   final raw = (data['exercicios'] ?? data['exercises'] ?? const []) as List;
   return raw.asMap().entries.map((entry) {
     final e = Map<String, dynamic>.from(entry.value as Map);
+    final name = ((e['nome'] ?? e['name']) as String?)?.trim();
+    final canonicalId = e['exercise_id'] as String?;
+    final exerciseDbId = e['exercise_db_id'] as String?;
     return TemplateExercise(
       orderIndex: entry.key + 1,
       sets: ((e['series'] ?? e['sets']) as num?)?.toInt() ?? 3,
       reps: _parseReps(e['repeticoes'] ?? e['reps']),
-      restSeconds: ((e['descanso_segundos'] ?? e['rest_seconds']) as num?)?.toInt(),
+      restSeconds:
+          ((e['descanso_segundos'] ?? e['rest_seconds']) as num?)?.toInt(),
       notes: (e['instrucao'] ?? e['notes'] ?? e['observacoes']) as String?,
-      freeName: ((e['nome'] ?? e['name']) as String?)?.trim().isNotEmpty == true
-          ? (e['nome'] ?? e['name']) as String
-          : 'Exercício',
+      exercise: canonicalId == null
+          ? null
+          : Exercise(
+              id: canonicalId,
+              exerciseDbId: exerciseDbId,
+              name: name?.isNotEmpty == true ? name! : 'Exercício',
+            ),
+      exerciseDbId: canonicalId == null ? exerciseDbId : null,
+      // V1 compatibility only. V2 artifacts are rejected by the server unless
+      // every exercise has a canonical identity.
+      freeName: canonicalId == null && exerciseDbId == null
+          ? (name?.isNotEmpty == true ? name : 'Exercício')
+          : null,
     );
   }).toList();
 }
 
-const List<String> _kWeekDayLabels = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+const List<String> _kWeekDayLabels = [
+  'Seg',
+  'Ter',
+  'Qua',
+  'Qui',
+  'Sex',
+  'Sáb',
+  'Dom'
+];
 
 class WorkoutDetailScreen extends StatefulWidget {
   final Map<String, dynamic> workoutData;
@@ -61,11 +83,11 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
 
   String get _workoutName =>
       (widget.workoutData['nome'] ?? widget.workoutData['name'] as String?)
-          ?.trim()
-          .isNotEmpty ==
-          true
-      ? (widget.workoutData['nome'] ?? widget.workoutData['name']) as String
-      : 'Treino HAVOK';
+                  ?.trim()
+                  .isNotEmpty ==
+              true
+          ? (widget.workoutData['nome'] ?? widget.workoutData['name']) as String
+          : 'Treino HAVOK';
 
   Future<WorkoutTemplate?> _createTemplate() async {
     final template = WorkoutTemplate(
@@ -79,7 +101,9 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
     if (failure != null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failure.message), backgroundColor: Colors.redAccent),
+          SnackBar(
+              content: Text(failure.message),
+              backgroundColor: Colors.redAccent),
         );
       }
       return null;
@@ -104,7 +128,9 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
         final failure = startResult.failureOrNull;
         if (mounted && failure != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(failure.message), backgroundColor: Colors.redAccent),
+            SnackBar(
+                content: Text(failure.message),
+                backgroundColor: Colors.redAccent),
           );
         }
         return;
@@ -163,19 +189,23 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
       if (template == null || !mounted) return;
 
       // _AddToPlanSheet retorna 0-indexed (0=Seg); UpdatePlanDay espera 1-indexed (1=Seg).
-      final result = await getIt<UpdatePlanDay>()(selectedDay + 1, template: template);
+      final result =
+          await getIt<UpdatePlanDay>()(selectedDay + 1, template: template);
       if (!mounted) return;
 
       final failure = result.failureOrNull;
       if (failure != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(failure.message), backgroundColor: Colors.redAccent),
+          SnackBar(
+              content: Text(failure.message),
+              backgroundColor: Colors.redAccent),
         );
       } else {
         unawaited(WidgetDataService.updateAll());
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${template.name} adicionado ao plano de ${_kWeekDayLabels[selectedDay]}.'),
+            content: Text(
+                '${template.name} adicionado ao plano de ${_kWeekDayLabels[selectedDay]}.'),
             backgroundColor: goldColor,
           ),
         );
@@ -284,7 +314,9 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                             height: 18,
                             child: CircularProgressIndicator(
                                 strokeWidth: 2, color: goldColor))
-                        : Text(_saved ? AppLocalizations.of(context).workout_detail_saved : AppLocalizations.of(context).workout_detail_save),
+                        : Text(_saved
+                            ? AppLocalizations.of(context).workout_detail_saved
+                            : AppLocalizations.of(context).workout_detail_save),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -304,8 +336,11 @@ class _WorkoutDetailScreenState extends State<WorkoutDetailScreen> {
                             height: 18,
                             child: CircularProgressIndicator(
                                 strokeWidth: 2, color: Colors.black))
-                        : Text(AppLocalizations.of(context).workout_detail_start_now,
-                            style: const TextStyle(fontWeight: FontWeight.w600)),
+                        : Text(
+                            AppLocalizations.of(context)
+                                .workout_detail_start_now,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w600)),
                   ),
                 ),
               ],
@@ -331,7 +366,9 @@ class _AddToPlanSheet extends StatelessWidget {
           children: [
             Text(AppLocalizations.of(context).workout_detail_add_plan,
                 style: const TextStyle(
-                    color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
             Text(AppLocalizations.of(context).workout_detail_which_day,
                 style: TextStyle(color: Colors.grey[400], fontSize: 13)),
@@ -352,7 +389,8 @@ class _AddToPlanSheet extends StatelessWidget {
                     ),
                     alignment: Alignment.center,
                     child: Text(_kWeekDayLabels[i],
-                        style: const TextStyle(color: Colors.white, fontSize: 13)),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 13)),
                   ),
                 );
               }),

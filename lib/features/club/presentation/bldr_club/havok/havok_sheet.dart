@@ -6,9 +6,12 @@ import 'package:bldr_fitness/features/subscription/domain/usecases/resolve_club_
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 import 'package:bldr_fitness/features/auth/domain/usecases/auth_usecases.dart';
+import 'package:bldr_fitness/features/club/domain/entities/havok_action.dart';
 import 'package:bldr_fitness/features/club/domain/entities/havok_thread.dart';
 import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/havok/havok_hub.dart';
+import 'package:bldr_fitness/features/club/presentation/bldr_club/havok/havok_memory_sheet.dart';
+import 'package:bldr_fitness/features/club/presentation/bldr_club/havok/havok_action_controller.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/havok/workout_detail_screen.dart';
 import 'package:bldr_fitness/features/nutrition/domain/usecases/nutrition_usecases.dart';
 import 'package:bldr_fitness/features/onboarding/domain/usecases/onboarding_usecases.dart';
@@ -240,11 +243,16 @@ class _HavokSheetState extends State<HavokSheet> {
       final goals = goalsResult?.valueOrNull;
       if (summary != null && goals != null && goals.protein > 0) {
         ctx['nutrition'] = {
-          'proteinG': summary.totals.protein,
-          'proteinGoalG': goals.protein,
-          'proteinPercentOfGoal':
-              ((summary.totals.protein / goals.protein) * 100).round(),
+          'date': now.toIso8601String().split('T').first,
           'caloriesConsumed': summary.totals.calories,
+          'protein': summary.totals.protein,
+          'carbs': summary.totals.carbs,
+          'fat': summary.totals.fat,
+          'calorieGoal': goals.calories,
+          'proteinGoal': goals.protein,
+          'carbsGoal': goals.carbs,
+          'fatGoal': goals.fat,
+          'generatedAt': DateTime.now().toUtc().toIso8601String(),
         };
       }
     } catch (_) {}
@@ -389,7 +397,17 @@ class _HavokSheetState extends State<HavokSheet> {
       if (reply == null) throw Exception(result.failureOrNull?.message);
 
       if (mounted) {
-        setState(() => _messages = [..._messages, reply]);
+        final followUps = reply.responseData?['followUpSuggestions'];
+        setState(() {
+          _messages = [..._messages, reply];
+          if (followUps is List) {
+            _suggestions = followUps
+                .whereType<String>()
+                .where((item) => item.trim().isNotEmpty)
+                .take(4)
+                .toList();
+          }
+        });
         _scrollToEnd();
       }
     } catch (e) {
@@ -513,6 +531,14 @@ class _HavokSheetState extends State<HavokSheet> {
             },
           ),
           IconButton(
+            tooltip: 'Memória HAVOK',
+            icon: const Icon(Icons.psychology_outlined,
+                color: BldrColors.textSecondary, size: 20),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const HavokMemorySheet()),
+            ),
+          ),
+          IconButton(
             icon: const Icon(Icons.open_in_full,
                 color: BldrColors.textSecondary, size: 18),
             onPressed: _expand,
@@ -546,12 +572,27 @@ class _HavokSheetState extends State<HavokSheet> {
           m.isUser
               ? _UserBubble(text: m.content)
               : _AssistantBubble(text: m.content, faded: false),
+          if (!m.isUser && m.responseData?['insights'] is List)
+            _InsightCards(
+                insights:
+                    List<dynamic>.from(m.responseData!['insights'] as List)),
           // B6 — artifact_data sobrevive a reload da thread; o card abre o
           // treino gerado na tela com os botões reais (B5 resolvido).
           if (!m.isUser &&
               m.artifactType == 'workout' &&
               m.artifactData != null)
-            _WorkoutArtifactCard(workoutData: m.artifactData!),
+            _WorkoutArtifactCard(
+              workoutData: m.artifactData!,
+              responseData: m.responseData,
+            ),
+          if (!m.isUser &&
+              (m.artifactType == 'recipe' ||
+                  m.artifactType == 'nutrition_plan') &&
+              m.artifactData != null)
+            _DraftArtifactCard(
+              type: m.artifactType!,
+              data: m.artifactData!,
+            ),
         ],
         if (showOriginDivider)
           _SessionDivider(
@@ -780,10 +821,103 @@ class _SessionDivider extends StatelessWidget {
   }
 }
 
+class _InsightCards extends StatelessWidget {
+  final List<dynamic> insights;
+
+  const _InsightCards({required this.insights});
+
+  @override
+  Widget build(BuildContext context) {
+    if (insights.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(left: 34, bottom: 8),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: insights.take(4).whereType<Map>().map((raw) {
+          final item = Map<String, dynamic>.from(raw);
+          return SizedBox(
+            width: 150,
+            child: BldrGlassCard(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(item['title']?.toString() ?? 'Insight',
+                      style: BldrText.description),
+                  const SizedBox(height: 4),
+                  Text(item['value']?.toString() ?? '--',
+                      style: BldrText.cardTitle
+                          .copyWith(color: BldrColors.goldBright)),
+                  if (item['period'] != null)
+                    Text(item['period'].toString(),
+                        style: const TextStyle(
+                            fontSize: 10, color: BldrColors.textMuted)),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+/// Recipe and nutrition-plan artifacts are drafts. They are intentionally
+/// visual-only here: a user action must be confirmed before any existing
+/// nutrition use case is called.
+class _DraftArtifactCard extends StatelessWidget {
+  final String type;
+  final Map<String, dynamic> data;
+
+  const _DraftArtifactCard({required this.type, required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final recipe = type == 'recipe';
+    final title = (data['nome'] ??
+            data['name'] ??
+            (recipe ? 'Receita sugerida' : 'Plano alimentar sugerido'))
+        .toString();
+    final ingredients = data['ingredientes'] ?? data['ingredients'];
+    final meals = data['meals'];
+    final subtitle = recipe
+        ? '${ingredients is List ? ingredients.length : 0} ingredientes'
+        : '${meals is List ? meals.length : 0} refeições planejadas';
+    return Padding(
+      padding: const EdgeInsets.only(left: 34, bottom: 8),
+      child: BldrGlassCard(
+        borderColor: BldrColors.goldBorder,
+        child: Row(
+          children: [
+            Icon(recipe ? Icons.restaurant_menu : Icons.menu_book_outlined,
+                color: BldrColors.goldBright),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: BldrText.cardTitle),
+                  Text('$subtitle · revise antes de salvar',
+                      style: BldrText.description),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _WorkoutArtifactCard extends StatelessWidget {
   final Map<String, dynamic> workoutData;
+  final Map<String, dynamic>? responseData;
 
-  const _WorkoutArtifactCard({required this.workoutData});
+  const _WorkoutArtifactCard({
+    required this.workoutData,
+    this.responseData,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -798,6 +932,13 @@ class _WorkoutArtifactCard extends StatelessWidget {
         ((workoutData['exercicios'] ?? workoutData['exercises']) as List?)
                 ?.length ??
             0;
+    final canonical = workoutData['canonical'] == true &&
+        ((workoutData['exercicios'] ?? workoutData['exercises']) as List?)
+                ?.every(
+                    (item) => item is Map && item['exercise_id'] is String) ==
+            true;
+    final actions = const HavokActionController()
+        .supportedActions(responseData, hasCanonicalWorkout: canonical);
 
     return Padding(
       padding: const EdgeInsets.only(left: 34, bottom: 8),
@@ -808,28 +949,77 @@ class _WorkoutArtifactCard extends StatelessWidget {
           MaterialPageRoute(
               builder: (_) => WorkoutDetailScreen(workoutData: workoutData)),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(TablerIcons.barbell,
-                color: BldrColors.goldBright, size: 18),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(name, style: BldrText.cardTitle),
-                  Text(
-                      AppLocalizations.of(context)
-                          .havok_workout_exercises_tap(exerciseCount),
-                      style: BldrText.meta),
-                ],
-              ),
+            Row(
+              children: [
+                const Icon(TablerIcons.barbell,
+                    color: BldrColors.goldBright, size: 18),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, style: BldrText.cardTitle),
+                      Text(
+                          AppLocalizations.of(context)
+                              .havok_workout_exercises_tap(exerciseCount),
+                          style: BldrText.meta),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right,
+                    color: BldrColors.textMuted, size: 18),
+              ],
             ),
-            const Icon(Icons.chevron_right,
-                color: BldrColors.textMuted, size: 18),
+            if (actions.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: actions
+                    .map((action) => BldrChip(
+                          label: action.label,
+                          onTap: () => _confirmAction(context, action),
+                        ))
+                    .toList(),
+              ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _confirmAction(
+      BuildContext context, HavokActionProposal action) async {
+    final accepted = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: BldrColors.surface,
+        title: const Text('Confirmar ação', style: BldrText.sectionTitle),
+        content: Text(
+            '${action.label} será preparado para você confirmar no treino.',
+            style: BldrText.body),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancelar')),
+          TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Continuar')),
+        ],
+      ),
+    );
+    if (accepted != true || !context.mounted) return;
+    final actionWorkout =
+        const HavokActionController().workoutForAction(workoutData, action);
+    if (actionWorkout == null) return;
+    Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => WorkoutDetailScreen(workoutData: actionWorkout),
+        ));
   }
 }

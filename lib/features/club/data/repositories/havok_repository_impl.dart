@@ -33,7 +33,8 @@ class HavokRepositoryImpl implements HavokRepository {
     } on TimeoutException catch (e) {
       return Result.failure(NetworkFailure('Tempo de conexão esgotado.', e));
     } catch (e) {
-      return Result.failure(UnexpectedFailure('Ocorreu um erro inesperado.', e));
+      return Result.failure(
+          UnexpectedFailure('Ocorreu um erro inesperado.', e));
     }
   }
 
@@ -54,24 +55,26 @@ class HavokRepositoryImpl implements HavokRepository {
   }
 
   @override
-  Future<Result<Map<String, dynamic>>> generateFreeWorkout(
-          String userPrompt) =>
-      _guard(() => _invoke('gerar-treino-livre', body: {'userPrompt': userPrompt}));
+  Future<Result<Map<String, dynamic>>> generateFreeWorkout(String userPrompt) =>
+      _guard(() =>
+          _invoke('gerar-treino-livre', body: {'userPrompt': userPrompt}));
 
   @override
   Future<Result<SavedWorkout>> generateHavokWorkout() => _guard(() async {
         final locale = GetIt.instance<LocaleProvider>().locale.languageCode;
-        final map = await _invoke('gerar-treino-havok', body: {'locale': locale});
+        final map =
+            await _invoke('gerar-treino-havok', body: {'locale': locale});
         return SavedWorkout.fromMap(map);
       });
 
   @override
   Future<Result<Map<String, dynamic>>> generateRecipe(String userQuery) =>
-      _guard(() => _invoke('gerar-receita-havok', body: {'userQuery': userQuery}));
+      _guard(
+          () => _invoke('gerar-receita-havok', body: {'userQuery': userQuery}));
 
   @override
-  Future<Result<void>> saveRecipe(Map<String, dynamic> recipeData) =>
-      _guard(() => _invoke('salvar-receita-havok', body: {'recipeData': recipeData}));
+  Future<Result<void>> saveRecipe(Map<String, dynamic> recipeData) => _guard(
+      () => _invoke('salvar-receita-havok', body: {'recipeData': recipeData}));
 
   @override
   Future<Result<List<Map<String, dynamic>>>> myRecipes() => _guard(() async {
@@ -143,7 +146,8 @@ class HavokRepositoryImpl implements HavokRepository {
             .eq('thread_id', threadId)
             .order('created_at', ascending: true);
         return (rows as List)
-            .map((r) => HavokMessage.fromMap(Map<String, dynamic>.from(r as Map)))
+            .map((r) =>
+                HavokMessage.fromMap(Map<String, dynamic>.from(r as Map)))
             .toList();
       });
 
@@ -161,11 +165,9 @@ class HavokRepositoryImpl implements HavokRepository {
           'originScreen': originScreen,
           'context': context,
         });
-        await _client
-            .schema('bldr_club')
-            .from('havok_threads')
-            .update({'last_message_at': DateTime.now().toUtc().toIso8601String()})
-            .eq('id', threadId);
+        await _client.schema('bldr_club').from('havok_threads').update({
+          'last_message_at': DateTime.now().toUtc().toIso8601String()
+        }).eq('id', threadId);
         return HavokMessage.fromMap(map);
       });
 
@@ -186,5 +188,60 @@ class HavokRepositoryImpl implements HavokRepository {
             .select('message_count')
             .single();
         return (rows['message_count'] as num?)?.toInt() ?? 0;
+      });
+
+  @override
+  Future<Result<List<HavokMemory>>> getMemories() => _guard(() async {
+        final rows = await _client
+            .schema('bldr_club')
+            .from('havok_memories')
+            .select()
+            .eq('user_id', _requireUser())
+            .eq('active', true)
+            .order('updated_at', ascending: false);
+        return (rows as List)
+            .map((row) =>
+                HavokMemory.fromMap(Map<String, dynamic>.from(row as Map)))
+            .toList();
+      });
+
+  @override
+  Future<Result<void>> updateMemory(HavokMemory memory, dynamic value) =>
+      _guard(() async {
+        await _client
+            .schema('bldr_club')
+            .from('havok_memories')
+            .update({
+              'value': value,
+              'updated_at': DateTime.now().toUtc().toIso8601String(),
+            })
+            .eq('id', memory.id)
+            .eq('user_id', _requireUser());
+      });
+
+  @override
+  Future<Result<void>> forgetMemory(String memoryId) => _guard(() async {
+        await _client
+            .schema('bldr_club')
+            .from('havok_memories')
+            .update({
+              'active': false,
+              'updated_at': DateTime.now().toUtc().toIso8601String(),
+            })
+            .eq('id', memoryId)
+            .eq('user_id', _requireUser());
+      });
+
+  @override
+  Future<Result<void>> clearMemories() => _guard(() async {
+        await _client
+            .schema('bldr_club')
+            .from('havok_memories')
+            .update({
+              'active': false,
+              'updated_at': DateTime.now().toUtc().toIso8601String(),
+            })
+            .eq('user_id', _requireUser())
+            .eq('active', true);
       });
 }
