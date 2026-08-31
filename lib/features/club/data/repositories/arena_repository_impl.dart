@@ -125,6 +125,38 @@ class ArenaRepositoryImpl implements ArenaRepository {
       });
 
   @override
+  Future<Result<Map<String, dynamic>>> createSquadWithQuota({
+    required String name,
+    required String description,
+    required String gameMode,
+    required int durationDays,
+    required String validationType,
+    required String shareCode,
+  }) =>
+      _guard(() async {
+        final response = await _club.rpc('create_squad_with_quota', params: {
+          'p_name': name,
+          'p_description': description,
+          'p_game_mode': gameMode,
+          'p_duration_days': durationDays,
+          'p_validation_type': validationType,
+          'p_share_code': shareCode,
+        });
+        return Map<String, dynamic>.from(response as Map);
+      });
+
+  @override
+  Future<Result<Map<String, dynamic>>> joinSquadWithQuota(
+          String arenaId, String shareCode) =>
+      _guard(() async {
+        final response = await _club.rpc('join_squad_with_quota', params: {
+          'p_arena_id': arenaId,
+          'p_share_code': shareCode,
+        });
+        return Map<String, dynamic>.from(response as Map);
+      });
+
+  @override
   Future<Result<void>> updateArena(
           String arenaId, Map<String, dynamic> updates) =>
       _guard(() => _club.from('arenas').update(updates).eq('id', arenaId));

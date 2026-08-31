@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/core/errors/failure.dart';
@@ -55,6 +56,10 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
   Failure? _squadsError;
   int _unreadNotifications = 0;
 
+  // ── New posts realtime ──────────────────────────────────────────────────────
+  RealtimeChannel? _feedChannel;
+  bool _hasNewPosts = false;
+
   @override
   void initState() {
     super.initState();
@@ -63,6 +68,37 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
     _loadFollowingFeed();
     _loadSquads();
     _loadUnreadNotifications();
+    _subscribeFeedRealtime();
+  }
+
+  void _subscribeFeedRealtime() {
+    final currentUid = Supabase.instance.client.auth.currentUser?.id;
+    _feedChannel?.unsubscribe();
+    _feedChannel =
+        Supabase.instance.client.channel('community_feed_new_posts')
+          ..onPostgresChanges(
+            event: PostgresChangeEvent.insert,
+            schema: 'public',
+            table: 'community_feed',
+            callback: (payload) {
+              if (!mounted) return;
+              // Only indicate new posts from other users
+              final postUserId = payload.newRecord['user_id'] as String?;
+              if (postUserId != null &&
+                  postUserId != currentUid &&
+                  _activeTab == 0) {
+                setState(() => _hasNewPosts = true);
+              }
+            },
+          )
+          ..subscribe();
+  }
+
+  @override
+  void dispose() {
+    _feedChannel?.unsubscribe();
+    _feedChannel = null;
+    super.dispose();
   }
 
   // ── Feed ───────────────────────────────────────────────────────────────────
@@ -75,6 +111,7 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
         _hasMore = true;
         _feedError = null;
         _loading = true;
+        _hasNewPosts = false;
       });
     }
     final result = await _repo.fetchFeed(limit: 20, before: _cursor);
@@ -410,6 +447,36 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
             SizedBox(height: MediaQuery.of(context).padding.top),
             _buildHeader(),
             _buildTabRow(),
+            // New posts indicator — shown when realtime delivers a new post
+            // from another user while the Explorar tab is visible.
+            if (_hasNewPosts && _activeTab == 0)
+              GestureDetector(
+                onTap: () => _loadFeed(refresh: true),
+                child: Container(
+                  width: double.infinity,
+                  color: Colors.transparent,
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: BldrColors.goldTintChip,
+                        border: Border.all(color: BldrColors.goldBorderChip),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        'Novas publicações',
+                        style: TextStyle(
+                          color: BldrColors.goldBright,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             // Body por tab — IndexedStack mantém estado de scroll de cada tab
             Expanded(
               child: IndexedStack(

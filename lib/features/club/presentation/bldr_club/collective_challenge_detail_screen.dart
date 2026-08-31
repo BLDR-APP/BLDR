@@ -1,6 +1,7 @@
 // lib/presentation/bldr_club/collective_challenge_detail_screen.dart
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:bldr_fitness/features/club/domain/entities/challenges.dart';
@@ -56,15 +57,60 @@ class _CollectiveChallengeDetailScreenState
   List<Map<String, dynamic>> _comments = [];
   bool _sendingComment = false;
 
+  // Realtime
+  RealtimeChannel? _challengeChannel;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _loadAll();
+    _subscribeChallengeRealtime();
+  }
+
+  void _subscribeChallengeRealtime() {
+    _challengeChannel?.unsubscribe();
+    _challengeChannel = Supabase.instance.client
+        .channel('challenge_detail_${widget.challengeId}')
+      ..onPostgresChanges(
+        event: PostgresChangeEvent.insert,
+        schema: 'bldr_club',
+        table: 'collective_challenge_participants',
+        filter: PostgresChangeFilter(
+          type: PostgresChangeFilterType.eq,
+          column: 'challenge_id',
+          value: widget.challengeId,
+        ),
+        callback: (_) {
+          if (!mounted) return;
+          _fetchParticipation();
+          _fetchTopContributors();
+          _fetchMilestones();
+        },
+      )
+      ..onPostgresChanges(
+        event: PostgresChangeEvent.update,
+        schema: 'bldr_club',
+        table: 'collective_challenge_participants',
+        filter: PostgresChangeFilter(
+          type: PostgresChangeFilterType.eq,
+          column: 'challenge_id',
+          value: widget.challengeId,
+        ),
+        callback: (_) {
+          if (!mounted) return;
+          _fetchParticipation();
+          _fetchTopContributors();
+          _fetchMilestones();
+        },
+      )
+      ..subscribe();
   }
 
   @override
   void dispose() {
+    _challengeChannel?.unsubscribe();
+    _challengeChannel = null;
     _tabController.dispose();
     _commentController.dispose();
     super.dispose();

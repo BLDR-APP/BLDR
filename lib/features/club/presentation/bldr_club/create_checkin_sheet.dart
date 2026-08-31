@@ -55,6 +55,7 @@ class _CreateCheckinSheetState extends State<CreateCheckinSheet> {
   }
 
   Future<void> _detectWearable() async {
+    // Garmin: não implementado — aguardando aprovação do Garmin Connect Developer Program
     final result =
         await getIt<CommunityFeedRepository>().detectRecentWearableActivity();
     if (!mounted) return;

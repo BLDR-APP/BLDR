@@ -196,7 +196,7 @@ class _ArenaDetailsScreenState extends State<ArenaDetailsScreen> {
           const SizedBox(height: 16),
           _buildRuleRow("Vidas iniciais",               "2 VIDAS",               Icons.favorite),
           _buildRuleRow("Check-in diário",              "Mantém você vivo",      Icons.check_circle),
-          _buildRuleRow("Foto rejeitada pelo Tribunal", "−1 VIDA",               Icons.gavel),
+          _buildRuleRow("Foto não aprovada",             "−1 VIDA",               Icons.gavel),
           _buildRuleRow("0 vidas",                      "ELIMINADO",             Icons.dangerous),
           _buildRuleRow("Desempate",                    "Check-in mais recente", Icons.access_time),
         ];
@@ -207,7 +207,7 @@ class _ArenaDetailsScreenState extends State<ArenaDetailsScreen> {
           _buildRuleRow("Cada check-in",  "Registra seus km",        Icons.directions_run),
           _buildRuleRow("Validação",      "Sistema de honra",        Icons.handshake),
           _buildRuleRow("Ranking",        "Maior km acumulado",      Icons.emoji_events),
-          _buildRuleRow("Sem tribunal",   "Não há votação de fotos", Icons.no_photography),
+          _buildRuleRow("Sem votação",    "Não há votação de fotos", Icons.no_photography),
         ];
       case 'hustle':
         return [
@@ -399,8 +399,8 @@ class _ArenaDetailsScreenState extends State<ArenaDetailsScreen> {
                     side: const BorderSide(color: Colors.white12)
                 ),
                 elevation: 4,
-                icon: Icon(validation == 'manual' ? Icons.forum : Icons.gavel, color: Colors.white),
-                label: Text(validation == 'manual' ? "CHAT" : "TRIBUNAL", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                icon: const Icon(Icons.forum, color: Colors.white),
+                label: const Text("CHAT", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => TribunalScreen(arenaId: widget.arenaId)),
@@ -465,7 +465,11 @@ class _ArenaDetailsScreenState extends State<ArenaDetailsScreen> {
             ),
         ],
       ),
-      body: CustomScrollView(
+      body: RefreshIndicator(
+        color: const Color(0xFFD4AF37),
+        backgroundColor: const Color(0xFF1A1A1A),
+        onRefresh: _loadData,
+        child: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
             child: Padding(
@@ -594,6 +598,7 @@ class _ArenaDetailsScreenState extends State<ArenaDetailsScreen> {
 
           const SliverToBoxAdapter(child: SizedBox(height: 120)),
         ],
+      ),
       ),
     );
   }
@@ -761,7 +766,7 @@ class _MissionBoard extends StatelessWidget {
             const Padding(
               padding: EdgeInsets.only(top: 16.0),
               child: Text(
-                  "Sua prova foi enviada para o Tribunal.",
+                  "Sua prova foi enviada para análise.",
                   style: TextStyle(color: Colors.white38, fontSize: 12, fontStyle: FontStyle.italic)
               ),
             ),

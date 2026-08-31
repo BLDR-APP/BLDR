@@ -22,6 +22,7 @@ import 'package:bldr_fitness/features/integrations/data/health_kit_service.dart'
 import 'package:bldr_fitness/features/integrations/data/watch_service.dart';
 import 'package:bldr_fitness/features/integrations/data/widget_data_service.dart';
 import 'package:bldr_fitness/services/exercise_db_service.dart';
+import 'package:bldr_fitness/services/exercise_db_rapid_service.dart';
 import 'package:bldr_fitness/services/notification_service.dart';
 import 'package:bldr_fitness/services/popup_service.dart';
 import 'package:bldr_fitness/services/user_service.dart';
@@ -323,14 +324,34 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
           .toList();
 
       if (dbIds.isNotEmpty) {
-        final details = await _exerciseDbService.prefetchAllExercises(dbIds);
-        if (mounted) {
-          setState(() {
-            for (final d in details) {
-              _exDbCache[d.exerciseId] = d;
-            }
-            _isPrefetching = false;
-          });
+        // Use the warm in-memory catalog from ExerciseDbRapidService so that
+        // when WorkoutsScreen has prefetched the catalog, these are instant
+        // hash-table lookups rather than N individual network calls.
+        try {
+          final results = await Future.wait(
+            dbIds.map((id) => ExerciseDbRapidService.instance.getById(id)),
+          );
+          if (mounted) {
+            setState(() {
+              for (final ex in results) {
+                if (ex == null) continue;
+                _exDbCache[ex.exerciseId] = ExerciseDetail(
+                  exerciseId: ex.exerciseId,
+                  name: ex.name,
+                  gifUrl: ex.displayUrl,
+                  instructions: ex.instructions,
+                  targetMuscles: ex.targetMuscles,
+                  bodyParts: ex.bodyParts,
+                  equipments: ex.equipments,
+                  secondaryMuscles: ex.secondaryMuscles,
+                );
+              }
+              _isPrefetching = false;
+            });
+          }
+        } catch (_) {
+          // Rate-limit or network failure — gracefully degrade; workout continues.
+          if (mounted) setState(() => _isPrefetching = false);
         }
       } else {
         if (mounted) setState(() => _isPrefetching = false);

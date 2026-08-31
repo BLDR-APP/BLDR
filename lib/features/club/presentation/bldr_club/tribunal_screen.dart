@@ -188,7 +188,7 @@ class _TribunalScreenState extends State<TribunalScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
-        title: const Text("TRIBUNAL & CHAT", style: TextStyle(color: gold, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+        title: const Text("CHAT", style: TextStyle(color: gold, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
         leading: const BackButton(color: Colors.white),
       ),
       body: Column(

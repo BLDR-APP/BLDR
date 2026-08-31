@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'dart:io';
 import 'dart:ui';
 
@@ -31,6 +32,7 @@ import 'package:bldr_fitness/features/workouts/domain/entities/muscle_normalizer
 import 'package:bldr_fitness/features/workouts/domain/entities/today_workout_resolver.dart';
 import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/widgets/current_week_card_widget.dart';
 import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/active_workout_screen.dart';
+import 'package:bldr_fitness/services/exercise_db_rapid_service.dart';
 import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/create_workout_screen.dart';
 import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/weekly_plan_screen.dart';
 import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/workout_photo_review_screen.dart';
@@ -74,6 +76,11 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
   void initState() {
     super.initState();
     _loadData();
+    // Prefetch ExerciseDB catalog in the background so ActiveWorkoutScreen
+    // gets instant cache hits instead of N individual network calls.
+    unawaited(
+      ExerciseDbRapidService.instance.listAllExercises().catchError((_) {}),
+    );
   }
 
   @override

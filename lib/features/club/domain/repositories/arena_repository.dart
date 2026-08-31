@@ -26,6 +26,22 @@ abstract class ArenaRepository {
       Map<String, dynamic> payload,
       {required String gameMode});
 
+  /// Cria a arena via RPC atômica com controle de cota (Free: 2/mês, Club: ilimitado).
+  /// Retorna o jsonb da RPC: { allowed, arena?, used, limit, is_club, reason? }
+  Future<Result<Map<String, dynamic>>> createSquadWithQuota({
+    required String name,
+    required String description,
+    required String gameMode,
+    required int durationDays,
+    required String validationType,
+    required String shareCode,
+  });
+
+  /// Entra na arena via RPC atômica com controle de cota (Free: 5/mês, Club: ilimitado).
+  /// Retorna o jsonb da RPC: { allowed, arena_title?, used, limit, is_club, reason? }
+  Future<Result<Map<String, dynamic>>> joinSquadWithQuota(
+      String arenaId, String shareCode);
+
   Future<Result<void>> updateArena(
       String arenaId, Map<String, dynamic> updates);
 

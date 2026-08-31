@@ -30,45 +30,46 @@ class ClubDashboardConnector extends StatelessWidget {
                       color: Color(0xFFD4AF37))));
         }
 
-        String? arenaId;
-        if (squadSnap.hasData && squadSnap.data!.isNotEmpty) {
-          final part = squadSnap.data!.first;
-          final status = (part['status'] ?? '').toString().toLowerCase();
-          if (status == 'active') arenaId = part['arena_id'];
-        }
+        // Collect all active participation arena IDs (may be >1)
+        final activeParticipations = (squadSnap.data ?? [])
+            .where((p) => (p['status'] ?? '').toString().toLowerCase() == 'active')
+            .toList();
 
-        return FutureBuilder<Map<String, dynamic>?>(
-          future: arenaId != null
-              ? getIt<ArenaRepository>()
-                  .arenaById(arenaId)
-                  .then((r) => r.valueOrNull)
-              : Future.value(null),
+        // Fetch full arena data for each active participation
+        return FutureBuilder<List<Map<String, dynamic>>>(
+          future: activeParticipations.isEmpty
+              ? Future.value([])
+              : Future.wait(
+                  activeParticipations.map((p) async {
+                    final arenaId = p['arena_id'] as String?;
+                    if (arenaId == null) return null;
+                    final result = await getIt<ArenaRepository>().arenaById(arenaId);
+                    final arena = result.valueOrNull;
+                    if (arena == null) return null;
+                    return <String, dynamic>{
+                      ...arena,
+                      'name': arena['title'],
+                      'is_danger': false,
+                    };
+                  }),
+                ).then((list) => list.whereType<Map<String, dynamic>>().toList()),
           builder: (context, arenaSnap) {
-            Map<String, dynamic>? finalSquad;
-            if (arenaSnap.hasData && arenaSnap.data != null) {
-              finalSquad = {
-                ...arenaSnap.data!,
-                'name': arenaSnap.data!['title'],
-                'is_danger': false,
-              };
-            }
+            final squads = arenaSnap.data ?? [];
 
             return SmartClubSlider(
-              activeSquad: finalSquad,
-              onTapSquad: () {
-                if (arenaId != null) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) =>
-                            ArenaDetailsScreen(arenaId: arenaId!)),
-                  );
-                }
-              },
-              onTapCreate: () => Navigator.push(
+              activeSquads: squads,
+              onTapSquad: (arenaId) {
+                Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (_) => const CompetitionHubScreen())),
+                    builder: (_) => ArenaDetailsScreen(arenaId: arenaId),
+                  ),
+                );
+              },
+              onTapCreate: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const CompetitionHubScreen()),
+              ),
             );
           },
         );
@@ -81,13 +82,14 @@ class ClubDashboardConnector extends StatelessWidget {
 // 2. O ROSTO (VISUAL)
 // =========================================================
 class SmartClubSlider extends StatefulWidget {
-  final Map<String, dynamic>? activeSquad;
-  final VoidCallback onTapSquad;
+  /// All active squads the user participates in (may be empty).
+  final List<Map<String, dynamic>> activeSquads;
+  final void Function(String arenaId) onTapSquad;
   final VoidCallback onTapCreate;
 
   const SmartClubSlider({
     Key? key,
-    this.activeSquad,
+    required this.activeSquads,
     required this.onTapSquad,
     required this.onTapCreate,
   }) : super(key: key);
@@ -116,19 +118,13 @@ class _SmartClubSliderState extends State<SmartClubSlider> {
   void _buildPages() {
     final List<Widget> pages = [];
 
-    // 1. Squad em Risco
-    if (widget.activeSquad != null &&
-        widget.activeSquad!['is_danger'] == true) {
-      pages.add(_buildSquadCard(isDanger: true));
+    // One page per active squad
+    for (final squad in widget.activeSquads) {
+      final isDanger = squad['is_danger'] == true;
+      pages.add(_buildSquadCard(squad: squad, isDanger: isDanger));
     }
 
-    // 2. Squad Normal
-    if (widget.activeSquad != null &&
-        widget.activeSquad!['is_danger'] != true) {
-      pages.add(_buildSquadCard(isDanger: false));
-    }
-
-    // 4. Vazio
+    // Empty state when no squads
     if (pages.isEmpty) {
       pages.add(_buildEmptyState());
     }
@@ -184,16 +180,21 @@ class _SmartClubSliderState extends State<SmartClubSlider> {
   // um estado informativo, não punitivo (mesma regra já aplicada a "Não
   // feito" em Meu Plano). A distinção do estado de risco vem do ícone e do
   // badge, nunca só da cor — regra de acessibilidade do design system.
-  Widget _buildSquadCard({required bool isDanger}) {
+  Widget _buildSquadCard({
+    required Map<String, dynamic> squad,
+    required bool isDanger,
+  }) {
+    final arenaId = (squad['id'] ?? '').toString();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: BldrSpacing.pageX),
       child: BldrGlassCard(
-        onTap: widget.onTapSquad,
+        onTap: () => widget.onTapSquad(arenaId),
         borderColor: isDanger ? BldrColors.goldBorder : null,
         child: Row(
           children: [
             BldrIconBox(
-                icon: isDanger ? Icons.warning_amber_rounded : Icons.shield_outlined),
+              icon: isDanger ? Icons.warning_amber_rounded : Icons.shield_outlined,
+            ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
@@ -206,7 +207,7 @@ class _SmartClubSliderState extends State<SmartClubSlider> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    widget.activeSquad!['name'] ?? 'Squad',
+                    (squad['name'] ?? 'Squad').toString(),
                     style: BldrText.cardTitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
