@@ -21,26 +21,27 @@ Never _fail(String message) {
 }
 
 void main(List<String> arguments) {
-  if (arguments.length != 1) {
-    _fail('Usage: xcode_debug_defines.dart <dart-defines-json-path>');
+  if (arguments.length != 2) {
+    _fail('Usage: xcode_dart_defines.dart <config-name> <json-path>');
   }
 
-  final file = File(arguments.single);
+  final configName = arguments[0];
+  final file = File(arguments[1]);
   if (!file.existsSync()) {
     _fail(
-      'Debug configuration is missing. Create dart_defines.dev.json from '
-      'dart_defines.example.json and keep it local.',
+      '$configName configuration is missing. Create ${file.path.split('/').last} '
+      'from its example file and keep it local.',
     );
   }
 
   final decoded = jsonDecode(file.readAsStringSync());
   if (decoded is! Map<String, dynamic>) {
-    _fail('Debug configuration must be a JSON object.');
+    _fail('$configName configuration must be a JSON object.');
   }
 
   final forbidden = decoded.keys.where(_forbiddenKeys.contains).toList();
   if (forbidden.isNotEmpty) {
-    _fail('Debug configuration contains forbidden server-side key(s): '
+    _fail('$configName configuration contains forbidden server-side key(s): '
         '${forbidden.join(', ')}.');
   }
 
@@ -49,14 +50,14 @@ void main(List<String> arguments) {
     return value is! String || value.trim().isEmpty;
   }).toList();
   if (missing.isNotEmpty) {
-    _fail('Debug configuration is missing required non-empty key(s): '
+    _fail('$configName configuration is missing required non-empty key(s): '
         '${missing.join(', ')}.');
   }
 
   final defines = decoded.entries.map((entry) {
     final value = entry.value;
     if (value is! String && value is! bool && value is! num) {
-      _fail('Debug define ${entry.key} must be a string, boolean, or number.');
+      _fail('$configName define ${entry.key} must be a string, boolean, or number.');
     }
     return base64.encode(utf8.encode('${entry.key}=$value'));
   });
