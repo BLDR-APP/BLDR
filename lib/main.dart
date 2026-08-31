@@ -51,19 +51,17 @@ const Map<String, dynamic> appConfig = {
 };
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
 
-void main() async {
-  // 1. Binding obrigatoriamente primeiro; preserve mantém a native splash visível.
+void main() {
+  // O Flutter precisa renderizar uma frame antes de qualquer inicialização
+  // externa. Assim, uma falha de configuração nunca mantém a splash nativa
+  // presa em Debug ou Release.
   final widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
-  // 2. Background handler após o binding, antes do Firebase.initializeApp.
+  // O handler pode ser registrado antes do Firebase ser inicializado.
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-
-  // runApp imediatamente — elimina tela branca entre splash nativa e Flutter.
+  // Renderiza imediatamente; AppLoader conclui o bootstrap em segundo plano.
   runApp(const AppLoader());
 }
 
@@ -77,17 +75,31 @@ class AppLoader extends StatefulWidget {
 
 class _AppLoaderState extends State<AppLoader> {
   bool _ready = false;
+  bool _initializationFailed = false;
   AchievementProvider? _achievementProvider;
   LocaleProvider? _localeProvider;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FlutterNativeSplash.remove();
+    });
     _initialize();
   }
 
   Future<void> _initialize() async {
+    if (mounted) {
+      setState(() {
+        _ready = false;
+        _initializationFailed = false;
+      });
+    }
+
     try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
       await SupabaseService.initialize();
       await FlutterMuscleAnatomy.initialize();
       setupInjection(config: appConfig);
@@ -121,12 +133,16 @@ class _AppLoaderState extends State<AppLoader> {
           _achievementProvider = achievementProvider;
           _localeProvider = localeProvider;
           _ready = true;
+          _initializationFailed = false;
         });
       }
     } catch (e) {
       if (kDebugMode) print('Falha crítica na inicialização: $e');
       if (mounted) {
-        setState(() => _ready = true); // mostra tela de erro no MyApp
+        setState(() {
+          _ready = true;
+          _initializationFailed = true;
+        });
       }
     }
   }
@@ -134,8 +150,10 @@ class _AppLoaderState extends State<AppLoader> {
   @override
   Widget build(BuildContext context) {
     if (!_ready) {
-      // Mesma cor da splash nativa — zero flash.
-      return const ColoredBox(color: Color(0xFF050505));
+      return const _BootstrapLoadingScreen();
+    }
+    if (_initializationFailed) {
+      return _BootstrapFailureScreen(onRetry: _initialize);
     }
     return MultiProvider(
       providers: [
@@ -147,6 +165,73 @@ class _AppLoaderState extends State<AppLoader> {
             value: _localeProvider ?? getIt<LocaleProvider>()),
       ],
       child: const MyApp(),
+    );
+  }
+}
+
+class _BootstrapLoadingScreen extends StatelessWidget {
+  const _BootstrapLoadingScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: Color(0xFF050505),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFFE8C12E)),
+        ),
+      ),
+    );
+  }
+}
+
+class _BootstrapFailureScreen extends StatelessWidget {
+  const _BootstrapFailureScreen({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: const Color(0xFF050505),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Não foi possível iniciar o BLDR.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Verifique sua conexão e tente novamente.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Color(0xFFB8B8B8)),
+                ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: onRetry,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFFE8C12E),
+                    foregroundColor: Colors.black,
+                  ),
+                  child: const Text('Tentar novamente'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
