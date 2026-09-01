@@ -296,7 +296,7 @@ private struct BLDRExpandedBottom: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("DESCANSANDO").font(.system(size: 9, weight: .black)).foregroundColor(kGold).kerning(0.8)
                     Text("Próx: \(s.exerciseName)").font(.system(size: 11, weight: .semibold)).foregroundColor(.white).lineLimit(1)
-                    Text("Série \(s.exerciseSet + 1)/\(s.exerciseTotalSets) · \(s.weightStr)").font(.system(size: 10)).foregroundColor(kMuted)
+                    Text("Série \(s.exerciseSet)/\(s.exerciseTotalSets) · \(s.weightStr)").font(.system(size: 10)).foregroundColor(kMuted)
                     if #available(iOS 17.0, *) {
                         HStack(spacing: 8) {
                             Button(intent: BLDRAddRestTimeIntent()) {

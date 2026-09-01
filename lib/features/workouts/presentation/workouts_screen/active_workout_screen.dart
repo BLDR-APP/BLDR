@@ -31,6 +31,7 @@ import 'package:bldr_fitness/widgets/muscle_visualizer_widget.dart';
 import 'package:bldr_fitness/widgets/notification_permission_modal.dart';
 import 'package:bldr_fitness/widgets/review_modal.dart';
 import 'package:bldr_fitness/shared/providers/workout_session_provider.dart';
+import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/workout_session_logic.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/paused_workout_summary.dart';
 import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/workout_summary_screen.dart';
 
@@ -58,13 +59,19 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
   int _currentExerciseIdx = 0;
   int _currentSetNumber = 1;
   bool _loading = true;
+  String? _loadError;
   bool _isPrefetching = false;
   bool _isPro = false;
   bool _finishing = false; // guard: prevents _finishWorkout from running twice
+  final _confirmationGuard = WorkoutSetConfirmationGuard();
+  String? _confirmingSetId;
+  late String _effectiveWorkoutName;
   bool _isFinishing = false; // true quando navegando para WorkoutSummaryScreen
+  bool _pausing = false;
 
   // ExerciseDB cache: exercise_db_id → ExerciseDetail
   final Map<String, ExerciseDetail> _exDbCache = {};
+  final Set<int> _skippedExerciseIndexes = <int>{};
 
   double _weight = 0;
   int _reps = 0;
@@ -99,6 +106,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
   @override
   void initState() {
     super.initState();
+    _effectiveWorkoutName = widget.workoutName;
     WidgetsBinding.instance.addObserver(this);
     _pulseCtrl = AnimationController(
       vsync: this,
@@ -154,6 +162,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (_isFinishing) return;
     if (state == AppLifecycleState.resumed && mounted) {
+      unawaited(_reconcileNativeRestAction());
       setState(() {
         _elapsedSeconds =
             DateTime.now().difference(_startTime).inSeconds.clamp(0, 86400);
@@ -163,9 +172,44 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
           if (left <= 0) {
             _resting = false;
             getIt<NotificationService>().cancelRestNotification();
+            unawaited(_updateLiveActivity(isResting: false));
           }
         }
       });
+    }
+  }
+
+  Future<void> _reconcileNativeRestAction() async {
+    final action = await LiveActivityService.consumeNativeRestAction();
+    if (action == null || !mounted || _isFinishing) return;
+    if (action.action == 'skip') {
+      _restTimer?.cancel();
+      await getIt<NotificationService>().cancelRestNotification();
+      setState(() {
+        _resting = false;
+        _restSecondsLeft = 0;
+      });
+      await _updateLiveActivity(isResting: false);
+      return;
+    }
+    if (action.action == 'add' && action.endTimestamp > 0) {
+      final end = DateTime.fromMillisecondsSinceEpoch(
+        (action.endTimestamp * 1000).round(),
+      );
+      final left = end.difference(DateTime.now()).inSeconds;
+      if (left <= 0) return;
+      _startRestTimer(left);
+      setState(() {
+        _restEndTime = end;
+        _restTotalSeconds = action.totalSeconds > 0
+            ? action.totalSeconds
+            : _restTotalSeconds;
+      });
+      await _updateLiveActivity(
+        isResting: true,
+        restTotalSeconds: _restTotalSeconds,
+        restEndTime: end,
+      );
     }
   }
 
@@ -209,7 +253,16 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
       final detailsResult =
           await getIt<uc.GetWorkoutDetails>()(widget.workoutId);
       var session = detailsResult.valueOrNull;
-      if (session == null || !mounted) return;
+      if (session == null || !mounted) {
+        if (mounted) {
+          setState(() {
+            _loading = false;
+            _loadError = detailsResult.failureOrNull?.message ??
+                'Não foi possível carregar esta sessão.';
+          });
+        }
+        return;
+      }
 
       debugPrint('[HAVOK] session id: ${session.id}');
       debugPrint('[HAVOK] session.templateId: ${session.templateId}');
@@ -290,17 +343,31 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
         };
       }).toList();
 
+      if (builtExercises.isEmpty) {
+        setState(() {
+          _loading = false;
+          _loadError = 'Esta sessão não possui exercícios disponíveis.';
+        });
+        return;
+      }
+
+      final resume = findWorkoutResumePosition(builtExercises);
+
       // Calibrate elapsed time from the DB started_at so resuming a paused
       // workout shows the real accumulated duration, not a reset counter.
       final startedAt = session.startedAt;
 
       setState(() {
         _exercises = builtExercises;
-        if (exList.isNotEmpty) {
-          final firstSet = exList.first.first;
-          _reps = (firstSet['reps'] as int?) ?? 10;
-          _weight = ((firstSet['weight_kg'] as num?)?.toDouble()) ?? 0;
-        }
+        _currentExerciseIdx = resume.exerciseIndex;
+        _currentSetNumber = resume.setNumber;
+        _reps = resume.reps;
+        _weight = resume.weightKg;
+        _effectiveWorkoutName = session.templateName?.trim().isNotEmpty == true
+            ? session.templateName!.trim()
+            : session.name.trim().isNotEmpty
+                ? session.name.trim()
+                : widget.workoutName;
         if (startedAt != null) {
           _startTime = startedAt;
           _elapsedSeconds =
@@ -310,8 +377,14 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
         _isPrefetching = true;
       });
 
+      if (!resume.hasPendingSet) {
+        await _finishWorkout();
+        return;
+      }
+
       _sendToWatch();
       _startHealthKit();
+      await _startLiveActivity();
 
       // Prefetch ExerciseDB details — collect ids from exercise map (may have
       // been populated above from the set's own exercise_db_id column).
@@ -357,22 +430,33 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
         if (mounted) setState(() => _isPrefetching = false);
       }
 
-      // Inicia LiveActivity agora que temos os dados do treino
-      _startLiveActivity();
     } catch (_) {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _loadError = 'Não foi possível carregar esta sessão.';
+        });
+      }
     }
+  }
+
+  void _retryLoadWorkout() {
+    setState(() {
+      _loading = true;
+      _loadError = null;
+    });
+    unawaited(_loadWorkout());
   }
 
   // ── Live Activity ─────────────────────────────────────────────────────────
 
   String get _currentExerciseName {
-    if (_exercises.isEmpty) return widget.workoutName;
+    if (_exercises.isEmpty) return _effectiveWorkoutName;
     final ex = _exercises[_currentExerciseIdx];
     final exData = ex['exercise'] as Map<String, dynamic>;
     return exData['name'] as String? ??
         exData['free_name'] as String? ??
-        widget.workoutName;
+        _effectiveWorkoutName;
   }
 
   int get _currentTotalSets {
@@ -380,9 +464,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     return (_exercises[_currentExerciseIdx]['totalSets'] as int?) ?? 1;
   }
 
-  void _startLiveActivity() {
-    LiveActivityService.startWorkout(
-      workoutName: widget.workoutName,
+  Future<void> _startLiveActivity() => LiveActivityService.startWorkout(
+      mode: 'free',
+      workoutName: _effectiveWorkoutName,
       exerciseName: _currentExerciseName,
       exerciseSet: _currentSetNumber,
       exerciseTotalSets: _currentTotalSets,
@@ -392,17 +476,17 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
       reps: _reps,
       workoutStartTimestamp: _startTime.millisecondsSinceEpoch / 1000.0,
     );
-  }
 
-  void _updateLiveActivity(
+  Future<void> _updateLiveActivity(
       {bool? isResting, int? restTotalSeconds, DateTime? restEndTime}) {
     final effectiveIsResting = isResting ?? _resting;
     final endTime = restEndTime ?? _restEndTime;
     final restEnd = effectiveIsResting && endTime != null
         ? endTime.millisecondsSinceEpoch / 1000.0
         : 0.0;
-    LiveActivityService.update(
-      workoutName: widget.workoutName,
+    return LiveActivityService.update(
+      mode: 'free',
+      workoutName: _effectiveWorkoutName,
       exerciseName: _currentExerciseName,
       exerciseSet: _currentSetNumber,
       exerciseTotalSets: _currentTotalSets,
@@ -431,11 +515,24 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     final setId = sets[setIdx]['id']?.toString() ?? '';
     if (setId.isEmpty) return;
 
-    await getIt<uc.CompleteWorkoutSet>()(
-      setId: setId,
-      weightKg: _weight,
-      reps: _reps,
-    );
+    if (!_confirmationGuard.tryAcquire(setId)) return;
+    if (mounted) setState(() => _confirmingSetId = setId);
+
+    try {
+      final result = await getIt<uc.CompleteWorkoutSet>()(
+        setId: setId,
+        weightKg: _weight,
+        reps: _reps,
+      );
+      if (result.failureOrNull != null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(result.failureOrNull!.message),
+          ));
+        }
+        return;
+      }
+      if (!mounted) return;
 
     // Item 8 — espelha localmente o que acabou de ser persistido, para que
     // a lista de séries mostre o valor real confirmado (e não o default
@@ -451,21 +548,28 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     final restSec = (sets[setIdx]['rest_seconds'] as int?) ?? 90;
     _startRestTimer(restSec);
 
-    if (_currentSetNumber < totalSets) {
-      setState(() => _currentSetNumber++);
-    } else {
-      _nextExercise();
-    }
+      if (_currentSetNumber < totalSets) {
+        setState(() => _currentSetNumber++);
+      } else if (!_advanceToNextExercise()) {
+        await _finishWorkout();
+        return;
+      }
 
-    _updateLiveActivity(
-      isResting: true,
-      restTotalSeconds: restSec,
-      restEndTime: DateTime.now().add(Duration(seconds: restSec)),
-    );
-    _sendToWatch();
+      await _updateLiveActivity(
+        isResting: true,
+        restTotalSeconds: restSec,
+        restEndTime: _restEndTime,
+      );
+      _sendToWatch();
+    } finally {
+      _confirmationGuard.release(setId);
+      if (mounted && _confirmingSetId == setId) {
+        setState(() => _confirmingSetId = null);
+      }
+    }
   }
 
-  void _nextExercise() {
+  bool _advanceToNextExercise() {
     if (_currentExerciseIdx < _exercises.length - 1) {
       setState(() {
         _currentExerciseIdx++;
@@ -477,14 +581,29 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
           _weight = ((sets.first['weight_kg'] as num?)?.toDouble()) ?? 0;
         }
       });
-      _updateLiveActivity(isResting: false);
+      return true;
     } else {
-      _finishWorkout();
+      return false;
+    }
+  }
+
+  Future<void> _nextExercise() async {
+    if (_advanceToNextExercise()) {
+      await _updateLiveActivity(isResting: false);
+    } else {
+      await _finishWorkout();
     }
   }
 
   void _skipExercise() {
-    _nextExercise();
+    if (_currentExerciseIdx >= _exercises.length - 1) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('Conclua ou pause o treino no último exercício.'),
+      ));
+      return;
+    }
+    _skippedExerciseIndexes.add(_currentExerciseIdx);
+    unawaited(_nextExercise());
   }
 
   void _startRestTimer(int seconds) {
@@ -509,6 +628,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
           _resting = false;
           _restSecondsLeft = 0;
         });
+        unawaited(_updateLiveActivity(isResting: false));
       } else {
         setState(() => _restSecondsLeft = left);
       }
@@ -562,7 +682,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
         };
       }).toList();
       getIt<WatchService>().sendWorkoutState(
-        workoutName: widget.workoutName,
+        workoutName: _effectiveWorkoutName,
         bpm: '${bpm.round()} bpm',
         exercises: exercises,
       );
@@ -587,7 +707,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
       };
     }).toList();
     getIt<WatchService>().sendWorkoutState(
-      workoutName: widget.workoutName,
+      workoutName: _effectiveWorkoutName,
       bpm: '— bpm',
       exercises: exercises,
     );
@@ -596,12 +716,13 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
   // MET ~5 (musculação moderada) × peso padrão 70 kg × horas
   double get _estimatedCalories => 5.0 * 70 * (_elapsedSeconds / 3600.0);
 
-  void _exitWorkout() {
-    if (_finishing || _isFinishing) return;
+  Future<void> _exitWorkout() async {
+    if (_finishing || _isFinishing || _pausing) return;
+    _pausing = true;
     context.read<WorkoutSessionProvider>().setPausedWorkout(
           PausedWorkoutSummary(
             id: widget.workoutId,
-            name: widget.workoutName,
+            name: _effectiveWorkoutName,
             source: 'free',
             startedAt: _startTime,
             totalExercises: _exercises.length,
@@ -609,7 +730,12 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
             currentExerciseName: _currentExerciseName,
           ),
         );
-    Navigator.of(context).pop();
+    try {
+      await LiveActivityService.end(reason: 'pause', mode: 'free');
+      if (mounted) Navigator.of(context).pop();
+    } finally {
+      _pausing = false;
+    }
   }
 
   int get _completedSetsCount {
@@ -623,30 +749,26 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     return count;
   }
 
-  void _finishWorkout() async {
+  int get _totalSetsCount => _exercises.fold<int>(
+      0,
+      (total, exercise) =>
+          total +
+          (exercise['sets'] as List<Map<String, dynamic>>? ?? const []).length);
+
+  int get _completedExercisesCount => _exercises.where((exercise) {
+        final sets =
+            exercise['sets'] as List<Map<String, dynamic>>? ?? const [];
+        return sets.any((set) => set['completed_at'] != null);
+      }).length;
+
+  Future<void> _finishWorkout() async {
     if (_finishing) return;
     _finishing = true;
     _isFinishing = true;
     final sessionProvider = context.read<WorkoutSessionProvider>();
     sessionProvider.beginFinishing(widget.workoutId);
-    _timer?.cancel();
-    _restTimer?.cancel();
-    try {
-      await getIt<NotificationService>().cancelRestNotification();
-    } catch (error) {
-      debugPrint(
-          '[WorkoutLifecycle] Falha ao cancelar rest notification: $error');
-    }
-    unawaited(getIt<WatchService>().sendWorkoutFinished());
-    _hrSubscription?.cancel();
-    unawaited(getIt<HealthKitService>().saveCalories(
-      calories: _estimatedCalories,
-      startTime: _startTime,
-      endTime: DateTime.now(),
-    ));
-    getIt<HealthKitService>().stopHeartRateMonitoring();
     final setsCount = _completedSetsCount;
-    final exerciseCount = _exercises.length;
+    final exerciseCount = _completedExercisesCount;
     debugPrint('[Summary] setsCount capturado: $setsCount');
     debugPrint('[Summary] exerciseCount capturado: $exerciseCount');
     final result = await getIt<uc.CompleteWorkoutWithAnalytics>()(
@@ -669,9 +791,25 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
       return;
     }
     sessionProvider.markCompleted(widget.workoutId);
+    _timer?.cancel();
+    _restTimer?.cancel();
+    try {
+      await getIt<NotificationService>().cancelRestNotification();
+    } catch (error) {
+      debugPrint(
+          '[WorkoutLifecycle] Falha ao cancelar rest notification: $error');
+    }
+    unawaited(getIt<WatchService>().sendWorkoutFinished());
+    _hrSubscription?.cancel();
+    unawaited(getIt<HealthKitService>().saveCalories(
+      calories: _estimatedCalories,
+      startTime: _startTime,
+      endTime: DateTime.now(),
+    ));
+    getIt<HealthKitService>().stopHeartRateMonitoring();
     unawaited(getIt<CheckAndUnlockAchievements>()('workout'));
     try {
-      await LiveActivityService.end();
+      await LiveActivityService.end(reason: 'finish', mode: 'free');
     } catch (error) {
       debugPrint('[WorkoutLifecycle] Falha ao encerrar Live Activity: $error');
     }
@@ -762,6 +900,20 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                 ? const Center(
                     child:
                         CircularProgressIndicator(color: BldrColors.goldBright))
+                : _loadError != null
+                    ? Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(_loadError!, style: BldrText.body),
+                            const SizedBox(height: 12),
+                            BldrPrimaryButton(
+                              label: 'Tentar novamente',
+                              onPressed: _retryLoadWorkout,
+                            ),
+                          ],
+                        ),
+                      )
                 : Stack(
                     children: [
                       Column(
@@ -838,7 +990,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                     style: BldrText.label),
                 const SizedBox(height: 2),
                 Text(
-                  widget.workoutName,
+                  _effectiveWorkoutName,
                   style: BldrText.cardTitleLg,
                   textAlign: TextAlign.center,
                   maxLines: 1,
@@ -963,7 +1115,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
   Widget _buildOverallProgress() {
     final totalEx = _exercises.length;
     final doneEx = _currentExerciseIdx;
-    final progress = totalEx == 0 ? 0.0 : doneEx / totalEx;
+    final totalSets = _totalSetsCount;
+    final progress = totalSets == 0 ? 0.0 : _completedSetsCount / totalSets;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1571,6 +1724,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
           final name = ex['name'] as String? ?? 'Exercício';
           final isCurrent = i == _currentExerciseIdx;
           final isDone = i < _currentExerciseIdx;
+          final isSkipped = _skippedExerciseIndexes.contains(i);
 
           return BldrTimelineItem(
             dotStyle: isDone
@@ -1607,7 +1761,9 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                   if (!isCurrent && !isDone)
                     Text(AppLocalizations.of(context).workout_next_up,
                         style: BldrText.meta),
-                  if (isDone)
+                  if (isSkipped)
+                    const Text('Pulado', style: BldrText.meta)
+                  else if (isDone)
                     const Icon(Icons.check_circle_outline,
                         color: BldrColors.goldBright, size: 16),
                 ],
@@ -1635,7 +1791,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
             label: AppLocalizations.of(context).workout_skip_exercise,
             button: true,
             child: GestureDetector(
-              onTap: _skipExercise,
+              onTap: _confirmingSetId == null ? _skipExercise : null,
               behavior: HitTestBehavior.opaque,
               child: Container(
                 width: 56,
@@ -1655,7 +1811,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
             child: BldrPrimaryButton(
               label: AppLocalizations.of(context).workout_confirm_set_btn,
               icon: Icons.check_rounded,
-              onPressed: _confirmSet,
+              onPressed: _confirmingSetId == null ? _confirmSet : null,
             ),
           ),
         ],

@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:bldr_fitness/features/workouts/domain/active_workout_name.dart';
+import 'package:bldr_fitness/core/workout_start_guard.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:bldr_fitness/services/auth_service.dart';
@@ -114,9 +116,21 @@ class ClubWorkoutsService {
     required String name,
     required String clubWorkoutTemplateId,
   }) async {
+    if (!WorkoutStartGuard.tryAcquire()) {
+      throw StateError('Um treino já está sendo iniciado.');
+    }
     try {
       final currentUser = AuthService.instance.currentUser;
       if (currentUser == null) throw Exception('User must be authenticated');
+
+      final activeSessions = await Future.wait([
+        _activeSessionRows('user_workouts', currentUser.id),
+        _activeSessionRows('club_user_workouts', currentUser.id),
+      ]);
+      if (activeSessions.any((rows) => rows.isNotEmpty)) {
+        throw StateError(
+            'Já existe um treino ativo. Retome ou conclua antes de iniciar outro.');
+      }
 
       // 1) cria o club_user_workouts (UTC evita deslocamento de fuso)
       final baseInsert = {
@@ -199,6 +213,29 @@ class ClubWorkoutsService {
       return Map<String, dynamic>.from(workout);
     } catch (error) {
       throw Exception('Failed to start club workout: $error');
+    } finally {
+      WorkoutStartGuard.release();
+    }
+  }
+
+  Future<List<dynamic>> _activeSessionRows(String table, String userId) async {
+    try {
+      return await _client
+          .from(table)
+          .select('id')
+          .eq('user_id', userId)
+          .eq('is_completed', false)
+          .limit(1);
+    } on PostgrestException catch (error) {
+      if (!(error.message ?? '').toLowerCase().contains('is_completed')) {
+        rethrow;
+      }
+      return await _client
+          .from(table)
+          .select('id')
+          .eq('user_id', userId)
+          .isFilter('completed_at', null)
+          .limit(1);
     }
   }
 
@@ -319,7 +356,24 @@ class ClubWorkoutsService {
       }
 
       final response = await query.order('started_at', ascending: false).limit(limit);
-      return List<Map<String, dynamic>>.from(response);
+      return List<Map<String, dynamic>>.from(response).map((row) {
+        if (row['is_completed'] == true || row['completed_at'] != null) {
+          return row;
+        }
+        final relationship = row['club_workout_templates'];
+        final template = relationship is Map
+            ? relationship
+            : relationship is List && relationship.isNotEmpty
+                ? relationship.first as Map?
+                : null;
+        return {
+          ...row,
+          'name': resolveActiveWorkoutName(
+            templateName: template?['name']?.toString(),
+            snapshotName: row['name']?.toString(),
+          ),
+        };
+      }).toList();
     } catch (error) {
       throw Exception('Failed to get user club workouts: $error');
     }
@@ -806,14 +860,30 @@ class ClubWorkoutsService {
     try {
       final rows = await _client
           .from('club_user_workouts')
-          .select('id, name, started_at')
+          .select('id, name, started_at, club_workout_templates(name)')
           .eq('user_id', currentUser.id)
           .eq('is_completed', false)
           .order('started_at', ascending: false)
           .limit(limit);
 
       final candidates = (rows as List)
-          .map((r) => {...(r as Map<String, dynamic>), 'source': 'club'})
+          .map((r) {
+            final row = r as Map<String, dynamic>;
+            final relationship = row['club_workout_templates'];
+            final template = relationship is Map
+                ? relationship
+                : relationship is List && relationship.isNotEmpty
+                    ? relationship.first as Map?
+                    : null;
+            return {
+              ...row,
+              'name': resolveActiveWorkoutName(
+                templateName: template?['name']?.toString(),
+                snapshotName: row['name']?.toString(),
+              ),
+              'source': 'club',
+            };
+          })
           .toList();
 
       if (candidates.isEmpty) return [];

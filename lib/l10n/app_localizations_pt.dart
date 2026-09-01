@@ -1177,16 +1177,17 @@ class AppLocalizationsPt extends AppLocalizations {
   String get plan_paywall_muscle_btn => 'Conhecer o BLDR Club';
 
   @override
-  String get workout_stop_title => 'Parar treino?';
+  String get workout_stop_title => 'Concluir treino agora?';
 
   @override
-  String get workout_stop_body => 'O progresso será salvo até aqui.';
+  String get workout_stop_body =>
+      'A sessão será concluída com o progresso registrado até aqui.';
 
   @override
-  String get workout_stop_btn => 'Parar';
+  String get workout_stop_btn => 'Concluir agora';
 
   @override
-  String get workout_stop_label => 'Parar treino';
+  String get workout_stop_label => 'Concluir treino';
 
   @override
   String get workout_in_progress => 'EM ANDAMENTO';

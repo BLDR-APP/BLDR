@@ -1,10 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_share_data.dart';
 import 'package:bldr_fitness/features/workouts/presentation/share/workout_share_exporter.dart';
 import 'package:bldr_fitness/features/workouts/presentation/share/workout_share_templates.dart';
-import 'package:bldr_fitness/shared/presentation/widgets/bldr_muscle_map.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 
 class WorkoutSharePreview extends StatefulWidget {
@@ -25,35 +26,61 @@ class _WorkoutSharePreviewState extends State<WorkoutSharePreview> {
   @override
   void initState() {
     super.initState();
-    _exporter = WorkoutShareExporter(prepareAssets: BldrMuscleMap.precache);
+    _exporter = WorkoutShareExporter(
+      prepareAssets: (context) => prepareWorkoutShareAssets(context, widget.data),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) BldrMuscleMap.precache(context);
+      if (mounted) {
+        unawaited(_prewarmShareAssets());
+      }
     });
+  }
+
+  Future<void> _prewarmShareAssets() async {
+    try {
+      await prepareWorkoutShareAssets(context, widget.data);
+    } catch (error, stackTrace) {
+      debugPrint(
+          '[WorkoutShare][prepare-warmup] ${error.runtimeType}\n$stackTrace');
+    }
   }
 
   Future<void> _share() async {
     if (_sharing) return;
     setState(() => _sharing = true);
+    WorkoutShareStage stage = WorkoutShareStage.prepare;
     try {
       final file = await _exporter.exportPng(
         context: context,
         boundaryKey: _boundaryKey,
+        onStage: (value) => stage = value,
       );
       if (file == null || !mounted) return;
       final box = _buttonKey.currentContext?.findRenderObject() as RenderBox?;
-      await SharePlus.instance.share(ShareParams(
-        files: [XFile(file.path, mimeType: 'image/png')],
-        text: 'Treino concluído no BLDR',
-        sharePositionOrigin:
-            box == null ? null : box.localToGlobal(Offset.zero) & box.size,
-      ));
-    } catch (error) {
+      try {
+        await SharePlus.instance.share(ShareParams(
+          files: [XFile(file.path, mimeType: 'image/png')],
+          text: 'Treino concluído no BLDR',
+          sharePositionOrigin:
+              box == null ? null : box.localToGlobal(Offset.zero) & box.size,
+        ));
+      } catch (error, stackTrace) {
+        debugPrint('[WorkoutShare][share] ${error.runtimeType}\n$stackTrace');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text(
+                'A imagem foi gerada, mas não foi possível abrir o compartilhamento.'),
+          ));
+        }
+      }
+    } catch (error, stackTrace) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Não foi possível gerar a imagem. Tente novamente.'),
         ));
       }
-      debugPrint('[WorkoutShare] $error');
+      debugPrint(
+          '[WorkoutShare][${stage.name}] ${error.runtimeType}\n$stackTrace');
     } finally {
       if (mounted) setState(() => _sharing = false);
     }

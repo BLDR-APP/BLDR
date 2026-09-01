@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:bldr_fitness/features/workouts/domain/active_workout_name.dart';
+import 'package:bldr_fitness/core/workout_start_guard.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:bldr_fitness/services/auth_service.dart';
@@ -310,9 +312,21 @@ class WorkoutService {
     required String name,
     String? workoutTemplateId,
   }) async {
+    if (!WorkoutStartGuard.tryAcquire()) {
+      throw StateError('Um treino já está sendo iniciado.');
+    }
     try {
       final currentUser = AuthService.instance.currentUser;
       if (currentUser == null) throw Exception('User must be authenticated');
+
+      final activeSessions = await Future.wait([
+        _activeSessionRows('user_workouts', currentUser.id),
+        _activeSessionRows('club_user_workouts', currentUser.id),
+      ]);
+      if (activeSessions.any((rows) => rows.isNotEmpty)) {
+        throw StateError(
+            'Já existe um treino ativo. Retome ou conclua antes de iniciar outro.');
+      }
 
       debugPrint(
           '[HAVOK] startWorkout → workoutTemplateId: $workoutTemplateId');
@@ -410,6 +424,29 @@ class WorkoutService {
       return Map<String, dynamic>.from(workout);
     } catch (error) {
       throw Exception('Failed to start workout: $error');
+    } finally {
+      WorkoutStartGuard.release();
+    }
+  }
+
+  Future<List<dynamic>> _activeSessionRows(String table, String userId) async {
+    try {
+      return await _client
+          .from(table)
+          .select('id')
+          .eq('user_id', userId)
+          .eq('is_completed', false)
+          .limit(1);
+    } on PostgrestException catch (error) {
+      if (!(error.message ?? '').toLowerCase().contains('is_completed')) {
+        rethrow;
+      }
+      return await _client
+          .from(table)
+          .select('id')
+          .eq('user_id', userId)
+          .isFilter('completed_at', null)
+          .limit(1);
     }
   }
 
@@ -663,7 +700,20 @@ class WorkoutService {
 
       final response =
           await query.order('started_at', ascending: false).limit(limit);
-      return List<Map<String, dynamic>>.from(response);
+      return List<Map<String, dynamic>>.from(response).map((row) {
+        // Sessões abertas refletem o nome atual do template; concluídas mantêm
+        // o snapshot histórico gravado em user_workouts.name.
+        if (row['is_completed'] == true || row['completed_at'] != null) {
+          return row;
+        }
+        return {
+          ...row,
+          'name': resolveActiveWorkoutName(
+            templateName: _relationshipName(row, 'workout_templates'),
+            snapshotName: row['name']?.toString(),
+          ),
+        };
+      }).toList();
     } catch (error) {
       throw Exception('Failed to get user workouts: $error');
     }
@@ -989,14 +1039,14 @@ class WorkoutService {
       final results = await Future.wait([
         _client
             .from('user_workouts')
-            .select('id, name, started_at')
+            .select('id, name, started_at, workout_templates(name)')
             .eq('user_id', currentUser.id)
             .eq('is_completed', false)
             .order('started_at', ascending: false)
             .limit(limit),
         _client
             .from('club_user_workouts')
-            .select('id, name, started_at')
+            .select('id, name, started_at, club_workout_templates(name)')
             .eq('user_id', currentUser.id)
             .eq('is_completed', false)
             .order('started_at', ascending: false)
@@ -1004,10 +1054,25 @@ class WorkoutService {
       ]);
 
       final free = (results[0] as List)
-          .map((r) => {...(r as Map<String, dynamic>), 'source': 'free'})
+          .map((r) => {
+                ...(r as Map<String, dynamic>),
+                'name': resolveActiveWorkoutName(
+                  templateName: _relationshipName(r, 'workout_templates'),
+                  snapshotName: r['name']?.toString(),
+                ),
+                'source': 'free'
+              })
           .toList();
       final club = (results[1] as List)
-          .map((r) => {...(r as Map<String, dynamic>), 'source': 'club'})
+          .map((r) => {
+                ...(r as Map<String, dynamic>),
+                'name': resolveActiveWorkoutName(
+                  templateName:
+                      _relationshipName(r, 'club_workout_templates'),
+                  snapshotName: r['name']?.toString(),
+                ),
+                'source': 'club'
+              })
           .toList();
 
       // Merge, dedup by id, sort desc, take top [limit]
@@ -1032,6 +1097,18 @@ class WorkoutService {
       return [];
     }
   }
+
+  String? _relationshipName(
+      Map<String, dynamic> row, String relationshipKey) {
+    final relationship = row[relationshipKey];
+    final template = relationship is Map
+        ? relationship
+        : relationship is List && relationship.isNotEmpty
+            ? relationship.first as Map?
+            : null;
+    return template?['name']?.toString();
+  }
+
 
   Future<Map<String, dynamic>> _enrichPausedWorkout(
       Map<String, dynamic> head) async {

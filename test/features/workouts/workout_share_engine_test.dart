@@ -200,4 +200,29 @@ void main() {
     gate.complete();
     expect(await first, 1);
   });
+
+  test('preparação do Share inclui logo, bases e máscaras utilizadas', () {
+    final paths = workoutShareAssetPaths(WorkoutShareData.fromSummary(
+      fixture(
+        muscleMapData: const BldrMuscleMapData(
+          muscles: {
+            BldrMuscle.biceps: 1,
+            BldrMuscle.glutes: .8,
+          },
+          view: BldrMuscleMapView.both,
+        ),
+      ),
+    ));
+    expect(paths, contains('assets/images/BLDR_CLEAN_BGLESS.png'));
+    expect(paths,
+        contains('assets/images/muscle_map/base/body_front_base.png'));
+    expect(paths,
+        contains('assets/images/muscle_map/base/body_back_base.png'));
+    expect(paths,
+        contains('assets/images/muscle_map/front_masks/biceps.png'));
+    expect(paths,
+        contains('assets/images/muscle_map/back_masks/glutes.png'));
+    expect(paths, isNot(contains(
+        'assets/images/muscle_map/front_masks/chest.png')));
+  });
 }

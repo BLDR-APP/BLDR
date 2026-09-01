@@ -99,6 +99,50 @@ import FirebaseMessaging
           }
           defaults?.removeObject(forKey: key)
           result(nil)
+        case "readRestAction":
+          guard let action = defaults?.string(forKey: "bldr_rest_action") else {
+            result(nil)
+            return
+          }
+          let payload: [String: Any] = [
+            "action": action,
+            "activityId": defaults?.string(forKey: "bldr_rest_action_activity_id") ?? "",
+            "actionId": defaults?.string(forKey: "bldr_rest_action_id") ?? "",
+            "endTimestamp": defaults?.double(forKey: "bldr_rest_action_end") ?? 0,
+            "totalSeconds": defaults?.integer(forKey: "bldr_rest_action_total") ?? 0,
+            "timestamp": defaults?.double(forKey: "bldr_rest_action_timestamp") ?? 0,
+          ]
+          result(payload)
+        case "ackRestAction":
+          guard let args = call.arguments as? [String: Any],
+                let actionId = args["actionId"] as? String,
+                let activityId = args["activityId"] as? String,
+                defaults?.string(forKey: "bldr_rest_action_id") == actionId,
+                defaults?.string(forKey: "bldr_rest_action_activity_id") == activityId else {
+            result(false)
+            return
+          }
+          defaults?.removeObject(forKey: "bldr_rest_action")
+          defaults?.removeObject(forKey: "bldr_rest_action_activity_id")
+          defaults?.removeObject(forKey: "bldr_rest_action_id")
+          defaults?.removeObject(forKey: "bldr_rest_action_end")
+          defaults?.removeObject(forKey: "bldr_rest_action_total")
+          defaults?.removeObject(forKey: "bldr_rest_action_timestamp")
+          result(true)
+        case "discardRestAction":
+          guard let args = call.arguments as? [String: Any],
+                let actionId = args["actionId"] as? String,
+                defaults?.string(forKey: "bldr_rest_action_id") == actionId else {
+            result(false)
+            return
+          }
+          defaults?.removeObject(forKey: "bldr_rest_action")
+          defaults?.removeObject(forKey: "bldr_rest_action_activity_id")
+          defaults?.removeObject(forKey: "bldr_rest_action_id")
+          defaults?.removeObject(forKey: "bldr_rest_action_end")
+          defaults?.removeObject(forKey: "bldr_rest_action_total")
+          defaults?.removeObject(forKey: "bldr_rest_action_timestamp")
+          result(true)
         default:
           result(FlutterMethodNotImplemented)
         }
