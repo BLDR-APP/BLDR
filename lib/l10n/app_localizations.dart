@@ -2150,25 +2150,25 @@ abstract class AppLocalizations {
   /// No description provided for @workout_stop_title.
   ///
   /// In pt, this message translates to:
-  /// **'Parar treino?'**
+  /// **'Concluir treino agora?'**
   String get workout_stop_title;
 
   /// No description provided for @workout_stop_body.
   ///
   /// In pt, this message translates to:
-  /// **'O progresso será salvo até aqui.'**
+  /// **'A sessão será concluída com o progresso registrado até aqui.'**
   String get workout_stop_body;
 
   /// No description provided for @workout_stop_btn.
   ///
   /// In pt, this message translates to:
-  /// **'Parar'**
+  /// **'Concluir agora'**
   String get workout_stop_btn;
 
   /// No description provided for @workout_stop_label.
   ///
   /// In pt, this message translates to:
-  /// **'Parar treino'**
+  /// **'Concluir treino'**
   String get workout_stop_label;
 
   /// No description provided for @workout_in_progress.
