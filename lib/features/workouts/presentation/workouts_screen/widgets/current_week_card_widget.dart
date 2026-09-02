@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/extra_activity.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
@@ -17,6 +19,8 @@ class _WeekDay {
   final _DayStatus status;
   final String? workoutLabel;
   final String? workoutId;
+  final bool workoutCompleted;
+  final ExtraActivity? extraActivity;
 
   const _WeekDay({
     required this.abbrev,
@@ -24,6 +28,8 @@ class _WeekDay {
     required this.status,
     this.workoutLabel,
     this.workoutId,
+    this.workoutCompleted = false,
+    this.extraActivity,
   });
 }
 
@@ -117,6 +123,9 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
       final historyResult =
           await getIt<GetConsolidatedWorkoutHistory>()(userId: uid, limit: 50);
       final sessions = historyResult.valueOrNull ?? [];
+      final extrasResult =
+          await getIt<GetExtraActivities>()(weekStart, weekEnd);
+      final extras = extrasResult.valueOrNull ?? const <ExtraActivity>[];
 
       // Build map: dayIndex (0=Mon) → sessão concluída
       final Map<int, WorkoutSession> completedByDay = {};
@@ -129,6 +138,13 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
             completedByDay[idx] = s;
           }
         }
+      }
+
+      // A atividade extra não substitui o treino concluído: ela só é usada
+      // para o check quando não há workout completion naquele dia.
+      final Map<int, ExtraActivity> extraByDay = {};
+      for (final extra in extras) {
+        extraByDay.putIfAbsent(extra.date.weekday - 1, () => extra);
       }
 
       const abbrevs = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
@@ -170,6 +186,8 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
                   ? labels[labelIdx % labels.length]
                   : null),
           workoutId: wId,
+          workoutCompleted: completedByDay.containsKey(i),
+          extraActivity: extraByDay[i],
         ));
       }
 
@@ -189,7 +207,24 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
   // ── bottom sheet ──────────────────────────────────────────────────────────
 
   void _showDaySheet(_WeekDay day) {
-    final isDone = day.status == _DayStatus.done;
+    final isWorkoutDone = day.workoutCompleted;
+    final extra = day.extraActivity;
+    final isExtraDone = !isWorkoutDone && extra != null;
+    final isRest = day.status == _DayStatus.rest && !isExtraDone;
+    final icon = isWorkoutDone
+        ? TablerIcons.barbell
+        : isExtraDone
+            ? TablerIcons.check
+            : isRest
+                ? TablerIcons.barbell_off
+                : Icons.circle_outlined;
+    final title = isWorkoutDone
+        ? AppLocalizations.of(context).plan_workout_done
+        : isExtraDone
+            ? 'Atividade concluída'
+            : isRest
+                ? AppLocalizations.of(context).plan_rest_day
+                : AppLocalizations.of(context).plan_workout_not_done;
     showModalBottomSheet(
       context: context,
       backgroundColor: BldrColors.sheetBg,
@@ -216,31 +251,36 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
               Row(
                 children: [
                   Icon(
-                    isDone
-                        ? Icons.check_circle_outline_rounded
-                        : Icons.circle_outlined,
-                    color: isDone
+                    icon,
+                    color: isWorkoutDone || isExtraDone
                         ? BldrColors.goldBright
                         : BldrColors.textSecondary,
                     size: 20,
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    isDone
-                        ? AppLocalizations.of(context).plan_workout_done
-                        : AppLocalizations.of(context).plan_workout_not_done,
+                    title,
                     style: BldrText.cardTitleLg,
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
-                isDone
+                isWorkoutDone
                     ? '${day.workoutLabel ?? "Treino"} — concluído.'
-                    : AppLocalizations.of(context).plan_no_record,
+                    : isExtraDone
+                        ? '${extra.activityType.label} — concluída.'
+                        : isRest
+                            ? AppLocalizations.of(context).plan_rest_day
+                            : AppLocalizations.of(context).plan_no_record,
                 style: BldrText.description,
               ),
-              if (!isDone) ...[
+              if (isWorkoutDone && extra != null) ...[
+                const SizedBox(height: 4),
+                Text('Atividade extra também registrada.',
+                    style: BldrText.meta),
+              ],
+              if (!isWorkoutDone && !isExtraDone && !isRest) ...[
                 const SizedBox(height: 16),
                 BldrPrimaryButton(
                   label: AppLocalizations.of(context).plan_view_week_btn,
@@ -260,7 +300,7 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final completed = _days.where((d) => d.status == _DayStatus.done).length;
+    final completed = _days.where((d) => d.workoutCompleted).length;
     final planned = _days.where((d) => d.status != _DayStatus.rest).length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -270,18 +310,18 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(AppLocalizations.of(context).plan_current_week,
-                style: BldrText.cardTitleLg),
+                style: BldrText.label),
             GestureDetector(
               onTap: widget.onViewPlan,
               behavior: HitTestBehavior.opaque,
               child: Text(
                 AppLocalizations.of(context).plan_see_plan,
-                style: BldrText.buttonSecondary,
+                style: BldrText.metaSm.copyWith(color: BldrColors.goldBright),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 12),
         // Days grid
         if (_loading)
           const Padding(
@@ -300,39 +340,55 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: _days.map(_buildDayCol).toList(),
           ),
-        if (!_loading && planned > 0) ...[
+        if (!_loading) ...[
           const SizedBox(height: 14),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(3),
-            child: LinearProgressIndicator(
-              value: completed / planned,
-              minHeight: 4,
-              color: BldrColors.goldBright,
-              backgroundColor: BldrColors.track,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _metric('$completed', 'Treinos'),
+              _metric('$planned', 'Planejados'),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text('$completed / $planned treinos concluídos',
-              style: BldrText.metaSm.copyWith(
-                  color: completed > 0
-                      ? BldrColors.goldBright
-                      : BldrColors.textTertiary)),
         ],
       ],
     );
   }
 
+  Widget _metric(String value, String label) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 13),
+        child: Column(
+          children: [
+            Text(value, style: BldrText.metaSm.copyWith(
+              color: BldrColors.goldBright,
+              fontWeight: FontWeight.w600,
+            )),
+            const SizedBox(height: 2),
+            Text(label, style: BldrText.metaSm.copyWith(fontSize: 8)),
+          ],
+        ),
+      );
+
   Widget _buildDayCol(_WeekDay day) {
     final isToday = day.status == _DayStatus.today;
+    final isWorkoutDone = day.workoutCompleted;
+    final isExtraDone = !isWorkoutDone && day.extraActivity != null;
+    final isRest = day.status == _DayStatus.rest && !isExtraDone;
     // G4/P1 — dia perdido é neutro, mesmo tratamento visual de "futuro".
-    final squareState = switch (day.status) {
-      _DayStatus.done => BldrDayState.done,
-      _DayStatus.today => BldrDayState.today,
-      _DayStatus.rest => BldrDayState.rest,
-      _DayStatus.pending || _DayStatus.lost => BldrDayState.pending,
-    };
+    final squareState = isWorkoutDone || isExtraDone
+        ? BldrDayState.done
+        : switch (day.status) {
+            _DayStatus.today => BldrDayState.today,
+            _DayStatus.rest => BldrDayState.rest,
+            _DayStatus.done || _DayStatus.pending || _DayStatus.lost =>
+              BldrDayState.pending,
+          };
+    final icon = isWorkoutDone
+        ? TablerIcons.barbell
+        : isExtraDone
+            ? TablerIcons.check
+            : null;
     final tappable =
-        day.status == _DayStatus.done || day.status == _DayStatus.lost;
+        isWorkoutDone || isExtraDone || day.status == _DayStatus.lost;
 
     return Expanded(
       child: Padding(
@@ -347,20 +403,21 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
                 fontWeight: isToday ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
-            const SizedBox(height: 6),
-            BldrDaySquare(
-              state: squareState,
-              icon: null,
-              onTap: tappable ? () => _showDaySheet(day) : null,
-            ),
-            const SizedBox(height: 6),
-            Text(
-              '${day.dayNumber}',
-              style: BldrText.metaSm.copyWith(
-                color:
-                    isToday ? BldrColors.textPrimary : BldrColors.textTertiary,
-                fontWeight: isToday ? FontWeight.w600 : FontWeight.w400,
-              ),
+            const SizedBox(height: 5),
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                BldrDaySquare(
+                  state: squareState,
+                  icon: icon,
+                  onTap: tappable ? () => _showDaySheet(day) : null,
+                ),
+                if (isRest)
+                  const IgnorePointer(
+                    child: Icon(TablerIcons.barbell_off,
+                        color: BldrColors.textMuted, size: 15),
+                  ),
+              ],
             ),
           ],
         ),

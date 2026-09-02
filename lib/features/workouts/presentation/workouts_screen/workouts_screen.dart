@@ -852,8 +852,8 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                   ),
                   onChanged: (v) => setState(() => _searchQuery = v),
                 )
-              : Text(AppLocalizations.of(context).workouts_title,
-                  style: BldrText.screenTitle),
+              : Text(AppLocalizations.of(context).workouts_title.toUpperCase(),
+                  style: BldrText.screenTitle.copyWith(fontSize: 20)),
         ),
         HavokEntryIcon(
             onTap: () => showHavokSheet(context, originScreen: 'workouts')),
@@ -904,9 +904,9 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
         await _loadData();
         _weekCardKey.currentState?.reload();
       },
-      padding: const EdgeInsets.fromLTRB(20, 20, 10, 18),
+      padding: const EdgeInsets.fromLTRB(25, 22, 16, 12),
       child: SizedBox(
-        height: 174,
+        height: 176,
         child: Row(
           children: [
             Expanded(
@@ -914,11 +914,13 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(AppLocalizations.of(context).workouts_today_hero_label,
-                      style: BldrText.label
-                          .copyWith(color: BldrColors.goldBright)),
-                  const SizedBox(height: 10),
+                      style: BldrText.label.copyWith(
+                          color: BldrColors.goldBright, letterSpacing: .4)),
+                  const SizedBox(height: 8),
                   Text(todayWorkout['name'] as String? ?? 'Treino',
-                      style: BldrText.kpiLg.copyWith(fontSize: 27)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: BldrText.cardTitleLg.copyWith(fontSize: 18)),
                   const SizedBox(height: 4),
                   Text(
                       completedToday == null
@@ -935,10 +937,10 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                     '$exerciseCount exercícios  ·  ~$duration min',
                     style: BldrText.meta,
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
                   SizedBox(
-                    width: 170,
-                    height: 44,
+                    width: 136,
+                    height: 38,
                     child: BldrPrimaryButton(
                       label: completedToday == null
                           ? 'Iniciar treino'
@@ -955,12 +957,12 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
               ),
             ),
             SizedBox(
-              width: 116,
+              width: 118,
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: SizedBox(
-                  width: 82.5,
-                  height: 165,
+                  width: 87,
+                  height: 170,
                   child: FittedBox(
                     fit: BoxFit.contain,
                     child: BldrMuscleMap(
@@ -1142,8 +1144,10 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
         Row(children: [
           Expanded(
               child: Text(AppLocalizations.of(context).workouts_my_workouts,
-                  style: BldrText.sectionTitle)),
-          Text('${list.length} treinos', style: BldrText.buttonSecondary),
+                  style: BldrText.label)),
+          Text('${list.length} treinos', style: BldrText.metaSm.copyWith(
+            color: BldrColors.goldBright,
+          )),
         ]),
         const SizedBox(height: 12),
         if (list.isEmpty)
@@ -1154,7 +1158,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
           )
         else
           SizedBox(
-            height: 142,
+            height: 116,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
@@ -1175,20 +1179,20 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
           'workout=${workout['name']}');
     }
     return SizedBox(
-      width: 126,
+      width: 98,
       child: BldrGlassCard(
         onTap: () => _viewWorkoutDetails(workout),
-        padding: const EdgeInsets.fromLTRB(13, 13, 8, 8),
+        padding: const EdgeInsets.fromLTRB(10, 10, 6, 7),
         background: selected ? BldrColors.goldTintStrong : null,
         borderColor: selected ? BldrColors.goldBorder : null,
-        radius: 16,
+        radius: 10,
         child: Stack(children: [
           Positioned(
             right: 2,
             bottom: 0,
             child: SizedBox(
-              width: 39,
-              height: 78,
+              width: 36,
+              height: 70,
               child: FittedBox(
                 fit: BoxFit.contain,
                 child: Opacity(
@@ -1204,12 +1208,17 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
           ),
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(workout['name'] as String? ?? 'Treino',
-                style: BldrText.cardTitle,
+                style: BldrText.metaSm.copyWith(color: BldrColors.textPrimary),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis),
             const SizedBox(height: 3),
-            Text('${workout['estimated_duration_minutes'] ?? 30} min',
-                style: BldrText.metaSm),
+            Text(
+              '${workout['estimated_duration_minutes'] ?? 30} min · '
+              '${((workout['workout_template_exercises'] as List?) ?? const []).length} ex.',
+              style: BldrText.metaSm.copyWith(fontSize: 8),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ]),
         ]),
       ),
@@ -1374,27 +1383,26 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
       children: [
         Text('Explorar', style: BldrText.sectionTitle),
         const SizedBox(height: 12),
-        _buildExplorCard(
-          icon: TablerIcons.barbell,
-          title: 'Biblioteca BLDR',
-          subtitle: 'Exercícios e treinos da comunidade',
-          onTap: _openBldrLibrary,
-        ),
-        const SizedBox(height: 10),
-        _buildExplorCard(
-          icon: TablerIcons.barbell,
-          title: 'BLDR CLUB',
-          subtitle: 'Biblioteca completa + exclusivos',
-          locked: !_isPro,
-          onTap: () => _openClubDestination((_) => const BldrClubScreen()),
-        ),
-        const SizedBox(height: 10),
-        _buildExplorCard(
-          icon: TablerIcons.books,
-          title: 'Programas',
-          subtitle: 'Programas estruturados e periodizados',
-          locked: !_isPro,
-          onTap: () => _openClubDestination((_) => const ClubProgramsPage()),
+        SizedBox(
+          height: 64,
+          child: Row(children: [
+            Expanded(child: _buildExplorCard(
+              icon: TablerIcons.books, title: 'Biblioteca BLDR',
+              subtitle: 'Treinos BLDR', onTap: _openBldrLibrary,
+            )),
+            const SizedBox(width: 8),
+            Expanded(child: _buildExplorCard(
+              icon: TablerIcons.barbell, title: 'BLDR CLUB',
+              subtitle: 'Exclusivos', locked: !_isPro,
+              onTap: () => _openClubDestination((_) => const BldrClubScreen()),
+            )),
+            const SizedBox(width: 8),
+            Expanded(child: _buildExplorCard(
+              icon: TablerIcons.books, title: 'Programas',
+              subtitle: 'Estruturados', locked: !_isPro,
+              onTap: () => _openClubDestination((_) => const ClubProgramsPage()),
+            )),
+          ]),
         ),
       ],
     );
@@ -1496,37 +1504,39 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
   }) {
     return BldrGlassCard(
       onTap: onTap,
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+      radius: 10,
       child: Row(
         children: [
           Container(
-            width: 36,
-            height: 36,
+            width: 22,
+            height: 22,
             decoration: BoxDecoration(
               color: BldrColors.goldTintChip,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: BldrColors.goldBorderChip),
             ),
-            child: Icon(icon, color: BldrColors.goldBright, size: 18),
+            child: Icon(icon, color: BldrColors.goldBright, size: 12),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 6),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: BldrText.cardTitle,
+                    style: BldrText.metaSm.copyWith(
+                        color: BldrColors.textPrimary, fontSize: 9),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
                 Text(subtitle,
-                    style: BldrText.meta,
-                    maxLines: 2,
+                    style: BldrText.metaSm.copyWith(fontSize: 7),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis),
               ],
             ),
           ),
-          Icon(locked ? TablerIcons.lock : TablerIcons.chevron_right,
-              color: BldrColors.textMuted, size: 18),
+          if (locked)
+            const Icon(TablerIcons.lock, color: BldrColors.textMuted, size: 11),
         ],
       ),
     );

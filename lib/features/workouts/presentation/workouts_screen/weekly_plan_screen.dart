@@ -1120,21 +1120,21 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
             filled: false,
             onPressed: () => Navigator.pop(context),
           ),
+          const SizedBox(width: 8),
           Expanded(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(AppLocalizations.of(context).plan_title,
-                        style: BldrText.cardTitleLg),
-                    if (widget.isClub) ...[
-                      const SizedBox(width: 7),
-                      const BldrBadge(label: 'CLUB'),
-                    ],
+                Row(children: [
+                  Text(AppLocalizations.of(context).plan_title.toUpperCase(),
+                      style: BldrText.screenTitle.copyWith(fontSize: 20)),
+                  if (widget.isClub) ...[
+                    const SizedBox(width: 7),
+                    const BldrBadge(label: 'CLUB'),
                   ],
-                ),
-                Text(_weekRange, style: BldrText.meta),
+                ]),
+                const SizedBox(height: 1),
+                Text(_weekRange, style: BldrText.metaSm),
               ],
             ),
           ),
@@ -1151,7 +1151,14 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
   Widget _buildSplitChip() {
     return Row(
       children: [
-        BldrChip(label: _splitLabel),
+        Expanded(
+          child: Text(
+            'Divisão do treino: $_splitLabel',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: BldrText.meta.copyWith(color: BldrColors.textSecondary),
+          ),
+        ),
         const SizedBox(width: 12),
         GestureDetector(
           onTap: _isPro ? _showEditPlanSheet : _showProUpsellSheet,
@@ -1168,25 +1175,27 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
   Widget _buildSummaryBlock() {
     final restantes = _trainingDays - _doneDays;
     return BldrGlassCard(
+      radius: 12,
+      padding: const EdgeInsets.fromLTRB(14, 13, 14, 11),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text.rich(
             TextSpan(
               text: '$_doneDays',
-              style: BldrText.kpiLg,
+              style: BldrText.kpiSm,
               children: [
                 TextSpan(
                     text:
                         ' ${AppLocalizations.of(context).plan_of_total_workouts(_trainingDays)}',
-                    style: BldrText.body),
+                    style: BldrText.meta),
               ],
             ),
           ),
           const SizedBox(height: 2),
           Text(AppLocalizations.of(context).plan_remaining(restantes),
               style: BldrText.meta),
-          const SizedBox(height: 15),
+          const SizedBox(height: 13),
           // P2 — barra segmentada só em dourado: preenchido = feito,
           // resto (não feito, hoje, futuro, descanso) = neutro uniforme.
           Row(
@@ -1195,7 +1204,7 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
               return Expanded(
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 2),
-                  height: 4,
+                  height: 3,
                   decoration: BoxDecoration(
                     color: filled
                         ? BldrColors.goldBright
@@ -1206,9 +1215,9 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
               );
             }).toList(),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Container(
-            padding: const EdgeInsets.only(top: 14),
+            padding: const EdgeInsets.only(top: 10),
             decoration: const BoxDecoration(
               border: Border(top: BorderSide(color: BldrColors.borderSubtle)),
             ),
