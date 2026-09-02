@@ -365,6 +365,8 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
           DateTime.tryParse((data['started_at'] as String?) ?? '');
 
       final resume = findWorkoutResumePosition(builtExercises);
+      final templateName = session.templateName?.trim();
+      final sessionName = session.name.trim();
 
       setState(() {
         _workoutData = data;
@@ -373,10 +375,10 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
         _currentSetNumber = resume.setNumber;
         _reps = resume.reps;
         _weight = resume.weightKg;
-        _effectiveWorkoutName = session.templateName?.trim().isNotEmpty == true
-            ? session.templateName!.trim()
-            : session.name.trim().isNotEmpty
-                ? session.name.trim()
+        _effectiveWorkoutName = templateName?.isNotEmpty == true
+            ? templateName!
+            : sessionName.isNotEmpty
+                ? sessionName
                 : widget.workoutName;
         if (startedAt != null) {
           // Move the start anchor back so the running diff matches real elapsed

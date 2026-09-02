@@ -356,6 +356,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
       // Calibrate elapsed time from the DB started_at so resuming a paused
       // workout shows the real accumulated duration, not a reset counter.
       final startedAt = session.startedAt;
+      final templateName = session.templateName?.trim();
+      final sessionName = session.name.trim();
 
       setState(() {
         _exercises = builtExercises;
@@ -363,10 +365,10 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
         _currentSetNumber = resume.setNumber;
         _reps = resume.reps;
         _weight = resume.weightKg;
-        _effectiveWorkoutName = session.templateName?.trim().isNotEmpty == true
-            ? session.templateName!.trim()
-            : session.name.trim().isNotEmpty
-                ? session.name.trim()
+        _effectiveWorkoutName = templateName?.isNotEmpty == true
+            ? templateName!
+            : sessionName.isNotEmpty
+                ? sessionName
                 : widget.workoutName;
         if (startedAt != null) {
           _startTime = startedAt;
