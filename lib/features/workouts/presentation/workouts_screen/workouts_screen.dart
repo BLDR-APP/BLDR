@@ -19,9 +19,7 @@ import 'package:bldr_fitness/routes/app_routes.dart';
 import 'package:bldr_fitness/services/workout_photo_service.dart';
 import 'package:bldr_fitness/theme/app_theme.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
-import 'package:bldr_fitness/widgets/continue_workout_card.dart';
 import 'package:bldr_fitness/widgets/custom_error_widget.dart';
-import 'package:bldr_fitness/features/club/presentation/bldr_club/club_active_workout_screen.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/bldr_club_screen.dart';
 import 'package:bldr_fitness/features/club/programs_page.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/havok/havok_sheet.dart';
@@ -49,7 +47,6 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
   // ── state ──────────────────────────────────────────────────────────────────
   List<Map<String, dynamic>> _myWorkouts = [];
   List<Map<String, dynamic>> _bldrWorkouts = [];
-  List<Map<String, dynamic>> _pausedWorkouts = [];
   Map<String, BldrMuscleMapData> _muscleDataByTemplateId = {};
   Map<String, dynamic>? _todayWorkout;
   BldrMuscleMapData? _todayMuscleData;
@@ -98,7 +95,6 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
       final templatesResult = await getIt<GetWorkoutTemplates>()();
       final weeklyPlanResult = await getIt<GetWeeklyPlan>()();
       final activeResult = await getIt<HasActiveWorkout>()();
-      final pausedResult = await getIt<GetPausedWorkouts>()(limit: 2);
       final completedResult =
           await getIt<GetWorkoutHistory>()(completedOnly: true, limit: 20);
 
@@ -163,10 +159,6 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
         debugPrint('[MuscleMapView] data.view=${todayData.view.name}');
       }
       final isActive = activeResult.valueOrNull ?? false;
-      final paused = (pausedResult.valueOrNull ?? [])
-          .where((w) => w.source == 'free')
-          .map(pausedToLegacyMap)
-          .toList();
       final completedToday = completedSessions.where((session) {
         final completedAt = session.completedAt?.toLocal();
         return completedAt != null &&
@@ -182,7 +174,6 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
       setState(() {
         _bldrWorkouts = all.where((w) => w['is_public'] == true).toList();
         _myWorkouts = all.where((w) => w['is_public'] != true).toList();
-        _pausedWorkouts = paused;
         _muscleDataByTemplateId = muscleData;
         _todayWorkout =
             todayTemplate == null ? null : templateToLegacyMap(todayTemplate);
@@ -761,16 +752,6 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                   ),
                 ),
 
-                // ── Continuar treinos pausados ──────────────────────────
-                if (_pausedWorkouts.isNotEmpty)
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(
-                        BldrSpacing.pageX, 16, BldrSpacing.pageX, 0),
-                    sliver: SliverToBoxAdapter(
-                      child: _buildContinueSection(),
-                    ),
-                  ),
-
                 // ── Banner treino ativo (legado) — oculto temporariamente ──
                 // if (_hasActiveWorkout)
                 //   SliverPadding(
@@ -978,118 +959,6 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
         ),
       ),
     );
-  }
-
-  // ── continue section ─────────────────────────────────────────────────────
-
-  Widget _buildContinueSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(AppLocalizations.of(context).workouts_continue_title,
-            style: BldrText.sectionTitle),
-        const SizedBox(height: 12),
-        ..._pausedWorkouts.map((summary) {
-          final workoutId = summary['id'] as String;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Dismissible(
-              key: ValueKey('paused_$workoutId'),
-              direction: DismissDirection.endToStart,
-              confirmDismiss: (_) async {
-                return await showDialog<bool>(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        backgroundColor: BldrColors.sheetBg,
-                        title: Text(
-                            AppLocalizations.of(context)
-                                .dashboard_delete_paused_title,
-                            style: const TextStyle(color: Colors.white)),
-                        content: Text(
-                          AppLocalizations.of(context)
-                              .dashboard_delete_paused_body,
-                          style: TextStyle(color: Color(0xFF888070)),
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx, false),
-                            child: Text(
-                                AppLocalizations.of(context).common_cancel,
-                                style:
-                                    const TextStyle(color: Color(0xFF888070))),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx, true),
-                            child: Text(
-                                AppLocalizations.of(context).common_delete,
-                                style:
-                                    const TextStyle(color: Color(0xFFC84040))),
-                          ),
-                        ],
-                      ),
-                    ) ??
-                    false;
-              },
-              onDismissed: (_) async {
-                setState(() =>
-                    _pausedWorkouts.removeWhere((w) => w['id'] == workoutId));
-                final result =
-                    await getIt<DeletePausedWorkout>()(workoutId, 'free');
-                if (result.isFailure && mounted) _loadData();
-              },
-              background: Container(
-                alignment: Alignment.centerRight,
-                padding: const EdgeInsets.only(right: 16),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFC84040),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(Icons.delete_outline,
-                    color: Colors.white, size: 24),
-              ),
-              // ContinueWorkoutCard é compartilhado (Club + Dashboard) —
-              // mantido como está, não redesenhado nesta tarefa.
-              child: ContinueWorkoutCard(
-                summary: summary,
-                onResume: () => _resumeWorkout(summary),
-              ),
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
-  void _resumeWorkout(Map<String, dynamic> summary) {
-    final id = summary['id'] as String;
-    final name = (summary['name'] as String?) ?? 'Treino';
-    final source = (summary['source'] as String?) ?? 'free';
-
-    if (source == 'club') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ClubActiveWorkoutScreen(
-            workoutId: id,
-            workoutName: name,
-          ),
-        ),
-      ).then((_) {
-        if (mounted) _loadData();
-      });
-    } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ActiveWorkoutScreen(
-            workoutId: id,
-            workoutName: name,
-          ),
-        ),
-      ).then((_) {
-        if (mounted) _loadData();
-      });
-    }
   }
 
   // ── active workout banner ─────────────────────────────────────────────────

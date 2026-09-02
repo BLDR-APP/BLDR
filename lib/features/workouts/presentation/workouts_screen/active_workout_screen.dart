@@ -14,6 +14,7 @@ import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/features/subscription/domain/usecases/resolve_club_access.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
+import 'package:bldr_fitness/features/workouts/presentation/exercise_display_name.dart';
 import 'package:bldr_fitness/features/achievements/domain/usecases/achievement_usecases.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart'
     as uc;
@@ -1154,9 +1155,10 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
 
     // Prefer name from ExerciseDB detail (covers ExerciseDB-picker exercises
     // that have no row in the internal exercises table).
-    final name = (ex['name'] as String?)?.isNotEmpty == true
-        ? ex['name'] as String
-        : (detail?.name.isNotEmpty == true ? detail!.name : 'Exercício');
+    final name = resolveExerciseDisplayName(
+      internalName: ex['name'] as String?,
+      exerciseDbName: detail?.name,
+    );
 
     final equipment = detail != null && detail.equipments.isNotEmpty
         ? detail.equipments.join(', ')
@@ -1371,12 +1373,12 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
               ),
               const SizedBox(height: 16),
               Text(
-                (ex['name'] as String?)?.isNotEmpty == true
-                    ? ex['name'] as String
-                    : (detail?.name.isNotEmpty == true
-                        ? detail!.name
-                        : AppLocalizations.of(sheetCtx)
-                            .workout_technique_fallback),
+                resolveExerciseDisplayName(
+                  internalName: ex['name'] as String?,
+                  exerciseDbName: detail?.name,
+                  fallback: AppLocalizations.of(sheetCtx)
+                      .workout_technique_fallback,
+                ),
                 style: BldrText.cardTitleLg,
               ),
               const SizedBox(height: 14),
@@ -1723,7 +1725,12 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
         const SizedBox(height: 12),
         ...List.generate(_exercises.length, (i) {
           final ex = _exercises[i]['exercise'] as Map<String, dynamic>;
-          final name = ex['name'] as String? ?? 'Exercício';
+          final exDbId = ex['exercise_db_id'] as String?;
+          final detail = exDbId != null ? _exDbCache[exDbId] : null;
+          final name = resolveExerciseDisplayName(
+            internalName: ex['name'] as String?,
+            exerciseDbName: detail?.name,
+          );
           final isCurrent = i == _currentExerciseIdx;
           final isDone = i < _currentExerciseIdx;
           final isSkipped = _skippedExerciseIndexes.contains(i);

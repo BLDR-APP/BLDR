@@ -25,6 +25,7 @@ import 'package:bldr_fitness/theme/bldr_tokens.dart';
 import 'package:bldr_fitness/widgets/muscle_visualizer_widget.dart';
 import 'package:bldr_fitness/shared/providers/workout_session_provider.dart';
 import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/workout_session_logic.dart';
+import 'package:bldr_fitness/features/workouts/presentation/exercise_display_name.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/paused_workout_summary.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart'
     as uc;
@@ -414,18 +415,6 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
           setState(() {
             for (final d in details) {
               _exDbCache[d.exerciseId] = d;
-            }
-            // Treinos personalizados: enriquece os nomes dos exercícios
-            // com os dados da API (fonte de verdade para exercícios do usuário)
-            for (final exGroup in _exercises) {
-              final ex = exGroup['exercise'] as Map<String, dynamic>;
-              final dbId = ex['exercise_db_id'] as String?;
-              if (dbId != null && dbId.isNotEmpty) {
-                final apiDetail = _exDbCache[dbId];
-                if (apiDetail != null && apiDetail.name.isNotEmpty) {
-                  ex['name'] = apiDetail.name;
-                }
-              }
             }
             _isPrefetching = false;
           });
@@ -1070,9 +1059,10 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
     final exerciseDbId = ex['exercise_db_id'] as String?;
     final detail = exerciseDbId != null ? _exDbCache[exerciseDbId] : null;
 
-    final name = (ex['name'] as String?)?.isNotEmpty == true
-        ? ex['name'] as String
-        : (detail?.name.isNotEmpty == true ? detail!.name : 'Exercício');
+    final name = resolveExerciseDisplayName(
+      internalName: ex['name'] as String?,
+      exerciseDbName: detail?.name,
+    );
 
     final equipment = detail != null && detail.equipments.isNotEmpty
         ? detail.equipments.join(', ')
@@ -1279,12 +1269,12 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
               ),
               const SizedBox(height: 16),
               Text(
-                (ex['name'] as String?)?.isNotEmpty == true
-                    ? ex['name'] as String
-                    : (detail?.name.isNotEmpty == true
-                        ? detail!.name
-                        : AppLocalizations.of(sheetCtx)
-                            .workout_technique_fallback),
+                resolveExerciseDisplayName(
+                  internalName: ex['name'] as String?,
+                  exerciseDbName: detail?.name,
+                  fallback: AppLocalizations.of(sheetCtx)
+                      .workout_technique_fallback,
+                ),
                 style: BldrText.cardTitleLg,
               ),
               const SizedBox(height: 14),
@@ -1731,11 +1721,10 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
           final ex = _exercises[i]['exercise'] as Map<String, dynamic>;
           final exDbId = ex['exercise_db_id'] as String?;
           final apiDetail = exDbId != null ? _exDbCache[exDbId] : null;
-          final name = (ex['name'] as String?)?.isNotEmpty == true
-              ? ex['name'] as String
-              : (apiDetail?.name.isNotEmpty == true
-                  ? apiDetail!.name
-                  : 'Exercício');
+          final name = resolveExerciseDisplayName(
+            internalName: ex['name'] as String?,
+            exerciseDbName: apiDetail?.name,
+          );
           final isCurrent = i == _currentExerciseIdx;
           final isDone = i < _currentExerciseIdx;
           final isSkipped = _skippedExerciseIndexes.contains(i);
