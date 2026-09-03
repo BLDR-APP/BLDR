@@ -12,6 +12,8 @@ import 'package:bldr_fitness/features/community/domain/entities/recent_workout.d
 import 'package:bldr_fitness/features/community/domain/entities/workout_exercise.dart';
 import 'package:bldr_fitness/features/community/domain/repositories/community_feed_repository.dart';
 import 'package:bldr_fitness/features/integrations/data/health_kit_service.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/exercise_display_name.dart';
+import 'package:bldr_fitness/services/exercise_db_rapid_service.dart';
 
 class CommunityFeedRepositoryImpl implements CommunityFeedRepository {
   final SupabaseClient _client;
@@ -874,21 +876,55 @@ class CommunityFeedRepositoryImpl implements CommunityFeedRepository {
           ? 'club_workout_exercise_sets'
           : 'workout_exercise_sets';
 
+      final select = source == 'club'
+          ? 'exercise_id, free_name, weight_kg, reps, completed_at, order_index, set_number'
+          : 'exercise_id, exercise_db_id, free_name, weight_kg, reps, completed_at, order_index, set_number';
       final rows = await _client
           .from(table)
-          .select('exercise_id, free_name, weight_kg, reps, created_at')
+          .select(select)
           .eq('user_workout_id', workoutId)
-          .not('completed_at', 'is', null)
-          .order('created_at') as List;
+          .order('order_index')
+          .order('set_number') as List;
+
+      final exerciseIds = rows
+          .map((row) => row['exercise_id']?.toString() ?? '')
+          .where((id) => id.isNotEmpty)
+          .toSet()
+          .toList();
+      final internalNames = <String, String>{};
+      if (exerciseIds.isNotEmpty) {
+        final condition = exerciseIds.map((id) => 'id.eq.$id').join(',');
+        final exerciseRows = await _client
+            .from('exercises')
+            .select('id, name')
+            .or(condition) as List;
+        for (final exercise in exerciseRows) {
+          internalNames[exercise['id'].toString()] =
+              exercise['name']?.toString() ?? '';
+        }
+      }
 
       final grouped = <String, List<WorkoutSet>>{};
       final names = <String, String>{};
       for (final row in rows) {
-        final key = (row['exercise_id'] as String?) ??
-            (row['free_name'] as String?) ??
-            'Exercício';
-        names.putIfAbsent(key, () => row['free_name'] as String? ?? key);
+        final exerciseId = row['exercise_id']?.toString();
+        final exerciseDbId = row['exercise_db_id']?.toString();
+        final freeName = row['free_name']?.toString();
+        final key = exerciseId ?? exerciseDbId ?? freeName ?? 'Exercício';
+        final exerciseDbName = exerciseDbId == null
+            ? null
+            : (await ExerciseDbRapidService.instance.getById(exerciseDbId))
+                ?.name;
+        names.putIfAbsent(
+          key,
+          () => resolveExerciseDisplayName(
+            internalName:
+                exerciseId == null ? freeName : internalNames[exerciseId],
+            exerciseDbName: exerciseDbName,
+          ),
+        );
         grouped.putIfAbsent(key, () => []);
+        if (row['completed_at'] == null) continue;
         final weight = (row['weight_kg'] as num?)?.toDouble();
         final reps = row['reps'] as int?;
         if (weight != null || reps != null) {

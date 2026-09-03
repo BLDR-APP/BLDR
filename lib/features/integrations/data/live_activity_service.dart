@@ -3,7 +3,6 @@ import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:bldr_fitness/core/async_latest_wins_queue.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:live_activities/live_activities.dart';
 
@@ -172,20 +171,19 @@ class LiveActivityService {
       return;
     }
     final data = _buildData(
-          workoutName: workoutName,
-          exerciseName: exerciseName,
-          exerciseSet: exerciseSet,
-          exerciseTotalSets: exerciseTotalSets,
-          exerciseIndex: exerciseIndex,
-          exerciseTotalExercises: exerciseTotalExercises,
-          isResting: isResting,
-          restEndTimestamp: restEndTimestamp,
-          restTotalSeconds: restTotalSeconds,
-          weightKg: weightKg,
-          reps: reps,
-          workoutStartTimestamp: workoutStartTimestamp,
-        )
-      ..['sequence'] = sequence;
+      workoutName: workoutName,
+      exerciseName: exerciseName,
+      exerciseSet: exerciseSet,
+      exerciseTotalSets: exerciseTotalSets,
+      exerciseIndex: exerciseIndex,
+      exerciseTotalExercises: exerciseTotalExercises,
+      isResting: isResting,
+      restEndTimestamp: restEndTimestamp,
+      restTotalSeconds: restTotalSeconds,
+      weightKg: weightKg,
+      reps: reps,
+      workoutStartTimestamp: workoutStartTimestamp,
+    )..['sequence'] = sequence;
     final update = _PendingLiveActivityUpdate(
       sequence: sequence,
       mode: mode,
@@ -316,7 +314,17 @@ class LiveActivityService {
   static Future<void> _performUpdate(_PendingLiveActivityUpdate update) async {
     final startedAt = DateTime.now();
     try {
-      await _plugin.updateActivity(_kActivityId, update.data);
+      final activityId = _activityKitId;
+      if (activityId == null) {
+        _log('update_dropped',
+            mode: update.mode,
+            sequence: update.sequence,
+            exerciseIndex: update.exerciseIndex,
+            exerciseSet: update.exerciseSet,
+            isResting: update.isResting);
+        return;
+      }
+      await _plugin.updateActivity(activityId, update.data);
       _log('update_completed',
           mode: update.mode,
           sequence: update.sequence,

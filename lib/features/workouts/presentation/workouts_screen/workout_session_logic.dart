@@ -24,7 +24,9 @@ WorkoutResumePosition findWorkoutResumePosition(
         exercises[exerciseIndex]['sets'] as List<Map<String, dynamic>>? ??
             const [];
     for (final set in sets) {
-      if (set['completed_at'] == null && set['is_completed'] != true) {
+      if (set['completed_at'] == null &&
+          set['is_completed'] != true &&
+          set['is_skipped'] != true) {
         return WorkoutResumePosition(
           hasPendingSet: true,
           exerciseIndex: exerciseIndex,

@@ -14,7 +14,7 @@ import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/features/subscription/domain/usecases/resolve_club_access.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
-import 'package:bldr_fitness/features/workouts/presentation/exercise_display_name.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/exercise_display_name.dart';
 import 'package:bldr_fitness/features/achievements/domain/usecases/achievement_usecases.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart'
     as uc;
@@ -202,9 +202,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
       _startRestTimer(left);
       setState(() {
         _restEndTime = end;
-        _restTotalSeconds = action.totalSeconds > 0
-            ? action.totalSeconds
-            : _restTotalSeconds;
+        _restTotalSeconds =
+            action.totalSeconds > 0 ? action.totalSeconds : _restTotalSeconds;
       });
       await _updateLiveActivity(
         isResting: true,
@@ -247,6 +246,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
         'exercise_id': s.exerciseId,
         'exercise_db_id': s.exerciseDbId,
         'completed_at': s.completedAt?.toIso8601String(),
+        'is_skipped': s.isSkipped,
       };
 
   Future<void> _loadWorkout() async {
@@ -424,6 +424,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
               }
               _isPrefetching = false;
             });
+            await _updateLiveActivity();
           }
         } catch (_) {
           // Rate-limit or network failure — gracefully degrade; workout continues.
@@ -432,7 +433,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
       } else {
         if (mounted) setState(() => _isPrefetching = false);
       }
-
     } catch (_) {
       if (mounted) {
         setState(() {
@@ -457,9 +457,13 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     if (_exercises.isEmpty) return _effectiveWorkoutName;
     final ex = _exercises[_currentExerciseIdx];
     final exData = ex['exercise'] as Map<String, dynamic>;
-    return exData['name'] as String? ??
-        exData['free_name'] as String? ??
-        _effectiveWorkoutName;
+    final exerciseDbId = exData['exercise_db_id'] as String?;
+    return resolveExerciseDisplayName(
+      internalName: exData['name'] as String? ?? exData['free_name'] as String?,
+      exerciseDbName:
+          exerciseDbId == null ? null : _exDbCache[exerciseDbId]?.name,
+      fallback: _effectiveWorkoutName,
+    );
   }
 
   int get _currentTotalSets {
@@ -468,17 +472,17 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
   }
 
   Future<void> _startLiveActivity() => LiveActivityService.startWorkout(
-      mode: 'free',
-      workoutName: _effectiveWorkoutName,
-      exerciseName: _currentExerciseName,
-      exerciseSet: _currentSetNumber,
-      exerciseTotalSets: _currentTotalSets,
-      exerciseIndex: _currentExerciseIdx,
-      exerciseTotalExercises: _exercises.length,
-      weightKg: _weight,
-      reps: _reps,
-      workoutStartTimestamp: _startTime.millisecondsSinceEpoch / 1000.0,
-    );
+        mode: 'free',
+        workoutName: _effectiveWorkoutName,
+        exerciseName: _currentExerciseName,
+        exerciseSet: _currentSetNumber,
+        exerciseTotalSets: _currentTotalSets,
+        exerciseIndex: _currentExerciseIdx,
+        exerciseTotalExercises: _exercises.length,
+        weightKg: _weight,
+        reps: _reps,
+        workoutStartTimestamp: _startTime.millisecondsSinceEpoch / 1000.0,
+      );
 
   Future<void> _updateLiveActivity(
       {bool? isResting, int? restTotalSeconds, DateTime? restEndTime}) {
@@ -537,19 +541,19 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
       }
       if (!mounted) return;
 
-    // Item 8 — espelha localmente o que acabou de ser persistido, para que
-    // a lista de séries mostre o valor real confirmado (e não o default
-    // carregado no início da sessão). Não afeta a chamada acima nem o
-    // avanço de sequência abaixo.
-    sets[setIdx]['weight_kg'] = _weight;
-    sets[setIdx]['reps'] = _reps;
-    sets[setIdx]['completed_at'] = DateTime.now().toIso8601String();
+      // Item 8 — espelha localmente o que acabou de ser persistido, para que
+      // a lista de séries mostre o valor real confirmado (e não o default
+      // carregado no início da sessão). Não afeta a chamada acima nem o
+      // avanço de sequência abaixo.
+      sets[setIdx]['weight_kg'] = _weight;
+      sets[setIdx]['reps'] = _reps;
+      sets[setIdx]['completed_at'] = DateTime.now().toIso8601String();
 
-    final totalSets = exGroup['totalSets'] as int;
+      final totalSets = exGroup['totalSets'] as int;
 
-    // Start rest timer
-    final restSec = (sets[setIdx]['rest_seconds'] as int?) ?? 90;
-    _startRestTimer(restSec);
+      // Start rest timer
+      final restSec = (sets[setIdx]['rest_seconds'] as int?) ?? 90;
+      _startRestTimer(restSec);
 
       if (_currentSetNumber < totalSets) {
         setState(() => _currentSetNumber++);
@@ -598,15 +602,33 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     }
   }
 
-  void _skipExercise() {
-    if (_currentExerciseIdx >= _exercises.length - 1) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Conclua ou pause o treino no último exercício.'),
-      ));
-      return;
+  Future<void> _skipExercise() async {
+    if (_exercises.isEmpty) return;
+    final exGroup = _exercises[_currentExerciseIdx];
+    final sets = exGroup['sets'] as List<Map<String, dynamic>>;
+    final setIdx = _currentSetNumber - 1;
+    if (setIdx >= sets.length) return;
+    final setId = sets[setIdx]['id']?.toString() ?? '';
+    if (!_confirmationGuard.tryAcquire(setId)) return;
+    if (mounted) setState(() => _confirmingSetId = setId);
+    try {
+      final result = await getIt<uc.SkipWorkoutSet>()(setId);
+      if (result.isFailure || !mounted) return;
+      sets[setIdx]['is_skipped'] = true;
+      if (_currentSetNumber < (exGroup['totalSets'] as int)) {
+        setState(() => _currentSetNumber++);
+      } else if (!_advanceToNextExercise()) {
+        await _finishWorkout();
+        return;
+      }
+      await _updateLiveActivity(isResting: false);
+      _sendToWatch();
+    } finally {
+      _confirmationGuard.release(setId);
+      if (mounted && _confirmingSetId == setId) {
+        setState(() => _confirmingSetId = null);
+      }
     }
-    _skippedExerciseIndexes.add(_currentExerciseIdx);
-    unawaited(_nextExercise());
   }
 
   void _startRestTimer(int seconds) {
@@ -917,51 +939,52 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                           ],
                         ),
                       )
-                : Stack(
-                    children: [
-                      Column(
+                    : Stack(
                         children: [
-                          _buildHeader(),
-                          Expanded(
-                            child: SingleChildScrollView(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: BldrSpacing.pageX),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const SizedBox(height: 16),
-                                  _buildTimeSeriesCards(),
-                                  const SizedBox(height: 14),
-                                  _buildOverallProgress(),
-                                  const SizedBox(height: 22),
-                                  if (_exercises.isNotEmpty) ...[
-                                    _buildCurrentExercise(),
-                                    const SizedBox(height: 18),
-                                    _buildInputRow(),
-                                    const SizedBox(height: 14),
-                                    _buildSeriesList(),
-                                    const SizedBox(height: 22),
-                                    _buildExerciseTimeline(),
-                                    const SizedBox(height: 130),
-                                  ],
-                                ],
+                          Column(
+                            children: [
+                              _buildHeader(),
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: BldrSpacing.pageX),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const SizedBox(height: 16),
+                                      _buildTimeSeriesCards(),
+                                      const SizedBox(height: 14),
+                                      _buildOverallProgress(),
+                                      const SizedBox(height: 22),
+                                      if (_exercises.isNotEmpty) ...[
+                                        _buildCurrentExercise(),
+                                        const SizedBox(height: 18),
+                                        _buildInputRow(),
+                                        const SizedBox(height: 14),
+                                        _buildSeriesList(),
+                                        const SizedBox(height: 22),
+                                        _buildExerciseTimeline(),
+                                        const SizedBox(height: 130),
+                                      ],
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
+                              _buildFooter(),
+                            ],
                           ),
-                          _buildFooter(),
+                          // Faixa de descanso — flutua sobre o conteúdo, que
+                          // continua rolável e utilizável por trás dela.
+                          if (_resting)
+                            Positioned(
+                              left: 14,
+                              right: 14,
+                              bottom: 88,
+                              child: _buildRestFloatingStrip(),
+                            ),
                         ],
                       ),
-                      // Faixa de descanso — flutua sobre o conteúdo, que
-                      // continua rolável e utilizável por trás dela.
-                      if (_resting)
-                        Positioned(
-                          left: 14,
-                          right: 14,
-                          bottom: 88,
-                          child: _buildRestFloatingStrip(),
-                        ),
-                    ],
-                  ),
           ),
         ),
       ),
@@ -1376,8 +1399,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                 resolveExerciseDisplayName(
                   internalName: ex['name'] as String?,
                   exerciseDbName: detail?.name,
-                  fallback: AppLocalizations.of(sheetCtx)
-                      .workout_technique_fallback,
+                  fallback:
+                      AppLocalizations.of(sheetCtx).workout_technique_fallback,
                 ),
                 style: BldrText.cardTitleLg,
               ),

@@ -219,6 +219,8 @@ void setupInjection({Map<String, dynamic> config = const {}}) {
       () => CompleteWorkoutSet(getIt<WorkoutSessionRepository>()));
   getIt
       .registerFactory(() => UndoWorkoutSet(getIt<WorkoutSessionRepository>()));
+  getIt
+      .registerFactory(() => SkipWorkoutSet(getIt<WorkoutSessionRepository>()));
   getIt.registerFactory(
       () => HasActiveWorkout(getIt<WorkoutSessionRepository>()));
   getIt.registerFactory(
@@ -358,6 +360,7 @@ void setupInjection({Map<String, dynamic> config = const {}}) {
       () => CompleteClubWorkout(getIt<ClubWorkoutRepository>()));
   getIt.registerFactory(() => CompleteClubSet(getIt<ClubWorkoutRepository>()));
   getIt.registerFactory(() => UndoClubSet(getIt<ClubWorkoutRepository>()));
+  getIt.registerFactory(() => SkipClubSet(getIt<ClubWorkoutRepository>()));
   getIt.registerFactory(
       () => WatchActiveClubWorkout(getIt<ClubWorkoutRepository>()));
   getIt.registerFactory(

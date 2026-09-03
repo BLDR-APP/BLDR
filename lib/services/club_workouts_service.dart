@@ -10,7 +10,8 @@ import 'package:bldr_fitness/services/supabase_service.dart';
 
 class ClubWorkoutsService {
   static ClubWorkoutsService? _instance;
-  static ClubWorkoutsService get instance => _instance ??= ClubWorkoutsService._();
+  static ClubWorkoutsService get instance =>
+      _instance ??= ClubWorkoutsService._();
 
   ClubWorkoutsService._();
 
@@ -35,7 +36,8 @@ class ClubWorkoutsService {
 
       if (publicOnly) query = query.eq('is_public', true);
       if (workoutType != null) query = query.eq('workout_type', workoutType);
-      if (difficultyLevel != null) query = query.eq('difficulty_level', difficultyLevel);
+      if (difficultyLevel != null)
+        query = query.eq('difficulty_level', difficultyLevel);
 
       final response = await query.order('created_at', ascending: false);
       return List<Map<String, dynamic>>.from(response);
@@ -45,7 +47,8 @@ class ClubWorkoutsService {
   }
 
   /// Detalha um template com exercícios (2 queries — sem embed FK para exercises)
-  Future<Map<String, dynamic>?> getClubWorkoutTemplateWithExercises(String templateId) async {
+  Future<Map<String, dynamic>?> getClubWorkoutTemplateWithExercises(
+      String templateId) async {
     try {
       // 1) Cabeçalho do template
       final template = await _client.from('club_workout_templates').select('''
@@ -56,7 +59,8 @@ class ClubWorkoutsService {
       // 2) Exercícios do template (sem embed)
       final rawExercises = await _client
           .from('club_workout_template_exercises')
-          .select('id, exercise_id, order_index, sets, reps, duration_seconds, rest_seconds, weight_kg, distance_meters, notes')
+          .select(
+              'id, exercise_id, order_index, sets, reps, duration_seconds, rest_seconds, weight_kg, distance_meters, notes')
           .eq('workout_template_id', templateId)
           .order('order_index', ascending: true);
 
@@ -74,7 +78,8 @@ class ClubWorkoutsService {
         final orCond = ids.map((id) => 'id.eq.$id').join(',');
         final exRows = await _client
             .from('exercises')
-            .select('id, name, description, exercise_type, primary_muscle_group, secondary_muscle_groups, instructions, image_url, equipment_needed, exercise_db_id')
+            .select(
+                'id, name, description, exercise_type, primary_muscle_group, secondary_muscle_groups, instructions, image_url, equipment_needed, exercise_db_id')
             .or(orCond);
         for (final e in (exRows as List)) {
           final id = (e['id'] ?? '').toString();
@@ -85,12 +90,13 @@ class ClubWorkoutsService {
       // 4) Mescla exercícios com detalhes
       final enriched = exerciseRows.map((row) {
         final exId = (row['exercise_id'] ?? '').toString();
-        final ex = exById[exId] ?? {
-          'id': exId,
-          'name': 'Exercício',
-          'primary_muscle_group': null,
-          'exercise_db_id': null,
-        };
+        final ex = exById[exId] ??
+            {
+              'id': exId,
+              'name': 'Exercício',
+              'primary_muscle_group': null,
+              'exercise_db_id': null,
+            };
         return {...row, 'exercises': ex};
       }).toList();
 
@@ -143,12 +149,21 @@ class ClubWorkoutsService {
 
       Map<String, dynamic> workout;
       try {
-        workout = await _client.from('club_user_workouts').insert(baseInsert).select().single();
+        workout = await _client
+            .from('club_user_workouts')
+            .insert(baseInsert)
+            .select()
+            .single();
       } on PostgrestException catch (e) {
         // Fallback se 'is_completed' não existir
         if ((e.message ?? '').toLowerCase().contains('is_completed')) {
-          final withoutFlag = Map<String, dynamic>.from(baseInsert)..remove('is_completed');
-          workout = await _client.from('club_user_workouts').insert(withoutFlag).select().single();
+          final withoutFlag = Map<String, dynamic>.from(baseInsert)
+            ..remove('is_completed');
+          workout = await _client
+              .from('club_user_workouts')
+              .insert(withoutFlag)
+              .select()
+              .single();
         } else {
           rethrow;
         }
@@ -200,7 +215,8 @@ class ClubWorkoutsService {
           // Fallback se 'is_completed' não existir
           if ((e.message ?? '').toLowerCase().contains('is_completed')) {
             final fallback = setsToInsert
-                .map((m) => Map<String, dynamic>.from(m)..remove('is_completed'))
+                .map(
+                    (m) => Map<String, dynamic>.from(m)..remove('is_completed'))
                 .toList();
             // MODIFICADO: Tenta inserir na tabela 'club_workout_exercise_sets'
             await _client.from('club_workout_exercise_sets').insert(fallback);
@@ -241,7 +257,8 @@ class ClubWorkoutsService {
 
   /// Garante que os sets iniciais existam para uma sessão do Club.
   /// Idempotente — seguro chamar mesmo que os sets já existam.
-  Future<void> ensureClubInitialSets(String sessionId, String templateId) async {
+  Future<void> ensureClubInitialSets(
+      String sessionId, String templateId) async {
     try {
       final existing = await _client
           .from('club_workout_exercise_sets')
@@ -252,7 +269,8 @@ class ClubWorkoutsService {
 
       final tpl = await _client
           .from('club_workout_template_exercises')
-          .select('order_index, sets, reps, duration_seconds, rest_seconds, weight_kg, distance_meters, notes, exercise_id')
+          .select(
+              'order_index, sets, reps, duration_seconds, rest_seconds, weight_kg, distance_meters, notes, exercise_id')
           .eq('workout_template_id', templateId)
           .order('order_index', ascending: true);
 
@@ -301,18 +319,19 @@ class ClubWorkoutsService {
           .eq('id', workoutId)
           .single();
 
-      final startedAt = DateTime.parse(workoutResponse['started_at'].toString());
+      final startedAt =
+          DateTime.parse(workoutResponse['started_at'].toString());
       final rawDuration = now.difference(startedAt).inSeconds;
       final duration = rawDuration < 60 ? 60 : rawDuration;
 
       final response = await _client
           .from('club_user_workouts')
           .update({
-        'completed_at': now.toUtc().toIso8601String(),
-        'total_duration_seconds': duration,
-        'notes': notes,
-        'is_completed': true,
-      })
+            'completed_at': now.toUtc().toIso8601String(),
+            'total_duration_seconds': duration,
+            'notes': notes,
+            'is_completed': true,
+          })
           .eq('id', workoutId)
           .select()
           .single();
@@ -342,20 +361,18 @@ class ClubWorkoutsService {
 
       final targetUserId = userId ?? currentUser.id;
 
-      var query = _client
-          .from('club_user_workouts')
-          .select('''
+      var query = _client.from('club_user_workouts').select('''
             id, name, started_at, completed_at, total_duration_seconds,
             notes, is_completed,
             club_workout_templates(name, workout_type, estimated_duration_minutes)
-          ''')
-          .eq('user_id', targetUserId);
+          ''').eq('user_id', targetUserId);
 
       if (completedOnly) {
         query = query.eq('is_completed', true);
       }
 
-      final response = await query.order('started_at', ascending: false).limit(limit);
+      final response =
+          await query.order('started_at', ascending: false).limit(limit);
       return List<Map<String, dynamic>>.from(response).map((row) {
         if (row['is_completed'] == true || row['completed_at'] != null) {
           return row;
@@ -396,16 +413,16 @@ class ClubWorkoutsService {
       final response = await _client
           .from('club_workout_exercise_sets')
           .insert({
-        'user_workout_id': userWorkoutId,
-        'exercise_id': exerciseId,
-        'set_number': setNumber,
-        'reps': reps,
-        'weight_kg': weightKg,
-        'duration_seconds': durationSeconds,
-        'distance_meters': distanceMeters,
-        'rest_seconds': restSeconds,
-        'notes': notes,
-      })
+            'user_workout_id': userWorkoutId,
+            'exercise_id': exerciseId,
+            'set_number': setNumber,
+            'reps': reps,
+            'weight_kg': weightKg,
+            'duration_seconds': durationSeconds,
+            'distance_meters': distanceMeters,
+            'rest_seconds': restSeconds,
+            'notes': notes,
+          })
           .select()
           .single();
 
@@ -422,7 +439,7 @@ class ClubWorkoutsService {
   Future<void> completeClubSet({
     required String setId,
     double? weight, // <--- Novo parâmetro
-    int? reps,      // <--- Novo parâmetro
+    int? reps, // <--- Novo parâmetro
   }) async {
     try {
       final Map<String, dynamic> updates = {
@@ -438,7 +455,8 @@ class ClubWorkoutsService {
       }
 
       await _client
-          .from('club_workout_exercise_sets') // Confirme se a tabela é essa mesmo
+          .from(
+              'club_workout_exercise_sets') // Confirme se a tabela é essa mesmo
           .update(updates)
           .eq('id', setId);
     } catch (e) {
@@ -452,16 +470,20 @@ class ClubWorkoutsService {
   /// Desfaz conclusão da série
   Future<void> undoClubSet({required String setId}) async {
     try {
-      await _client
-          .from('club_workout_exercise_sets')
-          .update({
+      await _client.from('club_workout_exercise_sets').update({
         'completed_at': null,
         // 'is_completed': false, // REMOVIDO
-      })
-          .eq('id', setId);
+      }).eq('id', setId);
     } catch (e) {
       throw Exception('Failed to undo club set: $e');
     }
+  }
+
+  Future<void> skipClubSet({required String setId}) async {
+    await _client.from('club_workout_exercise_sets').update({
+      'is_skipped': true,
+      'completed_at': null,
+    }).eq('id', setId);
   }
 
   // ==========================================================
@@ -474,21 +496,18 @@ class ClubWorkoutsService {
       // 1) Head + template (embed do template pode existir)
       Map<String, dynamic> head;
       try {
-        head = await _client
-            .from('club_user_workouts')
-            .select('''
+        head = await _client.from('club_user_workouts').select('''
               id, name, started_at, completed_at, total_duration_seconds,
               notes, is_completed, workout_template_id,
               club_workout_templates(
                 id, name, workout_type, difficulty_level, estimated_duration_minutes
               )
-            ''')
-            .eq('id', workoutId)
-            .single();
+            ''').eq('id', workoutId).single();
       } on PostgrestException catch (_) {
         head = await _client
             .from('club_user_workouts')
-            .select('id, name, started_at, completed_at, total_duration_seconds, notes, is_completed, workout_template_id')
+            .select(
+                'id, name, started_at, completed_at, total_duration_seconds, notes, is_completed, workout_template_id')
             .eq('id', workoutId)
             .single();
         head['club_workout_templates'] = null;
@@ -499,14 +518,14 @@ class ClubWorkoutsService {
           .from('club_workout_exercise_sets')
           .select('''
             id, user_workout_id, exercise_id, set_number, reps, weight_kg,
-            duration_seconds, distance_meters, rest_seconds, completed_at, notes,
+            duration_seconds, distance_meters, rest_seconds, completed_at, is_skipped, notes,
             order_index
           ''')
-      // ^^^ MODIFICADO: Adicionada a coluna 'order_index' ao select
+          // ^^^ MODIFICADO: Adicionada a coluna 'order_index' ao select
           .eq('user_workout_id', workoutId)
-      // =============================================
-      // === ⬇️ MODIFICADO (BUG ii - Passo 3) ⬇️ ===
-      // Ordena primeiro pela ORDEM, depois pelo NÚMERO DA SÉRIE
+          // =============================================
+          // === ⬇️ MODIFICADO (BUG ii - Passo 3) ⬇️ ===
+          // Ordena primeiro pela ORDEM, depois pelo NÚMERO DA SÉRIE
           .order('order_index', ascending: true)
           .order('set_number', ascending: true);
       // =============================================
@@ -526,9 +545,9 @@ class ClubWorkoutsService {
         final orCond = exerciseIds.map((id) => 'id.eq.$id').join(',');
         final exRows = await _client
             .from('exercises')
-        // =============================================
-        // === ⬇️ MODIFICADO (Bug 'exercise_db_id') ⬇️ ===
-        // =============================================
+            // =============================================
+            // === ⬇️ MODIFICADO (Bug 'exercise_db_id') ⬇️ ===
+            // =============================================
             .select('id, name, primary_muscle_group, exercise_db_id')
             .or(orCond);
 
@@ -588,7 +607,8 @@ class ClubWorkoutsService {
   }
 
   /// Injeta `is_completed` em cada set com base em `completed_at`, caso não exista
-  Map<String, dynamic>? _decorateClubSetsWithIsCompleted(Map<String, dynamic>? workout) {
+  Map<String, dynamic>? _decorateClubSetsWithIsCompleted(
+      Map<String, dynamic>? workout) {
     // ... (Esta função permanece INALTERADA) ...
     if (workout == null) return null;
     final sets = workout['club_workout_exercise_sets'];
@@ -633,34 +653,42 @@ class ClubWorkoutsService {
 
     // 3) insere com exercise_db_id
     try {
-      final row = await _client.from('exercises').insert({
-        'name': ex.name,
-        'exercise_type': ex.supabaseExerciseType,
-        'primary_muscle_group': ex.supabasePrimaryMuscle,
-        'secondary_muscle_groups': ex.supabaseSecondaryMuscles,
-        'instructions': ex.instructions,
-        'image_url': ex.displayUrl,
-        'equipment_needed': ex.equipments,
-        'is_system_exercise': false,
-        'created_by': userId,
-        'exercise_db_id': ex.exerciseId,
-      }).select('id').single();
+      final row = await _client
+          .from('exercises')
+          .insert({
+            'name': ex.name,
+            'exercise_type': ex.supabaseExerciseType,
+            'primary_muscle_group': ex.supabasePrimaryMuscle,
+            'secondary_muscle_groups': ex.supabaseSecondaryMuscles,
+            'instructions': ex.instructions,
+            'image_url': ex.displayUrl,
+            'equipment_needed': ex.equipments,
+            'is_system_exercise': false,
+            'created_by': userId,
+            'exercise_db_id': ex.exerciseId,
+          })
+          .select('id')
+          .single();
       return row['id'] as String?;
     } catch (_) {}
 
     // 4) fallback sem exercise_db_id (coluna pode não existir)
     try {
-      final row = await _client.from('exercises').insert({
-        'name': ex.name,
-        'exercise_type': ex.supabaseExerciseType,
-        'primary_muscle_group': ex.supabasePrimaryMuscle,
-        'secondary_muscle_groups': ex.supabaseSecondaryMuscles,
-        'instructions': ex.instructions,
-        'image_url': ex.displayUrl,
-        'equipment_needed': ex.equipments,
-        'is_system_exercise': false,
-        'created_by': userId,
-      }).select('id').single();
+      final row = await _client
+          .from('exercises')
+          .insert({
+            'name': ex.name,
+            'exercise_type': ex.supabaseExerciseType,
+            'primary_muscle_group': ex.supabasePrimaryMuscle,
+            'secondary_muscle_groups': ex.supabaseSecondaryMuscles,
+            'instructions': ex.instructions,
+            'image_url': ex.displayUrl,
+            'equipment_needed': ex.equipments,
+            'is_system_exercise': false,
+            'created_by': userId,
+          })
+          .select('id')
+          .single();
       return row['id'] as String?;
     } catch (_) {
       return null;
@@ -680,14 +708,18 @@ class ClubWorkoutsService {
     if (currentUser == null) throw Exception('User must be authenticated');
 
     // 1) cria o template
-    final template = await _client.from('club_workout_templates').insert({
-      'name': name,
-      'workout_type': workoutType,
-      'estimated_duration_minutes': estimatedDurationMinutes,
-      'difficulty_level': difficultyLevel,
-      'is_public': false,
-      'created_by': currentUser.id,
-    }).select().single();
+    final template = await _client
+        .from('club_workout_templates')
+        .insert({
+          'name': name,
+          'workout_type': workoutType,
+          'estimated_duration_minutes': estimatedDurationMinutes,
+          'difficulty_level': difficultyLevel,
+          'is_public': false,
+          'created_by': currentUser.id,
+        })
+        .select()
+        .single();
 
     if (exercises.isEmpty) return;
 
@@ -781,7 +813,8 @@ class ClubWorkoutsService {
           ? await ExerciseDbRapidService.instance.getById(exDbId)
           : null;
       if (exDbExercise == null) continue;
-      final exerciseId = await _upsertExerciseToDb(exDbExercise, currentUser.id);
+      final exerciseId =
+          await _upsertExerciseToDb(exDbExercise, currentUser.id);
       if (exerciseId == null) continue;
       final row = <String, dynamic>{
         'workout_template_id': templateId,
@@ -818,7 +851,8 @@ class ClubWorkoutsService {
       await _client.from('club_user_workouts').insert({
         'user_id': currentUser.id,
         'name': label,
-        'notes': activityType, // tipo guardado em notes (corrida/hiit/yoga/pilates…)
+        'notes':
+            activityType, // tipo guardado em notes (corrida/hiit/yoga/pilates…)
         'started_at': startedAt.toIso8601String(),
         'completed_at': now.toIso8601String(),
         'total_duration_seconds': durationSeconds,
@@ -866,30 +900,28 @@ class ClubWorkoutsService {
           .order('started_at', ascending: false)
           .limit(limit);
 
-      final candidates = (rows as List)
-          .map((r) {
-            final row = r as Map<String, dynamic>;
-            final relationship = row['club_workout_templates'];
-            final template = relationship is Map
-                ? relationship
-                : relationship is List && relationship.isNotEmpty
-                    ? relationship.first as Map?
-                    : null;
-            return {
-              ...row,
-              'name': resolveActiveWorkoutName(
-                templateName: template?['name']?.toString(),
-                snapshotName: row['name']?.toString(),
-              ),
-              'source': 'club',
-            };
-          })
-          .toList();
+      final candidates = (rows as List).map((r) {
+        final row = r as Map<String, dynamic>;
+        final relationship = row['club_workout_templates'];
+        final template = relationship is Map
+            ? relationship
+            : relationship is List && relationship.isNotEmpty
+                ? relationship.first as Map?
+                : null;
+        return {
+          ...row,
+          'name': resolveActiveWorkoutName(
+            templateName: template?['name']?.toString(),
+            snapshotName: row['name']?.toString(),
+          ),
+          'source': 'club',
+        };
+      }).toList();
 
       if (candidates.isEmpty) return [];
 
-      final enriched = await Future.wait(
-          candidates.map(_enrichPausedClubWorkout));
+      final enriched =
+          await Future.wait(candidates.map(_enrichPausedClubWorkout));
       return enriched;
     } catch (e) {
       debugPrint('[ClubWorkoutsService] getPausedClubWorkoutSummaries: $e');
@@ -955,10 +987,7 @@ class ClubWorkoutsService {
           .from('club_workout_exercise_sets')
           .delete()
           .eq('user_workout_id', workoutId);
-      await _client
-          .from('club_user_workouts')
-          .delete()
-          .eq('id', workoutId);
+      await _client.from('club_user_workouts').delete().eq('id', workoutId);
     } catch (e) {
       throw Exception('Failed to delete paused club workout: $e');
     }
@@ -986,10 +1015,7 @@ class ClubWorkoutsService {
           .from('club_workout_exercise_sets')
           .delete()
           .eq('user_workout_id', workoutId);
-      await _client
-          .from('club_user_workouts')
-          .delete()
-          .eq('id', workoutId);
+      await _client.from('club_user_workouts').delete().eq('id', workoutId);
     } catch (e) {
       throw Exception('Failed to delete club workout record: $e');
     }
@@ -1011,12 +1037,10 @@ class ClubWorkoutsService {
 
       if (participants.isEmpty) return false;
 
-      final challengeIds = participants
-          .map((p) => p['challenge_id'].toString())
-          .toList();
+      final challengeIds =
+          participants.map((p) => p['challenge_id'].toString()).toList();
 
-      final orCond =
-          challengeIds.map((id) => 'id.eq.$id').join(',');
+      final orCond = challengeIds.map((id) => 'id.eq.$id').join(',');
 
       final active = await _client
           .schema('bldr_club')
@@ -1067,8 +1091,8 @@ class ClubWorkoutsService {
         setsChannel!.unsubscribe();
         setsChannel = null;
       }
-      setsChannel = _client
-          .channel('club_sets_${workoutId}_${DateTime.now().millisecondsSinceEpoch}')
+      setsChannel = _client.channel(
+          'club_sets_${workoutId}_${DateTime.now().millisecondsSinceEpoch}')
         ..onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'public',
@@ -1092,8 +1116,8 @@ class ClubWorkoutsService {
     }
 
     // Observa mudanças nos treinos do usuário
-    workoutsChannel = _client
-        .channel('club_uw_${currentUser.id}_${DateTime.now().millisecondsSinceEpoch}')
+    workoutsChannel = _client.channel(
+        'club_uw_${currentUser.id}_${DateTime.now().millisecondsSinceEpoch}')
       ..onPostgresChanges(
         event: PostgresChangeEvent.all,
         schema: 'public',

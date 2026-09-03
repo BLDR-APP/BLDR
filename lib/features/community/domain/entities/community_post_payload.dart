@@ -18,6 +18,7 @@ class CommunityPostPayload {
   final double? distanceKm;
   final int? calories;
   final Map<String, dynamic> wearable;
+  final List<CommunityPostPr> prs;
 
   String? get wearableProvider =>
       wearable['provider']?.toString() ?? wearable['source']?.toString();
@@ -55,6 +56,7 @@ class CommunityPostPayload {
     this.distanceKm,
     this.calories,
     this.wearable = const {},
+    this.prs = const [],
   });
 
   factory CommunityPostPayload.fromJson(Map<String, dynamic> json) {
@@ -86,6 +88,12 @@ class CommunityPostPayload {
       wearable: json['wearable'] is Map
           ? Map<String, dynamic>.from(json['wearable'] as Map)
           : const {},
+      prs: (json['prs'] as List?)
+              ?.whereType<Map>()
+              .map((value) =>
+                  CommunityPostPr.fromJson(Map<String, dynamic>.from(value)))
+              .toList() ??
+          const [],
     );
   }
 
@@ -105,6 +113,7 @@ class CommunityPostPayload {
         if (distanceKm != null) 'distance_km': distanceKm,
         if (calories != null) 'calories': calories,
         if (wearable.isNotEmpty) 'wearable': wearable,
+        if (prs.isNotEmpty) 'prs': prs.map((pr) => pr.toJson()).toList(),
       };
 
   static CommunityPayloadKind _inferLegacyKind(Map<String, dynamic> json) {
@@ -113,4 +122,29 @@ class CommunityPostPayload {
     if (json['source'] == 'whoop') return CommunityPayloadKind.wearable;
     return CommunityPayloadKind.manual;
   }
+}
+
+class CommunityPostPr {
+  final String exerciseName;
+  final double weightKg;
+  final double? e1rm;
+
+  const CommunityPostPr({
+    required this.exerciseName,
+    required this.weightKg,
+    this.e1rm,
+  });
+
+  factory CommunityPostPr.fromJson(Map<String, dynamic> json) =>
+      CommunityPostPr(
+        exerciseName: json['exercise_name']?.toString() ?? 'Exercício',
+        weightKg: (json['weight_kg'] as num?)?.toDouble() ?? 0,
+        e1rm: (json['e1rm'] as num?)?.toDouble(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'exercise_name': exerciseName,
+        'weight_kg': weightKg,
+        if (e1rm != null) 'e1rm': e1rm,
+      };
 }

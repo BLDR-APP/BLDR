@@ -90,7 +90,12 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
 
   Future<void> _loadData() async {
     try {
-      if (!_isLoading) setState(() => _isLoading = true);
+      final hasRenderableData = _myWorkouts.isNotEmpty ||
+          _bldrWorkouts.isNotEmpty ||
+          _todayWorkout != null;
+      if (!_isLoading && !hasRenderableData) {
+        setState(() => _isLoading = true);
+      }
 
       final templatesResult = await getIt<GetWorkoutTemplates>()();
       final weeklyPlanResult = await getIt<GetWeeklyPlan>()();
@@ -891,6 +896,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
         child: Row(
           children: [
             Expanded(
+              flex: 3,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -919,26 +925,27 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                     style: BldrText.meta,
                   ),
                   const SizedBox(height: 12),
-                  SizedBox(
-                    width: 136,
-                    height: 38,
-                    child: BldrPrimaryButton(
-                      label: completedToday == null
-                          ? 'Iniciar treino'
-                          : 'Treino concluído',
-                      icon: completedToday == null
-                          ? Icons.play_arrow_rounded
-                          : Icons.check_rounded,
-                      onPressed: completedToday == null
-                          ? () => _startWorkout(todayWorkout)
-                          : null,
+                  if (completedToday == null)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 38,
+                      child: BldrPrimaryButton(
+                        label: 'Iniciar treino',
+                        icon: Icons.play_arrow_rounded,
+                        onPressed: () => _startWorkout(todayWorkout),
+                      ),
+                    )
+                  else
+                    const Icon(
+                      Icons.check_circle_rounded,
+                      color: Color(0xFF4CAF50),
+                      size: 28,
                     ),
-                  ),
                 ],
               ),
             ),
-            SizedBox(
-              width: 118,
+            Expanded(
+              flex: 2,
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: SizedBox(
@@ -1014,9 +1021,10 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
           Expanded(
               child: Text(AppLocalizations.of(context).workouts_my_workouts,
                   style: BldrText.label)),
-          Text('${list.length} treinos', style: BldrText.metaSm.copyWith(
-            color: BldrColors.goldBright,
-          )),
+          Text('${list.length} treinos',
+              style: BldrText.metaSm.copyWith(
+                color: BldrColors.goldBright,
+              )),
         ]),
         const SizedBox(height: 12),
         if (list.isEmpty)
@@ -1255,21 +1263,31 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
         SizedBox(
           height: 64,
           child: Row(children: [
-            Expanded(child: _buildExplorCard(
-              icon: TablerIcons.books, title: 'Biblioteca BLDR',
-              subtitle: 'Treinos BLDR', onTap: _openBldrLibrary,
+            Expanded(
+                child: _buildExplorCard(
+              icon: TablerIcons.books,
+              title: 'Biblioteca BLDR',
+              subtitle: 'Treinos BLDR',
+              onTap: _openBldrLibrary,
             )),
             const SizedBox(width: 8),
-            Expanded(child: _buildExplorCard(
-              icon: TablerIcons.barbell, title: 'BLDR CLUB',
-              subtitle: 'Exclusivos', locked: !_isPro,
+            Expanded(
+                child: _buildExplorCard(
+              icon: TablerIcons.barbell,
+              title: 'BLDR CLUB',
+              subtitle: 'Exclusivos',
+              locked: !_isPro,
               onTap: () => _openClubDestination((_) => const BldrClubScreen()),
             )),
             const SizedBox(width: 8),
-            Expanded(child: _buildExplorCard(
-              icon: TablerIcons.books, title: 'Programas',
-              subtitle: 'Estruturados', locked: !_isPro,
-              onTap: () => _openClubDestination((_) => const ClubProgramsPage()),
+            Expanded(
+                child: _buildExplorCard(
+              icon: TablerIcons.books,
+              title: 'Programas',
+              subtitle: 'Estruturados',
+              locked: !_isPro,
+              onTap: () =>
+                  _openClubDestination((_) => const ClubProgramsPage()),
             )),
           ]),
         ),
@@ -1393,8 +1411,8 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: BldrText.metaSm.copyWith(
-                        color: BldrColors.textPrimary, fontSize: 9),
+                    style: BldrText.metaSm
+                        .copyWith(color: BldrColors.textPrimary, fontSize: 9),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis),
                 Text(subtitle,

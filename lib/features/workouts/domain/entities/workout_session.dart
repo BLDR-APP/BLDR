@@ -15,6 +15,7 @@ class WorkoutSet {
   final int? restSeconds;
   final String? notes;
   final bool isCompleted;
+  final bool isSkipped;
   final DateTime? completedAt;
   final Exercise? exercise;
 
@@ -37,6 +38,7 @@ class WorkoutSet {
     this.restSeconds,
     this.notes,
     this.isCompleted = false,
+    this.isSkipped = false,
     this.completedAt,
     this.exercise,
     this.freeName,

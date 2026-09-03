@@ -12,6 +12,9 @@ import 'package:bldr_fitness/features/workouts/domain/repositories/workout_sessi
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart';
 
 class FakePersonalRepository implements WorkoutSessionRepository {
+  @override
+  Future<Result<void>> skipSet(String setId) =>
+      Future.value(const Result.success(null));
   final List<WorkoutSession> sessions;
   FakePersonalRepository(this.sessions);
 
@@ -79,6 +82,9 @@ class FakePersonalRepository implements WorkoutSessionRepository {
 }
 
 class FakeClubRepository implements ClubWorkoutRepository {
+  @override
+  Future<Result<void>> skipSet(String setId) =>
+      Future.value(const Result.success(null));
   final List<WorkoutSession> sessions;
   FakeClubRepository(this.sessions);
 

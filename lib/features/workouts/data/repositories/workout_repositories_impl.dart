@@ -5,8 +5,10 @@ import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 
 import 'package:bldr_fitness/core/errors/failure.dart';
 import 'package:bldr_fitness/core/errors/result.dart';
+import 'package:bldr_fitness/services/exercise_db_rapid_service.dart';
 import 'package:bldr_fitness/services/workout_service.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/paused_workout_summary.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/exercise_display_name.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/muscle_normalizer.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_summary_data.dart';
@@ -170,6 +172,10 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
       _guard(() => _service.undoSet(setId: setId));
 
   @override
+  Future<Result<void>> skipSet(String setId) =>
+      _guard(() => _service.skipSet(setId: setId));
+
+  @override
   Future<Result<bool>> hasActiveWorkout() => _guard(_service.hasActiveWorkout);
 
   @override
@@ -264,23 +270,62 @@ class WorkoutSessionRepositoryImpl implements WorkoutSessionRepository {
                   muscles: muscles,
                   view: MuscleNormalizer.dominantView(muscles),
                 ),
-          newPRs: _parsePRs(raw['new_prs']),
+          newPRs: await _parsePRs(
+            raw['new_prs'],
+            workoutId: workoutId,
+            source: source,
+          ),
           xpEarned: (raw['xp_earned'] as num?)?.toInt() ?? 0,
           completedAt: completedAt,
         );
       });
 
-  static List<PersonalRecordData> _parsePRs(dynamic prsJson) {
+  Future<List<PersonalRecordData>> _parsePRs(
+    dynamic prsJson, {
+    required String workoutId,
+    required String source,
+  }) async {
     if (prsJson == null) return [];
-    return (prsJson as List).map((pr) {
+    final prs = prsJson as List;
+    if (prs.isEmpty) return [];
+    List<Map<String, dynamic>> nameSources;
+    try {
+      nameSources = await _service.getWorkoutExerciseDisplaySources(
+        workoutId: workoutId,
+        source: source,
+      );
+    } catch (_) {
+      nameSources = const [];
+    }
+    final internalById = <String, String?>{};
+    final internalByDbId = <String, String?>{};
+    for (final nameSource in nameSources) {
+      final exerciseId = nameSource['exercise_id']?.toString();
+      final exerciseDbId = nameSource['exercise_db_id']?.toString();
+      final internalName = nameSource['internal_name']?.toString();
+      if (exerciseId != null) internalById[exerciseId] = internalName;
+      if (exerciseDbId != null) internalByDbId[exerciseDbId] = internalName;
+    }
+
+    return Future.wait(prs.map((pr) async {
       final map = pr as Map<String, dynamic>;
+      final exerciseId = map['exercise_id']?.toString();
+      final exerciseDbId = map['exercise_db_id']?.toString();
+      final internalName = map['exercise_name']?.toString() ??
+          map['name']?.toString() ??
+          (exerciseId == null ? null : internalById[exerciseId]) ??
+          (exerciseDbId == null ? null : internalByDbId[exerciseDbId]);
+      final exerciseDbName = exerciseDbId == null
+          ? null
+          : (await ExerciseDbRapidService.instance.getById(exerciseDbId))?.name;
       return PersonalRecordData(
-        exerciseName: (map['free_name'] as String?) ??
-            (map['exercise_db_id'] as String?) ??
-            'Exercício',
+        exerciseName: resolveExerciseDisplayName(
+          internalName: internalName ?? map['free_name']?.toString(),
+          exerciseDbName: exerciseDbName,
+        ),
         newWeightKg: (map['max_weight_kg'] as num?)?.toDouble() ?? 0,
         newE1rm: (map['e1rm'] as num?)?.toDouble(),
       );
-    }).toList();
+    }));
   }
 }

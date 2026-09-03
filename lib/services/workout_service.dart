@@ -559,6 +559,48 @@ class WorkoutService {
     }
   }
 
+  Future<List<Map<String, dynamic>>> getWorkoutExerciseDisplaySources({
+    required String workoutId,
+    required String source,
+  }) async {
+    final table = source == 'club'
+        ? 'club_workout_exercise_sets'
+        : 'workout_exercise_sets';
+    final select = source == 'club'
+        ? 'exercise_id'
+        : 'exercise_id, exercise_db_id, free_name';
+    final rawSets = await _client
+        .from(table)
+        .select(select)
+        .eq('user_workout_id', workoutId);
+    final sets = List<Map<String, dynamic>>.from(rawSets);
+    final exerciseIds = sets
+        .map((set) => set['exercise_id']?.toString() ?? '')
+        .where((id) => id.isNotEmpty)
+        .toSet()
+        .toList();
+    final exercisesById = <String, Map<String, dynamic>>{};
+    if (exerciseIds.isNotEmpty) {
+      final condition = exerciseIds.map((id) => 'id.eq.$id').join(',');
+      final rows = await _client
+          .from('exercises')
+          .select('id, name, exercise_db_id')
+          .or(condition);
+      for (final row in List<Map<String, dynamic>>.from(rows)) {
+        exercisesById[row['id'].toString()] = row;
+      }
+    }
+    return sets.map((set) {
+      final exerciseId = set['exercise_id']?.toString();
+      final exercise = exerciseId == null ? null : exercisesById[exerciseId];
+      return {
+        'exercise_id': exerciseId,
+        'exercise_db_id': set['exercise_db_id'] ?? exercise?['exercise_db_id'],
+        'internal_name': exercise?['name'] ?? set['free_name'],
+      };
+    }).toList();
+  }
+
   /// A RPC calcula analytics, mas o lifecycle só termina quando a linha que
   /// alimenta active/recovery está persistida e confirmada como concluída.
   Future<Map<String, dynamic>> _ensureWorkoutCompleted({
@@ -731,7 +773,7 @@ class WorkoutService {
             workout_templates(name, workout_type, estimated_duration_minutes),
             workout_exercise_sets(
               id, set_number, reps, weight_kg, duration_seconds,
-              distance_meters, rest_seconds, completed_at, notes,
+              distance_meters, rest_seconds, completed_at, is_skipped, notes,
               order_index, exercise_db_id, free_name,
               exercises!workout_exercise_sets_exercise_id_fkey (
                 id, name, primary_muscle_group,
@@ -758,7 +800,7 @@ class WorkoutService {
               workout_templates(name, workout_type, estimated_duration_minutes),
               workout_exercise_sets(
                 id, set_number, reps, weight_kg, duration_seconds,
-                distance_meters, rest_seconds, completed_at, notes,
+                distance_meters, rest_seconds, completed_at, is_skipped, notes,
                 order_index, exercise_db_id, free_name,
                 exercises(
                   id, name, primary_muscle_group,
@@ -834,6 +876,13 @@ class WorkoutService {
     } catch (e) {
       throw Exception('Failed to undo set: $e');
     }
+  }
+
+  Future<void> skipSet({required String setId}) async {
+    await _client.from('workout_exercise_sets').update({
+      'is_skipped': true,
+      'completed_at': null,
+    }).eq('id', setId);
   }
   // =========================================================================
 
@@ -1067,8 +1116,7 @@ class WorkoutService {
           .map((r) => {
                 ...(r as Map<String, dynamic>),
                 'name': resolveActiveWorkoutName(
-                  templateName:
-                      _relationshipName(r, 'club_workout_templates'),
+                  templateName: _relationshipName(r, 'club_workout_templates'),
                   snapshotName: r['name']?.toString(),
                 ),
                 'source': 'club'
@@ -1098,8 +1146,7 @@ class WorkoutService {
     }
   }
 
-  String? _relationshipName(
-      Map<String, dynamic> row, String relationshipKey) {
+  String? _relationshipName(Map<String, dynamic> row, String relationshipKey) {
     final relationship = row[relationshipKey];
     final template = relationship is Map
         ? relationship
@@ -1108,7 +1155,6 @@ class WorkoutService {
             : null;
     return template?['name']?.toString();
   }
-
 
   Future<Map<String, dynamic>> _enrichPausedWorkout(
       Map<String, dynamic> head) async {

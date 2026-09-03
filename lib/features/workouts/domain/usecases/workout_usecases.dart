@@ -136,6 +136,13 @@ class UndoWorkoutSet {
   Future<Result<void>> call(String setId) => _repo.undoSet(setId);
 }
 
+class SkipWorkoutSet {
+  final WorkoutSessionRepository _repo;
+  const SkipWorkoutSet(this._repo);
+
+  Future<Result<void>> call(String setId) => _repo.skipSet(setId);
+}
+
 class HasActiveWorkout {
   final WorkoutSessionRepository _repo;
   const HasActiveWorkout(this._repo);

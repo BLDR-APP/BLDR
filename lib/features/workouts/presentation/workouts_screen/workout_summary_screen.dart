@@ -36,7 +36,8 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
     try {
       final profile = await UserService.instance.getCurrentUserProfile();
       if (profile != null) {
-        debugPrint('[ShareCard] username="${profile.username}" avatarUrl="${profile.avatarUrl}" fullName="${profile.fullName}"');
+        debugPrint(
+            '[ShareCard] username="${profile.username}" avatarUrl="${profile.avatarUrl}" fullName="${profile.fullName}"');
         loadedShareData = WorkoutShareData.fromSummary(
           widget.data,
           username: profile.username,
@@ -120,6 +121,7 @@ class _WorkoutSummaryScreenState extends State<WorkoutSummaryScreen> {
                       builder: (_) => CreatePostScreen(
                         preselectedWorkoutId: widget.data.workoutId,
                         preselectedSource: widget.data.source,
+                        preselectedPrs: widget.data.newPRs,
                       ),
                     ),
                   ),

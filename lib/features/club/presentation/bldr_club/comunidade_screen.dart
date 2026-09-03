@@ -74,24 +74,23 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
   void _subscribeFeedRealtime() {
     final currentUid = Supabase.instance.client.auth.currentUser?.id;
     _feedChannel?.unsubscribe();
-    _feedChannel =
-        Supabase.instance.client.channel('community_feed_new_posts')
-          ..onPostgresChanges(
-            event: PostgresChangeEvent.insert,
-            schema: 'public',
-            table: 'community_feed',
-            callback: (payload) {
-              if (!mounted) return;
-              // Only indicate new posts from other users
-              final postUserId = payload.newRecord['user_id'] as String?;
-              if (postUserId != null &&
-                  postUserId != currentUid &&
-                  _activeTab == 0) {
-                setState(() => _hasNewPosts = true);
-              }
-            },
-          )
-          ..subscribe();
+    _feedChannel = Supabase.instance.client.channel('community_feed_new_posts')
+      ..onPostgresChanges(
+        event: PostgresChangeEvent.insert,
+        schema: 'public',
+        table: 'community_feed',
+        callback: (payload) {
+          if (!mounted) return;
+          // Only indicate new posts from other users
+          final postUserId = payload.newRecord['user_id'] as String?;
+          if (postUserId != null &&
+              postUserId != currentUid &&
+              _activeTab == 0) {
+            setState(() => _hasNewPosts = true);
+          }
+        },
+      )
+      ..subscribe();
   }
 
   @override
@@ -1669,6 +1668,16 @@ class _FeedCard extends StatelessWidget {
         if (post.muscleGroups.isNotEmpty) ...[
           const SizedBox(height: 8),
           _buildMuscleTags(),
+        ],
+        if (post.typedPayload.prs.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          ...post.typedPayload.prs.map(
+            (pr) => Text(
+              '🏆 ${pr.exerciseName} · ${pr.weightKg.toStringAsFixed(1)} kg',
+              style:
+                  BldrText.description.copyWith(color: BldrColors.goldBright),
+            ),
+          ),
         ],
         const SizedBox(height: 10),
         _buildViewWorkoutBtn(context),

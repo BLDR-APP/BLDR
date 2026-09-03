@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:bldr_fitness/features/workouts/presentation/exercise_display_name.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/exercise_display_name.dart';
 
 void main() {
   test('preserva nome interno localizado quando ExerciseDB também existe', () {

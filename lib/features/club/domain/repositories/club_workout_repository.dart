@@ -29,6 +29,8 @@ abstract class ClubWorkoutRepository {
     double? weightKg,
   });
 
+  Future<Result<void>> skipSet(String setId);
+
   Future<Result<void>> undoSet(String setId);
 
   Stream<WorkoutSession?> activeWorkoutStream();
@@ -83,7 +85,8 @@ abstract class ClubWorkoutRepository {
 
   /// Garante que os sets iniciais existam para uma sessão do Club.
   /// Idempotente — não duplica sets se já existirem.
-  Future<Result<void>> ensureClubInitialSets(String sessionId, String templateId);
+  Future<Result<void>> ensureClubInitialSets(
+      String sessionId, String templateId);
 
   /// Corridas GPS do usuário (mais recentes primeiro).
   Future<Result<List<RunActivity>>> runActivities({int? limit});

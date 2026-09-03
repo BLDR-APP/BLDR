@@ -24,6 +24,8 @@ abstract class WorkoutSessionRepository {
     double? weightKg,
   });
 
+  Future<Result<void>> skipSet(String setId);
+
   Future<Result<void>> undoSet(String setId);
 
   Future<Result<bool>> hasActiveWorkout();

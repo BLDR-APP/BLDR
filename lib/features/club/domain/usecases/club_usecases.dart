@@ -115,6 +115,13 @@ class UndoClubSet {
   Future<Result<void>> call(String setId) => _repo.undoSet(setId);
 }
 
+class SkipClubSet {
+  final ClubWorkoutRepository _repo;
+  const SkipClubSet(this._repo);
+
+  Future<Result<void>> call(String setId) => _repo.skipSet(setId);
+}
+
 class WatchActiveClubWorkout {
   final ClubWorkoutRepository _repo;
   const WatchActiveClubWorkout(this._repo);

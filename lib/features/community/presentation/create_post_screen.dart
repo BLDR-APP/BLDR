@@ -11,17 +11,20 @@ import 'package:bldr_fitness/features/community/domain/entities/recent_workout.d
 import 'package:bldr_fitness/features/community/domain/entities/community_post_payload.dart';
 import 'package:bldr_fitness/features/community/domain/repositories/community_feed_repository.dart';
 import 'package:bldr_fitness/features/community/presentation/widgets/wearable_activity_grid_card.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/workout_summary_data.dart';
 import 'package:bldr_fitness/services/user_service.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 
 class CreatePostScreen extends StatefulWidget {
   final String? preselectedWorkoutId;
   final String? preselectedSource;
+  final List<PersonalRecordData> preselectedPrs;
 
   const CreatePostScreen({
     super.key,
     this.preselectedWorkoutId,
     this.preselectedSource,
+    this.preselectedPrs = const [],
   });
 
   @override
@@ -288,7 +291,18 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
           payload['duration_s'] = _selectedWorkout!.durationSeconds;
           payload['muscle_groups'] = _selectedWorkout!.muscleGroups;
         }
-        if (_includePrs) payload['include_prs'] = true;
+        if (_includePrs) {
+          payload['include_prs'] = true;
+          if (widget.preselectedPrs.isNotEmpty) {
+            payload['prs'] = widget.preselectedPrs
+                .map((pr) => {
+                      'exercise_name': pr.exerciseName,
+                      'weight_kg': pr.newWeightKg,
+                      if (pr.newE1rm != null) 'e1rm': pr.newE1rm,
+                    })
+                .toList();
+          }
+        }
       }
 
       if (_selectedActivity != null) {

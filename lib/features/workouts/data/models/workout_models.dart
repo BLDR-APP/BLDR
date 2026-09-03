@@ -44,8 +44,7 @@ class WorkoutModels {
       difficultyLevel: map['difficulty_level'] as int?,
       isPublic: map['is_public'] as bool? ?? false,
       createdAt: _date(map['created_at']),
-      createdByName:
-          (map['user_profiles'] as Map?)?['full_name'] as String?,
+      createdByName: (map['user_profiles'] as Map?)?['full_name'] as String?,
       source: map['source'] as String?,
       exercises: rawExercises
           .map((e) => templateExerciseFromMap(Map<String, dynamic>.from(e)))
@@ -78,8 +77,7 @@ class WorkoutModels {
   /// free_name só é gravado quando não há exercise_id nem exercise_db_id
   /// (exercício gerado pelo HAVOK, sem match na biblioteca —
   /// BACKLOG_FUNCIONAL.md B5). Exercícios normais continuam como estavam.
-  static Map<String, dynamic> templateExerciseToServiceMap(
-      TemplateExercise e) {
+  static Map<String, dynamic> templateExerciseToServiceMap(TemplateExercise e) {
     final exerciseId = e.exercise?.id;
     final exerciseDbId = e.exerciseDbId ?? e.exercise?.exerciseDbId;
     return {
@@ -127,9 +125,8 @@ class WorkoutModels {
       workoutType: template?['workout_type'] as String?,
       templateEstimatedDurationMinutes:
           template?['estimated_duration_minutes'] as int?,
-      sets: rawSets
-          .map((s) => setFromMap(Map<String, dynamic>.from(s)))
-          .toList(),
+      sets:
+          rawSets.map((s) => setFromMap(Map<String, dynamic>.from(s))).toList(),
     );
   }
 
@@ -149,8 +146,8 @@ class WorkoutModels {
       restSeconds: map['rest_seconds'] as int?,
       notes: map['notes'] as String?,
       // Mesma regra do service: sem coluna is_completed, vale completed_at.
-      isCompleted:
-          map['is_completed'] as bool? ?? map['completed_at'] != null,
+      isCompleted: map['is_completed'] as bool? ?? map['completed_at'] != null,
+      isSkipped: map['is_skipped'] as bool? ?? false,
       completedAt: _date(map['completed_at']),
       exercise: exerciseMap is Map
           ? exerciseFromMap(Map<String, dynamic>.from(exerciseMap))

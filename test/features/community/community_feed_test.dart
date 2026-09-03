@@ -305,6 +305,24 @@ void main() {
       expect(payload.toJson(), containsPair('set_count', 9));
     });
 
+    test('preserva PRs incluídos no payload do treino', () {
+      final payload = CommunityPostPayload.fromJson({
+        'version': 1,
+        'kind': 'workout',
+        'prs': [
+          {
+            'exercise_name': 'Supino reto',
+            'weight_kg': 80,
+            'e1rm': 95.5,
+          }
+        ],
+      });
+
+      expect(payload.prs.single.exerciseName, 'Supino reto');
+      expect(payload.prs.single.weightKg, 80);
+      expect(payload.toJson()['prs'], isNotEmpty);
+    });
+
     test('expõe origem, atividade e métricas do wearable aninhado', () {
       final payload = CommunityPostPayload.fromJson({
         'version': 1,

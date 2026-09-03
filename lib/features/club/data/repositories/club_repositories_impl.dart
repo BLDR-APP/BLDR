@@ -39,7 +39,8 @@ class ClubWorkoutRepositoryImpl implements ClubWorkoutRepository {
   final SupabaseClubDatasource _datasource;
   final String? Function() _currentUserId;
 
-  ClubWorkoutRepositoryImpl(this._service, this._datasource, this._currentUserId);
+  ClubWorkoutRepositoryImpl(
+      this._service, this._datasource, this._currentUserId);
 
   /// Os maps do Club usam chaves `club_*`; realinha para o parse comum.
   WorkoutSession _clubSessionFromMap(Map<String, dynamic> map) =>
@@ -74,11 +75,11 @@ class ClubWorkoutRepositoryImpl implements ClubWorkoutRepository {
           ));
 
   @override
-  Future<Result<void>> updateTemplate(WorkoutTemplate template) =>
-      _guard(() {
+  Future<Result<void>> updateTemplate(WorkoutTemplate template) => _guard(() {
         final id = template.id;
         if (id == null) {
-          throw const ValidationFailure('Template sem id não pode ser atualizado.');
+          throw const ValidationFailure(
+              'Template sem id não pode ser atualizado.');
         }
         return _service.updateClubWorkoutTemplate(
           templateId: id,
@@ -128,6 +129,10 @@ class ClubWorkoutRepositoryImpl implements ClubWorkoutRepository {
       _guard(() => _service.undoClubSet(setId: setId));
 
   @override
+  Future<Result<void>> skipSet(String setId) =>
+      _guard(() => _service.skipClubSet(setId: setId));
+
+  @override
   Stream<WorkoutSession?> activeWorkoutStream() => _service
       .activeClubWorkoutStream()
       .map((map) => map == null ? null : _clubSessionFromMap(map));
@@ -167,8 +172,7 @@ class ClubWorkoutRepositoryImpl implements ClubWorkoutRepository {
       });
 
   @override
-  Future<Result<List<TemplateExercise>>> templateExercises(
-          String templateId) =>
+  Future<Result<List<TemplateExercise>>> templateExercises(String templateId) =>
       _guard(() async {
         final rows = await _datasource.templateExercises(templateId);
         return rows.map(WorkoutModels.templateExerciseFromMap).toList();
@@ -225,8 +229,7 @@ class ClubWorkoutRepositoryImpl implements ClubWorkoutRepository {
   @override
   Future<Result<List<PausedWorkoutSummary>>> pausedSummaries({int limit = 2}) =>
       _guard(() async {
-        final rows =
-            await _service.getPausedClubWorkoutSummaries(limit: limit);
+        final rows = await _service.getPausedClubWorkoutSummaries(limit: limit);
         return rows.map(WorkoutModels.pausedSummaryFromMap).toList();
       });
 
@@ -243,7 +246,8 @@ class ClubWorkoutRepositoryImpl implements ClubWorkoutRepository {
       _guard(() => _service.deleteActivityRecord(activityId));
 
   @override
-  Future<Result<void>> ensureClubInitialSets(String sessionId, String templateId) =>
+  Future<Result<void>> ensureClubInitialSets(
+          String sessionId, String templateId) =>
       _guard(() => _service.ensureClubInitialSets(sessionId, templateId));
 
   @override
@@ -256,15 +260,13 @@ class ClubWorkoutRepositoryImpl implements ClubWorkoutRepository {
                   id: m['id']?.toString(),
                   title: m['title'] as String?,
                   distanceMeters: m['distance_meters'] as num?,
-                  durationSeconds:
-                      (m['duration_seconds'] as num?)?.toInt(),
+                  durationSeconds: (m['duration_seconds'] as num?)?.toInt(),
                   paceText: m['pace_text'] as String?,
                   earnedXp: (m['earned_xp'] as num?)?.toInt(),
                   createdAt:
                       DateTime.tryParse(m['created_at']?.toString() ?? ''),
                   routeData: (m['route_data'] as List?)
-                          ?.map((p) =>
-                              Map<String, dynamic>.from(p as Map))
+                          ?.map((p) => Map<String, dynamic>.from(p as Map))
                           .toList() ??
                       const [],
                 ))
@@ -331,7 +333,8 @@ class ClubWorkoutRepositoryImpl implements ClubWorkoutRepository {
   @override
   Future<Result<List<MatchSession>>> matchSessions({int limit = 50}) =>
       _guard(() async {
-        final rows = await _datasource.matchSessions(_requireUser(), limit: limit);
+        final rows =
+            await _datasource.matchSessions(_requireUser(), limit: limit);
         return rows
             .map((m) => MatchSession(
                   id: m['id']?.toString(),
@@ -364,8 +367,7 @@ class ClubWorkoutRepositoryImpl implements ClubWorkoutRepository {
       });
 
   @override
-  Future<Result<OperationProgress?>> getOperationProgress(
-          String operationId) =>
+  Future<Result<OperationProgress?>> getOperationProgress(String operationId) =>
       _guard(() async {
         final uid = _requireUser();
         final row = await _datasource.operationProgress(uid, operationId);
@@ -391,8 +393,7 @@ class ClubWorkoutRepositoryImpl implements ClubWorkoutRepository {
         final operationId = opRow['id'] as String;
         final goalValue = (opRow['goal_value'] as num).toInt();
         final uid = _requireUser();
-        final progRow =
-            await _datasource.operationProgress(uid, operationId);
+        final progRow = await _datasource.operationProgress(uid, operationId);
         final current =
             progRow != null ? (progRow['current_value'] as num).toInt() : 0;
         final alreadyDone =
@@ -432,8 +433,7 @@ class ClubCommunityRepositoryImpl implements ClubCommunityRepository {
       });
 
   @override
-  Future<Result<List<ClubEvent>>> events({int limit = 20}) =>
-      _guard(() async {
+  Future<Result<List<ClubEvent>>> events({int limit = 20}) => _guard(() async {
         final rows = await _service.fetchEvents(limit: limit);
         return rows
             .map((m) => ClubEvent(

@@ -13,6 +13,9 @@ import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.d
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_template.dart';
 
 class FakeClubWorkoutRepository implements ClubWorkoutRepository {
+  @override
+  Future<Result<void>> skipSet(String setId) =>
+      Future.value(const Result.success(null));
   String? lastCall;
   Map<String, Object?> lastArgs = {};
   bool inChallenge = false;

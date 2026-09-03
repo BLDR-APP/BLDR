@@ -25,7 +25,7 @@ import 'package:bldr_fitness/theme/bldr_tokens.dart';
 import 'package:bldr_fitness/widgets/muscle_visualizer_widget.dart';
 import 'package:bldr_fitness/shared/providers/workout_session_provider.dart';
 import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/workout_session_logic.dart';
-import 'package:bldr_fitness/features/workouts/presentation/exercise_display_name.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/exercise_display_name.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/paused_workout_summary.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart'
     as uc;
@@ -195,9 +195,8 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
       _startRestTimer(left);
       setState(() {
         _restEndTime = end;
-        _restTotalSeconds = action.totalSeconds > 0
-            ? action.totalSeconds
-            : _restTotalSeconds;
+        _restTotalSeconds =
+            action.totalSeconds > 0 ? action.totalSeconds : _restTotalSeconds;
       });
       await _updateLiveActivity(
         isResting: true,
@@ -213,9 +212,13 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
     if (_exercises.isEmpty) return _effectiveWorkoutName;
     final ex =
         _exercises[_currentExerciseIdx]['exercise'] as Map<String, dynamic>;
-    return (ex['name'] as String?)?.isNotEmpty == true
-        ? ex['name'] as String
-        : _effectiveWorkoutName;
+    final exerciseDbId = ex['exercise_db_id'] as String?;
+    return resolveExerciseDisplayName(
+      internalName: ex['name'] as String? ?? ex['free_name'] as String?,
+      exerciseDbName:
+          exerciseDbId == null ? null : _exDbCache[exerciseDbId]?.name,
+      fallback: _effectiveWorkoutName,
+    );
   }
 
   int get _currentTotalSets {
@@ -224,17 +227,17 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
   }
 
   Future<void> _startLiveActivity() => LiveActivityService.startWorkout(
-      mode: 'club',
-      workoutName: _effectiveWorkoutName,
-      exerciseName: _currentExerciseName,
-      exerciseSet: _currentSetNumber,
-      exerciseTotalSets: _currentTotalSets,
-      exerciseIndex: _currentExerciseIdx,
-      exerciseTotalExercises: _exercises.length,
-      weightKg: _weight,
-      reps: _reps,
-      workoutStartTimestamp: _startTime.millisecondsSinceEpoch / 1000.0,
-    );
+        mode: 'club',
+        workoutName: _effectiveWorkoutName,
+        exerciseName: _currentExerciseName,
+        exerciseSet: _currentSetNumber,
+        exerciseTotalSets: _currentTotalSets,
+        exerciseIndex: _currentExerciseIdx,
+        exerciseTotalExercises: _exercises.length,
+        weightKg: _weight,
+        reps: _reps,
+        workoutStartTimestamp: _startTime.millisecondsSinceEpoch / 1000.0,
+      );
 
   Future<void> _updateLiveActivity(
       {bool? isResting, int? restTotalSeconds, DateTime? restEndTime}) {
@@ -418,11 +421,11 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
             }
             _isPrefetching = false;
           });
+          await _updateLiveActivity();
         }
       } else {
         if (mounted) setState(() => _isPrefetching = false);
       }
-
     } catch (_) {
       if (mounted) {
         setState(() {
@@ -603,15 +606,33 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
     }
   }
 
-  void _skipExercise() {
-    if (_currentExerciseIdx >= _exercises.length - 1) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Conclua ou pause o treino no último exercício.'),
-      ));
-      return;
+  Future<void> _skipExercise() async {
+    if (_exercises.isEmpty) return;
+    final exGroup = _exercises[_currentExerciseIdx];
+    final sets = exGroup['sets'] as List<Map<String, dynamic>>;
+    final setIdx = _currentSetNumber - 1;
+    if (setIdx >= sets.length) return;
+    final setId = sets[setIdx]['id']?.toString() ?? '';
+    if (!_confirmationGuard.tryAcquire(setId)) return;
+    if (mounted) setState(() => _confirmingSetId = setId);
+    try {
+      final result = await getIt<SkipClubSet>()(setId);
+      if (result.isFailure || !mounted) return;
+      sets[setIdx]['is_skipped'] = true;
+      if (_currentSetNumber < (exGroup['totalSets'] as int)) {
+        setState(() => _currentSetNumber++);
+      } else if (!_advanceToNextExercise()) {
+        await _finishWorkout();
+        return;
+      }
+      await _updateLiveActivity(isResting: false);
+      _sendToWatch();
+    } finally {
+      _confirmationGuard.release(setId);
+      if (mounted && _confirmingSetId == setId) {
+        setState(() => _confirmingSetId = null);
+      }
     }
-    _skippedExerciseIndexes.add(_currentExerciseIdx);
-    unawaited(_nextExercise());
   }
 
   void _startRestTimer(int seconds) {
@@ -659,7 +680,8 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
           (exercise['sets'] as List<Map<String, dynamic>>? ?? const []).length);
 
   int get _completedExercisesCount => _exercises.where((exercise) {
-        final sets = exercise['sets'] as List<Map<String, dynamic>>? ?? const [];
+        final sets =
+            exercise['sets'] as List<Map<String, dynamic>>? ?? const [];
         return sets.any((set) => set['is_completed'] == true);
       }).length;
 
@@ -811,50 +833,51 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
                           ],
                         ),
                       )
-                : Stack(
-                    children: [
-                      Column(
+                    : Stack(
                         children: [
-                          _buildHeader(),
-                          Expanded(
-                            child: SingleChildScrollView(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: BldrSpacing.pageX),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const SizedBox(height: 16),
-                                  _buildProgressBlock(),
-                                  const SizedBox(height: 22),
-                                  if (_exercises.isNotEmpty) ...[
-                                    _buildCurrentExercise(),
-                                    const SizedBox(height: 18),
-                                    _buildInputRow(),
-                                    const SizedBox(height: 14),
-                                    _buildSeriesList(),
-                                    const SizedBox(height: 22),
-                                    _buildExerciseTimeline(),
-                                    const SizedBox(height: 130),
-                                  ],
-                                ],
+                          Column(
+                            children: [
+                              _buildHeader(),
+                              Expanded(
+                                child: SingleChildScrollView(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: BldrSpacing.pageX),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const SizedBox(height: 16),
+                                      _buildProgressBlock(),
+                                      const SizedBox(height: 22),
+                                      if (_exercises.isNotEmpty) ...[
+                                        _buildCurrentExercise(),
+                                        const SizedBox(height: 18),
+                                        _buildInputRow(),
+                                        const SizedBox(height: 14),
+                                        _buildSeriesList(),
+                                        const SizedBox(height: 22),
+                                        _buildExerciseTimeline(),
+                                        const SizedBox(height: 130),
+                                      ],
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
+                              _buildFooter(),
+                            ],
                           ),
-                          _buildFooter(),
+                          // Faixa de descanso flutuante — mesmo tratamento da tela
+                          // grátis (active_workout_screen.dart): flutua sobre o
+                          // conteúdo, que continua rolável por trás dela.
+                          if (_resting)
+                            Positioned(
+                              left: 14,
+                              right: 14,
+                              bottom: 88,
+                              child: _buildRestIndicator(),
+                            ),
                         ],
                       ),
-                      // Faixa de descanso flutuante — mesmo tratamento da tela
-                      // grátis (active_workout_screen.dart): flutua sobre o
-                      // conteúdo, que continua rolável por trás dela.
-                      if (_resting)
-                        Positioned(
-                          left: 14,
-                          right: 14,
-                          bottom: 88,
-                          child: _buildRestIndicator(),
-                        ),
-                    ],
-                  ),
           ),
         ),
       ),
@@ -1272,8 +1295,8 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
                 resolveExerciseDisplayName(
                   internalName: ex['name'] as String?,
                   exerciseDbName: detail?.name,
-                  fallback: AppLocalizations.of(sheetCtx)
-                      .workout_technique_fallback,
+                  fallback:
+                      AppLocalizations.of(sheetCtx).workout_technique_fallback,
                 ),
                 style: BldrText.cardTitleLg,
               ),

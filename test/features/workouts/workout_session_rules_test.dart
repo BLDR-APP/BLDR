@@ -53,6 +53,19 @@ void main() {
     expect(result.hasPendingSet, isTrue);
   });
 
+  test('resume ignora série pulada e encontra a próxima pendente', () {
+    final position = findWorkoutResumePosition([
+      {
+        'sets': [
+          {'set_number': 1, 'is_skipped': true, 'completed_at': null},
+          {'set_number': 2, 'is_skipped': false, 'completed_at': null},
+        ],
+      },
+    ]);
+
+    expect(position.setNumber, 2);
+  });
+
   test('FREE todos os sets concluídos não seleciona set já concluído', () {
     final result = findWorkoutResumePosition([
       exercise([set(1, completed: true), set(2, completed: true)]),
@@ -69,7 +82,8 @@ void main() {
     expect(result.hasPendingSet, isFalse);
   });
 
-  test('último set do último exercício concluído não vira posição retomável', () {
+  test('último set do último exercício concluído não vira posição retomável',
+      () {
     final result = findWorkoutResumePosition([
       exercise([set(1, completed: true)]),
       exercise([set(1, completed: true, weight: 80, reps: 6)]),
