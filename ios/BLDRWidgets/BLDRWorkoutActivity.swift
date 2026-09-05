@@ -220,7 +220,9 @@ private struct BLDRCompactLeading: View {
     var body: some View {
         let s = WorkoutState(attr: attr)
         if s.isResting {
-            BLDRActivityRing(progress: s.restProgress, color: kGold, lineWidth: 3, size: 20)
+            Image(systemName: "timer")
+                .foregroundColor(kGold)
+                .font(.system(size: 12))
         } else {
             Image(systemName: "dumbbell.fill")
                 .foregroundColor(kGold)

@@ -23,6 +23,7 @@ import 'package:bldr_fitness/widgets/custom_error_widget.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/bldr_club_screen.dart';
 import 'package:bldr_fitness/features/club/programs_page.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/havok/havok_sheet.dart';
+import 'package:bldr_fitness/features/club/presentation/bldr_club/club_active_workout_screen.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/bldr_muscle.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_template.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
@@ -100,8 +101,10 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
       final templatesResult = await getIt<GetWorkoutTemplates>()();
       final weeklyPlanResult = await getIt<GetWeeklyPlan>()();
       final activeResult = await getIt<HasActiveWorkout>()();
-      final completedResult =
-          await getIt<GetWorkoutHistory>()(completedOnly: true, limit: 20);
+      final completedResult = await getIt<GetConsolidatedWorkoutHistory>()(
+        completedOnly: true,
+        limit: 20,
+      );
 
       if (!mounted) return;
 
@@ -180,8 +183,12 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
         _bldrWorkouts = all.where((w) => w['is_public'] == true).toList();
         _myWorkouts = all.where((w) => w['is_public'] != true).toList();
         _muscleDataByTemplateId = muscleData;
-        _todayWorkout =
-            todayTemplate == null ? null : templateToLegacyMap(todayTemplate);
+        _todayWorkout = todayTemplate == null
+            ? null
+            : {
+                ...templateToLegacyMap(todayTemplate),
+                'source': assignedToday?.source ?? todayTemplate.source,
+              };
         _todayMuscleData = todayData;
         _completedTodayWorkout = completedToday;
         _hasActiveWorkout = isActive;
@@ -241,13 +248,37 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
 
   void _startWorkout(Map<String, dynamic> template) async {
     try {
-      final startResult = await getIt<StartWorkout>()(
-        name: template['name'],
-        templateId: template['id'],
-      );
+      final name = template['name'] as String? ?? 'Treino';
+      final templateId = template['id'] as String?;
+      if (templateId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Não foi possível iniciar o treino.'),
+          backgroundColor: BldrColors.danger,
+          behavior: SnackBarBehavior.floating,
+        ));
+        return;
+      }
+      final isClub = template['source'] == 'club';
+      final startResult = isClub
+          ? await getIt<StartClubWorkout>()(
+              name: name,
+              templateId: templateId,
+            )
+          : await getIt<StartWorkout>()(
+              name: name,
+              templateId: templateId,
+            );
       final session = startResult.valueOrNull;
       if (session == null) {
-        throw Exception(startResult.failureOrNull?.message);
+        final failure = startResult.failureOrNull;
+        if (failure != null && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(failure.message),
+            backgroundColor: BldrColors.danger,
+            behavior: SnackBarBehavior.floating,
+          ));
+        }
+        return;
       }
 
       if (!mounted) return;
@@ -256,10 +287,15 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => ActiveWorkoutScreen(
-            workoutId: session.id!,
-            workoutName: template['name'],
-          ),
+          builder: (_) => isClub
+              ? ClubActiveWorkoutScreen(
+                  workoutId: session.id!,
+                  workoutName: name,
+                )
+              : ActiveWorkoutScreen(
+                  workoutId: session.id!,
+                  workoutName: name,
+                ),
         ),
       ).then((_) {
         if (mounted) {
@@ -928,7 +964,6 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                   if (completedToday == null)
                     SizedBox(
                       width: double.infinity,
-                      height: 38,
                       child: BldrPrimaryButton(
                         label: 'Iniciar treino',
                         icon: Icons.play_arrow_rounded,
@@ -944,8 +979,8 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                 ],
               ),
             ),
-            Expanded(
-              flex: 2,
+            Flexible(
+              fit: FlexFit.loose,
               child: Align(
                 alignment: Alignment.bottomCenter,
                 child: SizedBox(

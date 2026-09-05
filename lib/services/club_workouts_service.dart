@@ -362,7 +362,7 @@ class ClubWorkoutsService {
       final targetUserId = userId ?? currentUser.id;
 
       var query = _client.from('club_user_workouts').select('''
-            id, name, started_at, completed_at, total_duration_seconds,
+            id, name, workout_template_id, started_at, completed_at, total_duration_seconds,
             notes, is_completed,
             club_workout_templates(name, workout_type, estimated_duration_minutes)
           ''').eq('user_id', targetUserId);

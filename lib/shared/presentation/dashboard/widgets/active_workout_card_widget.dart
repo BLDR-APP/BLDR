@@ -43,7 +43,7 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
   // L4 — treino de hoje vindo do plano gerado no onboarding, se houver
   // (OnboardingPlanStorage; ver ressalva de B8 sobre não ser fonte real
   // de plano semanal, só o resultado imediato do onboarding).
-  Map<String, String>? _todayTemplate;
+  Map<String, dynamic>? _todayTemplate;
   bool _startingToday = false;
 
   WorkoutSession? _completedToday; // não nulo → exibe card "concluído"
@@ -71,7 +71,10 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
       final historyResult =
           await getIt<uc.GetWorkoutHistory>()(completedOnly: false, limit: 1);
       final completedHistoryResult =
-          await getIt<uc.GetWorkoutHistory>()(completedOnly: true, limit: 10);
+          await getIt<clubUc.GetConsolidatedWorkoutHistory>()(
+        completedOnly: true,
+        limit: 10,
+      );
       final pausedResult = await getIt<uc.GetPausedWorkouts>()(limit: 2);
       final pausedClubResult =
           await getIt<clubUc.GetPausedClubWorkouts>()(limit: 2);
@@ -87,7 +90,11 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
       final todayPlanDay =
           planDays.where((d) => d.diaSemana == todayWeekday).firstOrNull;
       final todayTemplate = (todayPlanDay?.treino?.id != null)
-          ? {'id': todayPlanDay!.treino!.id!, 'name': todayPlanDay.treino!.name}
+          ? {
+              'id': todayPlanDay!.treino!.id!,
+              'name': todayPlanDay.treino!.name,
+              'source': todayPlanDay.treino!.source,
+            }
           : null;
 
       final history = historyResult.valueOrNull;
@@ -107,14 +114,21 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
         WorkoutSession? completedToday;
         final completedHistory = completedHistoryResult.valueOrNull ?? const [];
         if (active == null && completedHistory.isNotEmpty) {
-          final latestCompleted = completedHistory.first;
-          final ct = latestCompleted.completedAt?.toLocal();
+          final completedForTodayTemplate = completedHistory.where((session) {
+            final ct = session.completedAt?.toLocal();
+            return ct != null &&
+                ct.year == DateTime.now().year &&
+                ct.month == DateTime.now().month &&
+                ct.day == DateTime.now().day &&
+                session.templateId == todayTemplate?['id'];
+          }).firstOrNull;
+          final ct = completedForTodayTemplate?.completedAt?.toLocal();
           final now = DateTime.now();
           if (ct != null &&
               ct.year == now.year &&
               ct.month == now.month &&
               ct.day == now.day) {
-            completedToday = latestCompleted;
+            completedToday = completedForTodayTemplate;
           }
         }
 
@@ -161,19 +175,51 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
     if (template == null || _startingToday) return;
     setState(() => _startingToday = true);
     try {
-      final startResult = await getIt<uc.StartWorkout>()(
-        name: template['name'] ?? 'Treino',
-        templateId: template['id'],
-      );
+      final name = template['name'] as String? ?? 'Treino';
+      final templateId = template['id'] as String?;
+      if (templateId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Não foi possível iniciar o treino.'),
+          backgroundColor: BldrColors.danger,
+          behavior: SnackBarBehavior.floating,
+        ));
+        return;
+      }
+      final isClub = template['source'] == 'club';
+      final startResult = isClub
+          ? await getIt<clubUc.StartClubWorkout>()(
+              name: name,
+              templateId: templateId,
+            )
+          : await getIt<uc.StartWorkout>()(
+              name: name,
+              templateId: templateId,
+            );
       final session = startResult.valueOrNull;
-      if (session?.id == null || !mounted) return;
+      if (session?.id == null || !mounted) {
+        final failure = startResult.failureOrNull;
+        if (failure != null && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(failure.message),
+            backgroundColor: BldrColors.danger,
+            behavior: SnackBarBehavior.floating,
+          ));
+        }
+        return;
+      }
+
       await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => ActiveWorkoutScreen(
-            workoutId: session!.id!,
-            workoutName: template['name'] ?? 'Treino',
-          ),
+          builder: (_) => isClub
+              ? ClubActiveWorkoutScreen(
+                  workoutId: session!.id!,
+                  workoutName: name,
+                )
+              : ActiveWorkoutScreen(
+                  workoutId: session!.id!,
+                  workoutName: name,
+                ),
         ),
       );
       if (mounted) _loadActiveWorkout();

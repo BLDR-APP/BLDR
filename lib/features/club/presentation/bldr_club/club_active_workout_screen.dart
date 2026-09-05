@@ -1609,6 +1609,7 @@ class _ClubActiveWorkoutScreenState extends State<ClubActiveWorkoutScreen>
                   _restTimer?.cancel();
                   getIt<NotificationService>().cancelRestNotification();
                   setState(() => _resting = false);
+                  unawaited(_updateLiveActivity(isResting: false));
                 },
               ),
             ],
