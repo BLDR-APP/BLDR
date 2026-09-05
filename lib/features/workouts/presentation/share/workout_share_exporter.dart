@@ -120,30 +120,26 @@ class WorkoutShareExporter {
       },
       operation: () async {
         var currentStage = WorkoutShareStage.boundary;
-        WidgetsBinding.instance.scheduleFrame();
-        await WidgetsBinding.instance.endOfFrame;
-        var boundary = boundaryKey.currentContext?.findRenderObject()
-            as RenderRepaintBoundary?;
-        if (boundary?.debugNeedsPaint == true) {
+        late RenderRepaintBoundary boundary;
+        try {
           WidgetsBinding.instance.scheduleFrame();
           await WidgetsBinding.instance.endOfFrame;
-          boundary = boundaryKey.currentContext?.findRenderObject()
+          final candidate = boundaryKey.currentContext?.findRenderObject()
               as RenderRepaintBoundary?;
-        }
-        onStage?.call(WorkoutShareStage.boundary);
-        if (boundary == null || boundary.debugNeedsPaint) {
-          throw WorkoutShareExportException(
-            WorkoutShareStage.boundary,
-            StateError('Template ainda não está pronto para exportação'),
-          );
+          if (candidate == null) {
+            throw StateError('Template ainda não está pronto para exportação');
+          }
+          if (candidate.size.width <= 0 || candidate.size.height <= 0) {
+            throw StateError('Template sem dimensões para exportação');
+          }
+          boundary = candidate;
+          onStage?.call(WorkoutShareStage.boundary);
+        } on WorkoutShareExportException {
+          rethrow;
+        } catch (error) {
+          throw WorkoutShareExportException(WorkoutShareStage.boundary, error);
         }
         final logicalWidth = boundary.size.width;
-        if (logicalWidth <= 0) {
-          throw WorkoutShareExportException(
-            WorkoutShareStage.boundary,
-            StateError('Template sem largura para exportação'),
-          );
-        }
         final ratio = 1080 / logicalWidth;
         try {
           currentStage = WorkoutShareStage.render;

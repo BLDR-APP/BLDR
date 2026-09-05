@@ -27,7 +27,8 @@ class _WorkoutSharePreviewState extends State<WorkoutSharePreview> {
   void initState() {
     super.initState();
     _exporter = WorkoutShareExporter(
-      prepareAssets: (context) => prepareWorkoutShareAssets(context, widget.data),
+      prepareAssets: (context) =>
+          prepareWorkoutShareAssets(context, widget.data),
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {

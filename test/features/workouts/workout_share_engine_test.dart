@@ -214,15 +214,12 @@ void main() {
       ),
     ));
     expect(paths, contains('assets/images/BLDR_CLEAN_BGLESS.png'));
+    expect(
+        paths, contains('assets/images/muscle_map/base/body_front_base.png'));
+    expect(paths, contains('assets/images/muscle_map/base/body_back_base.png'));
+    expect(paths, contains('assets/images/muscle_map/front_masks/biceps.png'));
+    expect(paths, contains('assets/images/muscle_map/back_masks/glutes.png'));
     expect(paths,
-        contains('assets/images/muscle_map/base/body_front_base.png'));
-    expect(paths,
-        contains('assets/images/muscle_map/base/body_back_base.png'));
-    expect(paths,
-        contains('assets/images/muscle_map/front_masks/biceps.png'));
-    expect(paths,
-        contains('assets/images/muscle_map/back_masks/glutes.png'));
-    expect(paths, isNot(contains(
-        'assets/images/muscle_map/front_masks/chest.png')));
+        isNot(contains('assets/images/muscle_map/front_masks/chest.png')));
   });
 }
