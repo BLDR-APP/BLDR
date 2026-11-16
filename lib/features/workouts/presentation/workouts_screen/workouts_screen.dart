@@ -134,10 +134,12 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
         templates: templates,
         weekday: DateTime.now().weekday,
       );
-      final assignedToday = plan
+      final todayRow = plan
           .where((day) => day.diaSemana == DateTime.now().weekday)
-          .firstOrNull
-          ?.treino;
+          .firstOrNull;
+      // Descanso com template guardado não é treino do dia.
+      final assignedToday =
+          (todayRow?.isRestDay ?? false) ? null : todayRow?.treino;
       if (todayTemplate == null && assignedToday?.id != null) {
         final assignedResult = assignedToday!.source == 'club'
             ? await getIt<GetClubTemplateWithExercises>()(assignedToday.id!)

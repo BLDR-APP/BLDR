@@ -33,6 +33,9 @@ abstract final class TodayWorkoutResolver {
         break;
       }
     }
+    // Dia de descanso pode guardar o template para quando voltar a treino;
+    // enquanto for descanso, não há treino do dia.
+    if (today?.isRestDay ?? false) return null;
     final assigned = today?.treino;
     final assignedId = assigned?.id;
     if (assignedId == null || assignedId.isEmpty) return null;

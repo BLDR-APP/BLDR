@@ -51,6 +51,10 @@ class _FakeWeeklyPlanRepository implements WeeklyPlanRepository {
       const Result.success([]);
 
   @override
+  Future<Result<void>> saveDayTypes(List<bool> trainingDays) async =>
+      const Result.success(null);
+
+  @override
   Future<Result<void>> deleteCompletedClub(String id) async =>
       const Result.success(null);
 }

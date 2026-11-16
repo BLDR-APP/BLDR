@@ -11,6 +11,7 @@ import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/features/auth/domain/repositories/auth_repository.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/paused_workout_summary.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/plan_day_type_resolver.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_template.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart'
     as uc;
@@ -107,12 +108,22 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
       // Filtra pelo dia da semana atual (1=seg … 7=dom).
       final planResult = await getIt<uc.GetWeeklyPlan>()();
       final planDays = planResult.valueOrNull ?? [];
+      // Regra única do tipo do dia (mesma da WeeklyPlanScreen e do hub):
+      // linha do plano decide; sem linha, rest_days; vazio, frequência.
+      final config = (await getIt<uc.GetWeeklyPlanConfig>()()).valueOrNull;
+      final todayIsRest = !PlanDayTypeResolver.trainingDays(
+        plan: planDays,
+        restDays: config?.restDays ?? const [],
+        frequencyDays: config?.frequencyDays ?? 3,
+      )[DateTime.now().weekday - 1];
       final todayWeekday = DateTime.now().weekday;
       final todayPlanDay =
           planDays.where((d) => d.diaSemana == todayWeekday).firstOrNull;
-      final todayTemplate = (todayPlanDay?.treino?.id != null)
+      // Descanso com template guardado não é treino do dia.
+      final todayTemplate = (todayPlanDay?.treino?.id != null &&
+              !todayPlanDay!.isRestDay)
           ? {
-              'id': todayPlanDay!.treino!.id!,
+              'id': todayPlanDay.treino!.id!,
               'name': todayPlanDay.treino!.name,
               'source': todayPlanDay.treino!.source,
             }
@@ -177,7 +188,7 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
           pausedSummaries = dedupedPaused;
           _todayTemplate = todayTemplate;
           _rawPaused = rawPaused;
-          _todayIsRest = todayPlanDay?.isRestDay ?? false;
+          _todayIsRest = todayIsRest;
           _completedToday = completedToday;
           isLoading = false;
           hasError = false;

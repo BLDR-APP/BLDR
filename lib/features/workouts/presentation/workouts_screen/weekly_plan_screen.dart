@@ -7,6 +7,7 @@ import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/features/subscription/domain/usecases/resolve_club_access.dart';
 import 'package:bldr_fitness/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/havok/havok_sheet.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/plan_day_type_resolver.dart';
 import 'package:bldr_fitness/features/onboarding/domain/entities/onboarding_plan.dart'
     as domain;
 import 'package:bldr_fitness/features/workouts/domain/entities/activity_type.dart';
@@ -90,7 +91,6 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
 
   // Plan metadata
   String _splitLabel = '';
-  int _freqDays = 3;
   String _weekRange = '';
   List<int> _restDays = []; // 0=Mon … 6=Sun
 
@@ -110,10 +110,6 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
   DateTime _monday(DateTime d) =>
       DateTime(d.year, d.month, d.day - (d.weekday - 1));
 
-  // Training days derived from explicitly-stored rest days
-  List<int> _trainingFromRestDays(List<int> restDays) =>
-      List.generate(7, (i) => i).where((i) => !restDays.contains(i)).toList();
-
   String _splitChipLabel(String pref) {
     if (pref.contains('Full Body')) return 'Full Body';
     if (pref.contains('Upper/Lower')) return 'Upper · Lower';
@@ -129,15 +125,6 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
     if (pref.contains('Push/Pull/Legs')) return ['Push', 'Pull', 'Legs'];
     if (pref.contains('ABCDE')) return ['A', 'B', 'C', 'D', 'E'];
     return ['Treino'];
-  }
-
-  List<int> _trainingIndices(int n) {
-    n = n.clamp(1, 7);
-    if (n >= 7) return List.generate(7, (i) => i);
-    return {
-      for (int i = 0; i < n; i++) (i * 7 / n).round() % 7,
-    }.toList()
-      ..sort();
   }
 
   String _formatDate(DateTime d) {
@@ -182,10 +169,8 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
       // Prefer explicit rest_days stored by the user; else even distribution
       final restDaysRaw = config.restDays;
       final labels = _splitLabels(splitPref);
-      final indices = restDaysRaw.isNotEmpty
-          ? _trainingFromRestDays(restDaysRaw)
-          : _trainingIndices(freqDays);
-      final effectiveFreq = indices.length;
+      // O tipo de cada dia vem da regra única (PlanDayTypeResolver), depois
+      // que o plano é carregado — ver abaixo.
 
       final now = DateTime.now();
       final weekStart = _monday(now);
@@ -208,13 +193,24 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
       final xpByDay = await Future.wait(xpFutures);
       final weeklyPlanResult = await weeklyPlanFuture;
 
+      // Regra única do tipo do dia: linha em weekly_plan_days decide; sem
+      // linha, rest_days; vazio, frequência. Mesma regra do hub e da Home.
+      final trainingDays = PlanDayTypeResolver.trainingDays(
+        plan: weeklyPlanResult.valueOrNull ?? const <domain.PlanDay>[],
+        restDays: restDaysRaw,
+        frequencyDays: freqDays,
+      );
+      final indices = PlanDayTypeResolver.trainingIndices(trainingDays);
+      final effectiveFreq = indices.length;
+
       // Mapeia template atribuído por diaSemana (1=Seg…7=Dom → 0-indexed: -1)
       final assignedByWeekday =
           <int, ({String id, String name, String? source})>{};
       for (final d in weeklyPlanResult.valueOrNull ?? <domain.PlanDay>[]) {
         final id = d.treino?.id;
         final name = d.treino?.name;
-        if (id != null && name != null && name.isNotEmpty) {
+        // Dia de descanso com template guardado não conta como atribuído.
+        if (id != null && name != null && name.isNotEmpty && !d.isRestDay) {
           // diaSemana (1=Seg) → weekdayIndex (0=Seg)
           assignedByWeekday[d.diaSemana - 1] =
               (id: id, name: name, source: d.treino?.source);
@@ -257,7 +253,7 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
 
       for (int i = 0; i < 7; i++) {
         final date = weekStart.add(Duration(days: i));
-        final isTraining = indices.contains(i);
+        final isTraining = trainingDays[i];
         final labelIdx = indices.indexOf(i);
 
         DayStatus status;
@@ -334,7 +330,6 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
           _days = days;
           _splitLabel =
               '${_splitChipLabel(splitPref)} — ${effectiveFreq}x/semana';
-          _freqDays = freqDays;
           _restDays = restDaysRaw;
           _weekRange =
               '${_formatDate(weekStart)} – ${_formatDate(weekStart.add(const Duration(days: 6)))}';
@@ -811,11 +806,14 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
     String selectedSplit = _splitLabel.split(' —').first.trim();
 
     // Initial rest days: use stored, or infer from freq
-    final List<int> selectedRestDays = _restDays.isNotEmpty
-        ? List<int>.from(_restDays)
-        : List.generate(7, (i) => i)
-            .where((i) => !_trainingIndices(_freqDays).contains(i))
-            .toList();
+    // Dias de descanso exibidos hoje (regra única), para a folha abrir
+    // igual à tela.
+    final List<int> selectedRestDays = _days.isNotEmpty
+        ? [
+            for (final d in _days)
+              if (d.status == DayStatus.rest) d.weekdayIndex,
+          ]
+        : List<int>.from(_restDays);
 
     showModalBottomSheet(
       context: context,

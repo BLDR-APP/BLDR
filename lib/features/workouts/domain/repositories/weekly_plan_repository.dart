@@ -18,6 +18,11 @@ abstract class WeeklyPlanRepository {
     required List<int> restDays,
   });
 
+  /// Grava só o `tipo` de cada dia em `weekly_plan_days` (7 posições,
+  /// 0 = segunda; `true` = treino). Preserva o template já atribuído a cada
+  /// dia — ao voltar para treino, o template reaparece.
+  Future<Result<void>> saveDayTypes(List<bool> trainingDays);
+
   /// Treinos concluídos no intervalo [weekStart, weekEnd).
   Future<Result<WeekCompletedWorkouts>> completedBetween(
       DateTime weekStart, DateTime weekEnd);

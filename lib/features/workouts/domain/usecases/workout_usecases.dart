@@ -232,12 +232,20 @@ class SaveWeeklyPlanConfig {
   final WeeklyPlanRepository _repo;
   const SaveWeeklyPlanConfig(this._repo);
 
+  /// Grava split e `rest_days` e, em seguida, o `tipo` de cada dia em
+  /// `weekly_plan_days` (descanso nos `restDays`, treino nos demais),
+  /// preservando os templates atribuídos — `weekly_plan_days` é a fonte que
+  /// decide o tipo do dia (PlanDayTypeResolver).
   Future<Result<void>> call({
     required String splitPreference,
     required List<int> restDays,
-  }) =>
-      _repo.savePlanConfig(
-          splitPreference: splitPreference, restDays: restDays);
+  }) async {
+    final saved = await _repo.savePlanConfig(
+        splitPreference: splitPreference, restDays: restDays);
+    if (saved.isFailure) return saved;
+    return _repo.saveDayTypes(
+        [for (var i = 0; i < 7; i++) !restDays.contains(i)]);
+  }
 }
 
 class SaveWeeklyPlan {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
@@ -6,6 +7,7 @@ import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/design_system/bldr_workout_v2_components.dart';
 import 'package:bldr_fitness/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/plan_day_type_resolver.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/extra_activity.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart';
@@ -80,20 +82,6 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
     return ['Treino'];
   }
 
-  // Evenly spread n training days across 7, starting from Monday (0-indexed)
-  List<int> _trainingIndices(int n) {
-    n = n.clamp(1, 7);
-    if (n >= 7) return List.generate(7, (i) => i);
-    return {
-      for (int i = 0; i < n; i++) (i * 7 / n).round() % 7,
-    }.toList()
-      ..sort();
-  }
-
-  // Derive training indices from stored rest_days (0=Mon … 6=Sun)
-  List<int> _trainingFromRestDays(List<int> restDays) =>
-      List.generate(7, (i) => i).where((i) => !restDays.contains(i)).toList();
-
   // ── data loading ──────────────────────────────────────────────────────────
 
   Future<void> _load() async {
@@ -114,9 +102,13 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
       // Prefer explicit rest_days; fallback to even distribution
       final restDaysRaw = config?.restDays ?? const <int>[];
       final labels = _splitLabels(splitPref);
-      final indices = restDaysRaw.isNotEmpty
-          ? _trainingFromRestDays(restDaysRaw)
-          : _trainingIndices(freqDays);
+      // Regra única do tipo do dia (mesma da WeeklyPlanScreen e da Home).
+      final trainingDays = PlanDayTypeResolver.trainingDays(
+        plan: weeklyPlanResult.valueOrNull ?? const [],
+        restDays: restDaysRaw,
+        frequencyDays: freqDays,
+      );
+      final indices = PlanDayTypeResolver.trainingIndices(trainingDays);
       // This-week's workouts
       final now = DateTime.now();
       final weekStart = _monday(now);
@@ -155,14 +147,15 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
       final todayIdx = now.weekday - 1;
       final assignedByIndex = {
         for (final day in weeklyPlanResult.valueOrNull ?? const [])
-          if (day.treino != null) day.diaSemana - 1: day.treino!,
+          if (day.treino != null && !day.isRestDay)
+            day.diaSemana - 1: day.treino!,
       };
 
       final List<_WeekDay> days = [];
       for (int i = 0; i < 7; i++) {
         final date = weekStart.add(Duration(days: i));
         final assigned = assignedByIndex[i];
-        final isTraining = assigned != null || indices.contains(i);
+        final isTraining = trainingDays[i];
         final labelIdx = indices.indexOf(i);
 
         _DayStatus status;
@@ -330,9 +323,10 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(l10n.hub_week_see, style: BldrWorkoutTextV2.hubSection),
-                  const SizedBox(width: 4),
-                  const Icon(TablerIcons.arrow_narrow_right,
-                      size: 22, color: BldrWorkoutColorsV2.goldBrand),
+                  const SizedBox(width: 8),
+                  // Seta longa e fina do mockup (vetor "Arrow 1", 23 × 3,7).
+                  SvgPicture.asset('assets/images/v2/icons/week_arrow.svg',
+                      width: 23.25, height: 3.68),
                 ],
               ),
             ),
@@ -405,59 +399,24 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
     };
   }
 
-  /// Letras dos dias (hoje em dourado) e círculos ligados por linhas.
+  /// Faixa da semana v2. "Hoje" é sempre o índice do dia atual (antes
+  /// dependia do status "today", que não existe em dia concluído ou de
+  /// descanso — a letra ficava branca).
   Widget _buildWeekRow() {
-    return LayoutBuilder(builder: (context, c) {
-      // 7 círculos de 44 + 6 ligações; em telas estreitas os círculos
-      // encolhem proporcionalmente.
-      final circle = ((c.maxWidth - 6 * 6) / 7).clamp(30.0, 44.0);
-      return Row(
-        children: [
-          for (var i = 0; i < _days.length; i++) ...[
-            if (i > 0)
-              Expanded(
-                // Linha na altura do centro do círculo (letra 12 × 1,21 +
-                // 3 de espaço + metade do círculo), como no mockup.
-                child: Padding(
-                  padding: EdgeInsets.only(
-                      top: 12 * 1.21 * MediaQuery.textScalerOf(context).scale(1) +
-                          3 +
-                          circle * 42 / 44 / 2),
-                  child: Container(
-                      height: 0.6, color: BldrWorkoutColorsV2.goldBrand),
-                ),
-              ),
-            SizedBox(
-              width: circle,
-              child: Column(
-                children: [
-                  Text(_days[i].abbrev,
-                      style: BldrWorkoutTextV2.weekDay.copyWith(
-                          color: _days[i].status == _DayStatus.today
-                              ? BldrWorkoutColorsV2.goldBrand
-                              : null)),
-                  const SizedBox(height: 3),
-                  SizedBox(
-                    width: circle,
-                    height: circle * 42 / 44,
-                    child: FittedBox(
-                      child: BldrWeekDayCircle(
-                        state: _stateOf(_days[i]),
-                        // Mesmos dias tocáveis de antes: feito, extra, perdido.
-                        onTap: (_days[i].workoutCompleted ||
-                                _days[i].extraActivity != null ||
-                                _days[i].status == _DayStatus.lost)
-                            ? () => _showDaySheet(_days[i])
-                            : null,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      );
-    });
+    final todayIdx = DateTime.now().weekday - 1; // 0 = segunda
+    return BldrWeekStrip(
+      letters: [for (final d in _days) d.abbrev],
+      states: [for (final d in _days) _stateOf(d)],
+      todayIndex: todayIdx,
+      onTaps: [
+        for (final d in _days)
+          // Mesmos dias tocáveis de antes: feito, extra, perdido.
+          (d.workoutCompleted ||
+                  d.extraActivity != null ||
+                  d.status == _DayStatus.lost)
+              ? () => _showDaySheet(d)
+              : null,
+      ],
+    );
   }
 }

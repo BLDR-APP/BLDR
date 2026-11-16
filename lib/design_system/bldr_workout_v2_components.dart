@@ -5,6 +5,7 @@
 // `BldrWorkoutColorsV2` / `BldrWorkoutTextV2`.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
@@ -870,38 +871,45 @@ class BldrTodayWorkoutCard extends StatelessWidget {
 /// Estado visual de um dia na faixa da semana (decisão aprovada).
 enum BldrWeekDayState { workoutDone, extraDone, lost, pending, rest }
 
-/// Círculo 44×42 da semana.
+/// Círculo do dia na semana (Figma 249:18901 / 116:52): preenchimento
+/// 44×42 #D9D9D9 com contorno dourado de 1 px POR FORA (caixa total 46×44).
+/// Descanso e dia perdido: só o contorno tracejado (traço 4, intervalo 1).
+/// Ícones = vetores exportados do mockup (Tabler barbell / check /
+/// barbell-off em traço fino).
 class BldrWeekDayCircle extends StatelessWidget {
   final BldrWeekDayState state;
   final VoidCallback? onTap;
 
   const BldrWeekDayCircle({super.key, required this.state, this.onTap});
 
+  static const double outerWidth = 46;
+  static const double outerHeight = 44;
+
   @override
   Widget build(BuildContext context) {
     final dashed = state == BldrWeekDayState.lost ||
         state == BldrWeekDayState.rest;
     final icon = switch (state) {
-      BldrWeekDayState.workoutDone => TablerIcons.barbell,
-      BldrWeekDayState.extraDone => TablerIcons.check,
-      BldrWeekDayState.lost => TablerIcons.barbell_off,
+      BldrWeekDayState.workoutDone =>
+        SvgPicture.asset('assets/images/v2/icons/week_barbell.svg',
+            width: 21, height: 13),
+      BldrWeekDayState.extraDone =>
+        SvgPicture.asset('assets/images/v2/icons/week_check.svg',
+            width: 16, height: 11),
+      BldrWeekDayState.lost =>
+        SvgPicture.asset('assets/images/v2/icons/week_barbell_off.svg',
+            width: 24, height: 24),
       _ => null,
     };
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: SizedBox(
-        width: 44,
-        height: 42,
+        width: outerWidth,
+        height: outerHeight,
         child: CustomPaint(
           painter: _WeekCirclePainter(dashed: dashed),
-          child: icon == null
-              ? null
-              : Icon(icon,
-                  size: 22,
-                  color: dashed
-                      ? BldrWorkoutColorsV2.goldBrand
-                      : BldrWorkoutColorsV2.weekIcon),
+          child: icon == null ? null : Center(child: icon),
         ),
       ),
     );
@@ -917,25 +925,24 @@ class _WeekCirclePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final stroke = Paint()
+    final outer = Offset.zero & size; // 46 × 44
+    final fill = outer.deflate(1); // 44 × 42
+    final ring = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1
       ..color = BldrWorkoutColorsV2.goldBrand;
+    // Contorno de 1 px por fora do preenchimento (máscara do mockup).
+    final ringRect = outer.deflate(0.5);
     if (!dashed) {
-      canvas.drawOval(
-          rect.deflate(1), Paint()..color = BldrWorkoutColorsV2.weekCircle);
-      canvas.drawOval(rect.deflate(0.5), stroke);
+      canvas.drawOval(fill, Paint()..color = BldrWorkoutColorsV2.weekCircle);
+      canvas.drawOval(ringRect, ring);
       return;
     }
-    // Tracejado medido no mockup (249:18901): traço 1 px #D4AF37,
-    // segmentos de 4 px com intervalos de 1 px. Igual para descanso
-    // (vazio) e dia perdido (com halter riscado).
-    final path = Path()..addOval(rect.deflate(0.5));
+    final path = Path()..addOval(ringRect);
     for (final metric in path.computeMetrics()) {
       var d = 0.0;
       while (d < metric.length) {
-        canvas.drawPath(metric.extractPath(d, d + _dash), stroke);
+        canvas.drawPath(metric.extractPath(d, d + _dash), ring);
         d += _dash + _gap;
       }
     }
@@ -943,6 +950,70 @@ class _WeekCirclePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_WeekCirclePainter old) => old.dashed != dashed;
+}
+
+/// Faixa da semana: letras (hoje em dourado) e círculos 44×42 ligados por
+/// linhas de 11 × 0,3 px douradas na altura do centro, encostando no
+/// preenchimento. Largura exata do mockup em 440 px (7×44 + 6×11 = 374);
+/// em telas mais estreitas a faixa inteira encolhe proporcionalmente.
+class BldrWeekStrip extends StatelessWidget {
+  final List<String> letters;
+  final List<BldrWeekDayState> states;
+  final int todayIndex;
+  final List<VoidCallback?> onTaps;
+
+  const BldrWeekStrip({
+    super.key,
+    required this.letters,
+    required this.states,
+    required this.todayIndex,
+    required this.onTaps,
+  });
+
+  static const double _fillW = 44;
+  static const double _gap = 11;
+
+  @override
+  Widget build(BuildContext context) {
+    final strip = Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < states.length; i++) ...[
+          if (i > 0)
+            Padding(
+              // letra (12 × 1,21) + 3,5 + metade do círculo (22).
+              padding: EdgeInsets.only(
+                  top: MediaQuery.textScalerOf(context).scale(12) * 1.21 +
+                      3.5 +
+                      BldrWeekDayCircle.outerHeight / 2 -
+                      0.15),
+              child: Container(
+                  width: _gap - 2, // o contorno de 1 px de cada lado
+                  height: 0.3,
+                  color: BldrWorkoutColorsV2.goldBrand),
+            ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(letters[i],
+                  style: BldrWorkoutTextV2.weekDay.copyWith(
+                      color: i == todayIndex
+                          ? BldrWorkoutColorsV2.goldBrand
+                          : null)),
+              const SizedBox(height: 3.5),
+              BldrWeekDayCircle(state: states[i], onTap: onTaps[i]),
+            ],
+          ),
+        ],
+      ],
+    );
+    return LayoutBuilder(builder: (context, c) {
+      final full = 7 * _fillW + 6 * _gap + 2;
+      if (c.maxWidth >= full) return Center(child: strip);
+      return FittedBox(fit: BoxFit.scaleDown, child: strip);
+    });
+  }
 }
 
 /// Card em pílula de "Meus treinos" (371×76, raio 60, borda dourada).

@@ -121,6 +121,20 @@ class WeeklyPlanRepositoryImpl implements WeeklyPlanRepository {
       });
 
   @override
+  Future<Result<void>> saveDayTypes(List<bool> trainingDays) =>
+      _guard(() async {
+        final uid = _requireUser();
+        await _datasource.upsertDayTypes(uid, [
+          for (var i = 0; i < 7 && i < trainingDays.length; i++)
+            {
+              'user_id': uid,
+              'dia_semana': i + 1,
+              'tipo': trainingDays[i] ? 'treino' : 'descanso',
+            },
+        ]);
+      });
+
+  @override
   Future<Result<WeekCompletedWorkouts>> completedBetween(
           DateTime weekStart, DateTime weekEnd) =>
       _guard(() async {

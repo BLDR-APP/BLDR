@@ -98,6 +98,17 @@ class SupabaseWeeklyPlanDatasource {
     );
   }
 
+  /// Upsert parcial: só `tipo` (user_id, dia_semana, tipo). No conflito o
+  /// PostgREST atualiza apenas as colunas enviadas, preservando template_id,
+  /// club_template_id, template_name e source.
+  Future<void> upsertDayTypes(
+      String userId, List<Map<String, dynamic>> rows) async {
+    await _client.from('weekly_plan_days').upsert(
+      rows,
+      onConflict: 'user_id,dia_semana',
+    );
+  }
+
   /// Retorna os dias do plano ordenados por dia_semana.
   Future<List<Map<String, dynamic>>> getWeeklyPlan(String userId) async {
     final rows = await _client
