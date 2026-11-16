@@ -69,6 +69,7 @@ class WorkoutModels {
           ? exerciseFromMap(Map<String, dynamic>.from(exerciseMap))
           : null,
       freeName: map['free_name'] as String?,
+      setDetails: TemplateSetDetail.listFromJson(map['set_details']),
     );
   }
 
@@ -92,6 +93,8 @@ class WorkoutModels {
       'exercise_db_id': exerciseDbId,
       if (exerciseId == null && exerciseDbId == null && e.freeName != null)
         'free_name': e.freeName,
+      if (e.setDetails.isNotEmpty)
+        'set_details': e.setDetails.map((d) => d.toJson()).toList(),
     };
   }
 

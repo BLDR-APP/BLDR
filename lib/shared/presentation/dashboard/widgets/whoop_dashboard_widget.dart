@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
+import 'package:bldr_fitness/design_system/bldr_v2_components.dart';
+import 'package:bldr_fitness/theme/bldr_tokens.dart';
 import 'package:bldr_fitness/features/integrations/domain/entities/whoop_entities.dart';
 import 'package:bldr_fitness/features/integrations/domain/usecases/whoop_usecases.dart';
+import 'package:bldr_fitness/features/integrations/presentation/widgets/bldr_connect_wearable_card.dart';
 import 'package:bldr_fitness/features/integrations/presentation/widgets/bldr_whoop_card.dart';
+import 'package:bldr_fitness/shared/presentation/dashboard/wearable_card_state.dart';
 
 class WhoopDashboardWidget extends StatefulWidget {
   const WhoopDashboardWidget({super.key});
@@ -74,20 +78,31 @@ class _WhoopDashboardWidgetState extends State<WhoopDashboardWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_checked) return const SizedBox.shrink();
-    if (!_connected) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: BldrWhoopCard(data: null, isConnected: false),
-      );
-    }
+    final state = resolveWhoopCardState(
+      checked: _checked,
+      connected: _connected,
+      syncing: _syncing,
+      hasData: _data != null,
+    );
+    if (state == WhoopCardState.unknown) return const SizedBox.shrink();
+
+    // Pilha v2: um card por wearable conectado (hoje só o WHOOP; o Garmin
+    // entra aqui quando existir integração) + "Conectar" SEMPRE por último.
+    final whoopConnected = state != WhoopCardState.disconnected;
+    final cards = <Widget>[
+      if (whoopConnected)
+        BldrWhoopCard(
+          data: _data,
+          isConnected: true,
+          isSyncing: state == WhoopCardState.syncing,
+        ),
+      BldrConnectWearableCard(hasConnectedDevice: whoopConnected),
+    ];
+
+    final pageX = BldrSpacingV2.pageX(MediaQuery.sizeOf(context).width);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: BldrWhoopCard(
-        data: _data,
-        isConnected: true,
-        isSyncing: _syncing,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: pageX),
+      child: WearableStack(cards: cards),
     );
   }
 }

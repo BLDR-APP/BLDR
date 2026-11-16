@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:bldr_fitness/features/workouts/domain/active_workout_name.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/workout_template.dart';
 import 'package:bldr_fitness/core/workout_start_guard.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -29,7 +30,7 @@ class WorkoutService {
         user_profiles!created_by(full_name),
         workout_template_exercises(
           id, order_index, sets, reps, duration_seconds, rest_seconds,
-          weight_kg, distance_meters, notes, exercise_db_id,
+          weight_kg, distance_meters, notes, exercise_db_id, set_details,
           exercises(
             id, name, description, exercise_type, primary_muscle_group,
             secondary_muscle_groups, instructions, tips, image_url,
@@ -61,7 +62,7 @@ class WorkoutService {
         workout_template_exercises(
           id, order_index, sets, reps, duration_seconds, rest_seconds,
           weight_kg, distance_meters, notes,
-          exercise_db_id,
+          exercise_db_id, set_details,
           exercises(
             id, name, description, exercise_type, primary_muscle_group,
             secondary_muscle_groups, instructions, tips, image_url,
@@ -161,6 +162,8 @@ class WorkoutService {
             'weight_kg': exercise['weight_kg'],
             'distance_meters': exercise['distance_meters'],
             'notes': exercise['notes'],
+            if (exercise['set_details'] != null)
+              'set_details': exercise['set_details'],
           };
           // ExerciseDB exercises use exercise_db_id; BLDR library exercises use exercise_id
           if (exercise['exercise_db_id'] != null) {
@@ -229,6 +232,8 @@ class WorkoutService {
             'weight_kg': exercise['weight_kg'],
             'distance_meters': exercise['distance_meters'],
             'notes': exercise['notes'],
+            if (exercise['set_details'] != null)
+              'set_details': exercise['set_details'],
           };
           if (exercise['exercise_db_id'] != null) {
             row['exercise_db_id'] = exercise['exercise_db_id'];
@@ -367,24 +372,25 @@ class WorkoutService {
             .select('''
               order_index, sets, reps, duration_seconds, rest_seconds,
               weight_kg, distance_meters, notes, exercise_id, exercise_db_id,
-              free_name
+              free_name, set_details
             ''')
             .eq('workout_template_id', workoutTemplateId)
             .order('order_index', ascending: true);
 
         final setsToInsert = <Map<String, dynamic>>[];
         for (final row in tpl) {
-          final totalSets = (row['sets'] as int?) ?? 1;
-          for (int s = 1; s <= totalSets; s++) {
+          final planned = _plannedSets(row);
+          for (int s = 1; s <= planned.length; s++) {
+            final detail = planned[s - 1];
             final setRow = <String, dynamic>{
               'user_workout_id': workout['id'],
               'set_number': s,
               'order_index': row['order_index'],
-              'reps': row['reps'],
-              'weight_kg': row['weight_kg'],
+              'reps': detail.reps,
+              'weight_kg': detail.weightKg,
               'duration_seconds': row['duration_seconds'],
               'distance_meters': row['distance_meters'],
-              'rest_seconds': row['rest_seconds'],
+              'rest_seconds': detail.restSeconds,
               'notes': row['notes'],
               'completed_at': null,
               'is_completed': false,
@@ -452,6 +458,17 @@ class WorkoutService {
 
   /// Garante que os sets iniciais existam para uma sessão já criada.
   ///
+  /// Séries a criar para uma linha de `workout_template_exercises`: usa
+  /// `set_details` (carga/reps/descanso por série) quando existir; senão,
+  /// `sets` cópias dos valores agregados (templates antigos). TREINOS_V2.md P2.
+  List<TemplateSetDetail> _plannedSets(Map row) => TemplateSetDetail.resolve(
+        sets: (row['sets'] as int?) ?? 1,
+        reps: row['reps'] as int?,
+        weightKg: (row['weight_kg'] as num?)?.toDouble(),
+        restSeconds: row['rest_seconds'] as int?,
+        details: TemplateSetDetail.listFromJson(row['set_details']),
+      );
+
   /// Chamado como segurança após [startWorkout] — caso o INSERT dos sets tenha
   /// falhado silenciosamente (ex: RLS retorna 204 sem lançar exceção), este
   /// método detecta a ausência e tenta criar os sets novamente.
@@ -472,7 +489,7 @@ class WorkoutService {
           .select('''
             order_index, sets, reps, duration_seconds, rest_seconds,
             weight_kg, distance_meters, notes, exercise_id, exercise_db_id,
-            free_name
+            free_name, set_details
           ''')
           .eq('workout_template_id', templateId)
           .order('order_index', ascending: true);
@@ -482,17 +499,18 @@ class WorkoutService {
       // 3. Montar e inserir sets (mesma lógica do startWorkout)
       final setsToInsert = <Map<String, dynamic>>[];
       for (final row in tpl) {
-        final totalSets = (row['sets'] as int?) ?? 1;
-        for (int s = 1; s <= totalSets; s++) {
+        final planned = _plannedSets(row);
+        for (int s = 1; s <= planned.length; s++) {
+          final detail = planned[s - 1];
           final setRow = <String, dynamic>{
             'user_workout_id': sessionId,
             'set_number': s,
             'order_index': row['order_index'],
-            'reps': row['reps'],
-            'weight_kg': row['weight_kg'],
+            'reps': detail.reps,
+            'weight_kg': detail.weightKg,
             'duration_seconds': row['duration_seconds'],
             'distance_meters': row['distance_meters'],
-            'rest_seconds': row['rest_seconds'],
+            'rest_seconds': detail.restSeconds,
             'notes': row['notes'],
             'completed_at': null,
           };

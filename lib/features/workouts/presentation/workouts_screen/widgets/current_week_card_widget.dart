@@ -3,6 +3,7 @@ import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
+import 'package:bldr_fitness/design_system/bldr_workout_v2_components.dart';
 import 'package:bldr_fitness/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
@@ -52,6 +53,9 @@ class CurrentWeekCardWidget extends StatefulWidget {
 }
 
 class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
+  /// Atividades extras da semana (métrica "Extras" do hub v2).
+  int _extrasCount = 0;
+
   /// Allows a parent to force-reload after the user edits the plan.
   Future<void> reload() => _load();
   List<_WeekDay> _days = [];
@@ -194,6 +198,7 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
       if (mounted) {
         setState(() {
           _days = days;
+          _extrasCount = extras.length;
           _loading = false;
         });
       }
@@ -298,31 +303,42 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
 
   // ── build ─────────────────────────────────────────────────────────────────
 
+  /// "Minha semana" v2 (Figma 249:18901 / 179:2): dias em círculos ligados
+  /// por linhas douradas e métricas Treinos · Extras. A métrica XP fica
+  /// pronta e oculta ([_showXp]) até `add_xp_to_user` gravar em xp_events.
+  static const bool _showXp = false;
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final completed = _days.where((d) => d.workoutCompleted).length;
-    final planned = _days.where((d) => d.status != _DayStatus.rest).length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header row
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(AppLocalizations.of(context).plan_current_week,
-                style: BldrText.label),
+            Expanded(
+              child: Text(l10n.hub_week_title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: BldrWorkoutTextV2.hubSection),
+            ),
             GestureDetector(
               onTap: widget.onViewPlan,
               behavior: HitTestBehavior.opaque,
-              child: Text(
-                AppLocalizations.of(context).plan_see_plan,
-                style: BldrText.metaSm.copyWith(color: BldrColors.goldBright),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(l10n.hub_week_see, style: BldrWorkoutTextV2.hubSection),
+                  const SizedBox(width: 4),
+                  const Icon(TablerIcons.arrow_narrow_right,
+                      size: 22, color: BldrWorkoutColorsV2.goldBrand),
+                ],
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        // Days grid
+        const SizedBox(height: 14),
         if (_loading)
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 24),
@@ -336,92 +352,112 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
             ),
           )
         else
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: _days.map(_buildDayCol).toList(),
-          ),
+          _buildWeekRow(),
         if (!_loading) ...[
-          const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _metric('$completed', 'Treinos'),
-              _metric('$planned', 'Planejados'),
-            ],
+          const SizedBox(height: 18),
+          IntrinsicHeight(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _metric('$completed', l10n.hub_week_workouts),
+                _divider(),
+                _metric('$_extrasCount', l10n.hub_week_extras),
+                if (_showXp) ...[
+                  _divider(),
+                  _metric('—', l10n.hub_week_xp),
+                ],
+              ],
+            ),
           ),
         ],
       ],
     );
   }
 
-  Widget _metric(String value, String label) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 13),
+  Widget _divider() => Container(
+        width: 1,
+        margin: const EdgeInsets.symmetric(vertical: 2),
+        color: BldrWorkoutColorsV2.secondary,
+      );
+
+  Widget _metric(String value, String label) => SizedBox(
+        width: 60,
         child: Column(
           children: [
-            Text(value, style: BldrText.metaSm.copyWith(
-              color: BldrColors.goldBright,
-              fontWeight: FontWeight.w600,
-            )),
-            const SizedBox(height: 2),
-            Text(label, style: BldrText.metaSm.copyWith(fontSize: 8)),
+            Text(value,
+                maxLines: 1,
+                style: BldrWorkoutTextV2.weekValue),
+            Text(label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: BldrWorkoutTextV2.weekLabel),
           ],
         ),
       );
 
-  Widget _buildDayCol(_WeekDay day) {
-    final isToday = day.status == _DayStatus.today;
-    final isWorkoutDone = day.workoutCompleted;
-    final isExtraDone = !isWorkoutDone && day.extraActivity != null;
-    final isRest = day.status == _DayStatus.rest && !isExtraDone;
-    // G4/P1 — dia perdido é neutro, mesmo tratamento visual de "futuro".
-    final squareState = isWorkoutDone || isExtraDone
-        ? BldrDayState.done
-        : switch (day.status) {
-            _DayStatus.today => BldrDayState.today,
-            _DayStatus.rest => BldrDayState.rest,
-            _DayStatus.done || _DayStatus.pending || _DayStatus.lost =>
-              BldrDayState.pending,
-          };
-    final icon = isWorkoutDone
-        ? TablerIcons.barbell
-        : isExtraDone
-            ? TablerIcons.check
-            : null;
-    final tappable =
-        isWorkoutDone || isExtraDone || day.status == _DayStatus.lost;
+  BldrWeekDayState _stateOf(_WeekDay day) {
+    if (day.workoutCompleted) return BldrWeekDayState.workoutDone;
+    if (day.extraActivity != null) return BldrWeekDayState.extraDone;
+    return switch (day.status) {
+      _DayStatus.lost => BldrWeekDayState.lost,
+      _DayStatus.rest => BldrWeekDayState.rest,
+      _ => BldrWeekDayState.pending,
+    };
+  }
 
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 3),
-        child: Column(
-          children: [
-            Text(
-              day.abbrev,
-              style: BldrText.metaSm.copyWith(
-                color:
-                    isToday ? BldrColors.goldBright : BldrColors.textTertiary,
-                fontWeight: isToday ? FontWeight.w600 : FontWeight.w400,
+  /// Letras dos dias (hoje em dourado) e círculos ligados por linhas.
+  Widget _buildWeekRow() {
+    return LayoutBuilder(builder: (context, c) {
+      // 7 círculos de 44 + 6 ligações; em telas estreitas os círculos
+      // encolhem proporcionalmente.
+      final circle = ((c.maxWidth - 6 * 6) / 7).clamp(30.0, 44.0);
+      return Row(
+        children: [
+          for (var i = 0; i < _days.length; i++) ...[
+            if (i > 0)
+              Expanded(
+                // Linha na altura do centro do círculo (letra 12 × 1,21 +
+                // 3 de espaço + metade do círculo), como no mockup.
+                child: Padding(
+                  padding: EdgeInsets.only(
+                      top: 12 * 1.21 * MediaQuery.textScalerOf(context).scale(1) +
+                          3 +
+                          circle * 42 / 44 / 2),
+                  child: Container(
+                      height: 0.6, color: BldrWorkoutColorsV2.goldBrand),
+                ),
+              ),
+            SizedBox(
+              width: circle,
+              child: Column(
+                children: [
+                  Text(_days[i].abbrev,
+                      style: BldrWorkoutTextV2.weekDay.copyWith(
+                          color: _days[i].status == _DayStatus.today
+                              ? BldrWorkoutColorsV2.goldBrand
+                              : null)),
+                  const SizedBox(height: 3),
+                  SizedBox(
+                    width: circle,
+                    height: circle * 42 / 44,
+                    child: FittedBox(
+                      child: BldrWeekDayCircle(
+                        state: _stateOf(_days[i]),
+                        // Mesmos dias tocáveis de antes: feito, extra, perdido.
+                        onTap: (_days[i].workoutCompleted ||
+                                _days[i].extraActivity != null ||
+                                _days[i].status == _DayStatus.lost)
+                            ? () => _showDaySheet(_days[i])
+                            : null,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 5),
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                BldrDaySquare(
-                  state: squareState,
-                  icon: icon,
-                  onTap: tappable ? () => _showDaySheet(day) : null,
-                ),
-                if (isRest)
-                  const IgnorePointer(
-                    child: Icon(TablerIcons.barbell_off,
-                        color: BldrColors.textMuted, size: 15),
-                  ),
-              ],
-            ),
           ],
-        ),
-      ),
-    );
+        ],
+      );
+    });
   }
 }

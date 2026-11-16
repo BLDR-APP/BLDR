@@ -3920,4 +3920,439 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get paywall_restore_after_update =>
       'Il ripristino sarà disponibile dopo l\'aggiornamento degli abbonamenti.';
+
+  @override
+  String get havok_entry_semantics => 'Apri HAVOK';
+
+  @override
+  String dashboard_v2_level_xp(String current, String target) {
+    return '$current / $target';
+  }
+
+  @override
+  String get dashboard_v2_workout_today_label => 'ALLENAMENTO DI OGGI';
+
+  @override
+  String get dashboard_v2_start_workout_cta => 'INIZIA ALLENAMENTO';
+
+  @override
+  String dashboard_v2_exercises_count(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count esercizi',
+      one: '$count esercizio',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dashboard_v2_workout_duration(int minutes) {
+    return '~$minutes min';
+  }
+
+  @override
+  String dashboard_v2_calories_of_target(String target) {
+    return 'di $target kcal';
+  }
+
+  @override
+  String get whoop_card_today_caps => 'OGGI';
+
+  @override
+  String get wearable_connect_label => 'LE TUE INTEGRAZIONI';
+
+  @override
+  String get wearable_connect_title_first => 'Collega il tuo wearable';
+
+  @override
+  String get wearable_connect_title_other => 'Collega un altro dispositivo';
+
+  @override
+  String get wearable_connect_body =>
+      'Monitora sonno, recupero e attività con i dati WHOOP.';
+
+  @override
+  String get wearable_connect_cta => 'COLLEGA DISPOSITIVO';
+
+  @override
+  String get whoop_unavailable_title => 'Dati non disponibili';
+
+  @override
+  String get whoop_unavailable_body =>
+      'Non abbiamo ancora ricevuto i dati di oggi.';
+
+  @override
+  String get whoop_unavailable_cta => 'VERIFICA CONNESSIONE';
+
+  @override
+  String get garmin_body_battery => 'BODY BATTERY';
+
+  @override
+  String get garmin_resting_hr => 'FC A RIPOSO';
+
+  @override
+  String get garmin_sleep => 'SONNO';
+
+  @override
+  String get garmin_footer => 'Dati Garmin · aggiornati oggi';
+
+  @override
+  String get havok_insight_label => 'HAVOK · INSIGHT';
+
+  @override
+  String get havok_insight_chat_cta => 'PARLA CON HAVOK';
+
+  @override
+  String get havok_insight_dismiss_semantics => 'Ignora insight';
+
+  @override
+  String wearable_stack_position(int index, int total) {
+    return 'Scheda $index di $total';
+  }
+
+  @override
+  String get dashboard_rest_title => 'Giorno di riposo';
+
+  @override
+  String get dashboard_rest_subtitle =>
+      'Oggi si recupera per tornare più forti.';
+
+  @override
+  String get dashboard_rest_meta => 'Il recupero fa parte dell\'evoluzione';
+
+  @override
+  String get dashboard_rest_cta => 'VEDI IL MIO PIANO';
+
+  @override
+  String get dashboard_noplan_title => 'Nessun allenamento pianificato';
+
+  @override
+  String get dashboard_noplan_subtitle =>
+      'Organizza la tua settimana per iniziare.';
+
+  @override
+  String get dashboard_noplan_meta => 'Il tuo prossimo allenamento inizia qui';
+
+  @override
+  String get dashboard_noplan_cta => 'CREA IL MIO PIANO';
+
+  @override
+  String get dashboard_v2_in_progress_label => 'ALLENAMENTO IN CORSO';
+
+  @override
+  String get dashboard_v2_done_label => 'ALLENAMENTO COMPLETATO';
+
+  @override
+  String get dashboard_v2_resume_cta => 'RIPRENDI ALLENAMENTO';
+
+  @override
+  String dashboard_v2_exercises_progress(int done, int total) {
+    return '$done di $total esercizi';
+  }
+
+  @override
+  String get dashboard_v2_done_duration => 'DURATA';
+
+  @override
+  String get dashboard_v2_done_sets => 'SERIE';
+
+  @override
+  String get dashboard_v2_done_volume => 'VOLUME';
+
+  @override
+  String get dashboard_v2_done_via_whoop => 'Completato via WHOOP';
+
+  @override
+  String get cw_eyebrow => 'CREA ALLENAMENTO';
+
+  @override
+  String get cw_title => 'Crea il tuo allenamento';
+
+  @override
+  String get cw_subtitle => 'Inizia dalle basi. I dettagli li regoli dopo.';
+
+  @override
+  String get cw_name_label => 'NOME ALLENAMENTO';
+
+  @override
+  String get cw_name_hint => 'Nome allenamento';
+
+  @override
+  String get cw_type_label => 'TIPO DI ALLENAMENTO';
+
+  @override
+  String get cw_type_strength => 'Pesi';
+
+  @override
+  String get cw_type_hiit => 'HIIT';
+
+  @override
+  String get cw_type_cardio => 'Indoor Cardio';
+
+  @override
+  String get cw_type_yoga => 'Yoga';
+
+  @override
+  String get cw_type_pilates => 'Pilates';
+
+  @override
+  String get cw_type_hyrox => 'Hyrox';
+
+  @override
+  String get cw_soon => 'In arrivo';
+
+  @override
+  String get cw_add_exercises => 'AGGIUNGI ESERCIZI';
+
+  @override
+  String get cw_setup_hint =>
+      'Imposti serie, ripetizioni e recupero dopo aver scelto gli esercizi.';
+
+  @override
+  String get cw_build_title => 'Componi allenamento';
+
+  @override
+  String cw_build_eyebrow(String name) {
+    return '$name · PESI';
+  }
+
+  @override
+  String cw_selected_count(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count selezionati',
+      one: '$count selezionato',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cw_create => 'CREA';
+
+  @override
+  String get cw_hud_exercises => 'ESERCIZI';
+
+  @override
+  String get cw_hud_sets => 'SERIE';
+
+  @override
+  String get cw_hud_minutes => 'MINUTI';
+
+  @override
+  String get cw_hud_avg_rest => 'RECUPERO MEDIO';
+
+  @override
+  String get cw_hud_helper => 'Si aggiorna con esercizi e preferenze';
+
+  @override
+  String get cw_selected_header => 'SELEZIONATI';
+
+  @override
+  String get cw_selected_hint => 'tocca i valori per modificare';
+
+  @override
+  String get cw_value_sets => 'SERIE';
+
+  @override
+  String get cw_value_reps => 'RIP.';
+
+  @override
+  String get cw_value_rest => 'REC.';
+
+  @override
+  String get cw_personalize => 'PERSONALIZZA SERIE';
+
+  @override
+  String get cw_advanced_hint => 'Regola carico e ripetizioni per serie';
+
+  @override
+  String get cw_add_set => 'AGGIUNGI SERIE';
+
+  @override
+  String get cw_add_exercise => 'AGGIUNGI ESERCIZIO';
+
+  @override
+  String get cw_add_exercise_hint =>
+      'Cerca e seleziona esercizi nella libreria';
+
+  @override
+  String get cw_sheet_title => 'Aggiungi esercizi';
+
+  @override
+  String get cw_search_hint => 'Cerca esercizio';
+
+  @override
+  String get cw_all_exercises => 'TUTTI GLI ESERCIZI';
+
+  @override
+  String cw_exercise_count(int count) {
+    return '$count esercizi';
+  }
+
+  @override
+  String cw_add_n(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'AGGIUNGI $count ESERCIZI',
+      one: 'AGGIUNGI $count ESERCIZIO',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cw_filter_all => 'Tutti';
+
+  @override
+  String get cw_filter_back => 'Schiena';
+
+  @override
+  String get cw_filter_biceps => 'Bicipiti';
+
+  @override
+  String get cw_filter_chest => 'Petto';
+
+  @override
+  String get cw_filter_shoulders => 'Spalle';
+
+  @override
+  String get cw_filter_legs => 'Gambe';
+
+  @override
+  String get cw_filter_triceps => 'Tricipiti';
+
+  @override
+  String get cw_filter_core => 'Core';
+
+  @override
+  String get cw_filter_glutes => 'Glutei';
+
+  @override
+  String get cw_set_edit => 'Modifica serie';
+
+  @override
+  String get cw_set_remove => 'Rimuovi serie';
+
+  @override
+  String get cw_edit_sets_title => 'Serie';
+
+  @override
+  String get cw_edit_reps_title => 'Ripetizioni';
+
+  @override
+  String get cw_edit_rest_title => 'Recupero';
+
+  @override
+  String get cw_confirm => 'Conferma';
+
+  @override
+  String get cw_overwrite_title => 'Sostituire le serie personalizzate?';
+
+  @override
+  String get cw_overwrite_body =>
+      'Le serie di questo esercizio hanno valori diversi. Il nuovo valore verrà applicato a tutte.';
+
+  @override
+  String get cw_overwrite_confirm => 'Sostituisci';
+
+  @override
+  String get cw_cancel => 'Annulla';
+
+  @override
+  String get hub_tab_workout => 'Allenamento';
+
+  @override
+  String get hub_tab_sports => 'Sport';
+
+  @override
+  String get hub_search => 'Cerca';
+
+  @override
+  String get hub_today_label => 'Allenamento di oggi';
+
+  @override
+  String get hub_today_hint => 'Tocca per cambiare allenamento';
+
+  @override
+  String get hub_start => 'Inizia allenamento';
+
+  @override
+  String get hub_done => 'Completato';
+
+  @override
+  String get hub_done_sub => 'Allenamento completato';
+
+  @override
+  String hub_meta(int count, int minutes) {
+    return '$count esercizi • ~$minutes min';
+  }
+
+  @override
+  String get hub_week_title => 'LA MIA SETTIMANA';
+
+  @override
+  String get hub_week_see => 'Vedi settimana';
+
+  @override
+  String get hub_week_workouts => 'Allenamenti';
+
+  @override
+  String get hub_week_extras => 'Extra';
+
+  @override
+  String get hub_week_xp => 'XP';
+
+  @override
+  String get hub_my_workouts => 'I MIEI ALLENAMENTI';
+
+  @override
+  String get hub_create => 'Crea allenamento';
+
+  @override
+  String get hub_from_photo => 'Da foto';
+
+  @override
+  String hub_count(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count allenamenti',
+      one: '$count allenamento',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String hub_card_stats(int count, int minutes) {
+    return '$count esercizi · ~$minutes min';
+  }
+
+  @override
+  String get hub_empty_title => 'Nessun allenamento creato';
+
+  @override
+  String get hub_empty_sub => 'Crea il tuo primo allenamento';
+
+  @override
+  String get hub_explore => 'ESPLORA';
+
+  @override
+  String get hub_explore_club => 'BLDR CLUB';
+
+  @override
+  String get hub_explore_club_sub => 'Funzioni esclusive';
+
+  @override
+  String get hub_explore_library => 'LIBRERIA BLDR';
+
+  @override
+  String get hub_explore_library_sub => 'Allenamenti creati dal team BLDR';
+
+  @override
+  String get hub_explore_programs => 'Programmi';
+
+  @override
+  String get hub_explore_programs_sub => 'Programmi strutturati';
 }

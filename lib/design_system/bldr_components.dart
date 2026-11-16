@@ -8,6 +8,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
+import 'package:bldr_fitness/design_system/bldr_v2_components.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/bldr_muscle.dart';
@@ -23,14 +24,25 @@ class BldrBackground extends StatelessWidget {
   final Widget child;
   final bool secondaryGlow;
 
+  /// Fundo do rebranding v2 (glows elípticos do Figma). Padrão `false`:
+  /// telas ainda não redesenhadas continuam com o fundo da fase 1.
+  final bool v2;
+
   const BldrBackground({
     super.key,
     required this.child,
     this.secondaryGlow = true,
+    this.v2 = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (v2) {
+      return CustomPaint(
+        painter: const BldrBackgroundV2Painter(),
+        child: child,
+      );
+    }
     return Container(
       color: BldrColors.bgBase,
       child: Stack(

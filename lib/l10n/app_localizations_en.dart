@@ -3917,4 +3917,432 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get paywall_restore_after_update =>
       'Restore will be available after subscriptions are updated.';
+
+  @override
+  String get havok_entry_semantics => 'Open HAVOK';
+
+  @override
+  String dashboard_v2_level_xp(String current, String target) {
+    return '$current / $target';
+  }
+
+  @override
+  String get dashboard_v2_workout_today_label => 'TODAY\'S WORKOUT';
+
+  @override
+  String get dashboard_v2_start_workout_cta => 'START WORKOUT';
+
+  @override
+  String dashboard_v2_exercises_count(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count exercises',
+      one: '$count exercise',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String dashboard_v2_workout_duration(int minutes) {
+    return '~$minutes min';
+  }
+
+  @override
+  String dashboard_v2_calories_of_target(String target) {
+    return 'of $target kcal';
+  }
+
+  @override
+  String get whoop_card_today_caps => 'TODAY';
+
+  @override
+  String get wearable_connect_label => 'YOUR INTEGRATIONS';
+
+  @override
+  String get wearable_connect_title_first => 'Connect your wearable';
+
+  @override
+  String get wearable_connect_title_other => 'Connect another device';
+
+  @override
+  String get wearable_connect_body =>
+      'Track sleep, recovery and activity with WHOOP data.';
+
+  @override
+  String get wearable_connect_cta => 'CONNECT DEVICE';
+
+  @override
+  String get whoop_unavailable_title => 'Data unavailable';
+
+  @override
+  String get whoop_unavailable_body =>
+      'We haven\'t received today\'s data yet.';
+
+  @override
+  String get whoop_unavailable_cta => 'CHECK CONNECTION';
+
+  @override
+  String get garmin_body_battery => 'BODY BATTERY';
+
+  @override
+  String get garmin_resting_hr => 'RESTING HR';
+
+  @override
+  String get garmin_sleep => 'SLEEP';
+
+  @override
+  String get garmin_footer => 'Garmin data · updated today';
+
+  @override
+  String get havok_insight_label => 'HAVOK · INSIGHT';
+
+  @override
+  String get havok_insight_chat_cta => 'CHAT WITH HAVOK';
+
+  @override
+  String get havok_insight_dismiss_semantics => 'Dismiss insight';
+
+  @override
+  String wearable_stack_position(int index, int total) {
+    return 'Card $index of $total';
+  }
+
+  @override
+  String get dashboard_rest_title => 'Rest day';
+
+  @override
+  String get dashboard_rest_subtitle =>
+      'Today is for recovering and coming back stronger.';
+
+  @override
+  String get dashboard_rest_meta => 'Recovery is part of progress';
+
+  @override
+  String get dashboard_rest_cta => 'SEE MY PLAN';
+
+  @override
+  String get dashboard_noplan_title => 'No workout planned';
+
+  @override
+  String get dashboard_noplan_subtitle => 'Plan your week to get started.';
+
+  @override
+  String get dashboard_noplan_meta => 'Your next workout starts here';
+
+  @override
+  String get dashboard_noplan_cta => 'CREATE MY PLAN';
+
+  @override
+  String get dashboard_v2_in_progress_label => 'WORKOUT IN PROGRESS';
+
+  @override
+  String get dashboard_v2_done_label => 'WORKOUT COMPLETED';
+
+  @override
+  String get dashboard_v2_resume_cta => 'RESUME WORKOUT';
+
+  @override
+  String dashboard_v2_exercises_progress(int done, int total) {
+    return '$done of $total exercises';
+  }
+
+  @override
+  String get dashboard_v2_done_duration => 'DURATION';
+
+  @override
+  String get dashboard_v2_done_sets => 'SETS';
+
+  @override
+  String get dashboard_v2_done_volume => 'VOLUME';
+
+  @override
+  String get dashboard_v2_done_via_whoop => 'Completed via WHOOP';
+
+  @override
+  String get cw_eyebrow => 'CREATE WORKOUT';
+
+  @override
+  String get cw_title => 'Build your workout';
+
+  @override
+  String get cw_subtitle => 'Start with the basics. You can fine-tune later.';
+
+  @override
+  String get cw_name_label => 'WORKOUT NAME';
+
+  @override
+  String get cw_name_hint => 'Workout name';
+
+  @override
+  String get cw_type_label => 'WORKOUT TYPE';
+
+  @override
+  String get cw_type_strength => 'Strength';
+
+  @override
+  String get cw_type_hiit => 'HIIT';
+
+  @override
+  String get cw_type_cardio => 'Indoor Cardio';
+
+  @override
+  String get cw_type_yoga => 'Yoga';
+
+  @override
+  String get cw_type_pilates => 'Pilates';
+
+  @override
+  String get cw_type_hyrox => 'Hyrox';
+
+  @override
+  String get cw_soon => 'Coming soon';
+
+  @override
+  String get cw_add_exercises => 'ADD EXERCISES';
+
+  @override
+  String get cw_setup_hint =>
+      'You set sets, reps and rest after selecting the exercises.';
+
+  @override
+  String get cw_build_title => 'Build workout';
+
+  @override
+  String cw_build_eyebrow(String name) {
+    return '$name · STRENGTH';
+  }
+
+  @override
+  String cw_selected_count(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get cw_create => 'CREATE';
+
+  @override
+  String get cw_hud_exercises => 'EXERCISES';
+
+  @override
+  String get cw_hud_sets => 'SETS';
+
+  @override
+  String get cw_hud_minutes => 'MINUTES';
+
+  @override
+  String get cw_hud_avg_rest => 'AVG. REST';
+
+  @override
+  String get cw_hud_helper => 'Updates with exercises and preferences';
+
+  @override
+  String get cw_selected_header => 'SELECTED';
+
+  @override
+  String get cw_selected_hint => 'tap values to edit';
+
+  @override
+  String get cw_value_sets => 'SETS';
+
+  @override
+  String get cw_value_reps => 'REPS';
+
+  @override
+  String get cw_value_rest => 'REST';
+
+  @override
+  String get cw_personalize => 'CUSTOMIZE SETS';
+
+  @override
+  String get cw_advanced_hint => 'Adjust load and reps per set';
+
+  @override
+  String get cw_add_set => 'ADD SET';
+
+  @override
+  String get cw_add_exercise => 'ADD EXERCISE';
+
+  @override
+  String get cw_add_exercise_hint =>
+      'Search and select exercises in the library';
+
+  @override
+  String get cw_sheet_title => 'Add exercises';
+
+  @override
+  String get cw_search_hint => 'Search exercise';
+
+  @override
+  String get cw_all_exercises => 'ALL EXERCISES';
+
+  @override
+  String cw_exercise_count(int count) {
+    return '$count exercises';
+  }
+
+  @override
+  String cw_add_n(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'ADD $count EXERCISES',
+      one: 'ADD $count EXERCISE',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cw_filter_all => 'All';
+
+  @override
+  String get cw_filter_back => 'Back';
+
+  @override
+  String get cw_filter_biceps => 'Biceps';
+
+  @override
+  String get cw_filter_chest => 'Chest';
+
+  @override
+  String get cw_filter_shoulders => 'Shoulders';
+
+  @override
+  String get cw_filter_legs => 'Legs';
+
+  @override
+  String get cw_filter_triceps => 'Triceps';
+
+  @override
+  String get cw_filter_core => 'Core';
+
+  @override
+  String get cw_filter_glutes => 'Glutes';
+
+  @override
+  String get cw_set_edit => 'Edit set';
+
+  @override
+  String get cw_set_remove => 'Remove set';
+
+  @override
+  String get cw_edit_sets_title => 'Sets';
+
+  @override
+  String get cw_edit_reps_title => 'Reps';
+
+  @override
+  String get cw_edit_rest_title => 'Rest';
+
+  @override
+  String get cw_confirm => 'Confirm';
+
+  @override
+  String get cw_overwrite_title => 'Replace custom sets?';
+
+  @override
+  String get cw_overwrite_body =>
+      'This exercise\'s sets have different values. The new value will apply to all of them.';
+
+  @override
+  String get cw_overwrite_confirm => 'Replace';
+
+  @override
+  String get cw_cancel => 'Cancel';
+
+  @override
+  String get hub_tab_workout => 'Workout';
+
+  @override
+  String get hub_tab_sports => 'Sports';
+
+  @override
+  String get hub_search => 'Search';
+
+  @override
+  String get hub_today_label => 'Today\'s Workout';
+
+  @override
+  String get hub_today_hint => 'Tap to change the workout';
+
+  @override
+  String get hub_start => 'Start workout';
+
+  @override
+  String get hub_done => 'Completed';
+
+  @override
+  String get hub_done_sub => 'Workout completed';
+
+  @override
+  String hub_meta(int count, int minutes) {
+    return '$count exercises • ~$minutes min';
+  }
+
+  @override
+  String get hub_week_title => 'MY WEEK';
+
+  @override
+  String get hub_week_see => 'See week';
+
+  @override
+  String get hub_week_workouts => 'Workouts';
+
+  @override
+  String get hub_week_extras => 'Extras';
+
+  @override
+  String get hub_week_xp => 'XP';
+
+  @override
+  String get hub_my_workouts => 'MY WORKOUTS';
+
+  @override
+  String get hub_create => 'Create workout';
+
+  @override
+  String get hub_from_photo => 'From photo';
+
+  @override
+  String hub_count(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count workouts',
+      one: '$count workout',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String hub_card_stats(int count, int minutes) {
+    return '$count exercises · ~$minutes min';
+  }
+
+  @override
+  String get hub_empty_title => 'No workouts created yet';
+
+  @override
+  String get hub_empty_sub => 'Create your first custom workout';
+
+  @override
+  String get hub_explore => 'EXPLORE';
+
+  @override
+  String get hub_explore_club => 'BLDR CLUB';
+
+  @override
+  String get hub_explore_club_sub => 'Exclusive features';
+
+  @override
+  String get hub_explore_library => 'BLDR LIBRARY';
+
+  @override
+  String get hub_explore_library_sub => 'Workouts built by the BLDR team';
+
+  @override
+  String get hub_explore_programs => 'Programs';
+
+  @override
+  String get hub_explore_programs_sub => 'Structured programs';
 }

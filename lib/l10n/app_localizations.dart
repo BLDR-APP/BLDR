@@ -1489,7 +1489,7 @@ abstract class AppLocalizations {
   /// No description provided for @whoop_card_sleep_label.
   ///
   /// In pt, this message translates to:
-  /// **'SLEEP'**
+  /// **'SONO'**
   String get whoop_card_sleep_label;
 
   /// No description provided for @whoop_card_recovery_label.
@@ -7138,6 +7138,762 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'A restauração estará disponível após a atualização de assinaturas.'**
   String get paywall_restore_after_update;
+
+  /// No description provided for @havok_entry_semantics.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir HAVOK'**
+  String get havok_entry_semantics;
+
+  /// No description provided for @dashboard_v2_level_xp.
+  ///
+  /// In pt, this message translates to:
+  /// **'{current} / {target}'**
+  String dashboard_v2_level_xp(String current, String target);
+
+  /// No description provided for @dashboard_v2_workout_today_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'TREINO DE HOJE'**
+  String get dashboard_v2_workout_today_label;
+
+  /// No description provided for @dashboard_v2_start_workout_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'INICIAR TREINO'**
+  String get dashboard_v2_start_workout_cta;
+
+  /// No description provided for @dashboard_v2_exercises_count.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, one{{count} exercício} other{{count} exercícios}}'**
+  String dashboard_v2_exercises_count(int count);
+
+  /// No description provided for @dashboard_v2_workout_duration.
+  ///
+  /// In pt, this message translates to:
+  /// **'~{minutes} min'**
+  String dashboard_v2_workout_duration(int minutes);
+
+  /// No description provided for @dashboard_v2_calories_of_target.
+  ///
+  /// In pt, this message translates to:
+  /// **'de {target} kcal'**
+  String dashboard_v2_calories_of_target(String target);
+
+  /// No description provided for @whoop_card_today_caps.
+  ///
+  /// In pt, this message translates to:
+  /// **'HOJE'**
+  String get whoop_card_today_caps;
+
+  /// No description provided for @wearable_connect_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'SUAS INTEGRAÇÕES'**
+  String get wearable_connect_label;
+
+  /// No description provided for @wearable_connect_title_first.
+  ///
+  /// In pt, this message translates to:
+  /// **'Conecte seu wearable'**
+  String get wearable_connect_title_first;
+
+  /// No description provided for @wearable_connect_title_other.
+  ///
+  /// In pt, this message translates to:
+  /// **'Conecte outro dispositivo'**
+  String get wearable_connect_title_other;
+
+  /// No description provided for @wearable_connect_body.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acompanhe sono, recuperação e atividade com dados da WHOOP.'**
+  String get wearable_connect_body;
+
+  /// No description provided for @wearable_connect_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'CONECTAR DISPOSITIVO'**
+  String get wearable_connect_cta;
+
+  /// No description provided for @whoop_unavailable_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dados indisponíveis'**
+  String get whoop_unavailable_title;
+
+  /// No description provided for @whoop_unavailable_body.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ainda não recebemos os dados de hoje.'**
+  String get whoop_unavailable_body;
+
+  /// No description provided for @whoop_unavailable_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'VERIFICAR CONEXÃO'**
+  String get whoop_unavailable_cta;
+
+  /// No description provided for @garmin_body_battery.
+  ///
+  /// In pt, this message translates to:
+  /// **'BODY BATTERY'**
+  String get garmin_body_battery;
+
+  /// No description provided for @garmin_resting_hr.
+  ///
+  /// In pt, this message translates to:
+  /// **'FC REPOUSO'**
+  String get garmin_resting_hr;
+
+  /// No description provided for @garmin_sleep.
+  ///
+  /// In pt, this message translates to:
+  /// **'SONO'**
+  String get garmin_sleep;
+
+  /// No description provided for @garmin_footer.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dados da Garmin · atualizados hoje'**
+  String get garmin_footer;
+
+  /// No description provided for @havok_insight_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'HAVOK · INSIGHT'**
+  String get havok_insight_label;
+
+  /// No description provided for @havok_insight_chat_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'CONVERSAR COM HAVOK'**
+  String get havok_insight_chat_cta;
+
+  /// No description provided for @havok_insight_dismiss_semantics.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dispensar insight'**
+  String get havok_insight_dismiss_semantics;
+
+  /// No description provided for @wearable_stack_position.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cartão {index} de {total}'**
+  String wearable_stack_position(int index, int total);
+
+  /// No description provided for @dashboard_rest_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dia de descanso'**
+  String get dashboard_rest_title;
+
+  /// No description provided for @dashboard_rest_subtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hoje é dia de recuperar e voltar mais forte.'**
+  String get dashboard_rest_subtitle;
+
+  /// No description provided for @dashboard_rest_meta.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recuperação faz parte da evolução'**
+  String get dashboard_rest_meta;
+
+  /// No description provided for @dashboard_rest_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'VER MEU PLANO'**
+  String get dashboard_rest_cta;
+
+  /// No description provided for @dashboard_noplan_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem treino planejado'**
+  String get dashboard_noplan_title;
+
+  /// No description provided for @dashboard_noplan_subtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Organize sua semana para começar.'**
+  String get dashboard_noplan_subtitle;
+
+  /// No description provided for @dashboard_noplan_meta.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seu próximo treino começa aqui'**
+  String get dashboard_noplan_meta;
+
+  /// No description provided for @dashboard_noplan_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'CRIAR MEU PLANO'**
+  String get dashboard_noplan_cta;
+
+  /// No description provided for @dashboard_v2_in_progress_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'TREINO EM ANDAMENTO'**
+  String get dashboard_v2_in_progress_label;
+
+  /// No description provided for @dashboard_v2_done_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'TREINO CONCLUÍDO'**
+  String get dashboard_v2_done_label;
+
+  /// No description provided for @dashboard_v2_resume_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'RETOMAR TREINO'**
+  String get dashboard_v2_resume_cta;
+
+  /// No description provided for @dashboard_v2_exercises_progress.
+  ///
+  /// In pt, this message translates to:
+  /// **'{done} de {total} exercícios'**
+  String dashboard_v2_exercises_progress(int done, int total);
+
+  /// No description provided for @dashboard_v2_done_duration.
+  ///
+  /// In pt, this message translates to:
+  /// **'DURAÇÃO'**
+  String get dashboard_v2_done_duration;
+
+  /// No description provided for @dashboard_v2_done_sets.
+  ///
+  /// In pt, this message translates to:
+  /// **'SÉRIES'**
+  String get dashboard_v2_done_sets;
+
+  /// No description provided for @dashboard_v2_done_volume.
+  ///
+  /// In pt, this message translates to:
+  /// **'VOLUME'**
+  String get dashboard_v2_done_volume;
+
+  /// No description provided for @dashboard_v2_done_via_whoop.
+  ///
+  /// In pt, this message translates to:
+  /// **'Concluído via WHOOP'**
+  String get dashboard_v2_done_via_whoop;
+
+  /// No description provided for @cw_eyebrow.
+  ///
+  /// In pt, this message translates to:
+  /// **'CRIAR TREINO'**
+  String get cw_eyebrow;
+
+  /// No description provided for @cw_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Monte seu treino'**
+  String get cw_title;
+
+  /// No description provided for @cw_subtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comece pelo básico. Você ajusta os detalhes depois.'**
+  String get cw_subtitle;
+
+  /// No description provided for @cw_name_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'NOME DO TREINO'**
+  String get cw_name_label;
+
+  /// No description provided for @cw_name_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome do treino'**
+  String get cw_name_hint;
+
+  /// No description provided for @cw_type_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'TIPO DE TREINO'**
+  String get cw_type_label;
+
+  /// No description provided for @cw_type_strength.
+  ///
+  /// In pt, this message translates to:
+  /// **'Musculação'**
+  String get cw_type_strength;
+
+  /// No description provided for @cw_type_hiit.
+  ///
+  /// In pt, this message translates to:
+  /// **'HIIT'**
+  String get cw_type_hiit;
+
+  /// No description provided for @cw_type_cardio.
+  ///
+  /// In pt, this message translates to:
+  /// **'Indoor Cardio'**
+  String get cw_type_cardio;
+
+  /// No description provided for @cw_type_yoga.
+  ///
+  /// In pt, this message translates to:
+  /// **'Yoga'**
+  String get cw_type_yoga;
+
+  /// No description provided for @cw_type_pilates.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pilates'**
+  String get cw_type_pilates;
+
+  /// No description provided for @cw_type_hyrox.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hyrox'**
+  String get cw_type_hyrox;
+
+  /// No description provided for @cw_soon.
+  ///
+  /// In pt, this message translates to:
+  /// **'Em breve'**
+  String get cw_soon;
+
+  /// No description provided for @cw_add_exercises.
+  ///
+  /// In pt, this message translates to:
+  /// **'ADICIONAR EXERCÍCIOS'**
+  String get cw_add_exercises;
+
+  /// No description provided for @cw_setup_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você configura séries, repetições e descanso após selecionar os exercícios.'**
+  String get cw_setup_hint;
+
+  /// No description provided for @cw_build_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Montar treino'**
+  String get cw_build_title;
+
+  /// No description provided for @cw_build_eyebrow.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} · MUSCULAÇÃO'**
+  String cw_build_eyebrow(String name);
+
+  /// No description provided for @cw_selected_count.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, one{{count} selecionado} other{{count} selecionados}}'**
+  String cw_selected_count(int count);
+
+  /// No description provided for @cw_create.
+  ///
+  /// In pt, this message translates to:
+  /// **'CRIAR'**
+  String get cw_create;
+
+  /// No description provided for @cw_hud_exercises.
+  ///
+  /// In pt, this message translates to:
+  /// **'EXERCÍCIOS'**
+  String get cw_hud_exercises;
+
+  /// No description provided for @cw_hud_sets.
+  ///
+  /// In pt, this message translates to:
+  /// **'SÉRIES'**
+  String get cw_hud_sets;
+
+  /// No description provided for @cw_hud_minutes.
+  ///
+  /// In pt, this message translates to:
+  /// **'MINUTOS'**
+  String get cw_hud_minutes;
+
+  /// No description provided for @cw_hud_avg_rest.
+  ///
+  /// In pt, this message translates to:
+  /// **'DESC. MÉDIO'**
+  String get cw_hud_avg_rest;
+
+  /// No description provided for @cw_hud_helper.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atualiza conforme exercícios e preferências'**
+  String get cw_hud_helper;
+
+  /// No description provided for @cw_selected_header.
+  ///
+  /// In pt, this message translates to:
+  /// **'SELECIONADOS'**
+  String get cw_selected_header;
+
+  /// No description provided for @cw_selected_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'toque nos valores para editar'**
+  String get cw_selected_hint;
+
+  /// No description provided for @cw_value_sets.
+  ///
+  /// In pt, this message translates to:
+  /// **'SÉRIES'**
+  String get cw_value_sets;
+
+  /// No description provided for @cw_value_reps.
+  ///
+  /// In pt, this message translates to:
+  /// **'REPS'**
+  String get cw_value_reps;
+
+  /// No description provided for @cw_value_rest.
+  ///
+  /// In pt, this message translates to:
+  /// **'DESC.'**
+  String get cw_value_rest;
+
+  /// No description provided for @cw_personalize.
+  ///
+  /// In pt, this message translates to:
+  /// **'PERSONALIZAR SÉRIES'**
+  String get cw_personalize;
+
+  /// No description provided for @cw_advanced_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ajuste carga e repetições individualmente'**
+  String get cw_advanced_hint;
+
+  /// No description provided for @cw_add_set.
+  ///
+  /// In pt, this message translates to:
+  /// **'ADICIONAR SÉRIE'**
+  String get cw_add_set;
+
+  /// No description provided for @cw_add_exercise.
+  ///
+  /// In pt, this message translates to:
+  /// **'ADICIONAR EXERCÍCIO'**
+  String get cw_add_exercise;
+
+  /// No description provided for @cw_add_exercise_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Busque e selecione exercícios na biblioteca'**
+  String get cw_add_exercise_hint;
+
+  /// No description provided for @cw_sheet_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar exercícios'**
+  String get cw_sheet_title;
+
+  /// No description provided for @cw_search_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Buscar exercício'**
+  String get cw_search_hint;
+
+  /// No description provided for @cw_all_exercises.
+  ///
+  /// In pt, this message translates to:
+  /// **'TODOS OS EXERCÍCIOS'**
+  String get cw_all_exercises;
+
+  /// No description provided for @cw_exercise_count.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} exercícios'**
+  String cw_exercise_count(int count);
+
+  /// No description provided for @cw_add_n.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, one{ADICIONAR {count} EXERCÍCIO} other{ADICIONAR {count} EXERCÍCIOS}}'**
+  String cw_add_n(int count);
+
+  /// No description provided for @cw_filter_all.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todos'**
+  String get cw_filter_all;
+
+  /// No description provided for @cw_filter_back.
+  ///
+  /// In pt, this message translates to:
+  /// **'Costas'**
+  String get cw_filter_back;
+
+  /// No description provided for @cw_filter_biceps.
+  ///
+  /// In pt, this message translates to:
+  /// **'Bíceps'**
+  String get cw_filter_biceps;
+
+  /// No description provided for @cw_filter_chest.
+  ///
+  /// In pt, this message translates to:
+  /// **'Peito'**
+  String get cw_filter_chest;
+
+  /// No description provided for @cw_filter_shoulders.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ombros'**
+  String get cw_filter_shoulders;
+
+  /// No description provided for @cw_filter_legs.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pernas'**
+  String get cw_filter_legs;
+
+  /// No description provided for @cw_filter_triceps.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tríceps'**
+  String get cw_filter_triceps;
+
+  /// No description provided for @cw_filter_core.
+  ///
+  /// In pt, this message translates to:
+  /// **'Core'**
+  String get cw_filter_core;
+
+  /// No description provided for @cw_filter_glutes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Glúteos'**
+  String get cw_filter_glutes;
+
+  /// No description provided for @cw_set_edit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar série'**
+  String get cw_set_edit;
+
+  /// No description provided for @cw_set_remove.
+  ///
+  /// In pt, this message translates to:
+  /// **'Remover série'**
+  String get cw_set_remove;
+
+  /// No description provided for @cw_edit_sets_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Séries'**
+  String get cw_edit_sets_title;
+
+  /// No description provided for @cw_edit_reps_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Repetições'**
+  String get cw_edit_reps_title;
+
+  /// No description provided for @cw_edit_rest_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Descanso'**
+  String get cw_edit_rest_title;
+
+  /// No description provided for @cw_confirm.
+  ///
+  /// In pt, this message translates to:
+  /// **'Confirmar'**
+  String get cw_confirm;
+
+  /// No description provided for @cw_overwrite_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Substituir séries personalizadas?'**
+  String get cw_overwrite_title;
+
+  /// No description provided for @cw_overwrite_body.
+  ///
+  /// In pt, this message translates to:
+  /// **'As séries deste exercício têm valores diferentes. O novo valor será aplicado a todas.'**
+  String get cw_overwrite_body;
+
+  /// No description provided for @cw_overwrite_confirm.
+  ///
+  /// In pt, this message translates to:
+  /// **'Substituir'**
+  String get cw_overwrite_confirm;
+
+  /// No description provided for @cw_cancel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cancelar'**
+  String get cw_cancel;
+
+  /// No description provided for @hub_tab_workout.
+  ///
+  /// In pt, this message translates to:
+  /// **'Treino'**
+  String get hub_tab_workout;
+
+  /// No description provided for @hub_tab_sports.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esportes'**
+  String get hub_tab_sports;
+
+  /// No description provided for @hub_search.
+  ///
+  /// In pt, this message translates to:
+  /// **'Buscar'**
+  String get hub_search;
+
+  /// No description provided for @hub_today_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'Treino de Hoje'**
+  String get hub_today_label;
+
+  /// No description provided for @hub_today_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Toque para alterar o treino'**
+  String get hub_today_hint;
+
+  /// No description provided for @hub_start.
+  ///
+  /// In pt, this message translates to:
+  /// **'Iniciar treino'**
+  String get hub_start;
+
+  /// No description provided for @hub_done.
+  ///
+  /// In pt, this message translates to:
+  /// **'Concluído'**
+  String get hub_done;
+
+  /// No description provided for @hub_done_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Treino concluído'**
+  String get hub_done_sub;
+
+  /// No description provided for @hub_meta.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} exercícios • ~{minutes} min'**
+  String hub_meta(int count, int minutes);
+
+  /// No description provided for @hub_week_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'MINHA SEMANA'**
+  String get hub_week_title;
+
+  /// No description provided for @hub_week_see.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ver semana'**
+  String get hub_week_see;
+
+  /// No description provided for @hub_week_workouts.
+  ///
+  /// In pt, this message translates to:
+  /// **'Treinos'**
+  String get hub_week_workouts;
+
+  /// No description provided for @hub_week_extras.
+  ///
+  /// In pt, this message translates to:
+  /// **'Extras'**
+  String get hub_week_extras;
+
+  /// No description provided for @hub_week_xp.
+  ///
+  /// In pt, this message translates to:
+  /// **'XP'**
+  String get hub_week_xp;
+
+  /// No description provided for @hub_my_workouts.
+  ///
+  /// In pt, this message translates to:
+  /// **'MEUS TREINOS'**
+  String get hub_my_workouts;
+
+  /// No description provided for @hub_create.
+  ///
+  /// In pt, this message translates to:
+  /// **'Criar treino'**
+  String get hub_create;
+
+  /// No description provided for @hub_from_photo.
+  ///
+  /// In pt, this message translates to:
+  /// **'A partir de foto'**
+  String get hub_from_photo;
+
+  /// No description provided for @hub_count.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, one{{count} treino} other{{count} treinos}}'**
+  String hub_count(int count);
+
+  /// No description provided for @hub_card_stats.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} exercícios · ~{minutes} min'**
+  String hub_card_stats(int count, int minutes);
+
+  /// No description provided for @hub_empty_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum treino criado ainda'**
+  String get hub_empty_title;
+
+  /// No description provided for @hub_empty_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Crie seu primeiro treino personalizado'**
+  String get hub_empty_sub;
+
+  /// No description provided for @hub_explore.
+  ///
+  /// In pt, this message translates to:
+  /// **'EXPLORAR'**
+  String get hub_explore;
+
+  /// No description provided for @hub_explore_club.
+  ///
+  /// In pt, this message translates to:
+  /// **'BLDR CLUB'**
+  String get hub_explore_club;
+
+  /// No description provided for @hub_explore_club_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Funcionalidades exclusivas'**
+  String get hub_explore_club_sub;
+
+  /// No description provided for @hub_explore_library.
+  ///
+  /// In pt, this message translates to:
+  /// **'BIBLIOTECA BLDR'**
+  String get hub_explore_library;
+
+  /// No description provided for @hub_explore_library_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Treinos montados pela equipe BLDR'**
+  String get hub_explore_library_sub;
+
+  /// No description provided for @hub_explore_programs.
+  ///
+  /// In pt, this message translates to:
+  /// **'Programas'**
+  String get hub_explore_programs;
+
+  /// No description provided for @hub_explore_programs_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Programas estruturados'**
+  String get hub_explore_programs_sub;
 }
 
 class _AppLocalizationsDelegate

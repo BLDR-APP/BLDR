@@ -21,6 +21,8 @@ import 'package:bldr_fitness/features/profile/presentation/profile_drawer/profil
 import 'package:bldr_fitness/features/subscription/presentation/paywall/club_paywall_sheet.dart';
 import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/workouts_screen.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
+import 'package:bldr_fitness/design_system/bldr_v2_components.dart';
+import 'package:bldr_fitness/features/club/presentation/bldr_club/havok/havok_sheet.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 import 'package:bldr_fitness/shared/presentation/dashboard/widgets/active_workout_card_widget.dart';
@@ -405,6 +407,19 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
     }
   }
 
+  /// `origin_screen` do HAVOK aberto pela navbar. Só valores que o app já
+  /// envia hoje (o campo é gravado em `havok_threads`).
+  String get _havokOriginScreen {
+    switch (_selectedIndex) {
+      case 1:
+        return 'workouts';
+      case 4:
+        return 'nutrition';
+      default:
+        return 'dashboard';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -428,25 +443,39 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
           const BldrMiniPlayer(),
         ],
       ),
-      // G5 — tab bar em glass, flutuando sobre o conteúdo rolável.
-      bottomNavigationBar: BldrNavBar(
+      // Rebranding v2 (Figma 57:388): pílula dourada + botão do HAVOK.
+      // Usada em todas as abas — é uma única navbar no Scaffold (decisão 1).
+      bottomNavigationBar: BldrNavBarV2(
         selectedIndex: _navIndex,
         onChanged: (i) => _onTabSelected(_tabFromNav(i)),
-        onClubTap: () => _onTabSelected(3),
-        clubLogo: Image.asset(
-          'assets/images/BLDR_CLUB.png',
-          fit: BoxFit.contain,
-        ),
+        onHavokTap: () =>
+            showHavokSheet(context, originScreen: _havokOriginScreen),
       ),
     );
   }
 
   Widget _buildDashboardTab() {
-    // G1 — fundo #050505 com glow radial dourado no topo.
+    // Rebranding v2 (Figma 57:388) — fundo #050505 com glows elípticos.
+    final pageX = BldrSpacingV2.pageX(MediaQuery.sizeOf(context).width);
     return BldrBackground(
+      v2: true,
       child: SafeArea(
         bottom: false,
-        child: _isLoading
+        child: Stack(
+          children: [
+            Positioned.fill(child: _buildDashboardScroll(pageX)),
+            // HAVOK_SPEC.md §3.1 — insight (máx. 1 por tela). Banner v2
+            // flutuante, fixo no topo da área segura durante a rolagem.
+            if (!_isLoading)
+              const Positioned.fill(child: HavokInsightWidget()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDashboardScroll(double pageX) {
+    return _isLoading
             ? const Center(
                 child: CircularProgressIndicator(color: BldrColors.goldBright),
               )
@@ -465,55 +494,42 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Ordem final (REDESIGN_SPEC, seção Dashboard):
-                      // header → nível/XP → chips → hero do treino → grid 2×2.
+                      // Ordem do mockup: header → nível/XP → chips →
+                      // wearable → treino de hoje → grid 2×2.
 
-                      // D1 — header compacto: saudação + nome + avatar.
+                      // 01 — header: saudação + nome + avatar.
                       const GreetingHeaderWidget(),
 
-                      // D2 — faixa fina de Nível/XP abaixo do nome.
+                      // 02 — faixa de Nível/XP (respiro de 12 no widget).
                       const LevelXpStripWidget(),
 
-                      const SizedBox(height: BldrSpacing.gapSection),
+                      const SizedBox(height: BldrSpacingV2.levelToChips),
 
-                      // D3 — fileira de chips roláveis.
+                      // 03 — chips de consistência.
                       const TodayMetricsWidget(),
 
-                      const SizedBox(height: BldrSpacing.gapSection),
+                      const SizedBox(height: BldrSpacingV2.chipsToWearable),
 
-                      // Whoop — Recovery/Strain/Sleep (máx. 1x a cada 30min).
+                      // 04 — wearable (WHOOP) na pilha genérica.
                       const WhoopDashboardWidget(),
 
-                      const SizedBox(height: BldrSpacing.gapSection),
+                      const SizedBox(height: BldrSpacingV2.wearableToTrain),
 
-                      // D4 — card hero "Treino de hoje" com botão interno.
+                      // 05 — treino de hoje.
                       ActiveWorkoutCardWidget(
                         key: ValueKey(_activeWorkoutCardRevision),
                         onStartPressed: _startWorkout,
                       ),
 
-                      const SizedBox(height: BldrSpacing.gapSection),
+                      const SizedBox(height: BldrSpacingV2.trainToGrid),
 
-                      // HAVOK_SPEC.md §3.1 — card de insight (máx. 1 por tela).
-                      // Só renderiza quando não foi dispensado hoje; texto
-                      // ainda é placeholder estático (sem use case de geração).
-                      HavokInsightWidget(onAction: _viewProgress),
-
-                      const SizedBox(height: BldrSpacing.gapSection),
-
-                      // D5 — grid 2×2: Peso alvo · Calorias · Macros · 7 dias.
-                      // D6 (macros empilhados) vive dentro do NutritionProgressWidget.
+                      // 06 — grid 2×2: Peso alvo · Calorias · Macros · 7 dias.
                       Padding(
-                        padding: BldrSpacing.pageInsets,
+                        padding: EdgeInsets.symmetric(horizontal: pageX),
                         child: Column(
                           children: [
-                            // IntrinsicHeight: dá à Row uma altura FINITA antes
-                            // do stretch agir. Sem isso, o stretch tenta esticar
-                            // os cards para a altura do Column/ScrollView, que é
-                            // não-limitada — e isso quebra a renderização do
-                            // frame inteiro sem lançar exceção (bug encontrado
-                            // por bisseção manual em 01/08/2026).
-                            IntrinsicHeight(
+                            SizedBox(
+                              height: BldrSpacingV2.tileHeight,
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
@@ -523,7 +539,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                       onUpdateProgressPressed: _viewProgress,
                                     ),
                                   ),
-                                  const SizedBox(width: BldrSpacing.gapCard),
+                                  const SizedBox(width: BldrSpacingV2.gridGapX),
                                   const Expanded(
                                     child: NutritionProgressWidget(
                                       variant: NutritionTile.calories,
@@ -532,8 +548,9 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                 ],
                               ),
                             ),
-                            const SizedBox(height: BldrSpacing.gapCard),
-                            IntrinsicHeight(
+                            const SizedBox(height: BldrSpacingV2.gridGapY),
+                            SizedBox(
+                              height: BldrSpacingV2.tileHeight,
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
@@ -542,7 +559,7 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                                       variant: NutritionTile.macros,
                                     ),
                                   ),
-                                  const SizedBox(width: BldrSpacing.gapCard),
+                                  const SizedBox(width: BldrSpacingV2.gridGapX),
                                   Expanded(
                                     child: ConsistencyHeatmapWidget(
                                       onViewAllPressed: _viewProgress,
@@ -555,10 +572,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                         ),
                       ),
 
-                      // D8 — os cards grandes de "Consistência" e "Conquistas"
-                      // saíram daqui: o dado migrou para os chips (D3) e para o
-                      // grid (D5). AchievementsWidget permanece no código.
-
                       const SizedBox(height: BldrSpacing.gapSection),
 
                       // D9 — Parceiros: o widget já se oculta sozinho
@@ -569,8 +582,6 @@ class _DashboardState extends State<Dashboard> with TickerProviderStateMixin {
                     ],
                   ),
                 ),
-              ),
-      ),
-    );
+              );
   }
 }

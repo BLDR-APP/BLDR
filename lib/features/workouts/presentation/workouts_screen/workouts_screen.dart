@@ -9,6 +9,10 @@ import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
+import 'package:bldr_fitness/design_system/bldr_workout_v2_components.dart';
+import 'package:bldr_fitness/features/club/presentation/bldr_club/esportes_screen.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/workout_duration_estimator.dart';
+import 'package:bldr_fitness/shared/presentation/dashboard/home_v2_formatters.dart';
 import 'package:bldr_fitness/features/subscription/domain/usecases/resolve_club_access.dart';
 import 'package:bldr_fitness/features/subscription/presentation/paywall/club_paywall_sheet.dart';
 import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
@@ -22,7 +26,6 @@ import 'package:bldr_fitness/theme/bldr_tokens.dart';
 import 'package:bldr_fitness/widgets/custom_error_widget.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/bldr_club_screen.dart';
 import 'package:bldr_fitness/features/club/programs_page.dart';
-import 'package:bldr_fitness/features/club/presentation/bldr_club/havok/havok_sheet.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/club_active_workout_screen.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/bldr_muscle.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_template.dart';
@@ -66,6 +69,13 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
   // T9 — "Ver tudo" expande o carrossel da Biblioteca BLDR para grade cheia,
   // usando o mesmo dado já carregado.
   bool _bldrExpanded = false;
+
+  // ── Hub v2 (Figma 249:18901 / 179:2) ──────────────────────────────────────
+  /// 0 = Treino, 1 = Esportes.
+  int _hubTab = 0;
+  /// Templates carregados, por id — duração estimada e grupos musculares.
+  Map<String, WorkoutTemplate> _templatesById = {};
+  WorkoutTemplate? _todayTemplateEntity;
 
   /// Key that lets us call reload() on the card after editing the plan.
   final _weekCardKey = GlobalKey<CurrentWeekCardWidgetState>();
@@ -190,6 +200,11 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                 'source': assignedToday?.source ?? todayTemplate.source,
               };
         _todayMuscleData = todayData;
+        _templatesById = {
+          for (final t in templates)
+            if (t.id != null) t.id!: t,
+        };
+        _todayTemplateEntity = todayTemplate;
         _completedTodayWorkout = completedToday;
         _hasActiveWorkout = isActive;
         _isLoading = false;
@@ -459,12 +474,16 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                           icon: Icons.schedule,
                           active: true,
                         ),
-                        const SizedBox(width: 8),
-                        BldrChip(
-                          label: 'Nível ${template['difficulty_level'] ?? 1}',
-                          icon: Icons.bar_chart,
-                          active: true,
-                        ),
+                        // Treinos novos do usuário salvam nível vazio
+                        // (TREINOS_V2): sem chip em vez de "Nível 1".
+                        if (template['difficulty_level'] != null) ...[
+                          const SizedBox(width: 8),
+                          BldrChip(
+                            label: 'Nível ${template['difficulty_level']}',
+                            icon: Icons.bar_chart,
+                            active: true,
+                          ),
+                        ],
                         const SizedBox(width: 8),
                         BldrChip(
                           label: _fmtType(template['workout_type']),
@@ -746,9 +765,32 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
       );
     }
 
+    // Aba Esportes: a EsportesScreen atual dentro do hub (só com acesso ao
+    // Club; sem acesso, o paywall abre e a aba Treino continua ativa).
+    if (_hubTab == 1) {
+      return Stack(
+        children: [
+          const EsportesScreen(),
+          Positioned(
+            top: MediaQuery.viewPaddingOf(context).top + 8,
+            right: _hubPx,
+            child: BldrHubTabs(
+              labels: [
+                AppLocalizations.of(context).hub_tab_workout,
+                AppLocalizations.of(context).hub_tab_sports,
+              ],
+              selected: 1,
+              onChanged: _onHubTab,
+            ),
+          ),
+        ],
+      );
+    }
+
     return Scaffold(
       backgroundColor: BldrColors.bgBase,
       body: BldrBackground(
+        v2: true,
         child: SafeArea(
           child: RefreshIndicator(
             onRefresh: _loadData,
@@ -758,25 +800,22 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
               physics: const BouncingScrollPhysics(
                   parent: AlwaysScrollableScrollPhysics()),
               slivers: [
-                // ── T1. Header: título + busca ──────────────────────────
+                // ── Cabeçalho v2: abas Treino / Esportes + busca ─────────
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(
-                      BldrSpacing.pageX, 16, BldrSpacing.pageX, 0),
+                  padding: const EdgeInsets.fromLTRB(_hubPx, 20, _hubPx, 0),
                   sliver: SliverToBoxAdapter(child: _buildHeader()),
                 ),
 
-                // ── T3. Hero do treino de hoje ──────────────────────────
+                // ── Treino de hoje ──────────────────────────────────────
                 if (_todayWorkout != null)
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(
-                        BldrSpacing.pageX, 16, BldrSpacing.pageX, 0),
+                    padding: const EdgeInsets.fromLTRB(_hubPx - 2, 18, _hubPx - 2, 0),
                     sliver: SliverToBoxAdapter(child: _buildTodayHero()),
                   ),
 
-                // ── Card Semana Atual ────────────────────────────────────
+                // ── Minha semana ────────────────────────────────────────
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(
-                      BldrSpacing.pageX, 16, BldrSpacing.pageX, 0),
+                  padding: const EdgeInsets.fromLTRB(_hubPx, 16, _hubPx, 0),
                   sliver: SliverToBoxAdapter(
                     child: CurrentWeekCardWidget(
                       key: _weekCardKey,
@@ -793,48 +832,30 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                   ),
                 ),
 
-                // ── Banner treino ativo (legado) — oculto temporariamente ──
-                // if (_hasActiveWorkout)
-                //   SliverPadding(
-                //     padding: const EdgeInsets.fromLTRB(
-                //         BldrSpacing.pageX, 16, BldrSpacing.pageX, 0),
-                //     sliver: SliverToBoxAdapter(
-                //       child: _buildActiveWorkoutBanner(),
-                //     ),
-                //   ),
+                const SliverPadding(
+                  padding: EdgeInsets.only(top: 24),
+                  sliver: SliverToBoxAdapter(child: BldrGoldDivider()),
+                ),
 
-                // ── T6. Meus Treinos (abas + carrossel) ─────────────────
+                // ── Meus treinos ────────────────────────────────────────
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(
-                      BldrSpacing.pageX, 20, BldrSpacing.pageX, 0),
+                  padding: const EdgeInsets.fromLTRB(_hubPx, 10, _hubPx, 0),
                   sliver: SliverToBoxAdapter(
                     child: _buildMyWorkoutsSection(),
                   ),
                 ),
 
-                // ── Explorar ─────────────────────────────────────────────
+                const SliverPadding(
+                  padding: EdgeInsets.only(top: 10),
+                  sliver: SliverToBoxAdapter(child: BldrGoldDivider()),
+                ),
+
+                // ── Explorar ────────────────────────────────────────────
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(
-                      BldrSpacing.pageX, 24, BldrSpacing.pageX, 0),
+                  padding: const EdgeInsets.fromLTRB(_hubPx + 15, 4, _hubPx + 15, 0),
                   sliver: SliverToBoxAdapter(child: _buildExplorSection()),
                 ),
 
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(
-                      BldrSpacing.pageX, 24, BldrSpacing.pageX, 0),
-                  sliver: SliverToBoxAdapter(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Criar', style: BldrText.sectionTitle),
-                        const SizedBox(height: 12),
-                        _buildCreateCta(),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // ── T4/T9. Biblioteca BLDR ───────────────────────────────
                 if (_bldrExpanded)
                   SliverToBoxAdapter(
                     child: Padding(
@@ -855,69 +876,109 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
 
   // ── T1: header ────────────────────────────────────────────────────────────
 
+  static const double _hubPx = 27;
+
+  void _onHubTab(int i) {
+    if (i == _hubTab) return;
+    if (i == 1 && !_isPro) {
+      // Regra de acesso de hoje: Esportes é do BLDR Club.
+      ClubPaywallSheet.show(
+        context,
+        onSubscribed: () async {
+          await _loadSubscription();
+          if (mounted && _isPro) setState(() => _hubTab = 1);
+        },
+      );
+      return;
+    }
+    setState(() => _hubTab = i);
+  }
+
+  /// Cabeçalho v2: abas + busca (o campo abre no lugar das abas; "×" fecha).
   Widget _buildHeader() {
-    return Row(
-      children: [
-        Expanded(
-          child: _searchOpen
-              ? TextField(
-                  controller: _searchCtrl,
-                  autofocus: true,
-                  style: BldrText.screenTitle,
-                  cursorColor: BldrColors.goldBright,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    border: InputBorder.none,
-                    hintText: AppLocalizations.of(context).workouts_search_hint,
-                    hintStyle: BldrText.screenTitle
-                        .copyWith(color: BldrColors.textMuted),
+    final l10n = AppLocalizations.of(context);
+    return SizedBox(
+      height: 49,
+      child: Row(
+        children: [
+          Expanded(
+            child: _searchOpen
+                ? TextField(
+                    controller: _searchCtrl,
+                    autofocus: true,
+                    style: BldrWorkoutTextV2.hubTabActive
+                        .copyWith(color: BldrWorkoutColorsV2.text),
+                    cursorColor: BldrColors.goldBright,
+                    decoration: InputDecoration(
+                      isDense: true,
+                      border: InputBorder.none,
+                      hintText: l10n.workouts_search_hint,
+                      hintStyle: BldrWorkoutTextV2.hubTab,
+                    ),
+                    onChanged: (v) => setState(() => _searchQuery = v),
+                  )
+                : Align(
+                    alignment: Alignment.topLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 5),
+                      child: BldrHubTabs(
+                        labels: [l10n.hub_tab_workout, l10n.hub_tab_sports],
+                        selected: _hubTab,
+                        onChanged: _onHubTab,
+                      ),
+                    ),
                   ),
-                  onChanged: (v) => setState(() => _searchQuery = v),
-                )
-              : Text(AppLocalizations.of(context).workouts_title.toUpperCase(),
-                  style: BldrText.screenTitle.copyWith(fontSize: 20)),
-        ),
-        HavokEntryIcon(
-            onTap: () => showHavokSheet(context, originScreen: 'workouts')),
-        const SizedBox(width: 8),
-        BldrCircleButton(
-          icon: _searchOpen ? Icons.close_rounded : TablerIcons.search,
-          size: 38,
-          filled: false,
-          onPressed: () {
-            setState(() {
-              _searchOpen = !_searchOpen;
-              if (!_searchOpen) {
-                _searchCtrl.clear();
-                _searchQuery = '';
-              }
-            });
-          },
-        ),
-      ],
+          ),
+          const SizedBox(width: 8),
+          BldrGoldCircleButton(
+            icon: _searchOpen ? TablerIcons.x : TablerIcons.search,
+            semanticLabel: l10n.hub_search,
+            onTap: () {
+              setState(() {
+                _searchOpen = !_searchOpen;
+                if (!_searchOpen) {
+                  _searchCtrl.clear();
+                  _searchQuery = '';
+                }
+              });
+            },
+          ),
+        ],
+      ),
     );
   }
 
   // ── T3: hero do treino de hoje ──────────────────────────────────────────
 
+  /// Card "Treino de hoje" v2. Muscle map atual (só o container é do
+  /// mockup); duração pelo estimador (P1).
   Widget _buildTodayHero() {
+    final l10n = AppLocalizations.of(context);
     final todayWorkout = _todayWorkout!;
     final mapData = _todayMuscleData ??
         const BldrMuscleMapData(
           muscles: <BldrMuscle, double>{},
           view: BldrMuscleMapView.front,
         );
-    final duration = todayWorkout['estimated_duration_minutes'] ?? 0;
-    final exerciseCount =
+    final entity = _todayTemplateEntity;
+    final exerciseCount = entity?.exercises.length ??
         ((todayWorkout['workout_template_exercises'] as List?) ?? const [])
             .length;
+    final minutes = entity == null
+        ? (todayWorkout['estimated_duration_minutes'] as int? ?? 0)
+        : WorkoutDurationEstimator.estimateTemplate(entity.exercises);
     final completedToday = _completedTodayWorkout;
     final completedViaWhoop = completedToday?.completedViaWhoop ?? false;
-    if (kDebugMode) {
-      debugPrint('[MuscleMapView] Hero received view=${mapData.view.name} '
-          'workout=${todayWorkout['name']}');
-    }
-    return BldrHeroCard(
+
+    return BldrTodayWorkoutCard(
+      label: l10n.hub_today_label,
+      name: todayWorkout['name'] as String? ?? 'Treino',
+      hint: completedToday == null
+          ? l10n.hub_today_hint
+          : completedViaWhoop
+              ? l10n.dashboard_v2_done_via_whoop
+              : l10n.hub_done_sub,
+      meta: l10n.hub_meta(exerciseCount, minutes),
       onTap: () async {
         await Navigator.push(
           context,
@@ -926,78 +987,24 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
         await _loadData();
         _weekCardKey.currentState?.reload();
       },
-      padding: const EdgeInsets.fromLTRB(25, 22, 16, 12),
-      child: SizedBox(
-        height: 176,
-        child: Row(
-          children: [
-            Expanded(
-              flex: 3,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(AppLocalizations.of(context).workouts_today_hero_label,
-                      style: BldrText.label.copyWith(
-                          color: BldrColors.goldBright, letterSpacing: .4)),
-                  const SizedBox(height: 8),
-                  Text(todayWorkout['name'] as String? ?? 'Treino',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: BldrText.cardTitleLg.copyWith(fontSize: 18)),
-                  const SizedBox(height: 4),
-                  Text(
-                      completedToday == null
-                          ? AppLocalizations.of(context)
-                              .workouts_today_hero_subtitle
-                          : completedViaWhoop
-                              ? 'Concluído via WHOOP'
-                              : 'Treino concluído',
-                      style: BldrText.description,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
-                  const Spacer(),
-                  Text(
-                    '$exerciseCount exercícios  ·  ~$duration min',
-                    style: BldrText.meta,
-                  ),
-                  const SizedBox(height: 12),
-                  if (completedToday == null)
-                    SizedBox(
-                      width: double.infinity,
-                      child: BldrPrimaryButton(
-                        label: 'Iniciar treino',
-                        icon: Icons.play_arrow_rounded,
-                        onPressed: () => _startWorkout(todayWorkout),
-                      ),
-                    )
-                  else
-                    const Icon(
-                      Icons.check_circle_rounded,
-                      color: Color(0xFF4CAF50),
-                      size: 28,
-                    ),
-                ],
-              ),
+      action: completedToday == null
+          ? BldrSmallGoldPill(
+              width: 136,
+              icon: TablerIcons.caret_right,
+              label: l10n.hub_start,
+              onTap: () => _startWorkout(todayWorkout),
+            )
+          : BldrSmallGoldPill(
+              width: 136,
+              icon: TablerIcons.check,
+              label: l10n.hub_done,
             ),
-            Flexible(
-              fit: FlexFit.loose,
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: SizedBox(
-                  width: 87,
-                  height: 170,
-                  child: FittedBox(
-                    fit: BoxFit.contain,
-                    child: BldrMuscleMap(
-                      muscles: mapData.muscles,
-                      size: BldrMuscleMapSize.hero,
-                      view: mapData.view,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+      muscleMap: FittedBox(
+        fit: BoxFit.contain,
+        child: BldrMuscleMap(
+          muscles: mapData.muscles,
+          size: BldrMuscleMapSize.hero,
+          view: mapData.view,
         ),
       ),
     );
@@ -1047,126 +1054,117 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
 
   // ── T6: meus treinos section ──────────────────────────────────────────────
 
+  /// "Meus treinos" v2: título + pílulas Criar treino / A partir de foto,
+  /// lista vertical de cards em pílula e a contagem.
   Widget _buildMyWorkoutsSection() {
+    final l10n = AppLocalizations.of(context);
     final list = _filtered(_myWorkouts);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(children: [
-          Expanded(
-              child: Text(AppLocalizations.of(context).workouts_my_workouts,
-                  style: BldrText.label)),
-          Text('${list.length} treinos',
-              style: BldrText.metaSm.copyWith(
-                color: BldrColors.goldBright,
-              )),
-        ]),
-        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: Text(l10n.hub_my_workouts,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: BldrWorkoutTextV2.hubSection
+                      .copyWith(color: BldrWorkoutColorsV2.text)),
+            ),
+            Flexible(
+              child: BldrSmallGoldPill(
+                vertical: true,
+                height: 40,
+                icon: TablerIcons.plus,
+                label: l10n.hub_create,
+                onTap: _openCreateWorkout,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Flexible(
+              child: BldrSmallGoldPill(
+                vertical: true,
+                height: 40,
+                icon: TablerIcons.camera,
+                label: l10n.hub_from_photo,
+                loading: _analyzingPhoto,
+                onTap: _onCreateFromPhoto,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
         if (list.isEmpty)
-          BldrEmptyState(
-            icon: Icons.fitness_center_outlined,
-            title: AppLocalizations.of(context).workouts_empty_state,
-            instruction: AppLocalizations.of(context).workouts_empty_subtitle,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28),
+            child: BldrDashedEmptyBox(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(TablerIcons.barbell,
+                      size: 18, color: BldrWorkoutColorsV2.text),
+                  const SizedBox(height: 10),
+                  Text(l10n.hub_empty_title,
+                      textAlign: TextAlign.center,
+                      style: BldrWorkoutTextV2.emptyTitle),
+                  const SizedBox(height: 2),
+                  Text(l10n.hub_empty_sub,
+                      textAlign: TextAlign.center,
+                      style: BldrWorkoutTextV2.emptySub),
+                ],
+              ),
+            ),
           )
         else
-          SizedBox(
-            height: 116,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              itemCount: list.length,
-              separatorBuilder: (_, __) =>
-                  const SizedBox(width: BldrSpacing.gapCard),
-              itemBuilder: (_, i) => _buildCompactWorkoutCard(list[i], i == 0),
-            ),
-          ),
+          for (final w in list) ...[
+            _buildCompactWorkoutCard(w, false),
+            const SizedBox(height: 8),
+          ],
+        const SizedBox(height: 4),
+        Center(
+          child: Text(l10n.hub_count(list.length),
+              style: BldrWorkoutTextV2.countGold),
+        ),
       ],
     );
   }
 
+  void _openCreateWorkout() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const CreateWorkoutScreen()),
+    ).then((created) {
+      if (created == true && mounted) _loadData();
+    });
+  }
+
   Widget _buildCompactWorkoutCard(Map<String, dynamic> workout, bool selected) {
+    final l10n = AppLocalizations.of(context);
     final mapData = _muscleDataForLegacy(workout, consumer: 'MiniCard');
-    if (kDebugMode) {
-      debugPrint('[MuscleMapView] MiniCard received view=${mapData.view.name} '
-          'workout=${workout['name']}');
-    }
-    return SizedBox(
-      width: 98,
-      child: BldrGlassCard(
-        onTap: () => _viewWorkoutDetails(workout),
-        padding: const EdgeInsets.fromLTRB(10, 10, 6, 7),
-        background: selected ? BldrColors.goldTintStrong : null,
-        borderColor: selected ? BldrColors.goldBorder : null,
-        radius: 10,
-        child: Stack(children: [
-          Positioned(
-            right: 2,
-            bottom: 0,
-            child: SizedBox(
-              width: 36,
-              height: 70,
-              child: FittedBox(
-                fit: BoxFit.contain,
-                child: Opacity(
-                  opacity: .9,
-                  child: BldrMuscleMap(
-                    muscles: mapData.muscles,
-                    size: BldrMuscleMapSize.card,
-                    view: mapData.view,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(workout['name'] as String? ?? 'Treino',
-                style: BldrText.metaSm.copyWith(color: BldrColors.textPrimary),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis),
-            const SizedBox(height: 3),
-            Text(
-              '${workout['estimated_duration_minutes'] ?? 30} min · '
-              '${((workout['workout_template_exercises'] as List?) ?? const []).length} ex.',
-              style: BldrText.metaSm.copyWith(fontSize: 8),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ]),
-        ]),
+    final entity = _templatesById[workout['id']];
+    final exerciseCount = entity?.exercises.length ??
+        ((workout['workout_template_exercises'] as List?) ?? const []).length;
+    final minutes = entity == null
+        ? (workout['estimated_duration_minutes'] as int? ?? 0)
+        : WorkoutDurationEstimator.estimateTemplate(entity.exercises);
+    return BldrPillWorkoutCard(
+      name: workout['name'] as String? ?? 'Treino',
+      muscles: entity == null ? '' : HomeV2Format.muscleGroups(entity),
+      stats: l10n.hub_card_stats(exerciseCount, minutes),
+      onTap: () => _viewWorkoutDetails(workout),
+      muscleMap: FittedBox(
+        fit: BoxFit.contain,
+        child: BldrMuscleMap(
+          muscles: mapData.muscles,
+          size: BldrMuscleMapSize.card,
+          view: mapData.view,
+        ),
       ),
     );
   }
 
   // ── T8: criar treino / a partir de foto ──────────────────────────────────
 
-  Widget _buildCreateCta() {
-    return Row(
-      children: [
-        Expanded(
-          child: BldrSquareActionButton(
-            icon: Icons.add_rounded,
-            label: AppLocalizations.of(context).workouts_create_btn,
-            emphasized: true,
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const CreateWorkoutScreen()),
-            ).then((created) {
-              if (created == true && mounted) _loadData();
-            }),
-          ),
-        ),
-        const SizedBox(width: BldrSpacing.gapCard),
-        Expanded(
-          child: BldrSquareActionButton(
-            icon: Icons.camera_alt_outlined,
-            label: AppLocalizations.of(context).workouts_from_photo_btn,
-            loading: _analyzingPhoto,
-            onPressed: _onCreateFromPhoto,
-          ),
-        ),
-      ],
-    );
-  }
 
   Future<void> _onCreateFromPhoto() async {
     // Free user → upsell
@@ -1289,43 +1287,47 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
     );
   }
 
+  /// "Explorar" v2: Club e Programas com cadeado (regra de acesso atual);
+  /// Biblioteca BLDR é só o atalho (o carrossel saiu do hub).
   Widget _buildExplorSection() {
+    final l10n = AppLocalizations.of(context);
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Explorar', style: BldrText.sectionTitle),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 64,
-          child: Row(children: [
-            Expanded(
-                child: _buildExplorCard(
-              icon: TablerIcons.books,
-              title: 'Biblioteca BLDR',
-              subtitle: 'Treinos BLDR',
-              onTap: _openBldrLibrary,
-            )),
-            const SizedBox(width: 8),
-            Expanded(
-                child: _buildExplorCard(
-              icon: TablerIcons.barbell,
-              title: 'BLDR CLUB',
-              subtitle: 'Exclusivos',
+        Text(l10n.hub_explore, style: BldrWorkoutTextV2.hubSection),
+        const SizedBox(height: 10),
+        Row(children: [
+          Expanded(
+            child: BldrExploreCard(
+              // Mockup: logo "BLDR CLUB SVG" (não é ícone) — asset atual.
+              leading: Image.asset('assets/images/BLDR_CLUB.png',
+                  width: 20, height: 17, fit: BoxFit.contain),
+              title: l10n.hub_explore_club,
+              subtitle: l10n.hub_explore_club_sub,
               locked: !_isPro,
               onTap: () => _openClubDestination((_) => const BldrClubScreen()),
-            )),
-            const SizedBox(width: 8),
-            Expanded(
-                child: _buildExplorCard(
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: BldrExploreCard(
               icon: TablerIcons.books,
-              title: 'Programas',
-              subtitle: 'Estruturados',
+              title: l10n.hub_explore_library,
+              subtitle: l10n.hub_explore_library_sub,
+              onTap: _openBldrLibrary,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: BldrExploreCard(
+              icon: TablerIcons.route,
+              title: l10n.hub_explore_programs,
+              subtitle: l10n.hub_explore_programs_sub,
               locked: !_isPro,
               onTap: () =>
                   _openClubDestination((_) => const ClubProgramsPage()),
-            )),
-          ]),
-        ),
+            ),
+          ),
+        ]),
       ],
     );
   }
@@ -1417,52 +1419,6 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
     );
   }
 
-  Widget _buildExplorCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-    bool locked = false,
-  }) {
-    return BldrGlassCard(
-      onTap: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
-      radius: 10,
-      child: Row(
-        children: [
-          Container(
-            width: 22,
-            height: 22,
-            decoration: BoxDecoration(
-              color: BldrColors.goldTintChip,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: BldrColors.goldBorderChip),
-            ),
-            child: Icon(icon, color: BldrColors.goldBright, size: 12),
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: BldrText.metaSm
-                        .copyWith(color: BldrColors.textPrimary, fontSize: 9),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
-                Text(subtitle,
-                    style: BldrText.metaSm.copyWith(fontSize: 7),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis),
-              ],
-            ),
-          ),
-          if (locked)
-            const Icon(TablerIcons.lock, color: BldrColors.textMuted, size: 11),
-        ],
-      ),
-    );
-  }
 
   BldrMuscleMapData _muscleDataForLegacy(
     Map<String, dynamic> workout, {

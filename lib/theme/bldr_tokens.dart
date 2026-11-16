@@ -274,3 +274,531 @@ abstract final class BldrBlur {
   static const double sheet = 15; // CSS blur(30px)
   static const double badge = 4; // CSS blur(8px)
 }
+
+// ═════════════════════════════════════════════════════════════
+// REBRANDING v2 — FIGMA (Bn5NBPkg7Yr1shm5F7vmb0)
+// ═════════════════════════════════════════════════════════════
+//
+// Tokens lidos do mockup da Home (node 57:388). Em telas com mockup no
+// Figma, o mockup vence as regras da fase 1 acima (cards sólidos, peso 700,
+// cores oficiais do WHOOP, CTA em caixa alta). Os tokens da fase 1 NÃO foram
+// alterados: telas ainda não redesenhadas continuam idênticas.
+//
+// Valores em px do frame de 440 × 956 (1 px = 1 logical pixel).
+
+abstract final class BldrColorsV2 {
+  // Base — o SVG de fundo do mockup usa #050505 (igual à fase 1).
+  static const bg = BldrColors.bgBase;
+
+  // Dourado
+  static const gold = Color(0xFFD4AF37); // bordas, CTA, ícones de stat
+  static const goldBright = BldrColors.goldBright; // #E0B830 — barras, inicial
+  static const goldFill = Color(0x29D4AF37); // rgba(212,175,55,0.16) — nav
+  static const goldBorderSoft =
+      Color(0x4DD4AF37); // rgba(212,175,55,0.30) — faixa de nível
+  static const avatarBorder = Color(0xFF75601D);
+  static const trainBorder = Color(0xFF77601B);
+
+  // Texto
+  static const textPrimary = Color(0xFFF7F7F7);
+  static const textSecondary = Color(0xFF999999);
+  static const textWhite = Color(0xFFFFFFFF);
+  static const trainLabel = Color(0xFFBFB19A);
+  static const trainMeta = Color(0xFFD8CBAE);
+
+  // Header / nível
+  static const avatarBg = Color(0xFF151515);
+  static const levelTrack = Color(0xFF444038);
+  static const levelFillStart = Color(0xA67A641A); // rgba(122,100,26,0.65)
+
+  // Chips de consistência
+  static const chipBg = Color(0xFF211F1B);
+
+  // Grid 2×2
+  static const tileBg = Color(0xFF181818);
+  static const tileLabel = Color(0xFF858585);
+  static const tileValue = Color(0xFFF5F5F5);
+  static const tileTrack = Color(0xFF303030);
+  static const weekBarIdle = Color(0xFF383838);
+
+  // Pilha de wearable (camadas de trás — genéricas para qualquer wearable)
+  static const stackBack = Color(0xFF171613);
+  static const stackBackBorder = Color(0x8C49402B); // rgba(73,64,43,0.55)
+  static const stackMid = Color(0xFF211F19);
+  static const stackMidBorder = Color(0x8C60502A); // rgba(96,80,42,0.55)
+
+  // Card ativo do WHOOP
+  static const whoopCardTop = Color(0xFF283339);
+  static const whoopCardBottom = Color(0xFF101518);
+  static const whoopCardBorder = Color(0xCC39474C); // rgba(57,71,76,0.8)
+  static const ringTrack = Color(0xFF343A3B);
+  static const ringInner = Color(0xFF101518);
+  static const ringLabel = Color(0xFFAFAAA0);
+  static const whoopToday = Color(0xFFA9A49B);
+
+  // Navbar
+  static const navIcon = Color(0xFF939393);
+
+  // Gradientes
+  static const levelFillGradient = LinearGradient(
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+    colors: [levelFillStart, goldBright],
+  );
+
+  static const whoopCardGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [whoopCardTop, whoopCardBottom],
+  );
+
+  // Glows elípticos (3 paradas) — desenhados por `BldrEllipseGlow`.
+  static const glowColors = [
+    Color(0x33C9A227), // 0.20
+    Color(0x16C9A227), // 0.085
+    Color(0x00C9A227),
+  ];
+  static const glowStops = [0.0, 0.46, 1.0];
+  static const glowSecondaryColors = [
+    Color(0x0FC9A227), // 0.0588
+    Color(0x06C9A227), // 0.024
+    Color(0x00C9A227),
+  ];
+  static const glowSecondaryStops = [0.0, 0.48, 1.0];
+}
+
+/// Cores oficiais do WHOOP (Brand & Design Guidelines). Antes eram `const`
+/// privados em `bldr_whoop_card.dart`; os valores não mudaram.
+abstract final class BldrWhoopColors {
+  static const recoveryHigh = Color(0xFF16EC06); // 100–67%
+  static const recoveryMed = Color(0xFFFFDE00); // 66–34%
+  static const recoveryLow = Color(0xFFFF0026); // 33–0%
+  static const recoveryEmpty = Color(0xFF67AEE6); // recovery sem valor
+  static const strain = Color(0xFF0093E7);
+  static const sleep = Color(0xFF7BA1BB);
+  static const track = Color(0x12FFFFFF); // trilho do estado de skeleton
+}
+
+/// Tipografia v2. `height: 1.21` reproduz o "line-height: normal" do Inter
+/// no Figma.
+abstract final class BldrTextV2 {
+  static const String family = BldrText.family;
+  static const double _h = 1.21;
+
+  /// Escala tipográfica fixa do rebranding v2 (aprovada). Cada tamanho do
+  /// mockup vai para o degrau mais próximo (empate → degrau de cima), com
+  /// mínimo de 11. Pesos, cores e espaçamento entre letras seguem o mockup.
+  /// Use sempre [scale]; nunca tamanhos soltos em telas novas.
+  static const double s11 = 11;
+  static const double s12 = 12;
+  static const double s13 = 13;
+  static const double s15 = 15;
+  static const double s17 = 17;
+  static const double s20 = 20;
+  static const double s24 = 24;
+  static const double s28 = 28;
+  static const double s32 = 32;
+
+  static TextStyle scale(double step, FontWeight weight, Color color,
+          {double? letterSpacing}) =>
+      TextStyle(
+        fontFamily: family,
+        fontSize: step,
+        fontWeight: weight,
+        color: color,
+        height: _h,
+        letterSpacing: letterSpacing,
+      );
+
+  static const _base = TextStyle(fontFamily: family, height: _h);
+
+  // Header
+  static final greeting = _base.copyWith(
+      fontSize: 13, fontWeight: FontWeight.w500, color: BldrColorsV2.textSecondary);
+  static final title = _base.copyWith(
+      fontSize: 31, fontWeight: FontWeight.w700, color: BldrColorsV2.textPrimary);
+  static final avatarInitial = _base.copyWith(
+      fontSize: 14, fontWeight: FontWeight.w700, color: BldrColorsV2.goldBright);
+
+  // Nível / XP
+  static final level = _base.copyWith(
+      fontSize: 13, fontWeight: FontWeight.w600, color: BldrColorsV2.textPrimary);
+  static final xp = _base.copyWith(
+      fontSize: 11, fontWeight: FontWeight.w500, color: BldrColorsV2.textSecondary);
+
+  // Chips
+  static final statValue = _base.copyWith(
+      fontSize: 19, fontWeight: FontWeight.w400, color: BldrColorsV2.textWhite);
+  static final statLabel = _base.copyWith(
+      fontSize: 11, fontWeight: FontWeight.w300, color: BldrColorsV2.textWhite);
+
+  // WHOOP
+  static final whoopToday = _base.copyWith(
+      fontSize: 10, fontWeight: FontWeight.w400, color: BldrColorsV2.whoopToday);
+  static final ringValue =
+      _base.copyWith(fontSize: 16, fontWeight: FontWeight.w600);
+  static final ringLabel = _base.copyWith(
+      fontSize: 9, fontWeight: FontWeight.w400, color: BldrColorsV2.ringLabel);
+
+  // Treino de hoje
+  static final trainLabel = _base.copyWith(
+      fontSize: 11, fontWeight: FontWeight.w600, color: BldrColorsV2.trainLabel);
+  static final trainTitle = _base.copyWith(
+      fontSize: 25, fontWeight: FontWeight.w700, color: BldrColorsV2.textPrimary);
+  static final trainMuscles = _base.copyWith(
+      fontSize: 11, fontWeight: FontWeight.w400, color: BldrColorsV2.textSecondary);
+  static final trainMeta = _base.copyWith(
+      fontSize: 11, fontWeight: FontWeight.w500, color: BldrColorsV2.trainMeta);
+  static final cta = _base.copyWith(
+      fontSize: 13, fontWeight: FontWeight.w700, color: BldrColorsV2.gold);
+
+  // Grid 2×2
+  static final tileLabel = _base.copyWith(
+      fontSize: 10, fontWeight: FontWeight.w400, color: BldrColorsV2.tileLabel);
+  static final tileValue = _base.copyWith(
+      fontSize: 23, fontWeight: FontWeight.w600, color: BldrColorsV2.tileValue);
+  static final macroValue = _base.copyWith(
+      fontSize: 10, fontWeight: FontWeight.w400, color: BldrColorsV2.tileValue);
+  static final weekDay = _base.copyWith(
+      fontSize: 8, fontWeight: FontWeight.w400, color: BldrColorsV2.tileLabel);
+
+  // Cards de estado do wearable (57:382 / 57:381)
+  static final wearableLabel = _base.copyWith(
+      fontSize: 10, fontWeight: FontWeight.w600, color: BldrColorsV2.goldBright);
+  static final wearableTitle = _base.copyWith(
+      fontSize: 19, fontWeight: FontWeight.w600, color: BldrColorsV2.tileValue);
+  static final wearableBody11 = _base.copyWith(
+      fontSize: 11,
+      fontWeight: FontWeight.w400,
+      color: BldrWearableColorsV2.connectBody);
+  static final wearableBody12 = _base.copyWith(
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      color: BldrWearableColorsV2.unavailableBody);
+  static final wearableCta = _base.copyWith(
+      fontSize: 12, fontWeight: FontWeight.w600, color: BldrColorsV2.gold);
+  static final wearableLink = _base.copyWith(
+      fontSize: 11, fontWeight: FontWeight.w600, color: BldrColorsV2.goldBright);
+
+  // Treino concluído (57:379) — cores de BldrTrainColorsV2
+  static final doneStat =
+      _base.copyWith(fontSize: 11, fontWeight: FontWeight.w600);
+
+  // Garmin (57:383) — cores de BldrGarminColors
+  static final garminValue =
+      _base.copyWith(fontSize: 20, fontWeight: FontWeight.w600);
+  static final garminLabel = _base.copyWith(
+      fontSize: 9, fontWeight: FontWeight.w400, color: BldrGarminColors.label);
+  static final garminFooter = _base.copyWith(
+      fontSize: 10, fontWeight: FontWeight.w400, color: BldrGarminColors.label);
+
+  // Havok (57:390 / 57:389)
+  static final havokBannerLabel = _base.copyWith(
+      fontSize: 8.719, fontWeight: FontWeight.w600, color: BldrColorsV2.goldBright);
+  static final havokBannerText = _base.copyWith(
+      fontSize: 11.334, fontWeight: FontWeight.w500, color: BldrColorsV2.textWhite);
+  static final havokBannerChevron = _base.copyWith(
+      fontSize: 20.925, fontWeight: FontWeight.w700, color: BldrColorsV2.goldBright);
+  static final havokLabel = _base.copyWith(
+      fontSize: 11, fontWeight: FontWeight.w600, color: BldrColorsV2.goldBright);
+  static final havokClose = _base.copyWith(
+      fontSize: 19, fontWeight: FontWeight.w500, color: BldrHavokColorsV2.muted);
+  static final havokTitle = _base.copyWith(
+      fontSize: 17, fontWeight: FontWeight.w600, color: BldrColorsV2.textWhite);
+  static final havokBody = _base.copyWith(
+      fontSize: 12, fontWeight: FontWeight.w400, color: BldrHavokColorsV2.muted);
+  static final havokCta = _base.copyWith(
+      fontSize: 12, fontWeight: FontWeight.w700, color: BldrColorsV2.gold);
+}
+
+abstract final class BldrSpacingV2 {
+  /// Largura de referência do frame. Em 440 px tudo fica idêntico ao mockup;
+  /// abaixo disso as margens escalam proporcionalmente (ver [pageX]).
+  static const double frameWidth = 440;
+  static const double pageXRef = 27;
+
+  /// Margem lateral proporcional à largura (27 em 440), mínimo 16.
+  static double pageX(double screenWidth) =>
+      (pageXRef * screenWidth / frameWidth).clamp(16.0, pageXRef);
+
+  // Respiros verticais entre seções da Home
+  static const double headerToLevel = 12;
+  static const double levelToChips = 31;
+  static const double chipsToWearable = 18;
+  static const double wearableToTrain = 20;
+  static const double trainToGrid = 18;
+
+  // Grid 2×2
+  static const double gridGapX = 10;
+  static const double gridGapY = 8;
+  static const double tileHeight = 96;
+  static const double tilePad = 13;
+
+  // Chips de consistência
+  static const double chipWidth = 81;
+  static const double chipHeight = 78;
+  static const double chipGap = 13;
+
+  // Treino de hoje
+  static const double trainPad = 18;
+
+  // Navbar
+  static const double navHeight = 42;
+  static const double navBottom = 22;
+}
+
+abstract final class BldrRadiusV2 {
+  static const double chip = 18;
+  static const double wearableCard = 18;
+  static const double train = 23;
+  static const double cta = 15;
+  static const double tile = 17;
+  static const double levelStrip = 27;
+  static const double navPill = 60;
+  static const double navHavok = 15;
+  static const double tileBar = 2;
+  static const double weekBar = 5;
+  static const double levelBar = 4;
+}
+
+// ─────────────────────────────────────────────────────────────
+// v2 — PILHA DE WEARABLE: 4ª camada (proposta aprovada; não existe no Figma)
+// ─────────────────────────────────────────────────────────────
+
+abstract final class BldrStackV2 {
+  /// Altura total fixa da pilha — não muda com o número de camadas.
+  static const double height = 188;
+  static const double activeHeight = 173;
+
+  /// Geometria por camada (0 = frente). Com 3 camadas: mockup (15/7/0,
+  /// recuos 0/3/7). Com 4: 15/10/5/0, recuos 0/3/6/9.
+  static const tops3 = [15.0, 7.0, 0.0];
+  static const insets3 = [0.0, 3.0, 7.0];
+  static const tops4 = [15.0, 10.0, 5.0, 0.0];
+  static const insets4 = [0.0, 3.0, 6.0, 9.0];
+  // Distância da base de cada camada até a base da pilha.
+  static const bottoms3 = [0.0, 7.0, 12.0];
+  static const bottoms4 = [0.0, 4.0, 8.0, 12.0];
+
+  static const layer4 = Color(0xFF100F0D);
+  static const layer4Border = Color(0x8C373021); // rgba(55,48,33,0.55)
+
+  static const Duration animation = Duration(milliseconds: 320);
+
+  // Indicador de posição (proposta aprovada)
+  static const dotActive = BldrColorsV2.gold;
+  static const dotIdle = BldrColorsV2.levelTrack; // #444038
+}
+
+// ─────────────────────────────────────────────────────────────
+// v2 — CARDS DE ESTADO DO WEARABLE (Figma 57:382 / 57:381)
+// ─────────────────────────────────────────────────────────────
+
+abstract final class BldrWearableColorsV2 {
+  static const connectSurface = Color(0xFF17191A);
+  static const connectBody = Color(0xFFA0A0A0);
+  static const unavailableTitle = Color(0xFFF4F4F4);
+  static const unavailableBody = Color(0xFF969696);
+  static const double connectCtaRadius = 12;
+}
+
+/// Cores do card Garmin (Figma 57:383) — exatamente as do mockup, por
+/// exigência do manual de marca da Garmin. Não substituir por tokens v2.
+abstract final class BldrGarminColors {
+  static const surface = Color(0xFF111315);
+  static const border = Color(0xCC454A4D); // rgba(69,74,77,0.8)
+  static const metricBox = Color(0xFF222629);
+  static const bodyBattery = Color(0xFF6DCFF6);
+  static const value = Color(0xFFFFFFFF);
+  static const label = Color(0xFFB7BFC3);
+  static const today = Color(0xFFA9A49B);
+  static const double metricRadius = 12;
+}
+
+// ─────────────────────────────────────────────────────────────
+// v2 — HAVOK (Figma 57:390 banner / 57:389 card expandido)
+// ─────────────────────────────────────────────────────────────
+
+abstract final class BldrHavokColorsV2 {
+  static const surface = Color(0xFF050505);
+  static const bannerBorder = BldrColorsV2.gold;
+  static const expandedBorder = Color(0xFF806826);
+  static const muted = Color(0xFFBDBDBD);
+  static const label = BldrColorsV2.goldBright;
+}
+
+abstract final class BldrHavokV2 {
+  static const double bannerWidth = 279;
+  static const double bannerHeight = 45.338;
+  static const double bannerRadius = 22.669;
+  static const double bannerBorderWidth = 0.872;
+  static const double expandedWidth = 370;
+  static const double expandedHeight = 205;
+  static const double expandedRadius = 24;
+  static const Duration transition = Duration(milliseconds: 300);
+}
+
+// ─────────────────────────────────────────────────────────────
+// v2 — TREINO DE HOJE: estados (Figma 57:386 / 57:385 / 57:380 / 57:379)
+// ─────────────────────────────────────────────────────────────
+
+abstract final class BldrTrainColorsV2 {
+  /// Check duplo do estado concluído — verde do mockup (prevalece).
+  static const success = Color(0xFF16EC06);
+  // CTA neutro (dia de descanso)
+  static const ctaNeutralBg = Color(0xFF1B1B1B);
+  static const ctaNeutralBorder = Color(0xFF5C5C5C);
+  static const ctaNeutralText = Color(0xFFE0E0E0);
+  // Métricas do concluído
+  static const doneLabel = Color(0xFF5C5C5C);
+  static const doneValue = BldrColorsV2.tileValue; // #F5F5F5
+}
+
+// ─────────────────────────────────────────────────────────────
+// v2 — TREINOS (Figma guqp4TpJiiCKjhSgzqxSjg — 179:981 / 179:1015 / 179:1117)
+// ─────────────────────────────────────────────────────────────
+
+abstract final class BldrWorkoutColorsV2 {
+  static const text = Color(0xFFF0F0F0);
+  static const muted = Color(0xFF787878);
+  static const gold = BldrColorsV2.goldBright; // #E0B830
+
+  // CTA com borda (＋ … ›) e botão compacto
+  static const ctaBg = Color(0xFF0F0E0A);
+  static const ctaBorder = Color(0x7AD4AF37); // .48
+
+  // Campo de nome
+  static const inputBg = Color(0xD10A0A0A); // rgba(10,10,10,.82)
+  static const inputBorder = Color(0x4DD4AF37); // .30
+
+  // Seletor de tipo
+  static const typeBoxBg = Color(0x800A0A0A); // .50
+  static const typeBoxBorder = Color(0x24D4AF37); // .14
+  static const typeChipBg = Color(0x9E0A0A0A); // .62
+  static const typeChipSelBg = Color(0xFF0E0D09);
+  static const typeChipSelBorder = Color(0x9ED4AF37); // .62
+
+  // HUD
+  static const hudBg = Color(0xC70A0A0A); // .78
+  static const hudBorder = Color(0x2ED4AF37); // .18
+
+  // Card de exercício configurado
+  static const cardBg = Color(0xC70A0A0A); // .78
+  static const cardExpandedBg = Color(0xCC0A0A0A); // .80
+  static const cardBorder = Color(0x29D4AF37); // .16
+  static const cardExpandedBorder = Color(0x5CD4AF37); // .36
+  static const thumbBg = Color(0xFF0E0E0E);
+  static const thumbBorder = Color(0x2ED4AF37); // .18
+  static const valueBg = Color(0xB80A0A0A); // .72
+  static const valueBorder = Color(0x1FD4AF37); // .12
+  static const setBoxBg = Color(0xB30A0A0A); // .70
+  static const setBoxBorder = Color(0x1AD4AF37); // .10
+
+  // Sheet "Adicionar exercícios"
+  static const sheetBg = Color(0xFC080808); // rgba(8,8,8,.99)
+  static const sheetBorder = Color(0x75D4AF37); // .46
+  static const grabber = Color(0xFF575757);
+  static const searchBg = Color(0xD1080808); // .82
+  static const searchBorder = Color(0x24D4AF37); // .14
+  static const filterSelBg = Color(0xE6080808); // .90
+  static const filterSelBorder = Color(0x80D4AF37); // .50
+  static const filterBg = Color(0x8C080808); // .55
+  static const filterBorder = Color(0x1AD4AF37); // .10
+  static const itemBg = Color(0xC7080808); // .78
+  static const itemSelBorder = Color(0x61D4AF37); // .38
+  static const itemBorder = Color(0x1AD4AF37); // .10
+  static const itemThumbBg = Color(0xE6080808); // .90
+  static const itemThumbBorder = Color(0x1FD4AF37); // .12
+  static const equipBg = Color(0x8C080808); // .55
+  static const equipBorder = Color(0x14D4AF37); // .08
+  static const pickSelBg = Color(0xFA080808); // .98
+  static const pickSelBorder = Color(0xADD4AF37); // .68
+  static const pickBg = Color(0xB8080808); // .72
+  static const pickBorder = Color(0x2ED4AF37); // .18
+
+  // Hub (249:18901 / 179:2)
+  static const goldBrand = Color(0xFFD4AF37);
+  static const secondary = Color(0xFF6F6F6F);
+  static const tabIdle = Color(0xFF949494);
+  static const todayBorder = goldBrand;
+  static const pillBorder = Color(0x7AD4AF37); // .48
+  static const weekCircle = Color(0xFFD9D9D9);
+  static const weekIcon = Color(0xFF1A1A1A);
+  static const listCardBg = Color(0x4D353535); // rgba(53,53,53,.3)
+  static const listCardBorder = Color(0xCFD4AF37); // .81
+  static const exploreBg = Color(0xFF353535);
+  static const divider = Color(0x66D4AF37);
+}
+
+/// Textos de Treinos v2 na escala do rebranding (`BldrTextV2.scale`).
+/// Conversão aprovada (mockup → degrau) registrada no TREINOS_V2.md.
+abstract final class BldrWorkoutTextV2 {
+  static const _b = FontWeight.w700;
+  static const _sb = FontWeight.w600;
+  static const _m = FontWeight.w500;
+  static const _r = FontWeight.w400;
+  static const _t = BldrWorkoutColorsV2.text;
+  static const _mu = BldrWorkoutColorsV2.muted;
+  static const _g = BldrWorkoutColorsV2.gold;
+  static TextStyle _s(double step, FontWeight w, Color c, {double? ls}) =>
+      BldrTextV2.scale(step, w, c, letterSpacing: ls);
+
+  // ── Criar treino (179:981 / 179:1015 / 179:1117) ──
+  static final back = _s(BldrTextV2.s28, _r, _t); // 30
+  static final eyebrow = _s(BldrTextV2.s11, _b, _g); // 10
+  static final eyebrowSm = _s(BldrTextV2.s11, _b, _g); // 9
+  static final title = _s(BldrTextV2.s24, _b, _t); // 24
+  static final subtitle = _s(BldrTextV2.s12, _m, _mu); // 12
+  static final sectionLabel = _s(BldrTextV2.s11, _b, _mu); // 9
+  static final inputValue = _s(BldrTextV2.s24, _sb, _t); // 22
+  static final typeChip = _s(BldrTextV2.s11, _b, _mu); // 9
+  static final soon = _s(BldrTextV2.s11, _b, _mu); // 6
+  static final cta = _s(BldrTextV2.s11, _b, _g); // 11
+  static final ctaSm = _s(BldrTextV2.s11, _sb, _g, ls: 0.8); // 9
+  static final ctaArrow = _s(BldrTextV2.s20, _r, _g); // 21
+  static final hint = _s(BldrTextV2.s11, _m, _mu); // 10
+  static final hintSm = _s(BldrTextV2.s11, _m, _mu); // 8
+  static final count = _s(BldrTextV2.s11, _b, _g); // 8
+  static final compactCta = _s(BldrTextV2.s11, _b, _g); // 8
+  static final hudValue = _s(BldrTextV2.s15, _b, _g); // 14
+  static final hudLabel = _s(BldrTextV2.s11, _b, _mu); // 7
+  static final exName = _s(BldrTextV2.s13, _sb, _t); // 11 → 13 (hierarquia)
+  static final exMuscles = _s(BldrTextV2.s11, _m, _mu); // 8
+  static final valueBox = _s(BldrTextV2.s13, _b, _t); // 8 → 13 (hierarquia)
+  static final valueLabel = _s(BldrTextV2.s11, _b, _mu); // 6
+  static final remove = _s(BldrTextV2.s15, _r, _mu); // 15
+  static final personalize = _s(BldrTextV2.s11, _b, _g); // 7
+  static final advancedHint = _s(BldrTextV2.s11, _m, _mu); // 7
+  static final setIndex = _s(BldrTextV2.s11, _b, _g); // 8
+  static final setValue = _s(BldrTextV2.s12, _sb, _t); // 8 → 12 (hierarquia)
+  static final more = _s(BldrTextV2.s11, _b, _mu); // 11
+  static final addSet = _s(BldrTextV2.s11, _b, _mu); // 7
+  static final sheetTitle = _s(BldrTextV2.s24, _b, _t); // 22
+  static final search = _s(BldrTextV2.s11, _m, _mu); // 10
+  static final filter = _s(BldrTextV2.s11, _b, _mu); // 7
+  static final listLabel = _s(BldrTextV2.s11, _b, _mu); // 8
+  static final itemName = _s(BldrTextV2.s13, _sb, _t); // 10 → 13 (hierarquia)
+  static final equip = _s(BldrTextV2.s11, _b, _mu); // 6
+  static final sheetCta = _s(BldrTextV2.s11, _b, _g); // 10
+
+  // ── Hub (249:18901 / 179:2) ──
+  static final hubTabActive = _s(BldrTextV2.s17, _sb, _g); // 16
+  static final hubTab = _s(BldrTextV2.s17, _sb, BldrWorkoutColorsV2.tabIdle); // 16
+  static final todayLabel = _s(BldrTextV2.s12, _r, BldrWorkoutColorsV2.goldBrand); // 12
+  static final todayName = _s(BldrTextV2.s12, _b, Colors.white); // 12
+  static final todayHint = _s(BldrTextV2.s12, _r, BldrWorkoutColorsV2.secondary); // 12
+  static final pillLabel = _s(BldrTextV2.s11, _b, _g); // 7 / 5,4
+  static final metaWhite = _s(BldrTextV2.s11, _r, Colors.white); // 7 / 8
+  static final hubSection = _s(BldrTextV2.s11, _r, Colors.white); // 10
+  static final weekDay = _s(BldrTextV2.s12, _r, Colors.white); // 12
+  static final weekValue = _s(BldrTextV2.s15, _r, Colors.white); // 14
+  static final weekLabel = _s(BldrTextV2.s11, _r, Colors.white); // 9
+  static final cardName = _s(BldrTextV2.s15, _b, Colors.white); // 14
+  static final cardMuscles = _s(BldrTextV2.s11, _m, BldrWorkoutColorsV2.secondary); // 9
+  static final cardStats = _s(BldrTextV2.s11, _m, _t); // 8
+  static final countGold = _s(BldrTextV2.s11, _r, BldrWorkoutColorsV2.goldBrand); // 6
+  static final emptyTitle = _s(BldrTextV2.s11, _r, Colors.white); // 8 (Inter)
+  static final emptySub = _s(BldrTextV2.s11, _r, BldrWorkoutColorsV2.secondary); // 8
+  static final exploreTitle = _s(BldrTextV2.s11, _r, Colors.white); // 6,6
+  static final exploreSub = _s(BldrTextV2.s11, _r, BldrWorkoutColorsV2.secondary); // 4,1
+}

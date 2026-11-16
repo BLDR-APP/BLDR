@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
-import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/models/user_profile.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/features/auth/domain/repositories/auth_repository.dart';
-import 'package:bldr_fitness/features/club/presentation/bldr_club/havok/havok_sheet.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/services/user_service.dart';
 
@@ -89,68 +87,63 @@ class _GreetingHeaderWidgetState extends State<GreetingHeaderWidget> {
         : getIt<AuthRepository>().currentUser?.email?[0].toUpperCase() ?? 'U';
   }
 
-  /// D1 — header compacto: saudação + nome + avatar circular.
-  ///
-  /// A mensagem motivacional e o chip de streak saíram daqui: o streak virou
-  /// chip da fileira D3 (TodayMetricsWidget), com a mesma consulta.
-  /// `_getMotivationalMessage()` continua aqui, sem slot no D1.
+  /// Header v2 (Figma 57:388 · "01 — HEADER"): saudação 13/500, nome do
+  /// usuário 31/700 (o "BLDR" do mockup simula o `fullName`) e avatar de 36.
+  /// O ícone do HAVOK saiu daqui e foi para a navbar v2 (decisão 3).
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final authenticated = getIt<AuthRepository>().isAuthenticated;
     final avatarUrl = userProfile?.avatarUrl;
+    final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
+    final pageX = BldrSpacingV2.pageX(MediaQuery.sizeOf(context).width);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        BldrSpacing.pageX,
-        18,
-        BldrSpacing.pageX,
-        0,
-      ),
+      padding: EdgeInsets.fromLTRB(pageX, 4, pageX, 0),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Dinâmico: hora do dispositivo.
-                Text(_getGreeting(l10n), style: BldrText.label),
-                const SizedBox(height: 3),
+                Text(_getGreeting(l10n), style: BldrTextV2.greeting),
+                const SizedBox(height: 7),
                 Text(
                   _getDisplayName(l10n),
-                  style: BldrText.screenTitle,
+                  style: BldrTextV2.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 10),
-          HavokEntryIcon(onTap: () => showHavokSheet(context, originScreen: 'dashboard')),
           const SizedBox(width: 12),
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: BldrColors.goldTint,
-              border: Border.all(color: BldrColors.goldBorder, width: 1),
-              image: (avatarUrl != null && avatarUrl.isNotEmpty)
-                  ? DecorationImage(
-                      image: NetworkImage(avatarUrl),
-                      fit: BoxFit.cover,
-                    )
-                  : null,
-            ),
-            alignment: Alignment.center,
-            child: (avatarUrl == null || avatarUrl.isEmpty)
-                ? Text(
-                    authenticated ? _getInitials() : 'G',
-                    style: BldrText.cardTitle.copyWith(
-                      color: BldrColors.goldBright,
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: BldrColorsV2.avatarBg,
+                border: Border.all(color: BldrColorsV2.avatarBorder),
+                image: hasAvatar
+                    ? DecorationImage(
+                        image: NetworkImage(avatarUrl),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
+              alignment: Alignment.center,
+              child: hasAvatar
+                  ? null
+                  : Text(
+                      authenticated ? _getInitials() : 'G',
+                      style: BldrTextV2.avatarInitial,
                     ),
-                  )
-                : null,
+            ),
           ),
         ],
       ),

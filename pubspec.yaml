@@ -147,6 +147,8 @@ flutter:
     - assets/images/launch/
     - assets/videos/
     - assets/images/whoop/
+    - assets/images/v2/icons/
+    - assets/images/garmin/
     - assets/models/
     - assets/images/categories/
     - assets/images/muscle_map/base/
@@ -156,18 +158,23 @@ flutter:
 
   # Inter empacotado localmente para o design system (lib/theme/bldr_tokens.dart).
   # Necessário porque BldrText usa `fontFamily: 'Inter'`, que não resolve via
-  # google_fonts. Pesos: 400/500/600 — os únicos que os tokens declaram.
+  # google_fonts. Pesos: 400/500/600 (fase 1) + 300/700 (rebranding v2, Figma).
+  # Todos do release oficial Inter 4.1 (rsms/inter, extras/ttf).
   # Licença SIL OFL 1.1 em assets/fonts/LICENSE.txt.
   # O legado (AppTheme) continua usando GoogleFonts; os dois coexistem.
   fonts:
     - family: Inter
       fonts:
+        - asset: assets/fonts/Inter-Light.ttf
+          weight: 300
         - asset: assets/fonts/Inter-Regular.ttf
           weight: 400
         - asset: assets/fonts/Inter-Medium.ttf
           weight: 500
         - asset: assets/fonts/Inter-SemiBold.ttf
           weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
     - family: Montserrat
       fonts:
         - asset: assets/fonts/Montserrat-Bold.ttf

@@ -9,6 +9,11 @@
 import 'package:flutter/material.dart';
 
 import 'package:bldr_fitness/design_system/bldr_components.dart';
+import 'package:bldr_fitness/design_system/bldr_v2_components.dart';
+import 'package:bldr_fitness/features/integrations/domain/entities/whoop_entities.dart';
+import 'package:bldr_fitness/features/integrations/presentation/widgets/bldr_connect_wearable_card.dart';
+import 'package:bldr_fitness/features/integrations/presentation/widgets/bldr_garmin_card.dart';
+import 'package:bldr_fitness/features/integrations/presentation/widgets/bldr_whoop_card.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 
 class BldrShowcaseScreen extends StatefulWidget {
@@ -218,12 +223,49 @@ class _BldrShowcaseScreenState extends State<BldrShowcaseScreen> {
             'Índice selecionado: $_navIndex. Toque nos ícones abaixo.',
             style: BldrText.meta,
           ),
+          const SizedBox(height: BldrSpacing.gapSection),
+
+          // ── 11. WearableStack v2 (Figma 57:382–57:384) ───────────────
+          // Dados de exemplo. Arraste na horizontal para rolar a pilha.
+          _Legenda('11a · Pilha — WHOOP + Conectar'),
+          WearableStack(cards: [
+            BldrWhoopCard(data: _sampleWhoop, isConnected: true),
+            const BldrConnectWearableCard(hasConnectedDevice: true),
+          ]),
+          const SizedBox(height: BldrSpacing.gapSection),
+          _Legenda('11b · Pilha — WHOOP + Garmin + Conectar'),
+          WearableStack(cards: [
+            BldrWhoopCard(data: _sampleWhoop, isConnected: true),
+            const BldrGarminCard(bodyBattery: 76, restingHr: 56, sleepScore: 82),
+            const BldrConnectWearableCard(hasConnectedDevice: true),
+          ]),
+          const SizedBox(height: BldrSpacing.gapSection),
+          _Legenda('11c · Pilha — 5 cards (4ª camada)'),
+          WearableStack(cards: [
+            BldrWhoopCard(data: _sampleWhoop, isConnected: true),
+            const BldrGarminCard(bodyBattery: 76, restingHr: 56, sleepScore: 82),
+            const BldrWhoopCard(data: null, isConnected: true),
+            const BldrGarminCard(bodyBattery: 41, restingHr: 61, sleepScore: 68),
+            const BldrConnectWearableCard(hasConnectedDevice: true),
+          ]),
+          const SizedBox(height: BldrSpacing.gapSection),
+          _Legenda('11d · Só Conectar (sem wearable)'),
+          WearableStack(cards: const [BldrConnectWearableCard()]),
           ],
         ),
       ),
     );
   }
 }
+
+final _sampleWhoop = WhoopDailyData(
+  userId: 'showcase',
+  date: DateTime(2026, 11, 16),
+  recoveryScore: 75,
+  strainScore: 6.1,
+  sleepScore: 73,
+  syncedAt: DateTime(2026, 11, 16, 8),
+);
 
 class _Legenda extends StatelessWidget {
   const _Legenda(this.texto);

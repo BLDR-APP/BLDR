@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
-import 'package:bldr_fitness/design_system/bldr_components.dart';
+import 'package:bldr_fitness/design_system/bldr_v2_components.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 import 'package:bldr_fitness/services/auth_service.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
 import 'package:bldr_fitness/features/workouts/presentation/mappers/legacy_ui_maps.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
+import 'package:bldr_fitness/shared/presentation/dashboard/home_v2_formatters.dart';
 
 class ConsistencyHeatmapWidget extends StatefulWidget {
   final VoidCallback onViewAllPressed;
@@ -79,6 +80,9 @@ class _ConsistencyHeatmapWidgetState extends State<ConsistencyHeatmapWidget> {
     }
   }
 
+  // Tempo total da janela saiu da Home v2 (decisão 4); a soma continua em
+  // `_totalSecondsLast7Days`.
+  // ignore: unused_element
   String _formatTotalTime() {
     final totalMinutes = _totalSecondsLast7Days ~/ 60;
     if (totalMinutes == 0) return '—';
@@ -99,78 +103,65 @@ class _ConsistencyHeatmapWidgetState extends State<ConsistencyHeatmapWidget> {
     });
   }
 
+  /// Tile "7 dias" v2 (Figma): barras de 13 px (máx. 36), dourado nos dias
+  /// com treino e #383838 nos demais; letra do dia e total de treinos.
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final bars = _barValues;
+    // Corrigido: antes somava MINUTOS e exibia como "N treinos".
     final workoutsInWindow =
-        bars.fold<int>(0, (sum, v) => sum + v.round());
+        HomeV2Format.workoutsInLast7Days(_dayCount, DateTime.now());
 
-    return BldrGlassCard(
+    return BldrSolidCard(
       onTap: widget.onViewAllPressed,
+      color: BldrColorsV2.tileBg,
+      radius: BldrRadiusV2.tile,
+      height: BldrSpacingV2.tileHeight,
+      padding: const EdgeInsets.fromLTRB(BldrSpacingV2.tilePad, 11, 13, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(l10n.dashboard_seven_days, style: BldrText.meta),
-              if (!_isLoading && _totalSecondsLast7Days > 0)
-                Text(_formatTotalTime(), style: BldrText.metaSm),
-            ],
+          Text(l10n.dashboard_seven_days, style: BldrTextV2.tileLabel),
+          const SizedBox(height: 8.9),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2.5),
+            child: Column(
+              children: [
+                SizedBox(height: 36, child: _buildBars(_barValues)),
+                const SizedBox(height: 4),
+                _buildDayLabels(),
+              ],
+            ),
           ),
-          const SizedBox(height: 14),
-          SizedBox(
-            height: 56,
-            child: _isLoading
-                ? Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text('—', style: BldrText.kpiLg),
-                  )
-                : _buildBars(bars),
-          ),
-          const SizedBox(height: 4),
-          _buildDayLabels(),
-          const SizedBox(height: 4),
           Text(
-            l10n.dashboard_workouts_count(workoutsInWindow),
-            style: BldrText.metaSm,
+            _isLoading ? '—' : l10n.dashboard_workouts_count(workoutsInWindow),
+            style: BldrTextV2.tileLabel,
           ),
         ],
       ),
     );
   }
 
+  static const double _barWidth = 13;
+  static const double _barMax = 36;
+  static const double _barIdle = 10;
+
   Widget _buildBars(List<double> values) {
     final max = values.fold<double>(0, (a, b) => b > a ? b : a);
-    final today = DateTime.now();
-    final todayIdx = 6; // último slot = hoje
-    final todayWeekday = today.weekday; // 1=Mon…7=Sun
-    // slot i corresponde ao dia weekday: base=(Mon da semana passada)+i*dias
-    // Na janela de 7 dias: slot 0 = 6 dias atrás, slot 6 = hoje
-    final baseWeekday = ((todayWeekday - 1 - 6) % 7 + 7) % 7; // weekday do slot 0 (0=Mon)
-
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: List.generate(values.length, (i) {
         final hasValue = values[i] > 0;
-        final isToday = i == todayIdx;
         final ratio = max > 0 ? values[i] / max : 0.0;
-        return Expanded(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: Container(
-              height: hasValue
-                  ? (44 * ratio).clamp(6.0, 44.0)
-                  : 4.0,
-              decoration: BoxDecoration(
-                color: hasValue
-                    ? (isToday ? BldrColors.goldBright : BldrColors.goldBright.withOpacity(0.7))
-                    : BldrColors.border.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(BldrRadius.bar),
-              ),
-            ),
+        return Container(
+          width: _barWidth,
+          height: hasValue
+              ? (_barMax * ratio).clamp(_barIdle, _barMax)
+              : _barIdle,
+          decoration: BoxDecoration(
+            color: hasValue ? BldrColorsV2.goldBright : BldrColorsV2.weekBarIdle,
+            borderRadius: BorderRadius.circular(BldrRadiusV2.weekBar),
           ),
         );
       }),
@@ -180,22 +171,20 @@ class _ConsistencyHeatmapWidgetState extends State<ConsistencyHeatmapWidget> {
   static const _abbrevs = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
 
   Widget _buildDayLabels() {
-    final today = DateTime.now();
-    final todayWeekday = today.weekday - 1; // 0=Mon…6=Sun
+    final todayWeekday = DateTime.now().weekday - 1; // 0=Mon…6=Sun
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(7, (i) {
         final dayOffset = 6 - i; // slot 0 = 6 dias atrás
-        final weekday = (todayWeekday - dayOffset) % 7;
-        final normalizedWeekday = (weekday + 7) % 7;
+        final normalizedWeekday = ((todayWeekday - dayOffset) % 7 + 7) % 7;
         final isToday = dayOffset == 0;
-        return Expanded(
+        return SizedBox(
+          width: _barWidth,
           child: Text(
             _abbrevs[normalizedWeekday],
             textAlign: TextAlign.center,
-            style: BldrText.metaSm.copyWith(
-              fontSize: 8,
-              fontWeight: isToday ? FontWeight.w700 : FontWeight.normal,
-              color: isToday ? BldrColors.goldBright : BldrColors.textMuted,
+            style: BldrTextV2.weekDay.copyWith(
+              color: isToday ? BldrColorsV2.goldBright : null,
             ),
           ),
         );

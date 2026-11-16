@@ -685,4 +685,12 @@ Corridas já têm GPS. Mapa com rotas usa dado existente.
 | B2 — Conquistas nunca desbloqueiam                           | ✅                  |
 | Whoop: aprovação para produção                               | 🟡 Limita usuários |
 
+## Rebranding v2 — pendências funcionais
 
+| Item | Status |
+|---|---|
+| HAVOK insight: edge function `gerar-insight-havok` devolver headline curto (até 40 caracteres) + use case repassar o campo. Hoje o banner e o título do card expandido da Home (Figma 57:390 / 57:389) usam o título fixo do .arb como fallback. | ⏳ |
+| Garmin: integração (conexão, sync de Body Battery / FC repouso / sono). O card `BldrGarminCard` (57:383) já existe e só entra na pilha da Home quando houver conexão. | ⏳ |
+| Configurações: abrir já rolada até a seção Integrações a partir do card "Conecte seu wearable" (hoje abre no topo, por decisão). | ⏳ |
+| Treino de hoje: mostrar/acessar os demais treinos pausados na Home (o card v2 mostra só o mais recente; os outros ficam na aba Treinos). | ⏳ |
+| XP semanal: `add_xp_to_user` passar a gravar também em `bldr_club.xp_events`, para viabilizar XP semanal (hoje só atualiza `club_ranking.xp_total`; a métrica "XP da semana" do hub de Treinos fica oculta até isso). | ⏳ |

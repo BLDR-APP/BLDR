@@ -3,17 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
-import 'package:bldr_fitness/design_system/bldr_components.dart';
+import 'package:bldr_fitness/design_system/bldr_v2_components.dart';
 import 'package:bldr_fitness/features/achievements/domain/usecases/achievement_usecases.dart';
 import 'package:bldr_fitness/features/auth/domain/repositories/auth_repository.dart';
 import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart';
 import 'package:bldr_fitness/services/auth_service.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
+import 'package:bldr_fitness/shared/presentation/dashboard/home_v2_formatters.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 
-/// D3 — fileira de chips roláveis: Streak · Treinos/mês · Tempo total ·
-/// Conquistas.
+/// D3 — chips de consistência (v2): Streak · Treinos/mês · Tempo total.
 ///
 /// Absorve dado que antes vivia em outros widgets do Dashboard, sem alterar
 /// nenhuma consulta:
@@ -33,7 +33,11 @@ class _TodayMetricsWidgetState extends State<TodayMetricsWidget> {
   int _totalMinutes = 0;
   int _streak = 0;
   bool _streakAtRisk = false;
+  // Conquistas saíram da Home v2 (decisão 4). A consulta continua no código
+  // (`_loadAchievements`), mas não é disparada enquanto não houver slot.
+  // ignore: unused_field
   int _unlockedAchievements = 0;
+  // ignore: unused_field
   int _totalAchievements = 0;
   bool _isLoading = true;
 
@@ -42,7 +46,6 @@ class _TodayMetricsWidgetState extends State<TodayMetricsWidget> {
     super.initState();
     _load();
     _loadStreak();
-    _loadAchievements();
   }
 
   Future<void> _load() async {
@@ -129,7 +132,8 @@ class _TodayMetricsWidgetState extends State<TodayMetricsWidget> {
   }
 
   /// Conquistas — mesmos use cases que o AchievementsWidget usa, mais o
-  /// catálogo completo para exibir a fração "N/total" (mockup).
+  /// catálogo completo para exibir a fração "N/total". Sem chip na Home v2.
+  // ignore: unused_element
   Future<void> _loadAchievements() async {
     final userId = getIt<AuthRepository>().currentUser?.id;
     if (userId == null) return;
@@ -147,122 +151,46 @@ class _TodayMetricsWidgetState extends State<TodayMetricsWidget> {
     } catch (_) {}
   }
 
-  String _formatDuration() {
-    if (_totalMinutes == 0) return '—';
-    final h = _totalMinutes ~/ 60;
-    final m = _totalMinutes % 60;
-    if (h == 0) return '${m}m';
-    if (m == 0) return '${h}h';
-    return '${h}h ${m}m';
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    // O zero é informativo no streak e nos contadores de progresso
-    // (REDESIGN_SPEC, "Estados vazios") — por isso não são ocultados.
-    // Hierarquia (mockup): ícone → valor COM unidade → label da categoria.
+    // O zero é informativo no streak e nos contadores (REDESIGN_SPEC,
+    // "Estados vazios") — por isso não são ocultados.
     final showRisk = _streakAtRisk && _streak > 0;
-    final streakValueColor =
-        showRisk ? BldrColors.goldBright : BldrColors.textPrimary;
 
-    final cards = <Widget>[
-      GestureDetector(
-        onTap: showRisk
-            ? () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(
-                      'Treine hoje para manter seu streak de $_streak dias!'),
-                  backgroundColor: const Color(0xFFFF6432),
-                  behavior: SnackBarBehavior.floating,
-                ))
-            : null,
-        child: _StatCard(
-          icon: Icons.local_fire_department_outlined,
-          value: l10n.dashboard_streak_value(_streak),
-          label: l10n.dashboard_streak_label,
-          valueColor: streakValueColor,
-        ),
-      ),
-      _StatCard(
-        icon: Icons.calendar_today_outlined,
-        value: _isLoading ? '—' : '$_workoutsThisMonth',
-        label: l10n.dashboard_workouts_month_label,
-      ),
-      _StatCard(
-        icon: Icons.timer_outlined,
-        value: _isLoading ? '—' : _formatDuration(),
-        label: l10n.dashboard_total_time_label,
-      ),
-      _StatCard(
-        icon: Icons.emoji_events_outlined,
-        value: '$_unlockedAchievements/$_totalAchievements',
-        label: l10n.dashboard_achievements_label,
-      ),
-    ];
-
-    return SizedBox(
-      height: 96,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        // Padding no ListView (não margin nos filhos) — evita o primeiro
-        // chip cortado à esquerda.
-        padding: BldrSpacing.pageInsets,
-        physics: const BouncingScrollPhysics(),
-        itemCount: cards.length,
-        separatorBuilder: (_, __) => const SizedBox(width: BldrSpacing.gapCard),
-        itemBuilder: (_, i) => cards[i],
-      ),
-    );
-  }
-}
-
-/// D3 — card vertical de estatística: ícone (15px) → valor grande → label.
-/// Os ícones permanecem dourados; [valueColor] permite destacar somente o
-/// valor de um indicador específico.
-class _StatCard extends StatelessWidget {
-  const _StatCard({
-    required this.icon,
-    required this.value,
-    required this.label,
-    this.valueColor,
-  });
-
-  final IconData icon;
-  final String value;
-  final String label;
-  final Color? valueColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 106,
-      child: BldrGlassCard(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 15, color: BldrColors.goldSolid),
-            const SizedBox(height: 6),
-            SizedBox(
-              width: double.infinity,
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  value,
-                  maxLines: 1,
-                  softWrap: false,
-                  style: BldrText.kpiSm.copyWith(
-                    color: valueColor ?? BldrColors.textPrimary,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 1),
-            Text(label, style: BldrText.meta),
-          ],
-        ),
+    // Chips v2 (Figma "03 — CONSISTÊNCIA"): 3 cards 81 × 78, gap 13,
+    // centralizados. O chip de Conquistas saiu (decisão 4).
+    return Center(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          BldrStatChip(
+            iconAsset: 'assets/images/v2/icons/stat_flame.svg',
+            value: l10n.dashboard_streak_value(_streak),
+            label: l10n.dashboard_streak_label,
+            valueColor: showRisk ? BldrColorsV2.goldBright : null,
+            onTap: showRisk
+                ? () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(
+                          'Treine hoje para manter seu streak de $_streak dias!'),
+                      backgroundColor: const Color(0xFFFF6432),
+                      behavior: SnackBarBehavior.floating,
+                    ))
+                : null,
+          ),
+          const SizedBox(width: BldrSpacingV2.chipGap),
+          BldrStatChip(
+            iconAsset: 'assets/images/v2/icons/stat_barbell.svg',
+            value: _isLoading ? '—' : '$_workoutsThisMonth',
+            label: l10n.dashboard_workouts_month_label,
+          ),
+          const SizedBox(width: BldrSpacingV2.chipGap),
+          BldrStatChip(
+            iconAsset: 'assets/images/v2/icons/stat_alarm.svg',
+            value: _isLoading ? '—' : HomeV2Format.totalDuration(_totalMinutes),
+            label: l10n.dashboard_total_time_label,
+          ),
+        ],
       ),
     );
   }

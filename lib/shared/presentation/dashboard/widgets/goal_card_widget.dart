@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:bldr_fitness/design_system/bldr_components.dart';
+import 'package:bldr_fitness/design_system/bldr_v2_components.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 import 'package:bldr_fitness/services/auth_service.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
@@ -93,57 +93,19 @@ class _GoalCardWidgetState extends State<GoalCardWidget> {
     final target  = (_goal!['target_value']  as num?)?.toDouble() ?? 0;
     final unit    = _goal!['unit']           as String? ?? '';
     final progress = target > 0 ? (current / target).clamp(0.0, 1.0) : 0.0;
-    final pct      = (progress * 100).round();
 
-    // D5 — bloco do grid 2×2. O card inteiro é clicável (leva ao Progresso),
-    // no lugar dos dois botões que ocupavam altura do card antigo.
-    // Ordem (mockup): [label + badge %] → [valor + unidade] → [meta] → [barra].
-    return BldrGlassCard(
+    // Tile v2 (Figma "Peso alvo"): label → valor + unidade → meta → barra.
+    // O selo de % saiu da Home v2 (decisão 4). O card inteiro leva ao
+    // Progresso.
+    return BldrTileV2(
       onTap: widget.onViewProgressPressed,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: BldrText.meta,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (target > 0) BldrBadge(label: '$pct%'),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Flexible(
-                child: Text(
-                  _formatValue(current),
-                  style: BldrText.kpiLg,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (unit.isNotEmpty) ...[
-                const SizedBox(width: 4),
-                Text(unit, style: BldrText.unit),
-              ],
-            ],
-          ),
-          if (target > 0) ...[
-            const SizedBox(height: 2),
-            Text(AppLocalizations.of(context).dashboard_goal_target(_formatValue(target), unit), style: BldrText.meta),
-            const SizedBox(height: 12),
-            BldrProgressBar(value: progress, gradient: true),
-          ],
-        ],
-      ),
+      label: title,
+      value: unit.isEmpty ? _formatValue(current) : '${_formatValue(current)} $unit',
+      caption: target > 0
+          ? AppLocalizations.of(context)
+              .dashboard_goal_target(_formatValue(target), unit)
+          : null,
+      progress: target > 0 ? progress.toDouble() : null,
     );
   }
 
@@ -155,41 +117,25 @@ class _GoalCardWidgetState extends State<GoalCardWidget> {
     return s[0].toUpperCase() + s.substring(1).toLowerCase();
   }
 
-  /// Skeleton com o MESMO layout do card final (título, KPI, meta), só com
-  /// "—" no lugar dos valores — nunca uma tela vazia enquanto carrega.
+  /// Skeleton com o MESMO layout do tile final, só com "—" nos valores.
   Widget _buildSkeleton() {
-    // context está disponível via State
     final l10n = AppLocalizations.of(context);
-    return BldrGlassCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l10n.dashboard_weight_goal_label, style: BldrText.meta),
-          const SizedBox(height: 14),
-          Text('—', style: BldrText.kpiLg),
-          const SizedBox(height: 2),
-          Text(l10n.dashboard_goal_target('—', ''), style: BldrText.meta),
-          const SizedBox(height: 12),
-          const BldrProgressBar(value: 0),
-        ],
-      ),
+    return BldrTileV2(
+      label: l10n.dashboard_weight_goal_label,
+      value: '—',
+      caption: l10n.dashboard_goal_target('—', ''),
+      progress: 0,
     );
   }
 
   Widget _buildEmpty() {
     final l10n = AppLocalizations.of(context);
-    return BldrGlassCard(
+    return BldrTileV2(
       onTap: widget.onViewProgressPressed,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l10n.dashboard_weight_goal_label, style: BldrText.meta),
-          const SizedBox(height: 14),
-          Text(l10n.dashboard_goal_empty_title, style: BldrText.body),
-          const SizedBox(height: 6),
-          Text(l10n.dashboard_goal_empty_subtitle, style: BldrText.meta),
-        ],
-      ),
+      label: l10n.dashboard_weight_goal_label,
+      value: l10n.dashboard_goal_empty_title,
+      valueStyle: BldrTextV2.macroValue.copyWith(fontSize: 13),
+      caption: l10n.dashboard_goal_empty_subtitle,
     );
   }
 }

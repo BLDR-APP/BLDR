@@ -1,24 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
 
 import 'package:bldr_fitness/core/app_export.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
+import 'package:bldr_fitness/design_system/bldr_v2_components.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/features/auth/domain/repositories/auth_repository.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/paused_workout_summary.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/workout_template.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/workout_usecases.dart'
     as uc;
 import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart'
     as clubUc;
 import 'package:bldr_fitness/features/workouts/presentation/mappers/legacy_ui_maps.dart';
-import 'package:bldr_fitness/widgets/continue_workout_card.dart';
-import 'package:bldr_fitness/features/achievements/presentation/achievements/achievement_provider.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/club_active_workout_screen.dart';
 import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/active_workout_screen.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
+import 'package:bldr_fitness/shared/presentation/dashboard/home_v2_formatters.dart';
+import 'package:bldr_fitness/shared/presentation/dashboard/today_workout_state.dart';
+import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/weekly_plan_screen.dart';
 import 'package:bldr_fitness/shared/providers/workout_session_provider.dart';
 
 class ActiveWorkoutCardWidget extends StatefulWidget {
@@ -45,6 +49,23 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
   // de plano semanal, só o resultado imediato do onboarding).
   Map<String, dynamic>? _todayTemplate;
   bool _startingToday = false;
+
+  // Template de hoje com exercícios — grupos musculares, nº de exercícios e
+  // duração estimada do card v2. Mesma busca da tela de Treinos
+  // (GetTemplateWithExercises / GetClubTemplateWithExercises pelo id do plano).
+  WorkoutTemplate? _todayDetails;
+
+  // Home v2 — estados do card (Figma 57:386 / 57:385 / 57:380 / 57:379).
+  /// Resumos de treinos não concluídos ANTES da deduplicação: incluem o
+  /// treino ativo (a consulta de pausados devolve todo `is_completed=false`).
+  List<PausedWorkoutSummary> _rawPaused = const [];
+
+  /// `PlanDay.isRestDay` do dia de hoje.
+  bool _todayIsRest = false;
+
+  /// Detalhes (séries + exercícios) do treino em andamento — grupos
+  /// musculares. Mesma busca usada pelo card concluído.
+  WorkoutSession? _inProgressDetails;
 
   WorkoutSession? _completedToday; // não nulo → exibe card "concluído"
 
@@ -155,10 +176,14 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
           activeWorkout = active;
           pausedSummaries = dedupedPaused;
           _todayTemplate = todayTemplate;
+          _rawPaused = rawPaused;
+          _todayIsRest = todayPlanDay?.isRestDay ?? false;
           _completedToday = completedToday;
           isLoading = false;
           hasError = false;
         });
+        _loadTodayDetails(todayTemplate);
+        _loadInProgressDetails();
       }
     } catch (error) {
       debugPrint('Erro ao carregar treino ativo: $error');
@@ -168,6 +193,68 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
           hasError = true;
         });
     }
+  }
+
+  /// Detalhes do treino de hoje para o card v2. Falha silenciosa: sem
+  /// detalhes, as linhas de músculos/meta ficam vazias (altura preservada).
+  Future<void> _loadTodayDetails(Map<String, dynamic>? today) async {
+    final id = today?['id'] as String?;
+    if (id == null) {
+      if (mounted && _todayDetails != null) {
+        setState(() => _todayDetails = null);
+      }
+      return;
+    }
+    final result = today!['source'] == 'club'
+        ? await getIt<clubUc.GetClubTemplateWithExercises>()(id)
+        : await getIt<uc.GetTemplateWithExercises>()(id);
+    if (!mounted || _todayTemplate?['id'] != id) return;
+    setState(() => _todayDetails = result.valueOrNull);
+  }
+
+  /// Treino não concluído mostrado no card v2: o ativo, senão o pausado
+  /// mais recente (decisão aprovada: só um card na Home).
+  ({String id, String name, String source, DateTime? startedAt})?
+      get _unfinished {
+    final active = activeWorkout;
+    if (active != null) {
+      final started = active['started_at'] as String?;
+      return (
+        id: active['id'] as String,
+        name: active['name'] as String? ?? 'Treino',
+        source: 'free',
+        startedAt: started == null ? null : DateTime.parse(started),
+      );
+    }
+    if (pausedSummaries.isEmpty) return null;
+    final p = pausedSummaries.first;
+    final started = p['started_at'];
+    return (
+      id: p['id'] as String,
+      name: (p['name'] as String?) ?? 'Treino',
+      source: (p['source'] as String?) ?? 'free',
+      startedAt: started is DateTime
+          ? started
+          : (started is String ? DateTime.tryParse(started) : null),
+    );
+  }
+
+  Future<void> _loadInProgressDetails() async {
+    final u = _unfinished;
+    if (u == null) return;
+    final result = u.source == 'club'
+        ? await getIt<clubUc.GetClubWorkoutDetails>()(u.id)
+        : await getIt<uc.GetWorkoutDetails>()(u.id);
+    if (!mounted || _unfinished?.id != u.id) return;
+    setState(() => _inProgressDetails = result.valueOrNull);
+  }
+
+  Future<void> _openWeeklyPlan() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const WeeklyPlanScreen()),
+    );
+    if (mounted) _loadActiveWorkout();
   }
 
   Future<void> _startTodayTemplate() async {
@@ -260,18 +347,6 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
     }
   }
 
-  String _formatDuration(DateTime startTime) {
-    final duration = DateTime.now().difference(startTime);
-    final hours = duration.inHours;
-    final minutes = duration.inMinutes % 60;
-
-    if (hours > 0) {
-      return '${hours}h ${minutes}m';
-    } else {
-      return '${minutes}m';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -286,157 +361,156 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
       return _buildUnauthenticatedCard();
     }
 
-    // If there are paused workouts, show "Continuar" cards
-    if (pausedSummaries.isNotEmpty) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 6.w),
-            child: Text(
-              AppLocalizations.of(context).dashboard_continue_workout_label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-              ),
-            ),
-          ),
-          SizedBox(height: 1.5.h),
-          ...pausedSummaries.map((s) {
-            final workoutId = s['id'] as String;
-            final source = (s['source'] as String?) ?? 'free';
-            return Padding(
-              padding: EdgeInsets.fromLTRB(6.w, 0, 6.w, 1.2.h),
-              child: Dismissible(
-                key: ValueKey('paused_dash_$workoutId'),
-                direction: DismissDirection.endToStart,
-                confirmDismiss: (_) async {
-                  await _confirmAndDelete(workoutId, source);
-                  // _confirmAndDelete already handles setState; tell
-                  // Dismissible not to animate removal itself.
-                  return false;
-                },
-                background: Container(
-                  alignment: Alignment.centerRight,
-                  padding: EdgeInsets.only(right: 4.w),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFC84040),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: const Icon(Icons.delete_outline,
-                      color: Colors.white, size: 24),
-                ),
-                child: ContinueWorkoutCard(
-                  summary: s,
-                  onResume: () => _resumeWorkout(s),
-                  onDiscard: () => _confirmAndDelete(workoutId, source),
-                ),
-              ),
-            );
-          }),
-        ],
-      );
-    }
-
-    if (_completedToday != null) return _buildDoneCard(_completedToday!);
-
-    return activeWorkout != null
-        ? _buildActiveWorkoutCard()
-        : _buildStartWorkoutCard();
+    final state = resolveTodayWorkoutState(
+      hasUnfinishedWorkout: _unfinished != null,
+      completedToday: _completedToday != null,
+      hasTodayTemplate: _todayTemplate != null,
+      todayIsRestDay: _todayIsRest,
+    );
+    return switch (state) {
+      TodayWorkoutState.inProgress => _buildInProgressCardV2(),
+      TodayWorkoutState.done => _buildDoneCardV2(_completedToday!),
+      TodayWorkoutState.planned => _buildStartWorkoutCard(),
+      TodayWorkoutState.rest => _buildRestCardV2(),
+      TodayWorkoutState.noPlan => _buildNoPlanCardV2(),
+    };
   }
 
-  Widget _buildDoneCard(WorkoutSession session) {
-    final durSeconds = session.totalDurationSeconds ?? 0;
-    final durMin = durSeconds ~/ 60;
-    final durH = durMin ~/ 60;
-    final durLabel = durH > 0 ? '${durH}h ${durMin % 60}min' : '${durMin}min';
+  // ── Home v2 — casca comum dos estados ─────────────────────────────────
 
-    final setsCount = session.completedSetCount;
-    final volumeKg = session.completedVolumeKg;
-    final completedViaWhoop = session.completedViaWhoop;
-
-    final completedAtLabel = () {
-      final ct = session.completedAt?.toLocal();
-      if (ct == null) return '';
-      final h = ct.hour.toString().padLeft(2, '0');
-      final m = ct.minute.toString().padLeft(2, '0');
-      return '$h:$m';
-    }();
-
+  Widget _v2Card({
+    required String label,
+    required String title,
+    required String detail,
+    String meta = '',
+    Widget? cta,
+    Widget? stats,
+    Widget? corner,
+  }) {
+    final pageX = BldrSpacingV2.pageX(MediaQuery.sizeOf(context).width);
     return Padding(
-      padding: BldrSpacing.pageInsets,
-      child: BldrHeroCard(
-        cornerGlow: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: AppTheme.successGreen.withValues(alpha: 0.18),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.check_rounded,
-                      color: AppTheme.successGreen, size: 16),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  AppLocalizations.of(context).dashboard_workout_today_title,
-                  style: BldrText.label,
-                ),
-                if (completedAtLabel.isNotEmpty) ...[
-                  const Spacer(),
-                  Text(completedAtLabel, style: BldrText.meta),
-                ],
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              session.templateName ?? session.name,
-              style: BldrText.kpiMd,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              completedViaWhoop
-                  ? 'Concluído via WHOOP'
-                  : AppLocalizations.of(context).dashboard_workout_done_label,
-              style: BldrText.meta.copyWith(color: AppTheme.successGreen),
-            ),
-            const SizedBox(height: 14),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                _DoneStat(
-                  icon: Icons.timer_outlined,
-                  value: durLabel,
-                  label: AppLocalizations.of(context)
-                      .dashboard_done_duration_label,
-                ),
-                _DoneStat(
-                  icon: Icons.fitness_center_rounded,
-                  value:
-                      completedViaWhoop && setsCount == 0 ? '—' : '$setsCount',
-                  label: AppLocalizations.of(context).dashboard_done_sets_label,
-                ),
-                if (volumeKg > 0)
-                  _DoneStat(
-                    icon: Icons.scale_rounded,
-                    value: volumeKg >= 1000
-                        ? '${(volumeKg / 1000).toStringAsFixed(1)}t'
-                        : '${volumeKg.toStringAsFixed(0)}kg',
-                    label: AppLocalizations.of(context)
-                        .dashboard_done_volume_label,
-                  ),
-              ],
-            ),
-          ],
-        ),
+      padding: EdgeInsets.symmetric(horizontal: pageX),
+      child: BldrTrainCardV2(
+        label: label,
+        title: title,
+        detail: detail,
+        meta: meta,
+        cta: cta,
+        stats: stats,
+        corner: corner,
+      ),
+    );
+  }
+
+  /// Dia de descanso (57:386): CTA neutro "VER MEU PLANO ›".
+  Widget _buildRestCardV2() {
+    final l10n = AppLocalizations.of(context);
+    return _v2Card(
+      label: l10n.dashboard_v2_workout_today_label,
+      title: l10n.dashboard_rest_title,
+      detail: l10n.dashboard_rest_subtitle,
+      meta: l10n.dashboard_rest_meta,
+      cta: BldrOutlineCta(
+        label: l10n.dashboard_rest_cta,
+        variant: BldrCtaVariant.neutral,
+        trailingChevron: true,
+        onPressed: _openWeeklyPlan,
+      ),
+    );
+  }
+
+  /// Sem treino planejado (57:385): "CRIAR MEU PLANO ›" abre o editor do
+  /// plano semanal (mesma tela de criar/editar).
+  Widget _buildNoPlanCardV2() {
+    final l10n = AppLocalizations.of(context);
+    return _v2Card(
+      label: l10n.dashboard_v2_workout_today_label,
+      title: l10n.dashboard_noplan_title,
+      detail: l10n.dashboard_noplan_subtitle,
+      meta: l10n.dashboard_noplan_meta,
+      cta: BldrOutlineCta(
+        label: l10n.dashboard_noplan_cta,
+        trailingChevron: true,
+        onPressed: _openWeeklyPlan,
+      ),
+    );
+  }
+
+  /// Em andamento (57:380): exercícios feitos/total e tempo decorrido.
+  /// "RETOMAR" usa a ação de retomar existente. Arrastar para a esquerda
+  /// descarta, com a confirmação atual.
+  Widget _buildInProgressCardV2() {
+    final l10n = AppLocalizations.of(context);
+    final u = _unfinished!;
+    final summary = _rawPaused.where((p) => p.id == u.id).firstOrNull;
+    final details = _inProgressDetails;
+    final meta = [
+      if (summary != null && summary.totalExercises > 0)
+        l10n.dashboard_v2_exercises_progress(
+            summary.completedExercises, summary.totalExercises),
+      if (u.startedAt != null) HomeV2Format.elapsed(u.startedAt!, DateTime.now()),
+    ].join('    ·    ');
+
+    final card = _v2Card(
+      label: l10n.dashboard_v2_in_progress_label,
+      title: u.name,
+      detail: details == null ? '' : HomeV2Format.muscleGroupsFromSession(details),
+      meta: meta,
+      cta: BldrOutlineCta(
+        label: l10n.dashboard_v2_resume_cta,
+        onPressed: () => _resumeWorkout({
+          'id': u.id,
+          'name': u.name,
+          'source': u.source,
+        }),
+      ),
+    );
+
+    return Dismissible(
+      key: ValueKey('in_progress_${u.id}'),
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (_) async {
+        await _confirmAndDelete(u.id, u.source);
+        return false;
+      },
+      background: const SizedBox.shrink(),
+      child: card,
+    );
+  }
+
+  /// Concluído (57:379): sem CTA, check duplo verde e três métricas.
+  Widget _buildDoneCardV2(WorkoutSession session) {
+    final l10n = AppLocalizations.of(context);
+    final via = session.completedViaWhoop;
+    final muscles = HomeV2Format.muscleGroupsFromSession(session);
+    final sets = session.completedSetCount;
+    return _v2Card(
+      label: l10n.dashboard_v2_done_label,
+      title: session.templateName ?? session.name,
+      detail: via && muscles.isEmpty ? l10n.dashboard_v2_done_via_whoop : muscles,
+      corner: SvgPicture.asset('assets/images/v2/icons/done_checks.svg',
+          width: 24, height: 24),
+      stats: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          BldrDoneStatV2(
+            icon: 'assets/images/v2/icons/done_stopwatch.svg',
+            value: HomeV2Format.doneDuration(session.totalDurationSeconds ?? 0),
+            label: l10n.dashboard_v2_done_duration,
+          ),
+          const SizedBox(width: 17),
+          BldrDoneStatV2(
+            icon: 'assets/images/v2/icons/done_barbell.svg',
+            value: via && sets == 0 ? '—' : '$sets',
+            label: l10n.dashboard_v2_done_sets,
+          ),
+          const SizedBox(width: 17),
+          BldrDoneStatV2(
+            icon: 'assets/images/v2/icons/done_weight.svg',
+            value: HomeV2Format.volume(session.completedVolumeKg),
+            label: l10n.dashboard_v2_done_volume,
+          ),
+        ],
       ),
     );
   }
@@ -640,147 +714,48 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
     );
   }
 
-  Widget _buildActiveWorkoutCard() {
-    final workout = activeWorkout!;
-    final startTime = DateTime.parse(workout['started_at']);
-    final workoutName = workout['name'] as String? ?? 'Workout';
-    final templateName = workout['workout_templates'] != null
-        ? workout['workout_templates']['name'] as String?
-        : null;
-
-    return Padding(
-      padding: BldrSpacing.pageInsets,
-      child: BldrHeroCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(AppLocalizations.of(context).dashboard_workout_in_progress,
-                style: BldrText.label),
-            const SizedBox(height: 6),
-            // Dinâmico: nome real da sessão.
-            Text(
-              workoutName,
-              style: BldrText.kpiMd,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            // G10 — título curto + detalhe no subtítulo.
-            if (templateName != null) ...[
-              const SizedBox(height: 4),
-              Text(
-                templateName,
-                style: BldrText.meta,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-            const SizedBox(height: 12),
-
-            // Duração corrente da sessão.
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.timer_outlined,
-                    color: BldrColors.goldBright, size: 15),
-                const SizedBox(width: 6),
-                Text(_formatDuration(startTime), style: BldrText.meta),
-              ],
-            ),
-            const SizedBox(height: BldrSpacing.padCard),
-
-            // Action Buttons
-            Row(
-              children: [
-                // Expanded(
-                //   child: OutlinedButton.icon(
-                //     onPressed: () {
-                //       ScaffoldMessenger.of(context).showSnackBar(
-                //         SnackBar(
-                //           content: Text('Resume workout feature coming soon'),
-                //           backgroundColor: AppTheme.warningAmber,
-                //           behavior: SnackBarBehavior.floating,
-                //         ),
-                //       );
-                //     },
-                //     style: OutlinedButton.styleFrom(
-                //       foregroundColor: AppTheme.accentGold,
-                //       side: BorderSide(color: AppTheme.accentGold, width: 1.5),
-                //       padding: EdgeInsets.symmetric(vertical: 3.w),
-                //       shape: RoundedRectangleBorder(
-                //         borderRadius: BorderRadius.circular(12),
-                //       ),
-                //     ),
-                //     icon: CustomIconWidget(
-                //       iconName: 'play_arrow',
-                //       color: AppTheme.accentGold,
-                //       size: 4.w,
-                //     ),
-                //     label: Text(
-                //       'Resumir',
-                //       style: AppTheme.darkTheme.textTheme.titleSmall?.copyWith(
-                //         color: AppTheme.accentGold,
-                //         fontWeight: FontWeight.w600,
-                //       ),
-                //     ),
-                //   ),
-                // ),
-                // SizedBox(width: 3.w),
-                // G4 — verde eliminado; ação principal em dourado.
-                Expanded(
-                  child: BldrPrimaryButton(
-                    label: AppLocalizations.of(context)
-                        .dashboard_finish_workout_btn,
-                    icon: Icons.check_rounded,
-                    onPressed: _showCompleteWorkoutDialog,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   /// D4 — card hero "Treino de hoje" com botão primário interno.
   ///
   /// Quando o onboarding gerou um plano e hoje tem treino nele (L4), mostra
   /// o nome real do treino em vez do texto genérico e inicia direto esse
   /// template.
+  /// Treino de hoje — estado PLANEJADO no visual v2 (Figma 57:387, dentro
+  /// do frame base 57:388). Card 386 × 189 só com borda, glow no canto
+  /// superior direito e CTA com borda.
   Widget _buildStartWorkoutCard() {
+    final l10n = AppLocalizations.of(context);
     final today = _todayTemplate;
-    return Padding(
-      padding: BldrSpacing.pageInsets,
-      child: BldrHeroCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(AppLocalizations.of(context).dashboard_workout_today_title,
-                style: BldrText.label),
-            const SizedBox(height: 6),
-            Text(
-                today != null
-                    ? (today['name'] ?? 'Treino')
-                    : AppLocalizations.of(context).dashboard_workout_ready,
-                style: BldrText.kpiMd),
-            const SizedBox(height: 4),
-            Text(
-                today != null
-                    ? AppLocalizations.of(context)
-                        .dashboard_workout_havok_generated
-                    : AppLocalizations.of(context)
-                        .dashboard_workout_next_session,
-                style: BldrText.meta),
-            const SizedBox(height: BldrSpacing.padCard),
-            BldrPrimaryButton(
-              label: AppLocalizations.of(context).dashboard_workout_start_btn,
-              icon: Icons.play_arrow_rounded,
-              onPressed: today != null
-                  ? (_startingToday ? null : _startTodayTemplate)
-                  : widget.onStartPressed,
-            ),
-          ],
-        ),
+    final details = _todayDetails;
+
+    final String title;
+    final String muscles;
+    final String meta;
+    if (today != null) {
+      title = today['name'] as String? ?? 'Treino';
+      muscles = details == null ? '' : HomeV2Format.muscleGroups(details);
+      final count = details?.exercises.length ?? 0;
+      final minutes = details?.estimatedDurationMinutes ?? 0;
+      meta = [
+        if (count > 0) l10n.dashboard_v2_exercises_count(count),
+        if (minutes > 0) l10n.dashboard_v2_workout_duration(minutes),
+      ].join('    ·    ');
+    } else {
+      // Sem plano (node 57:385, próxima etapa): textos atuais no layout v2.
+      title = l10n.dashboard_workout_ready;
+      muscles = l10n.dashboard_workout_next_session;
+      meta = '';
+    }
+
+    return _v2Card(
+      label: l10n.dashboard_v2_workout_today_label,
+      title: title,
+      detail: muscles,
+      meta: meta,
+      cta: BldrOutlineCta(
+        label: l10n.dashboard_v2_start_workout_cta,
+        onPressed: today != null
+            ? (_startingToday ? null : _startTodayTemplate)
+            : widget.onStartPressed,
       ),
     );
   }
@@ -816,111 +791,5 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
     setState(() => pausedSummaries.removeWhere((w) => w['id'] == workoutId));
     final result = await getIt<uc.DeletePausedWorkout>()(workoutId, source);
     if (result.isFailure && mounted) _loadActiveWorkout();
-  }
-
-  // ── helpers ──────────────────────────────────────────────────────────────
-
-  void _showCompleteWorkoutDialog() {
-    final stateContext = context;
-    showDialog(
-      context: stateContext,
-      builder: (dialogContext) {
-        final dl = AppLocalizations.of(dialogContext);
-        return AlertDialog(
-          backgroundColor: AppTheme.dialogDark,
-          title: Text(
-            dl.dashboard_finish_workout_dialog_title,
-            style: TextStyle(color: AppTheme.textPrimary),
-          ),
-          content: Text(
-            dl.dashboard_finish_workout_dialog_body,
-            style: TextStyle(color: AppTheme.textSecondary),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(dl.common_cancel,
-                  style: TextStyle(color: AppTheme.textSecondary)),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(dialogContext);
-
-                try {
-                  final result = await getIt<uc.CompleteWorkout>()(
-                    workoutId: activeWorkout!['id'],
-                  );
-                  final failure = result.failureOrNull;
-                  if (failure != null) throw Exception(failure.message);
-
-                  // Verificar conquistas desbloqueadas pelo treino concluído
-                  if (mounted) {
-                    await stateContext
-                        .read<AchievementProvider>()
-                        .checkAchievements('workout');
-                  }
-
-                  if (mounted) {
-                    ScaffoldMessenger.of(stateContext).showSnackBar(
-                      SnackBar(
-                        content: Text(AppLocalizations.of(stateContext)
-                            .dashboard_workout_completed_success),
-                        backgroundColor: AppTheme.successGreen,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  }
-
-                  // Refresh the card
-                  _loadActiveWorkout();
-                } catch (error) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(stateContext).showSnackBar(
-                      SnackBar(
-                        content: Text(AppLocalizations.of(stateContext)
-                            .dashboard_finish_workout_error(error.toString())),
-                        backgroundColor: AppTheme.errorRed,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  }
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.successGreen,
-                foregroundColor: AppTheme.textPrimary,
-              ),
-              child: Text(dl.dashboard_complete_workout_btn),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _DoneStat extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final String label;
-
-  const _DoneStat({
-    required this.icon,
-    required this.value,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, color: BldrColors.goldBright, size: 16),
-        const SizedBox(height: 4),
-        Text(value,
-            style: BldrText.meta
-                .copyWith(fontWeight: FontWeight.w700, color: Colors.white)),
-        Text(label, style: BldrText.meta),
-      ],
-    );
   }
 }
