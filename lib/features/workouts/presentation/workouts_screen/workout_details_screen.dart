@@ -19,9 +19,9 @@ import 'package:bldr_fitness/shared/presentation/widgets/bldr_muscle_map.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 
 /// Resultado ao sair dos detalhes, tratado pelo hub.
-enum WorkoutDetailsResult { start, changed, deleted }
+enum WorkoutDetailsResult { start, changed, deleted, duplicated }
 
-enum _MenuAction { edit, delete }
+enum _MenuAction { edit, duplicate, delete }
 
 /// Detalhes do treino v2 (Figma 316:113 / 320:113 / 320:214).
 class WorkoutDetailsScreen extends StatefulWidget {
@@ -103,6 +103,33 @@ class _WorkoutDetailsScreenState extends State<WorkoutDetailsScreen> {
       _changed = true;
       _load();
     }
+  }
+
+  bool _duplicating = false;
+
+  /// Cópia com exercícios e séries (TREINOS_V2, plano aprovado).
+  Future<void> _duplicate() async {
+    final t = _template;
+    if (t == null || _duplicating) return;
+    final l10n = AppLocalizations.of(context);
+    _duplicating = true;
+    final copy = WorkoutDetailsFormat.duplicate(
+      t,
+      name: l10n.wd_copy_name(t.name),
+      durationMinutes: WorkoutDurationEstimator.estimateTemplate(t.exercises),
+    );
+    final result = await getIt<CreateWorkoutTemplate>()(copy);
+    _duplicating = false;
+    if (!mounted) return;
+    if (result.isFailure) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(l10n.wd_duplicate_error),
+        backgroundColor: BldrColors.danger,
+        behavior: SnackBarBehavior.floating,
+      ));
+      return;
+    }
+    _close(WorkoutDetailsResult.duplicated);
   }
 
   Future<void> _delete() async {
@@ -222,12 +249,15 @@ class _WorkoutDetailsScreenState extends State<WorkoutDetailsScreen> {
           ),
           onSelected: (a) => switch (a) {
             _MenuAction.edit => _edit(),
+            _MenuAction.duplicate => _duplicate(),
             _MenuAction.delete => _delete(),
           },
           itemBuilder: (_) => [
             _menuItem(_MenuAction.edit, TablerIcons.pencil, l10n.wd_edit,
                 BldrDetailsColorsV2.value),
-            // "Duplicar treino" aguarda aprovação do plano (TREINOS_V2).
+            const PopupMenuDivider(height: 1),
+            _menuItem(_MenuAction.duplicate, TablerIcons.copy,
+                l10n.wd_duplicate, BldrDetailsColorsV2.value),
             const PopupMenuDivider(height: 1),
             _menuItem(_MenuAction.delete, TablerIcons.trash_x, l10n.wd_delete,
                 BldrDetailsColorsV2.destructive),

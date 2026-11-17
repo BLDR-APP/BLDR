@@ -2381,5 +2381,9 @@
   "@wd_ex_count": {"placeholders": {"n": {"type": "int"}}},
   "@wd_sets_count": {"placeholders": {"n": {"type": "int"}}},
   "@wd_reps": {"placeholders": {"range": {"type": "String"}}},
-  "@wd_delete_body": {"placeholders": {"name": {"type": "String"}}}
+  "@wd_delete_body": {"placeholders": {"name": {"type": "String"}}},
+  "wd_copy_name": "{name} (cópia)",
+  "wd_duplicated": "Treino duplicado",
+  "wd_duplicate_error": "Não foi possível duplicar o treino.",
+  "@wd_copy_name": {"placeholders": {"name": {"type": "String"}}}
 }

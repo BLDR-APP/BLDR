@@ -2347,5 +2347,8 @@
   "ex_sets": "SERIE",
   "ex_how": "COME ESEGUIRE",
   "ex_tip": "CONSIGLIO DI ESECUZIONE",
-  "ex_back": "TORNA ALL'ALLENAMENTO"
+  "ex_back": "TORNA ALL'ALLENAMENTO",
+  "wd_copy_name": "{name} (copia)",
+  "wd_duplicated": "Allenamento duplicato",
+  "wd_duplicate_error": "Impossibile duplicare l'allenamento."
 }

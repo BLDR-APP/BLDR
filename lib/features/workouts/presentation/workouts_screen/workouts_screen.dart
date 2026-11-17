@@ -370,6 +370,13 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
         _startWorkout(template);
       case WorkoutDetailsResult.changed:
         _loadData();
+      case WorkoutDetailsResult.duplicated:
+        _loadData();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(l10n.wd_duplicated),
+          backgroundColor: BldrColors.surface,
+          behavior: SnackBarBehavior.floating,
+        ));
       case WorkoutDetailsResult.deleted:
         _loadData();
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(

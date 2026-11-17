@@ -8710,6 +8710,24 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'VOLTAR AO TREINO'**
   String get ex_back;
+
+  /// No description provided for @wd_copy_name.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} (cópia)'**
+  String wd_copy_name(String name);
+
+  /// No description provided for @wd_duplicated.
+  ///
+  /// In pt, this message translates to:
+  /// **'Treino duplicado'**
+  String get wd_duplicated;
+
+  /// No description provided for @wd_duplicate_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível duplicar o treino.'**
+  String get wd_duplicate_error;
 }
 
 class _AppLocalizationsDelegate

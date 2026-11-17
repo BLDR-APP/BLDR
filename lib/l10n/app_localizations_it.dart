@@ -4842,4 +4842,15 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get ex_back => 'TORNA ALL\'ALLENAMENTO';
+
+  @override
+  String wd_copy_name(String name) {
+    return '$name (copia)';
+  }
+
+  @override
+  String get wd_duplicated => 'Allenamento duplicato';
+
+  @override
+  String get wd_duplicate_error => 'Impossibile duplicare l\'allenamento.';
 }

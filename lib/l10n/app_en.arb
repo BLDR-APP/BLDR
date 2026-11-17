@@ -2347,5 +2347,8 @@
   "ex_sets": "SETS",
   "ex_how": "HOW TO DO IT",
   "ex_tip": "EXECUTION TIP",
-  "ex_back": "BACK TO WORKOUT"
+  "ex_back": "BACK TO WORKOUT",
+  "wd_copy_name": "{name} (copy)",
+  "wd_duplicated": "Workout duplicated",
+  "wd_duplicate_error": "Couldn't duplicate the workout."
 }

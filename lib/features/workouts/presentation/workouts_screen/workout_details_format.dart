@@ -72,4 +72,37 @@ abstract final class WorkoutDetailsFormat {
         ? null
         : 'https://static.exercisedb.dev/media/$id.gif';
   }
+
+  /// Cópia de um template para "Duplicar treino": sem id, nome [name],
+  /// do usuário (privado, origem "user"), com os exercícios na mesma ordem
+  /// e as séries uma a uma (`setDetails`). [durationMinutes] vem do
+  /// estimador (P1).
+  static WorkoutTemplate duplicate(WorkoutTemplate t,
+          {required String name, required int durationMinutes}) =>
+      WorkoutTemplate(
+        name: name,
+        description: t.description,
+        workoutType: t.workoutType,
+        estimatedDurationMinutes: durationMinutes,
+        difficultyLevel: t.difficultyLevel,
+        isPublic: false,
+        source: 'user',
+        exercises: [
+          for (final e in t.exercises)
+            TemplateExercise(
+              orderIndex: e.orderIndex,
+              sets: e.sets,
+              reps: e.reps,
+              durationSeconds: e.durationSeconds,
+              restSeconds: e.restSeconds,
+              weightKg: e.weightKg,
+              distanceMeters: e.distanceMeters,
+              notes: e.notes,
+              exerciseDbId: e.exerciseDbId,
+              exercise: e.exercise,
+              freeName: e.freeName,
+              setDetails: e.resolvedSets,
+            ),
+        ],
+      );
 }

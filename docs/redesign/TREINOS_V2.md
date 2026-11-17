@@ -426,7 +426,7 @@ Cada etapa termina com `dart analyze lib`, `flutter test test/features` e compar
 - **Sai do sheet antigo:** descrição, chips de nível/tipo e o sheet de
   técnica (substituído pelos detalhes do exercício). Nenhuma ação se perde.
 
-### Duplicar treino — plano (aguarda aprovação)
+### Duplicar treino — ✅ aprovado e implementado
 - Presentation-only, com use cases existentes: `GetTemplateWithExercises`
   (template completo) → cópia → `CreateWorkoutTemplate`.
 - Cópia: novo template sem id, nome "<Nome> (cópia)" (no .arb), mesmo tipo,
@@ -439,6 +439,6 @@ Cada etapa termina com `dart analyze lib`, `flutter test test/features` e compar
   Club (outra tabela) não mostram "Duplicar".
 - Depois: aviso "Treino duplicado", volta ao hub e a cópia aparece em
   "Meus treinos".
-- **Feito (exceto Duplicar, aguardando aprovação).** Validado em 320/440 px
+- **Feito.** Duplicar implementado após aprovação. Validado em 320/440 px
   e textScaler 1,3; em tela estreita a faixa de performance vira 2 × 2.
   Sem GIF disponível, a miniatura mostra o ícone de halter.

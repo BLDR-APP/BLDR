@@ -63,4 +63,39 @@ void main() {
     expect(WorkoutDetailsFormat.totalSets(t), 5);
     expect(WorkoutDetailsFormat.muscleGroups(t.exercises.first), 'Peito · Tríceps');
   });
+
+  test('duplicar copia exercícios e séries, sem id e privado', () {
+    const t = WorkoutTemplate(
+      id: 'orig',
+      name: 'Push A',
+      workoutType: 'força',
+      isPublic: true,
+      source: 'havok',
+      exercises: [
+        TemplateExercise(
+          orderIndex: 1,
+          sets: 2,
+          exerciseDbId: 'db1',
+          setDetails: [
+            TemplateSetDetail(weightKg: 40, reps: 10, restSeconds: 90),
+            TemplateSetDetail(weightKg: 45, reps: 8, restSeconds: 90),
+          ],
+        ),
+        TemplateExercise(orderIndex: 2, sets: 3, reps: 12, weightKg: 20),
+      ],
+    );
+    final c = WorkoutDetailsFormat.duplicate(t,
+        name: 'Push A (cópia)', durationMinutes: 30);
+    expect(c.id, isNull);
+    expect(c.name, 'Push A (cópia)');
+    expect(c.isPublic, isFalse);
+    expect(c.source, 'user');
+    expect(c.workoutType, 'força');
+    expect(c.estimatedDurationMinutes, 30);
+    expect(c.exercises.first.exerciseDbId, 'db1');
+    expect(c.exercises.first.setDetails.map((d) => d.weightKg), [40, 45]);
+    // Template antigo sem set_details: séries agregadas viram lista.
+    expect(c.exercises.last.setDetails.length, 3);
+    expect(c.exercises.last.setDetails.first.weightKg, 20);
+  });
 }
