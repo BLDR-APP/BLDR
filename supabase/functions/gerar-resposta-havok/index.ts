@@ -5,6 +5,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   compactThreadSummary,
   contextDomains,
+  localWeekStart,
+  mergeWeekPlan,
   normalizeOptionalResponseFields,
   type HavokAction,
   type HavokIntent,
@@ -87,6 +89,34 @@ function deviceContext(raw: unknown): Record<string, unknown> {
     // the already-calculated current summary is accepted — never raw meals.
     ...(nutritionSnapshot ? { nutritionSummary: nutritionSnapshot } : {}),
   };
+}
+
+/** Plano desta semana: recorrente + ajustes da semana (fuso do usuário). */
+async function weekPlan(client: any, userId: string): Promise<any[]> {
+  const [recurring, profile] = await Promise.all([
+    optional(() =>
+      client.from("weekly_plan_days").select(
+        "dia_semana, template_id, template_name, tipo, source",
+      ).eq("user_id", userId).order("dia_semana")
+    ),
+    optional(() =>
+      client.from("user_profiles").select("timezone").eq("id", userId)
+        .maybeSingle()
+    ),
+  ]);
+  const weekStart = localWeekStart(
+    new Date(),
+    (profile as any)?.timezone ?? "America/Sao_Paulo",
+  );
+  const overrides = await optional(() =>
+    client.from("weekly_plan_overrides").select(
+      "dia_semana, template_id, template_name, tipo, source",
+    ).eq("user_id", userId).eq("week_start", weekStart).order("dia_semana")
+  );
+  return mergeWeekPlan(
+    (recurring as any[] | null) ?? [],
+    (overrides as any[] | null) ?? [],
+  );
 }
 
 function workoutAnalytics(sessions: any[], sets: any[], plan: any[]) {
@@ -200,11 +230,7 @@ async function contextFor(
           ).in("user_workout_id", workoutIds).limit(500)
         )
         : Promise.resolve([]),
-      optional(() =>
-        client.from("weekly_plan_days").select(
-          "dia_semana, template_id, template_name, tipo, source",
-        ).eq("user_id", userId).order("dia_semana")
-      ),
+      weekPlan(client, userId),
     ]);
     context.workout = {
       recentSessions: sessions ?? [],

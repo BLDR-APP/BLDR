@@ -280,3 +280,17 @@ e aplicar o mesmo merge antes de montar o contexto. Mudança em
   confere `weekly_plan_days.club_template_id` antes de aplicar.
 - Ao terminar a mudança na edge function do HAVOK, entregar o comando de
   deploy.
+
+## 10. Passo 2 — feito (17/11)
+- Domain: `WeekOverride`, `WeekCalendar` (segunda local; `utcOffset` para
+  testes), `WeekPlanMerger`, `PlanDayTypeResolver(overrides:)`, use cases
+  `GetWeekPlan`, `ApplyWeekAdjustment` (CLUB, semana 0..+4, dias passados,
+  protegidos, destino válido; uma escrita só), `UndoWeekAdjustment`,
+  `ClearWeekDayOverride` (ao escolher "Todas as semanas").
+- Data: datasource/repository de `weekly_plan_overrides`.
+- Leitores no `GetWeekPlan`: hub (Treino de hoje, Minha semana), Home,
+  tela do plano, widget da tela inicial, confirmação do wearable (semana da
+  atividade). "Editar plano" segue no recorrente.
+- Edge function `gerar-resposta-havok`: plano da semana = recorrente +
+  ajustes, semana pela `user_profiles.timezone` (padrão São Paulo); testes
+  Deno. Deploy: `supabase functions deploy gerar-resposta-havok`.

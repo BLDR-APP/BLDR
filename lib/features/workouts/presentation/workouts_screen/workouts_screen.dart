@@ -9,6 +9,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:bldr_fitness/features/workouts/domain/usecases/week_plan_usecases.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/week_override.dart';
 import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
@@ -124,7 +126,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
       }
 
       final templatesResult = await getIt<GetWorkoutTemplates>()();
-      final weeklyPlanResult = await getIt<GetWeeklyPlan>()();
+      final weeklyPlanResult = await getIt<GetWeekPlan>()(WeekCalendar.weekStartFor(DateTime.now()));
       final activeResult = await getIt<HasActiveWorkout>()();
       final completedResult = await getIt<GetConsolidatedWorkoutHistory>()(
         completedOnly: true,

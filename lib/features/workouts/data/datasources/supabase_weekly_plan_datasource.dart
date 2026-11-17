@@ -17,7 +17,7 @@ class SupabaseWeeklyPlanDatasource {
   }
 
   Future<void> updateOnboardingData(
-      String userId, Map<String, dynamic> onboardingData) =>
+          String userId, Map<String, dynamic> onboardingData) =>
       _client
           .from('user_profiles')
           .update({'onboarding_data': onboardingData}).eq('id', userId);
@@ -93,9 +93,9 @@ class SupabaseWeeklyPlanDatasource {
   Future<void> upsertWeeklyPlan(
       String userId, List<Map<String, dynamic>> rows) async {
     await _client.from('weekly_plan_days').upsert(
-      rows,
-      onConflict: 'user_id,dia_semana',
-    );
+          rows,
+          onConflict: 'user_id,dia_semana',
+        );
   }
 
   /// Upsert parcial: só `tipo` (user_id, dia_semana, tipo). No conflito o
@@ -104,16 +104,48 @@ class SupabaseWeeklyPlanDatasource {
   Future<void> upsertDayTypes(
       String userId, List<Map<String, dynamic>> rows) async {
     await _client.from('weekly_plan_days').upsert(
-      rows,
-      onConflict: 'user_id,dia_semana',
-    );
+          rows,
+          onConflict: 'user_id,dia_semana',
+        );
+  }
+
+  /// Ajustes da semana (`weekly_plan_overrides`) — [weekStart] 'yyyy-MM-dd'.
+  Future<List<Map<String, dynamic>>> getOverrides(
+      String userId, String weekStart) async {
+    final rows = await _client
+        .from('weekly_plan_overrides')
+        .select(
+            'dia_semana, tipo, template_id, club_template_id, template_name, source')
+        .eq('user_id', userId)
+        .eq('week_start', weekStart)
+        .order('dia_semana');
+    return List<Map<String, dynamic>>.from(rows);
+  }
+
+  /// Upsert em uma única requisição (todos ou nenhum).
+  Future<void> upsertOverrides(List<Map<String, dynamic>> rows) async {
+    await _client.from('weekly_plan_overrides').upsert(
+          rows,
+          onConflict: 'user_id,week_start,dia_semana',
+        );
+  }
+
+  Future<void> deleteOverrides(
+      String userId, String weekStart, List<int> dias) async {
+    await _client
+        .from('weekly_plan_overrides')
+        .delete()
+        .eq('user_id', userId)
+        .eq('week_start', weekStart)
+        .inFilter('dia_semana', dias);
   }
 
   /// Retorna os dias do plano ordenados por dia_semana.
   Future<List<Map<String, dynamic>>> getWeeklyPlan(String userId) async {
     final rows = await _client
         .from('weekly_plan_days')
-        .select('dia_semana, template_id, club_template_id, template_name, tipo, source')
+        .select(
+            'dia_semana, template_id, club_template_id, template_name, tipo, source')
         .eq('user_id', userId)
         .order('dia_semana');
     return List<Map<String, dynamic>>.from(rows);

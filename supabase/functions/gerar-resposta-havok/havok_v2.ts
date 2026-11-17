@@ -497,3 +497,48 @@ Nunca invente métricas. Insights devem citar apenas dados recebidos no contexto
 export function responseIntentConstraint(expectedIntent: HavokIntent): string {
   return `Intent esperado: ${expectedIntent}. O campo "intent" do seu JSON DEVE ser exatamente "${expectedIntent}". Não reclassifique a intenção do usuário. Não escolha outro intent da enum permitida.`;
 }
+
+// ---------------------------------------------------------------------------
+// Plano da semana = weekly_plan_days + weekly_plan_overrides (MINHA_SEMANA.md
+// §9). week_start é a segunda-feira na data LOCAL do usuário.
+// ---------------------------------------------------------------------------
+
+/** Segunda-feira ('YYYY-MM-DD') da semana de [now] no fuso [timeZone]. */
+export function localWeekStart(now: Date, timeZone: string): string {
+  let parts: Record<string, string>;
+  try {
+    parts = Object.fromEntries(
+      new Intl.DateTimeFormat("en-CA", {
+        timeZone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        weekday: "short",
+      }).formatToParts(now).map((p) => [p.type, p.value]),
+    );
+  } catch {
+    return localWeekStart(now, "America/Sao_Paulo");
+  }
+  const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const offset = weekdays.indexOf(parts.weekday);
+  const local = new Date(
+    Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day)),
+  );
+  local.setUTCDate(local.getUTCDate() - Math.max(offset, 0));
+  return local.toISOString().slice(0, 10);
+}
+
+type PlanRow = { dia_semana: number; [key: string]: unknown };
+
+/** O ajuste da semana substitui a linha recorrente do mesmo dia. */
+export function mergeWeekPlan<T extends PlanRow>(
+  recurring: T[],
+  overrides: T[],
+): T[] {
+  const byDay = new Map<number, T>();
+  for (const row of recurring) byDay.set(row.dia_semana, row);
+  for (const row of overrides) {
+    byDay.set(row.dia_semana, { ...row, week_adjusted: true });
+  }
+  return [...byDay.keys()].sort((a, b) => a - b).map((k) => byDay.get(k)!);
+}

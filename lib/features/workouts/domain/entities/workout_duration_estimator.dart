@@ -35,9 +35,10 @@ abstract final class WorkoutDurationEstimator {
       final ex = nonEmpty[i];
       for (var j = 0; j < ex.sets.length; j++) {
         final set = ex.sets[j];
-        total += setWorkSeconds(
-            reps: set.reps, durationSeconds: ex.durationSeconds);
-        final isLastOfWorkout = i == nonEmpty.length - 1 && j == ex.sets.length - 1;
+        total +=
+            setWorkSeconds(reps: set.reps, durationSeconds: ex.durationSeconds);
+        final isLastOfWorkout =
+            i == nonEmpty.length - 1 && j == ex.sets.length - 1;
         if (!isLastOfWorkout) total += set.restSeconds ?? 0;
       }
     }

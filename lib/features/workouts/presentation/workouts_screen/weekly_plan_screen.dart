@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
+import 'package:bldr_fitness/features/workouts/domain/usecases/week_plan_usecases.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/week_override.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/features/subscription/domain/usecases/resolve_club_access.dart';
@@ -181,7 +183,7 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
       final weekResultFuture =
           getIt<GetWeekCompletedWorkouts>()(weekStart, weekEnd);
       final extraResultFuture = getIt<GetExtraActivities>()(weekStart, weekEnd);
-      final weeklyPlanFuture = getIt<GetWeeklyPlan>()();
+      final weeklyPlanFuture = getIt<GetWeekPlan>()(WeekCalendar.weekStartFor(DateTime.now()));
       final xpFutures = List.generate(7, (i) {
         final dayStart = weekStart.add(Duration(days: i));
         final dayEnd = dayStart.add(const Duration(days: 1));

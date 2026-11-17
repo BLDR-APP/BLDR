@@ -2,6 +2,8 @@ import { assertEquals } from "https://deno.land/std@0.168.0/testing/asserts.ts";
 import {
   compactThreadSummary,
   contextDomains,
+  localWeekStart,
+  mergeWeekPlan,
   normalizeOptionalResponseFields,
   responseIntentConstraint,
   responseSchemaPrompt,
@@ -388,4 +390,31 @@ Deno.test("resumo de thread só é atualizado no limiar e em blocos de seis", ()
     compactThreadSummary([{ role: "user", content: "  Prefiro   halteres. " }]),
     "Usuário: Prefiro halteres.",
   );
+});
+
+Deno.test("localWeekStart usa a data local do usuário (domingo 23h em SP)", () => {
+  // 2026-11-23T02:00Z = domingo 22/11 23h em São Paulo (UTC-3).
+  const now = new Date("2026-11-23T02:00:00Z");
+  assertEquals(localWeekStart(now, "America/Sao_Paulo"), "2026-11-16");
+  // Em UTC já seria segunda 23/11 — não é o que o usuário vê.
+  assertEquals(localWeekStart(now, "UTC"), "2026-11-23");
+});
+
+Deno.test("localWeekStart com fuso inválido cai em São Paulo", () => {
+  const now = new Date("2026-11-18T12:00:00Z");
+  assertEquals(localWeekStart(now, "Not/AZone"), "2026-11-16");
+});
+
+Deno.test("mergeWeekPlan: ajuste da semana vence o recorrente", () => {
+  const merged = mergeWeekPlan(
+    [
+      { dia_semana: 1, tipo: "treino", template_name: "Push" },
+      { dia_semana: 3, tipo: "treino", template_name: "Pull" },
+    ],
+    [{ dia_semana: 3, tipo: "descanso", template_name: null }],
+  );
+  assertEquals(merged.length, 2);
+  assertEquals(merged[1].tipo, "descanso");
+  assertEquals((merged[1] as any).week_adjusted, true);
+  assertEquals(merged[0].template_name, "Push");
 });

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get_it/get_it.dart';
 
+import 'package:bldr_fitness/features/workouts/domain/usecases/week_plan_usecases.dart';
 import 'package:bldr_fitness/core/providers/locale_provider.dart';
 import 'package:bldr_fitness/core/time/device_timezone_service.dart';
 import 'package:bldr_fitness/features/community/data/repositories/community_feed_repository_impl.dart';
@@ -254,6 +255,13 @@ void setupInjection({Map<String, dynamic> config = const {}}) {
       () => SaveWeeklyPlanConfig(getIt<WeeklyPlanRepository>()));
   getIt.registerFactory(() => SaveWeeklyPlan(getIt<WeeklyPlanRepository>()));
   getIt.registerFactory(() => GetWeeklyPlan(getIt<WeeklyPlanRepository>()));
+  getIt.registerFactory(() => GetWeekPlan(getIt<WeeklyPlanRepository>()));
+  getIt.registerFactory(() => ApplyWeekAdjustment(
+      getIt<WeeklyPlanRepository>(), getIt<ResolveClubAccess>()));
+  getIt.registerFactory(
+      () => UndoWeekAdjustment(getIt<WeeklyPlanRepository>()));
+  getIt.registerFactory(
+      () => ClearWeekDayOverride(getIt<WeeklyPlanRepository>()));
   getIt.registerFactory(() => UpdatePlanDay(getIt<WeeklyPlanRepository>()));
   getIt.registerFactory(
       () => GetWeekCompletedWorkouts(getIt<WeeklyPlanRepository>()));

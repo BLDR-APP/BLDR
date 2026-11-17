@@ -243,8 +243,8 @@ class SaveWeeklyPlanConfig {
     final saved = await _repo.savePlanConfig(
         splitPreference: splitPreference, restDays: restDays);
     if (saved.isFailure) return saved;
-    return _repo.saveDayTypes(
-        [for (var i = 0; i < 7; i++) !restDays.contains(i)]);
+    return _repo
+        .saveDayTypes([for (var i = 0; i < 7; i++) !restDays.contains(i)]);
   }
 }
 

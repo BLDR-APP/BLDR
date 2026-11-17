@@ -109,6 +109,7 @@ class WorkoutTemplate {
   final DateTime? createdAt;
   final String? createdByName;
   final List<TemplateExercise> exercises;
+
   /// Origem do template: 'havok' | 'user' | 'bldr'. Nullable para legado.
   final String? source;
 

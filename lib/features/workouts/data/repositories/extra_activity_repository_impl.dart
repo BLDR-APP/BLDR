@@ -27,7 +27,8 @@ class ExtraActivityRepositoryImpl implements ExtraActivityRepository {
     } on TimeoutException catch (e) {
       return Result.failure(NetworkFailure('Tempo de conexão esgotado.', e));
     } catch (e) {
-      return Result.failure(UnexpectedFailure('Ocorreu um erro inesperado.', e));
+      return Result.failure(
+          UnexpectedFailure('Ocorreu um erro inesperado.', e));
     }
   }
 
@@ -50,7 +51,8 @@ class ExtraActivityRepositoryImpl implements ExtraActivityRepository {
 
         await _client.from('extra_activities').insert({
           'user_id': uid,
-          'date': '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+          'date':
+              '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
           'activity_type': activityType.name,
           'duration_min': durationMin,
           'notes': notes,
@@ -76,7 +78,8 @@ class ExtraActivityRepositoryImpl implements ExtraActivityRepository {
         final uid = _requireUser();
         final rows = await _client
             .from('extra_activities')
-            .select('id, user_id, date, activity_type, duration_min, notes, xp_earned, created_at')
+            .select(
+                'id, user_id, date, activity_type, duration_min, notes, xp_earned, created_at')
             .eq('user_id', uid)
             .gte('date', weekStart.toIso8601String().substring(0, 10))
             .lte('date', weekEnd.toIso8601String().substring(0, 10))
@@ -88,8 +91,10 @@ class ExtraActivityRepositoryImpl implements ExtraActivityRepository {
           return ExtraActivity(
             id: r['id'] as String?,
             userId: r['user_id'] as String,
-            date: DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2])),
-            activityType: ActivityType.fromString(r['activity_type'] as String?),
+            date: DateTime(
+                int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2])),
+            activityType:
+                ActivityType.fromString(r['activity_type'] as String?),
             durationMin: r['duration_min'] as int?,
             notes: r['notes'] as String?,
             xpEarned: r['xp_earned'] as int? ?? 50,

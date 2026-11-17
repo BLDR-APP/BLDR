@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 
+import 'package:bldr_fitness/features/workouts/domain/entities/week_override.dart';
 import 'package:bldr_fitness/core/errors/failure.dart';
 import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/onboarding/domain/entities/onboarding_plan.dart';
@@ -36,7 +37,8 @@ class WeeklyPlanRepositoryImpl implements WeeklyPlanRepository {
     } on TimeoutException catch (e) {
       return Result.failure(NetworkFailure('Tempo de conexão esgotado.', e));
     } catch (e) {
-      return Result.failure(UnexpectedFailure('Ocorreu um erro inesperado.', e));
+      return Result.failure(
+          UnexpectedFailure('Ocorreu um erro inesperado.', e));
     }
   }
 
@@ -50,19 +52,92 @@ class WeeklyPlanRepositoryImpl implements WeeklyPlanRepository {
   Future<Result<void>> saveWeeklyPlan(List<PlanDay> days) => _guard(() async {
         final uid = _requireUser();
         final rows = days.map((d) {
-              final isClub = d.treino?.source == 'club';
-              return {
-                'user_id': uid,
-                'dia_semana': d.diaSemana,
-                'tipo': d.tipo,
-                // template_id tem FK → workout_templates; club templates usam clube_template_id
-                'template_id': isClub ? null : d.treino?.id,
-                'club_template_id': isClub ? d.treino?.id : null,
-                'template_name': d.treino?.name,
-                'source': d.treino?.source ?? 'user',
-              };
-            }).toList();
+          final isClub = d.treino?.source == 'club';
+          return {
+            'user_id': uid,
+            'dia_semana': d.diaSemana,
+            'tipo': d.tipo,
+            // template_id tem FK → workout_templates; club templates usam clube_template_id
+            'template_id': isClub ? null : d.treino?.id,
+            'club_template_id': isClub ? d.treino?.id : null,
+            'template_name': d.treino?.name,
+            'source': d.treino?.source ?? 'user',
+          };
+        }).toList();
         await _datasource.upsertWeeklyPlan(uid, rows);
+      });
+
+  /// Mesmo mapeamento de `weekly_plan_days` e `weekly_plan_overrides`:
+  /// template pessoal × Club (FK separada) e nome sem id.
+  static WorkoutTemplate? _templateFromRow(Map<String, dynamic> r) {
+    final source = r['source'] as String?;
+    final isClub = source == 'club';
+    final templateId = isClub
+        ? r['club_template_id']?.toString()
+        : r['template_id']?.toString();
+    final templateName = r['template_name'] as String?;
+    if (templateId == null && (templateName == null || templateName.isEmpty)) {
+      return null;
+    }
+    return WorkoutTemplate(
+        id: templateId,
+        name: templateName ?? '',
+        isPublic: false,
+        source: source);
+  }
+
+  static Map<String, dynamic> _templateColumns(WorkoutTemplate? t) {
+    final isClub = t?.source == 'club';
+    return {
+      'template_id': isClub ? null : t?.id,
+      'club_template_id': isClub ? t?.id : null,
+      'template_name': t?.name,
+      'source': t?.source ?? 'user',
+    };
+  }
+
+  @override
+  Future<Result<List<WeekOverride>>> getOverrides(DateTime weekStart) =>
+      _guard(() async {
+        final uid = _requireUser();
+        final rows = await _datasource.getOverrides(
+            uid, WeekCalendar.toDateString(weekStart));
+        return [
+          for (final r in rows)
+            WeekOverride(
+              weekStart: weekStart,
+              diaSemana: r['dia_semana'] as int,
+              tipo: (r['tipo'] as String?) ?? 'treino',
+              treino: _templateFromRow(r),
+            ),
+        ];
+      });
+
+  @override
+  Future<Result<void>> upsertOverrides(
+          DateTime weekStart, List<WeekOverride> overrides) =>
+      _guard(() async {
+        if (overrides.isEmpty) return;
+        final uid = _requireUser();
+        final ws = WeekCalendar.toDateString(weekStart);
+        await _datasource.upsertOverrides([
+          for (final o in overrides)
+            {
+              'user_id': uid,
+              'week_start': ws,
+              'dia_semana': o.diaSemana,
+              'tipo': o.tipo,
+              ..._templateColumns(o.treino),
+            },
+        ]);
+      });
+
+  @override
+  Future<Result<void>> deleteOverrides(DateTime weekStart, List<int> dias) =>
+      _guard(() async {
+        if (dias.isEmpty) return;
+        await _datasource.deleteOverrides(
+            _requireUser(), WeekCalendar.toDateString(weekStart), dias);
       });
 
   @override
@@ -80,7 +155,8 @@ class WeeklyPlanRepositoryImpl implements WeeklyPlanRepository {
           return PlanDay(
             diaSemana: (r['dia_semana'] as int),
             tipo: (r['tipo'] as String?) ?? 'treino',
-            treino: (templateId != null || (templateName != null && templateName.isNotEmpty))
+            treino: (templateId != null ||
+                    (templateName != null && templateName.isNotEmpty))
                 ? WorkoutTemplate(
                     id: templateId,
                     name: templateName ?? '',
@@ -113,8 +189,8 @@ class WeeklyPlanRepositoryImpl implements WeeklyPlanRepository {
       _guard(() async {
         final uid = _requireUser();
         // Lê o onboarding_data atual para não sobrescrever outros campos.
-        final ob =
-            Map<String, dynamic>.from(await _datasource.onboardingData(uid) ?? {});
+        final ob = Map<String, dynamic>.from(
+            await _datasource.onboardingData(uid) ?? {});
         ob['split_preference'] = splitPreference;
         ob['rest_days'] = restDays;
         await _datasource.updateOnboardingData(uid, ob);
@@ -173,8 +249,7 @@ class WeeklyPlanRepositoryImpl implements WeeklyPlanRepository {
           }
         }
 
-        muscles.addAll(
-            await _datasource.internalMusclesForWorkout(workoutId));
+        muscles.addAll(await _datasource.internalMusclesForWorkout(workoutId));
         return muscles.toList();
       });
 

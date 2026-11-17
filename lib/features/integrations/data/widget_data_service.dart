@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:home_widget/home_widget.dart';
 
+import 'package:bldr_fitness/features/workouts/domain/usecases/week_plan_usecases.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/week_override.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/features/auth/domain/repositories/auth_repository.dart';
 import 'package:bldr_fitness/features/nutrition/domain/usecases/nutrition_usecases.dart';
@@ -88,7 +90,7 @@ class WidgetDataService {
     String effectiveWorkoutName = workoutName ?? '';
     String effectiveWorkoutTemplateId = workoutTemplateId ?? '';
     if (workoutName == null) {
-      final planResult = await getIt<GetWeeklyPlan>()();
+      final planResult = await getIt<GetWeekPlan>()(WeekCalendar.weekStartFor(DateTime.now()));
       final planDays = planResult.valueOrNull ?? [];
       final todayWeekday = today.weekday;
       final todayDay = planDays.where((d) => d.diaSemana == todayWeekday).firstOrNull;

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 
+import 'package:bldr_fitness/features/workouts/domain/usecases/week_plan_usecases.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/week_override.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/features/achievements/domain/usecases/achievement_usecases.dart';
@@ -58,7 +60,8 @@ class _WearableWorkoutConfirmationScreenState
       return;
     }
 
-    final planResult = await getIt<GetWeeklyPlan>()();
+    final planResult = await getIt<GetWeekPlan>()(
+        WeekCalendar.weekStartFor(activity.startedAt));
     PlanDay? assigned;
     for (final day in planResult.valueOrNull ?? const <PlanDay>[]) {
       if (day.diaSemana == activity.startedAt.toLocal().weekday &&

@@ -3,6 +3,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
 
+import 'package:bldr_fitness/features/workouts/domain/usecases/week_plan_usecases.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/week_override.dart';
 import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
 import 'package:bldr_fitness/core/app_export.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
@@ -107,7 +109,7 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
       ];
       // B8: lê o treino de hoje do Supabase (weekly_plan_days).
       // Filtra pelo dia da semana atual (1=seg … 7=dom).
-      final planResult = await getIt<uc.GetWeeklyPlan>()();
+      final planResult = await getIt<GetWeekPlan>()(WeekCalendar.weekStartFor(DateTime.now()));
       final planDays = planResult.valueOrNull ?? [];
       // Regra única do tipo do dia (mesma da WeeklyPlanScreen e do hub):
       // linha do plano decide; sem linha, rest_days; vazio, frequência.

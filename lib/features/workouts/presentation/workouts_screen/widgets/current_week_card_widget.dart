@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 
+import 'package:bldr_fitness/features/workouts/domain/usecases/week_plan_usecases.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/week_override.dart';
 import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_workout_v2_components.dart';
@@ -98,7 +100,7 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
       }
 
       final configResult = await getIt<GetWeeklyPlanConfig>()();
-      final weeklyPlanResult = await getIt<GetWeeklyPlan>()();
+      final weeklyPlanResult = await getIt<GetWeekPlan>()(WeekCalendar.weekStartFor(DateTime.now()));
       final config = configResult.valueOrNull;
       final splitPref = config?.splitPreference ?? '';
       final freqDays = config?.frequencyDays ?? 3;

@@ -1,9 +1,11 @@
 import 'package:bldr_fitness/features/onboarding/domain/entities/onboarding_plan.dart';
+import 'package:bldr_fitness/features/workouts/domain/entities/week_override.dart';
 
 /// Regra ÚNICA do tipo de cada dia da semana (treino × descanso), usada pela
 /// WeeklyPlanScreen, pelo hub de Treinos e pela Home.
 ///
 /// Prioridade:
+/// 0. Ajuste da semana (`weekly_plan_overrides`) → o `tipo` decide.
 /// 1. Linha em `weekly_plan_days` para o dia → o `tipo` decide
 ///    ('descanso' = descanso; qualquer outro = treino, mesmo sem template).
 /// 2. Sem linha → `rest_days` do onboarding_data (0 = segunda … 6 = domingo).
@@ -14,9 +16,11 @@ abstract final class PlanDayTypeResolver {
     required Iterable<PlanDay> plan,
     required List<int> restDays,
     required int frequencyDays,
+    Iterable<WeekOverride> overrides = const [],
   }) {
+    final effective = WeekPlanMerger.merge(plan, overrides);
     final byIndex = <int, PlanDay>{
-      for (final d in plan)
+      for (final d in effective)
         if (d.diaSemana >= 1 && d.diaSemana <= 7) d.diaSemana - 1: d,
     };
     final fallback = restDays.isNotEmpty
@@ -43,6 +47,8 @@ abstract final class PlanDayTypeResolver {
   }
 
   /// Índices (0 = segunda) dos dias de treino.
-  static List<int> trainingIndices(List<bool> days) =>
-      [for (var i = 0; i < days.length; i++) if (days[i]) i];
+  static List<int> trainingIndices(List<bool> days) => [
+        for (var i = 0; i < days.length; i++)
+          if (days[i]) i
+      ];
 }

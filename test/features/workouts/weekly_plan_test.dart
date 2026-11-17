@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:bldr_fitness/features/workouts/domain/entities/week_override.dart';
 import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/onboarding/domain/entities/onboarding_plan.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/weekly_plan.dart';
@@ -56,6 +57,20 @@ class _FakeWeeklyPlanRepository implements WeeklyPlanRepository {
 
   @override
   Future<Result<void>> deleteCompletedClub(String id) async =>
+      const Result.success(null);
+
+  @override
+  Future<Result<List<WeekOverride>>> getOverrides(DateTime weekStart) async =>
+      const Result.success([]);
+
+  @override
+  Future<Result<void>> upsertOverrides(
+          DateTime weekStart, List<WeekOverride> overrides) async =>
+      const Result.success(null);
+
+  @override
+  Future<Result<void>> deleteOverrides(
+          DateTime weekStart, List<int> dias) async =>
       const Result.success(null);
 }
 
