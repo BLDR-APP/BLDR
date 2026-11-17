@@ -83,7 +83,14 @@ class BldrWorkoutHeader extends StatelessWidget {
 class BldrHudStats extends StatelessWidget {
   final List<({String value, String label})> items;
 
-  const BldrHudStats({super.key, required this.items});
+  /// Estilo dos valores (padrão: `hudValue`).
+  final TextStyle? valueStyle;
+
+  /// Estilo do primeiro valor, quando ele é destacado (editor 179:1590).
+  final TextStyle? accentStyle;
+
+  const BldrHudStats(
+      {super.key, required this.items, this.valueStyle, this.accentStyle});
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +103,7 @@ class BldrHudStats extends StatelessWidget {
       ),
       child: Row(
         children: [
-          for (final it in items)
+          for (final (i, it) in items.indexed)
             Expanded(
               child: Column(
                 children: [
@@ -108,7 +115,9 @@ class BldrHudStats extends StatelessWidget {
                       child: Text(it.value,
                           maxLines: 1,
                           textAlign: TextAlign.center,
-                          style: BldrWorkoutTextV2.hudValue),
+                          style: (i == 0 ? accentStyle : null) ??
+                              valueStyle ??
+                              BldrWorkoutTextV2.hudValue),
                     ),
                   ),
                   Padding(

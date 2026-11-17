@@ -4416,4 +4416,70 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get hub_empty_cta => 'CREA ALLENAMENTO';
+
+  @override
+  String get ed_eyebrow => 'MODIFICA ALLENAMENTO';
+
+  @override
+  String get ed_save => 'SALVA';
+
+  @override
+  String get ed_name_label => 'NOME ALLENAMENTO';
+
+  @override
+  String get ed_category_label => 'CATEGORIA';
+
+  @override
+  String get ed_section => 'ESERCIZI';
+
+  @override
+  String get ed_default => 'STANDARD DELL\'ESERCIZIO';
+
+  @override
+  String get ed_sets_header => 'SERIE · PERSONALIZZAZIONE OPZIONALE';
+
+  @override
+  String ed_chip_sets(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count serie',
+      one: '$count serie',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ed_chip_reps(String reps) {
+    return '$reps rip.';
+  }
+
+  @override
+  String ed_default_rest(String rest) {
+    return '$rest recupero';
+  }
+
+  @override
+  String get ed_remove_exercise => 'Rimuovi esercizio';
+
+  @override
+  String get ed_edit_name => 'Modifica nome';
+
+  @override
+  String get ed_options => 'Opzioni esercizio';
+
+  @override
+  String get ed_cat_strength => 'Forza';
+
+  @override
+  String get ed_cat_hiit => 'HIIT';
+
+  @override
+  String get ed_cat_cardio => 'Cardio';
+
+  @override
+  String get ed_cat_mobility => 'Mobilità';
+
+  @override
+  String get ed_cat_mixed => 'Misto';
 }

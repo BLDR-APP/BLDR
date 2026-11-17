@@ -737,6 +737,11 @@ abstract final class BldrWorkoutColorsV2 {
   static const myCardMuted = Color(0xFF999CA1);
   static const myCardDivider = Color(0xF2474A4D); // rgba(71,74,77,.95)
   static const pageDotIdle = secondary;
+
+  // Editor (179:1590)
+  static const editorIdentityBorder = Color(0x3DD4AF37); // .24
+  static const editorExpandedBorder = Color(0x6BD4AF37); // .42
+  static const editorChipBg = Color(0xF2121212); // rgba(18,18,18,.95)
 }
 
 /// Textos de Treinos v2 na escala do rebranding (`BldrTextV2.scale`).
@@ -821,4 +826,24 @@ abstract final class BldrWorkoutTextV2 {
   static final menuTitle = _s(BldrTextV2.s11, _r, Colors.white); // 10,8
   static final menuDesc = _s(BldrTextV2.s11, _r, BldrWorkoutColorsV2.libraryMenuDesc); // 8
   static final tip = _s(BldrTextV2.s12, _m, Colors.white);
+
+  // ── Editor (179:1590) ──
+  static final edName = _s(BldrTextV2.s24, _b, _t); // 25
+  static final edLabel = _s(BldrTextV2.s11, _b, _mu); // 9 / 8
+  static final edGroups = _s(BldrTextV2.s11, _m, _mu); // 11
+  static final edHudValue = _s(BldrTextV2.s17, _b, _t); // 17
+  static final edHudAccent = _s(BldrTextV2.s17, _b, _g); // 17
+  static final edOrder = _s(BldrTextV2.s11, _b, _g); // 10
+  static final edExName = _s(BldrTextV2.s15, _sb, _t); // 15
+  static final edMuscles = _s(BldrTextV2.s11, _m, _mu); // 10
+  static final edChip = _s(BldrTextV2.s11, _sb, _t); // 9
+  static final edChipAccent = _s(BldrTextV2.s11, _sb, _g); // 9
+  static final edMenu = _s(BldrTextV2.s13, _b, _mu); // 13
+  static final edPersonalize = _s(BldrTextV2.s11, _b, _mu); // 7
+  static final edDefault = _s(BldrTextV2.s11, _sb, _t); // 11
+  static final edDefaultAccent = _s(BldrTextV2.s11, _b, _g); // 11
+  static final edSetIndex = _s(BldrTextV2.s11, _b, _mu); // 11
+  static final edSetValue = _s(BldrTextV2.s11, _sb, _t); // 11
+  static final edAddSet = _s(BldrTextV2.s11, _b, _g); // 9
+  static final edAddCount = _s(BldrTextV2.s11, _sb, _mu); // 9
 }

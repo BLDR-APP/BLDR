@@ -238,3 +238,27 @@ Cada etapa termina com `dart analyze lib`, `flutter test test/features` e compar
   Três pontos: Editar / Excluir (Duplicar [F], oculto).
 - pt: `=0` explícito no plural ("0 treinos"), pois a regra do pt trata 0 como
   "one".
+
+## Etapa 4 — Editor (179:1590) — plano
+
+- `CreateWorkoutScreen` em modo edição passa a usar `_buildEditorV2()`; a UI
+  antiga de edição (cabeçalho, seletores Categoria/Duração, cards antigos,
+  rodapé) é removida.
+- Cabeçalho `BldrWorkoutHeader`: "EDITAR TREINO", nome, botão "SALVAR".
+- Card de identidade: "NOME DO TREINO", nome editável (✎ = Tabler `pencil`
+  foca o campo), grupos do treino. **Decisão do usuário:** a Categoria
+  continua editável, como fileira de chips (`BldrTypeChip`) no card —
+  diverge do mockup para não perder a ação.
+- Resumo: Exercícios, Séries, ~Minutos (`WorkoutDurationEstimator`),
+  Desc. médio (`BldrHudStats`, valor no degrau 17).
+- Card do exercício: número "01" dourado, nome, "•••" (remover exercício),
+  grupos, chips séries/reps/descanso (tocáveis, mesmos editores da
+  criação), "PERSONALIZAR SÉRIES ›". Expandido: "PADRÃO DO EXERCÍCIO",
+  "SÉRIES · PERSONALIZAÇÃO OPCIONAL", linhas carga/reps/"•••",
+  "＋ ADICIONAR SÉRIE". Reps em faixa só como exibição.
+- Sem miniatura/GIF: o mockup do editor não tem espaço de mídia.
+- "Segure para reordenar" oculto. "Adicionar exercício N/M": não existe
+  limite de exercícios por treino → mostra só N.
+- Salvar em edição usa o estimador (antes: duração do seletor).
+- **Feito.** Validado em 320/440 px e textScaler 1,3 (sem overflow). Chips
+  e "Padrão do exercício" quebram linha em telas estreitas em vez de cortar.

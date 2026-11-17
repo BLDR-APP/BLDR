@@ -128,24 +128,23 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
   static const _gold = Color(0xFFD4AF37);
   static const _goldBg = Color(0x1FD4AF37);
   static const _borderGold = Color(0x40D4AF37);
-  static const _bg = Color(0xFF111110);
   static const _surface = Color(0xFF1A1916);
   static const _card = Color(0xFF1E1C18);
   static const _muted = Color(0xFF888070);
-  static const _red = Color(0xFFC84040);
 
   // ── form state ─────────────────────────────────────────────────────────────
   final _nameCtrl = TextEditingController();
   String _category = 'Força';
+
   /// Nível só é mantido para treinos já existentes (decisão aprovada):
   /// treinos novos do usuário salvam difficulty_level NULL.
   int? _difficulty;
-  int _duration = 45;
   bool _saving = false;
 
   // ── Treinos v2 (Figma 179:981 / 179:1015) ─────────────────────────────────
   /// 0 = "Monte seu treino" (nome + tipo); 1 = "Montar treino".
   int _step = 0;
+
   /// Exercícios com "Personalizar séries" aberto.
   final Set<int> _expanded = {};
 
@@ -161,7 +160,6 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
     'Mobilidade': 'mobilidade',
     'Misto': 'misto',
   };
-  static const _durations = [30, 45, 60, 75, 90];
 
   // ── exercise list ──────────────────────────────────────────────────────────
   final List<_WorkoutEx> _exercises = [];
@@ -197,7 +195,6 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
     // Edição: mantém o nível salvo (pode ser NULL). Fluxo da foto (sem id)
     // é um treino novo: nível NULL e começa direto no passo "Montar".
     _difficulty = t.id != null ? t.difficultyLevel : null;
-    _duration = t.estimatedDurationMinutes ?? 45;
     if (t.id == null) _step = 1;
   }
 
@@ -238,7 +235,9 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
       // valores agregados (TREINOS_V2.md, P2).
       final builtSets = row.resolvedSets
           .map((d) => _ExSet(
-              weight: d.weightKg, reps: d.reps ?? 10, rest: d.restSeconds ?? 90))
+              weight: d.weightKg,
+              reps: d.reps ?? 10,
+              rest: d.restSeconds ?? 90))
           .toList();
 
       final exDbId = row.exerciseDbId ?? '';
@@ -281,6 +280,7 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
   @override
   void dispose() {
     _nameCtrl.dispose();
+    _nameFocus.dispose();
     super.dispose();
   }
 
@@ -348,11 +348,9 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
         id: templateId,
         name: name,
         workoutType: _categoryToDbValue[_category] ?? _category.toLowerCase(),
-        // Criação v2: duração estimada (P1). Edição (visual antigo até a
-        // etapa 3): mantém a duração escolhida no seletor.
-        estimatedDurationMinutes: isEditing
-            ? _duration
-            : WorkoutDurationEstimator.estimateTemplate(exercisePayload),
+        // Duração estimada (P1), na criação e na edição.
+        estimatedDurationMinutes:
+            WorkoutDurationEstimator.estimateTemplate(exercisePayload),
         difficultyLevel: _difficulty,
         isPublic: false,
         exercises: exercisePayload,
@@ -589,51 +587,455 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
   // ── build ─────────────────────────────────────────────────────────────────
 
   @override
-  Widget build(BuildContext context) {
-    // Criação usa o visual v2; a edição mantém o visual atual até a etapa 3.
-    if (!_isEditing) return _buildV2();
+  Widget build(BuildContext context) =>
+      _isEditing ? _buildEditorV2() : _buildV2();
+
+  // ══ Treinos v2 — editor (179:1590) ═══════════════════════════════════════
+
+  final _nameFocus = FocusNode();
+
+  static const _categoryKeys = {
+    'Força': 'strength',
+    'HIIT': 'hiit',
+    'Cardio': 'cardio',
+    'Mobilidade': 'mobility',
+    'Misto': 'mixed',
+  };
+
+  String _categoryLabel(AppLocalizations l10n, String c) =>
+      switch (_categoryKeys[c]) {
+        'strength' => l10n.ed_cat_strength,
+        'hiit' => l10n.ed_cat_hiit,
+        'cardio' => l10n.ed_cat_cardio,
+        'mobility' => l10n.ed_cat_mobility,
+        'mixed' => l10n.ed_cat_mixed,
+        _ => c,
+      };
+
+  Widget _buildEditorV2() {
+    final l10n = AppLocalizations.of(context);
+    final allSets = [for (final e in _exercises) ...e.sets];
+    final avgRest = allSets.isEmpty
+        ? 0
+        : (allSets.map((st) => st.rest).reduce((a, b) => a + b) /
+                allSets.length)
+            .round();
+    final minutes =
+        WorkoutDurationEstimator.estimateTemplate(_payloadForEstimate);
+    final name = _nameCtrl.text.trim();
+    final groups = <String>{
+      for (final e in _exercises)
+        if (e.muscle.trim().isNotEmpty) e.muscle.trim()
+    }.join(' · ');
+
     return Scaffold(
-      backgroundColor: _bg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _buildHeader(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 4.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: 2.h),
-                    _buildNameInput(),
-                    SizedBox(height: 1.5.h),
-                    _buildMetaRow(),
-                    SizedBox(height: 2.5.h),
-                    if (_exercises.isNotEmpty) ...[
-                      Text('Exercícios',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15)),
-                      SizedBox(height: 1.5.h),
-                      ..._exercises
-                          .asMap()
-                          .entries
-                          .map((e) => _buildExerciseCard(e.key, e.value)),
-                    ],
-                    _buildAddButton(),
-                    SizedBox(height: 10.h),
-                  ],
+      backgroundColor: BldrColorsV2.bg,
+      body: BldrBackground(
+        v2: true,
+        child: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(_px, 4, _px, 40),
+            children: [
+              BldrWorkoutHeader(
+                eyebrow: l10n.ed_eyebrow,
+                eyebrowStyle: BldrWorkoutTextV2.eyebrowSm,
+                title: name.isEmpty ? l10n.cw_name_hint : name,
+                onBack: () => Navigator.pop(context),
+                trailing: BldrCompactGoldButton(
+                  label: _saving ? '…' : l10n.ed_save,
+                  width: 82,
+                  height: 38,
+                  onTap: _saving ? null : _save,
                 ),
               ),
-            ),
-            _buildSaveFooter(),
-          ],
+              const SizedBox(height: 10),
+              _editorIdentityCard(l10n, groups),
+              const SizedBox(height: 12),
+              BldrHudStats(
+                valueStyle: BldrWorkoutTextV2.edHudValue,
+                accentStyle: BldrWorkoutTextV2.edHudAccent,
+                items: [
+                  (value: '${_exercises.length}', label: l10n.cw_hud_exercises),
+                  (value: '${allSets.length}', label: l10n.cw_hud_sets),
+                  (value: '~$minutes', label: l10n.cw_hud_minutes),
+                  (value: '${avgRest}s', label: l10n.cw_hud_avg_rest),
+                ],
+              ),
+              const SizedBox(height: 20),
+              // "Segure para reordenar" oculto: reordenar não existe ([F]).
+              Text(l10n.ed_section,
+                  maxLines: 1, style: BldrWorkoutTextV2.sectionLabel),
+              const SizedBox(height: 10),
+              for (var i = 0; i < _exercises.length; i++) ...[
+                _editorExerciseCard(l10n, i, _exercises[i]),
+                const SizedBox(height: 12),
+              ],
+              const SizedBox(height: 6),
+              BldrGoldRowCta(
+                label: l10n.cw_add_exercise,
+                height: 58,
+                radius: 22,
+                labelStyle: BldrWorkoutTextV2.cta,
+                // N/M: não há limite de exercícios por treino → só N.
+                trailing: Text('${_exercises.length}',
+                    style: BldrWorkoutTextV2.edAddCount),
+                onTap: () => _openPicker(),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  Widget _editorIdentityCard(AppLocalizations l10n, String groups) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(17, 15, 12, 14),
+      decoration: BoxDecoration(
+        color: BldrWorkoutColorsV2.cardBg,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: BldrWorkoutColorsV2.editorIdentityBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.ed_name_label, style: BldrWorkoutTextV2.edLabel),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _nameCtrl,
+                  focusNode: _nameFocus,
+                  maxLines: 1,
+                  style: BldrWorkoutTextV2.edName,
+                  cursorColor: BldrWorkoutColorsV2.gold,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    hintText: l10n.cw_name_hint,
+                    hintStyle: BldrWorkoutTextV2.edName
+                        .copyWith(color: BldrWorkoutColorsV2.muted),
+                  ),
+                ),
+              ),
+              Semantics(
+                button: true,
+                label: l10n.ed_edit_name,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => _nameFocus.requestFocus(),
+                  child: const SizedBox(
+                    width: 36,
+                    height: 36,
+                    child: Icon(TablerIcons.pencil,
+                        size: 18, color: BldrWorkoutColorsV2.gold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (groups.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(groups,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: BldrWorkoutTextV2.edGroups),
+          ],
+          const SizedBox(height: 12),
+          Text(l10n.ed_category_label, style: BldrWorkoutTextV2.edLabel),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final c in _categories)
+                BldrTypeChip(
+                  label: _categoryLabel(l10n, c),
+                  width: 92,
+                  selected: _category == c,
+                  onTap: () => setState(() => _category = c),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _editorChip(String text, TextStyle style, VoidCallback onTap) =>
+      GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 24, minWidth: 62),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+          decoration: BoxDecoration(
+            color: BldrWorkoutColorsV2.editorChipBg,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: style),
+        ),
+      );
+
+  /// Card do exercício no editor (27:23 fechado / 27:35 expandido).
+  Widget _editorExerciseCard(AppLocalizations l10n, int idx, _WorkoutEx ex) {
+    final open = _expanded.contains(idx);
+    final setsTxt = l10n.ed_chip_sets(ex.sets.length);
+    final repsTxt = l10n.ed_chip_reps(_repsLabel(ex.sets));
+    final restTxt = _restLabel(ex.sets);
+    void toggle() =>
+        setState(() => open ? _expanded.remove(idx) : _expanded.add(idx));
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(15, 12, 8, 10),
+      decoration: BoxDecoration(
+        color: BldrWorkoutColorsV2.cardBg,
+        borderRadius: BorderRadius.circular(open ? 24 : 22),
+        border: Border.all(
+            color: open
+                ? BldrWorkoutColorsV2.editorExpandedBorder
+                : BldrWorkoutColorsV2.cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 36,
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Text((idx + 1).toString().padLeft(2, '0'),
+                      style: BldrWorkoutTextV2.edOrder),
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(ex.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: BldrWorkoutTextV2.edExName),
+                    const SizedBox(height: 3),
+                    Text(ex.muscle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: BldrWorkoutTextV2.edMuscles),
+                  ],
+                ),
+              ),
+              PopupMenuButton<String>(
+                tooltip: l10n.ed_options,
+                padding: EdgeInsets.zero,
+                color: BldrWorkoutColorsV2.sheetBg,
+                onSelected: (_) => setState(() {
+                  _exercises.removeAt(idx);
+                  _expanded
+                    ..remove(idx)
+                    ..removeWhere((e) => e > idx);
+                }),
+                itemBuilder: (_) => [
+                  PopupMenuItem(
+                      value: 'remove',
+                      child: Text(l10n.ed_remove_exercise,
+                          style: BldrWorkoutTextV2.exName)),
+                ],
+                child: SizedBox(
+                  width: 36,
+                  height: 28,
+                  child: Center(
+                      child: Text('•••', style: BldrWorkoutTextV2.edMenu)),
+                ),
+              ),
+            ],
+          ),
+          if (!open) ...[
+            Padding(
+              padding: const EdgeInsets.only(left: 36, top: 6, right: 8),
+              child: Wrap(spacing: 8, runSpacing: 6, children: [
+                _editorChip(setsTxt, BldrWorkoutTextV2.edChipAccent,
+                    () => _editSetCount(idx)),
+                _editorChip(
+                    repsTxt, BldrWorkoutTextV2.edChip, () => _editAllReps(idx)),
+                _editorChip(
+                    restTxt, BldrWorkoutTextV2.edChip, () => _editAllRest(idx)),
+              ]),
+            ),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: toggle,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 36, top: 6),
+                child: Row(children: [
+                  Expanded(
+                    child: Text(l10n.cw_personalize,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: BldrWorkoutTextV2.edPersonalize),
+                  ),
+                  const SizedBox(
+                    width: 36,
+                    child: Icon(TablerIcons.chevron_right,
+                        size: 16, color: BldrWorkoutColorsV2.muted),
+                  ),
+                ]),
+              ),
+            ),
+          ] else ...[
+            const SizedBox(height: 14),
+            Text(l10n.ed_default, style: BldrWorkoutTextV2.edLabel),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.only(right: 7),
+              child: Container(
+                constraints: const BoxConstraints(minHeight: 52),
+                padding: const EdgeInsets.only(left: 13),
+                decoration: BoxDecoration(
+                  color: BldrWorkoutColorsV2.cardBg,
+                  borderRadius: BorderRadius.circular(17),
+                  border: Border.all(color: BldrWorkoutColorsV2.typeBoxBorder),
+                ),
+                child: Row(children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Wrap(
+                        spacing: 22,
+                        runSpacing: 6,
+                        children: [
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => _editSetCount(idx),
+                            child: Text(setsTxt,
+                                style: BldrWorkoutTextV2.edDefaultAccent),
+                          ),
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => _editAllReps(idx),
+                            child: Text(repsTxt,
+                                style: BldrWorkoutTextV2.edDefault),
+                          ),
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => _editAllRest(idx),
+                            child: Text(l10n.ed_default_rest(restTxt),
+                                style: BldrWorkoutTextV2.edDefault),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: toggle,
+                    child: const SizedBox(
+                      width: 40,
+                      height: 44,
+                      child: Icon(TablerIcons.chevron_down,
+                          size: 18, color: BldrWorkoutColorsV2.muted),
+                    ),
+                  ),
+                ]),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(l10n.ed_sets_header,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: BldrWorkoutTextV2.edLabel),
+            const SizedBox(height: 4),
+            for (var j = 0; j < ex.sets.length; j++)
+              SizedBox(
+                height: 29,
+                child: Row(children: [
+                  SizedBox(
+                    width: 36,
+                    child: Text('${j + 1}',
+                        textAlign: TextAlign.center,
+                        style: j == 0
+                            ? BldrWorkoutTextV2.edSetIndex
+                                .copyWith(color: BldrWorkoutColorsV2.gold)
+                            : BldrWorkoutTextV2.edSetIndex),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => _editSet(idx, j, ex.sets[j]),
+                      child: Text(_kg(ex.sets[j].weight),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: BldrWorkoutTextV2.edSetValue),
+                    ),
+                  ),
+                  Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => _editSet(idx, j, ex.sets[j]),
+                      child: Text('${ex.sets[j].reps} reps',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: BldrWorkoutTextV2.edSetValue),
+                    ),
+                  ),
+                  PopupMenuButton<String>(
+                    padding: EdgeInsets.zero,
+                    color: BldrWorkoutColorsV2.sheetBg,
+                    onSelected: (v) {
+                      if (v == 'edit') {
+                        _editSet(idx, j, ex.sets[j]);
+                      } else if (ex.sets.length > 1) {
+                        setState(() => ex.sets.removeAt(j));
+                      }
+                    },
+                    itemBuilder: (_) => [
+                      PopupMenuItem(
+                          value: 'edit',
+                          child: Text(l10n.cw_set_edit,
+                              style: BldrWorkoutTextV2.exName)),
+                      PopupMenuItem(
+                          value: 'remove',
+                          enabled: ex.sets.length > 1,
+                          child: Text(l10n.cw_set_remove,
+                              style: BldrWorkoutTextV2.exName)),
+                    ],
+                    child: SizedBox(
+                      width: 44,
+                      height: 29,
+                      child: Center(
+                          child: Text('•••', style: BldrWorkoutTextV2.more)),
+                    ),
+                  ),
+                ]),
+              ),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => setState(() => ex.sets.add(
+                  ex.sets.isNotEmpty ? ex.sets.last.copyWith() : _ExSet())),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(36, 6, 0, 4),
+                child: Row(children: [
+                  const Icon(TablerIcons.plus,
+                      size: 12, color: BldrWorkoutColorsV2.gold),
+                  const SizedBox(width: 6),
+                  Text(l10n.cw_add_set, style: BldrWorkoutTextV2.edAddSet),
+                ]),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 
   // ══ Treinos v2 — criação ═════════════════════════════════════════════════
 
@@ -779,15 +1181,17 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
         : (allSets.map((st) => st.rest).reduce((a, b) => a + b) /
                 allSets.length)
             .round();
-    final minutes = WorkoutDurationEstimator.estimateTemplate(_payloadForEstimate);
+    final minutes =
+        WorkoutDurationEstimator.estimateTemplate(_payloadForEstimate);
     final name = _nameCtrl.text.trim();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(_px, 4, _px, 60),
       children: [
         BldrWorkoutHeader(
-          eyebrow: l10n.cw_build_eyebrow(
-              name.isEmpty ? l10n.cw_name_hint.toUpperCase() : name.toUpperCase()),
+          eyebrow: l10n.cw_build_eyebrow(name.isEmpty
+              ? l10n.cw_name_hint.toUpperCase()
+              : name.toUpperCase()),
           eyebrowStyle: BldrWorkoutTextV2.eyebrowSm,
           title: l10n.cw_build_title,
           onBack: _back,
@@ -863,9 +1267,9 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
     if (sets.isEmpty) return '—';
     final rests = sets.map((st) => st.rest).toSet();
     if (rests.length == 1) return '${rests.first}s';
-    final avg = (sets.map((st) => st.rest).reduce((a, b) => a + b) /
-            sets.length)
-        .round();
+    final avg =
+        (sets.map((st) => st.rest).reduce((a, b) => a + b) / sets.length)
+            .round();
     return '~${avg}s';
   }
 
@@ -979,15 +1383,17 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
           ),
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () => setState(() =>
-                open ? _expanded.remove(idx) : _expanded.add(idx)),
+            onTap: () => setState(
+                () => open ? _expanded.remove(idx) : _expanded.add(idx)),
             child: Padding(
               padding: const EdgeInsets.only(top: 4, bottom: 2),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
-                        open ? l10n.cw_personalize : '${l10n.cw_personalize}  ›',
+                        open
+                            ? l10n.cw_personalize
+                            : '${l10n.cw_personalize}  ›',
                         style: BldrWorkoutTextV2.personalize),
                   ),
                   if (open)
@@ -1012,11 +1418,13 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
                           textAlign: TextAlign.center,
                           style: BldrWorkoutTextV2.setIndex),
                     ),
-                    Expanded(child: _setBox(_kg(ex.sets[j].weight),
-                        () => _editSet(idx, j, ex.sets[j]))),
+                    Expanded(
+                        child: _setBox(_kg(ex.sets[j].weight),
+                            () => _editSet(idx, j, ex.sets[j]))),
                     const SizedBox(width: 10),
-                    Expanded(child: _setBox('${ex.sets[j].reps} reps',
-                        () => _editSet(idx, j, ex.sets[j]))),
+                    Expanded(
+                        child: _setBox('${ex.sets[j].reps} reps',
+                            () => _editSet(idx, j, ex.sets[j]))),
                     SizedBox(
                       width: 52,
                       child: PopupMenuButton<String>(
@@ -1049,9 +1457,8 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
               ),
             GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () => setState(() => ex.sets.add(ex.sets.isNotEmpty
-                  ? ex.sets.last.copyWith()
-                  : _ExSet())),
+              onTap: () => setState(() => ex.sets.add(
+                  ex.sets.isNotEmpty ? ex.sets.last.copyWith() : _ExSet())),
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(34, 4, 0, 4),
                 child: Row(
@@ -1218,432 +1625,6 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
         ex.sets[i] = ex.sets[i].copyWith(rest: v);
       }
     });
-  }
-
-  // ── header ─────────────────────────────────────────────────────────────────
-
-  Widget _buildHeader() {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.5.h),
-      decoration: BoxDecoration(
-        color: _surface,
-        border: Border(
-            bottom: BorderSide(color: Colors.white.withValues(alpha: 0.07))),
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Navigator.pop(context),
-            child: Container(
-              padding: EdgeInsets.all(2.w),
-              decoration: BoxDecoration(
-                color: _card,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
-              ),
-              child:
-                  const Icon(Icons.chevron_left, color: Colors.white, size: 22),
-            ),
-          ),
-          Expanded(
-            child: Text(
-                (widget.editTemplate != null && widget.editTemplate!.id != null)
-                    ? 'Editar treino'
-                    : 'Novo treino',
-                style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16),
-                textAlign: TextAlign.center),
-          ),
-          GestureDetector(
-            onTap: _saving ? null : _save,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 4.w, vertical: 1.h),
-              decoration: BoxDecoration(
-                color: _saving ? _muted : _gold,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                _saving ? 'Salvando…' : 'Salvar',
-                style: const TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── name input ─────────────────────────────────────────────────────────────
-
-  Widget _buildNameInput() {
-    return TextField(
-      controller: _nameCtrl,
-      style: const TextStyle(
-          color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700),
-      decoration: InputDecoration(
-        hintText: 'Nome do treino',
-        hintStyle:
-            TextStyle(color: _muted, fontSize: 20, fontWeight: FontWeight.w700),
-        filled: true,
-        fillColor: Colors.transparent,
-        border: InputBorder.none,
-        enabledBorder: InputBorder.none,
-        focusedBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: _gold.withValues(alpha: 0.5), width: 1),
-        ),
-        contentPadding: EdgeInsets.symmetric(vertical: 0.5.h),
-      ),
-    );
-  }
-
-  // ── meta row ───────────────────────────────────────────────────────────────
-
-  Widget _buildMetaRow() {
-    return Row(
-      children: [
-        Expanded(
-            child: _buildSelect('Categoria', _categories, _category,
-                (v) => setState(() => _category = v!))),
-        SizedBox(width: 2.w),
-        Expanded(
-            child: _buildSelect(
-                'Duração',
-                _durations.map((d) => '${d}min').toList(),
-                '${_duration}min',
-                (v) => setState(
-                    () => _duration = int.parse(v!.replaceAll('min', ''))))),
-      ],
-    );
-  }
-
-  Widget _buildSelect(String label, List<String> options, String value,
-      void Function(String?) onChange) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 2.w, vertical: 0.5.h),
-      decoration: BoxDecoration(
-        color: _card,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
-          isExpanded: true,
-          dropdownColor: _surface,
-          icon: Icon(Icons.keyboard_arrow_down, color: _muted, size: 16),
-          style: const TextStyle(
-              color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500),
-          items: options
-              .map((o) => DropdownMenuItem(
-                    value: o,
-                    child: Text(o,
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 13)),
-                  ))
-              .toList(),
-          onChanged: onChange,
-        ),
-      ),
-    );
-  }
-
-  // ── exercise card ──────────────────────────────────────────────────────────
-
-  Widget _buildExerciseCard(int idx, _WorkoutEx ex) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 1.5.h),
-      decoration: BoxDecoration(
-        color: _card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.07)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Exercise header ──────────────────────────────────────────
-          Padding(
-            padding: EdgeInsets.fromLTRB(3.w, 2.h, 3.w, 1.5.h),
-            child: Row(
-              children: [
-                // GIF thumbnail
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: SizedBox(
-                    width: 52,
-                    height: 52,
-                    child: ex.imageUrl.isNotEmpty
-                        ? CachedNetworkImage(
-                            imageUrl: ex.imageUrl,
-                            fit: BoxFit.cover,
-                            placeholder: (_, __) => Container(
-                              color: _surface,
-                              child: Icon(Icons.fitness_center,
-                                  color: _muted, size: 22),
-                            ),
-                            errorWidget: (_, __, ___) => Container(
-                              color: _surface,
-                              child: Icon(Icons.fitness_center,
-                                  color: _muted, size: 22),
-                            ),
-                          )
-                        : Container(
-                            color: _surface,
-                            child: Icon(Icons.fitness_center,
-                                color: _muted, size: 22),
-                          ),
-                  ),
-                ),
-                SizedBox(width: 2.5.w),
-                // Name + muscle
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(ex.name,
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14)),
-                      if (ex.muscle.isNotEmpty) ...[
-                        SizedBox(height: 0.3.h),
-                        Text(ex.muscle,
-                            style: TextStyle(color: _muted, fontSize: 12)),
-                      ],
-                    ],
-                  ),
-                ),
-                // Delete exercise
-                GestureDetector(
-                  onTap: () => setState(() => _exercises.removeAt(idx)),
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: _red.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(Icons.close_rounded, color: _red, size: 15),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // ── Sets table ───────────────────────────────────────────────
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 3.w),
-            child: Column(
-              children: [
-                // Header row
-                _setTableHeader(),
-                SizedBox(height: 0.5.h),
-                ...ex.sets.asMap().entries.map(
-                      (e) => _setRow(idx, e.key, e.value, ex.sets.length > 1),
-                    ),
-              ],
-            ),
-          ),
-
-          // ── Add set button ───────────────────────────────────────────
-          Padding(
-            padding: EdgeInsets.fromLTRB(3.w, 1.h, 3.w, 1.5.h),
-            child: GestureDetector(
-              onTap: () => setState(() => ex.sets.add(_ExSet(
-                    reps: ex.sets.isNotEmpty ? ex.sets.last.reps : 10,
-                    rest: ex.sets.isNotEmpty ? ex.sets.last.rest : 90,
-                    weight: ex.sets.isNotEmpty ? ex.sets.last.weight : null,
-                  ))),
-              child: Row(
-                children: [
-                  Icon(Icons.add_circle_outline, color: _gold, size: 16),
-                  SizedBox(width: 1.5.w),
-                  Text('Adicionar série',
-                      style: TextStyle(
-                          color: _gold,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500)),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _setTableHeader() {
-    return Row(
-      children: [
-        SizedBox(
-          width: 48,
-          child: Text('SÉRIE',
-              style: TextStyle(
-                  color: _muted, fontSize: 11, fontWeight: FontWeight.w600),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.visible),
-        ),
-        SizedBox(width: 2.w),
-        Expanded(
-          child: Text('KG',
-              style: TextStyle(
-                  color: _muted, fontSize: 11, fontWeight: FontWeight.w600),
-              textAlign: TextAlign.center),
-        ),
-        SizedBox(width: 2.w),
-        Expanded(
-          child: Text('REPS',
-              style: TextStyle(
-                  color: _muted, fontSize: 11, fontWeight: FontWeight.w600),
-              textAlign: TextAlign.center),
-        ),
-        SizedBox(width: 2.w),
-        const SizedBox(width: 24),
-      ],
-    );
-  }
-
-  Widget _setRow(int exIdx, int setIdx, _ExSet set, bool canDelete) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 0.6.h),
-      child: Row(
-        children: [
-          // Set number
-          SizedBox(
-            width: 32,
-            child: Text('${setIdx + 1}',
-                style: TextStyle(
-                    color: _muted, fontSize: 13, fontWeight: FontWeight.w600),
-                textAlign: TextAlign.center),
-          ),
-          SizedBox(width: 2.w),
-          // Weight
-          Expanded(
-            child: GestureDetector(
-              onTap: () => _editSet(exIdx, setIdx, set),
-              child: Container(
-                padding: EdgeInsets.symmetric(vertical: 0.9.h),
-                decoration: BoxDecoration(
-                  color: _surface,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  set.weight != null ? '${set.weight}' : '—',
-                  style: TextStyle(
-                      color: set.weight != null ? Colors.white : _muted,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: 2.w),
-          // Reps
-          Expanded(
-            child: GestureDetector(
-              onTap: () => _editSet(exIdx, setIdx, set),
-              child: Container(
-                padding: EdgeInsets.symmetric(vertical: 0.9.h),
-                decoration: BoxDecoration(
-                  color: _surface,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '${set.reps}',
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
-          ),
-          SizedBox(width: 2.w),
-          // Delete set
-          SizedBox(
-            width: 24,
-            child: canDelete
-                ? GestureDetector(
-                    onTap: () =>
-                        setState(() => _exercises[exIdx].sets.removeAt(setIdx)),
-                    child: Icon(Icons.remove_circle_outline,
-                        color: _muted, size: 18),
-                  )
-                : const SizedBox(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── add button ─────────────────────────────────────────────────────────────
-
-  Widget _buildAddButton() {
-    return Padding(
-      padding: EdgeInsets.only(top: _exercises.isNotEmpty ? 0 : 0),
-      child: GestureDetector(
-        onTap: _openPicker,
-        child: Container(
-          width: double.infinity,
-          padding: EdgeInsets.symmetric(vertical: 1.8.h),
-          decoration: BoxDecoration(
-            color: _goldBg,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: _borderGold),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.add_rounded, color: _gold, size: 20),
-              SizedBox(width: 2.w),
-              Text('Adicionar exercício',
-                  style: TextStyle(
-                      color: _gold, fontWeight: FontWeight.w600, fontSize: 14)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ── save footer ───────────────────────────────────────────────────────────
-
-  Widget _buildSaveFooter() {
-    return Container(
-      padding: EdgeInsets.fromLTRB(4.w, 1.5.h, 4.w, 2.h),
-      decoration: BoxDecoration(
-        color: _surface,
-        border: Border(
-            top: BorderSide(color: Colors.white.withValues(alpha: 0.07))),
-      ),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: _saving ? null : _save,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: _gold,
-            foregroundColor: Colors.black,
-            padding: EdgeInsets.symmetric(vertical: 1.8.h),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-          child: Text(
-            _saving
-                ? 'Salvando…'
-                : (widget.editTemplate != null
-                    ? 'Salvar alterações'
-                    : 'Salvar treino'),
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15),
-          ),
-        ),
-      ),
-    );
   }
 }
 
@@ -1863,8 +1844,7 @@ class _ExercisePickerSheetState extends State<_ExercisePickerSheet> {
                               color: BldrWorkoutColorsV2.gold))
                       : _filteredExercises.isEmpty
                           ? Center(
-                              child: Text('—',
-                                  style: BldrWorkoutTextV2.hint),
+                              child: Text('—', style: BldrWorkoutTextV2.hint),
                             )
                           : _buildExerciseList(sc),
                 ),

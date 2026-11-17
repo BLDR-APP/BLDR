@@ -7990,6 +7990,114 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'CRIAR TREINO'**
   String get hub_empty_cta;
+
+  /// No description provided for @ed_eyebrow.
+  ///
+  /// In pt, this message translates to:
+  /// **'EDITAR TREINO'**
+  String get ed_eyebrow;
+
+  /// No description provided for @ed_save.
+  ///
+  /// In pt, this message translates to:
+  /// **'SALVAR'**
+  String get ed_save;
+
+  /// No description provided for @ed_name_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'NOME DO TREINO'**
+  String get ed_name_label;
+
+  /// No description provided for @ed_category_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'CATEGORIA'**
+  String get ed_category_label;
+
+  /// No description provided for @ed_section.
+  ///
+  /// In pt, this message translates to:
+  /// **'EXERCÍCIOS'**
+  String get ed_section;
+
+  /// No description provided for @ed_default.
+  ///
+  /// In pt, this message translates to:
+  /// **'PADRÃO DO EXERCÍCIO'**
+  String get ed_default;
+
+  /// No description provided for @ed_sets_header.
+  ///
+  /// In pt, this message translates to:
+  /// **'SÉRIES · PERSONALIZAÇÃO OPCIONAL'**
+  String get ed_sets_header;
+
+  /// No description provided for @ed_chip_sets.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =0{0 séries} one{{count} série} other{{count} séries}}'**
+  String ed_chip_sets(int count);
+
+  /// No description provided for @ed_chip_reps.
+  ///
+  /// In pt, this message translates to:
+  /// **'{reps} reps'**
+  String ed_chip_reps(String reps);
+
+  /// No description provided for @ed_default_rest.
+  ///
+  /// In pt, this message translates to:
+  /// **'{rest} descanso'**
+  String ed_default_rest(String rest);
+
+  /// No description provided for @ed_remove_exercise.
+  ///
+  /// In pt, this message translates to:
+  /// **'Remover exercício'**
+  String get ed_remove_exercise;
+
+  /// No description provided for @ed_edit_name.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar nome'**
+  String get ed_edit_name;
+
+  /// No description provided for @ed_options.
+  ///
+  /// In pt, this message translates to:
+  /// **'Opções do exercício'**
+  String get ed_options;
+
+  /// No description provided for @ed_cat_strength.
+  ///
+  /// In pt, this message translates to:
+  /// **'Força'**
+  String get ed_cat_strength;
+
+  /// No description provided for @ed_cat_hiit.
+  ///
+  /// In pt, this message translates to:
+  /// **'HIIT'**
+  String get ed_cat_hiit;
+
+  /// No description provided for @ed_cat_cardio.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cardio'**
+  String get ed_cat_cardio;
+
+  /// No description provided for @ed_cat_mobility.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mobilidade'**
+  String get ed_cat_mobility;
+
+  /// No description provided for @ed_cat_mixed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Misto'**
+  String get ed_cat_mixed;
 }
 
 class _AppLocalizationsDelegate
