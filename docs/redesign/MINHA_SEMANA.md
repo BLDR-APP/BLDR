@@ -149,10 +149,34 @@ Snackbar "Semana atualizada · <descrição>" + "DESFAZER" por ~5 s.
 - **Navegação:** semanas passadas somente leitura; atual + até 4 futuras
   editáveis.
 - **Dias sem `template_id`:** mostrar o `template_name`.
-- **Ajustes por semana no FREE:** **[DEFINIR: liberado para todos / exclusivo
-  BLDR CLUB]** — pendente, bloqueia a implementação.
+- **Acesso:** ajustes por semana são **exclusivos do BLDR CLUB**.
+  - FREE e CLUB: ver a semana atual, Editar plano (recorrente), trocar
+    treino em todas as semanas (comportamento atual do seletor) e Registrar
+    extra.
+  - Só CLUB: arrastar, mover e transformar em descanso só nesta semana, a
+    opção "Só nesta semana" e a navegação entre semanas.
+  - No FREE, as ações exclusivas aparecem com cadeado e abrem o
+    `ClubPaywallSheet` atual (via `ResolveClubAccess`).
 - **"+50 XP" do extra:** escondido até a correção do sistema de XP
   (BACKLOG_FUNCIONAL B10, que vem antes da implementação desta tela).
 - **"HAVOK decide":** chip exibido desabilitado, com "Em breve".
-- Ainda abertos: D3 (dias passados da semana atual), D6 (edge function do
-  HAVOK ler ajustes), D9 (ações em dia concluído).
+- **Dias já passados da semana atual (D3):** somente leitura, como as
+  semanas passadas.
+- **Função do HAVOK no servidor (D6):** sim — `gerar-resposta-havok` passa a
+  ler `weekly_plan_overrides` da semana, para enxergar a semana real. Entra
+  no plano de implementação abaixo.
+- **Dia concluído (D9):** sem mover, trocar ou descanso; tocar mostra o
+  treino feito (ou o resumo, se esse caminho já existir).
+
+## 8. Plano de implementação (ordem)
+
+1. BACKLOG_FUNCIONAL B10 (XP unificado) — pré-requisito.
+2. Migration `weekly_plan_overrides` + RLS (criada, aplicada pelo usuário).
+3. Domain: `PlanDayOverride`, métodos no `WeeklyPlanRepository`, use cases
+   `GetWeekPlan`, `ApplyWeekAdjustment`, `UndoWeekAdjustment`; resolver com
+   ajustes como 1ª prioridade; testes com repository fake.
+4. Data: datasource Supabase dos ajustes.
+5. Edge function `gerar-resposta-havok`: ler os ajustes da semana junto com
+   `weekly_plan_days`.
+6. Hub (card da semana, Treino de hoje) e Home passam a usar `GetWeekPlan`.
+7. Tela v2 (frames 282:68 … 291:76) com gating CLUB (cadeado + paywall).
