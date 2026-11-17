@@ -62,7 +62,13 @@ fallback atual do app. O botão de play do mockup não se aplica (proposta P4).
 - **Lista de séries:** só exibe; não permite editar uma série concluída. Nada se perde ao remover.
 - **Faixa flutuante de descanso:** tem duas ações — "+15 s" e "pular descanso". Precisam ir para o card de descanso (P3).
 
-## Pendência conhecida — persistência por série (etapa 1)
+## ✅ Resolvida — persistência por série (etapa 1)
+- **Investigado em 2026-11-17:** o código grava e lê `set_details` em todas
+  as camadas. No banco, o "TESTE 2" salvo em 17/11 16:12 tem séries
+  diferentes no exercício 8 (10/12/15/15 kg, média 13 em `weight_kg`):
+  a gravação por série funciona. O 42,5 veio de um salvamento com build
+  anterior ao commit `5b461e1`, que gravava só a média. Reabertura
+  confirmada no aparelho (10/12/15/15). Sem mudança de código.
 - **Sintoma:** em "Personalizar séries", série 1 = 40 kg e série 2 = 45 kg; ao salvar e reabrir, as duas aparecem com 42,5 kg (média). A migration foi aplicada e a coluna `set_details` existe.
 - **Quando:** investigar logo após a etapa 3 (editor). Nas etapas 2 e 3, a lógica de gravação/leitura das séries não muda além do necessário para o visual.
 - **Pistas a checar:** se `set_details` chega ao insert/update do `WorkoutService`; se `_enrichExerciseDbRows` ou outro passo reconstrói as linhas do template sem a coluna; se a reabertura usa o caminho que lê `set_details`.
@@ -214,7 +220,7 @@ Ficam ocultos/fora nesta fase:
 5. ✅ **Treino em andamento** + sheets de carga e reps (179:1319, 179:1401, 179:1496).
 6. ✅ **Resumo** (211:5).
 7. ✅ **Compartilhar** Overlay e Card + comunidade (241:12891, 241:12890).
-8. **Investigar a pendência da persistência por série.** Até lá, a lógica de gravação/leitura das séries só muda o necessário para o visual.
+8. ✅ **Investigar a pendência da persistência por série.** Até lá, a lógica de gravação/leitura das séries só muda o necessário para o visual.
 
 Cada etapa termina com `dart analyze lib`, `flutter test test/features` e comparação com os nodes da etapa.
 
