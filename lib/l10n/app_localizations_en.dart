@@ -4843,4 +4843,226 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wd_duplicate_error => 'Couldn\'t duplicate the workout.';
+
+  @override
+  String get ms_title => 'MY WEEK';
+
+  @override
+  String get ms_subtitle => 'TAP OR DRAG TO ADJUST';
+
+  @override
+  String ms_workouts_planned(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n workouts planned',
+      one: '1 workout planned',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String ms_rest_days(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n rest days',
+      one: '1 rest day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ms_instruction => 'DRAG OR TAP A WORKOUT TO REORGANIZE';
+
+  @override
+  String get ms_read_only => 'PAST WEEK · READ ONLY';
+
+  @override
+  String get ms_club_hint => 'THIS-WEEK ADJUSTMENTS ARE BLDR CLUB';
+
+  @override
+  String get ms_state_today => 'TODAY';
+
+  @override
+  String get ms_state_planned => 'PLANNED';
+
+  @override
+  String get ms_state_free => 'FREE';
+
+  @override
+  String get ms_state_done => 'DONE';
+
+  @override
+  String get ms_state_missed => 'MISSED';
+
+  @override
+  String get ms_state_in_progress => 'IN PROGRESS';
+
+  @override
+  String get ms_rest => 'REST';
+
+  @override
+  String get ms_free_day => 'Free day';
+
+  @override
+  String get ms_add_workout => 'Add workout';
+
+  @override
+  String get ms_management => 'MANAGE';
+
+  @override
+  String get ms_edit_plan => 'EDIT PLAN';
+
+  @override
+  String get ms_register_extra => 'LOG EXTRA';
+
+  @override
+  String get ms_footer => 'Tap to manage · hold the handle to drag';
+
+  @override
+  String get ms_workout_fallback => 'Workout';
+
+  @override
+  String get ms_actions_title => 'Day actions';
+
+  @override
+  String get ms_swap => 'Swap workout';
+
+  @override
+  String get ms_swap_sub => 'Pick another workout from the plan';
+
+  @override
+  String get ms_move => 'Move to another day';
+
+  @override
+  String get ms_move_sub => 'Reschedule this workout';
+
+  @override
+  String get ms_rest_action => 'Make it a rest day';
+
+  @override
+  String get ms_rest_action_sub =>
+      'Remove from this day without deleting the workout';
+
+  @override
+  String get ms_start => 'Start workout';
+
+  @override
+  String get ms_start_sub => 'Start this workout now';
+
+  @override
+  String get ms_swap_hint => 'pick a workout from the plan';
+
+  @override
+  String get ms_confirm_swap => 'CONFIRM SWAP';
+
+  @override
+  String get ms_add_title => 'Add workout';
+
+  @override
+  String get ms_confirm_add => 'ADD WORKOUT';
+
+  @override
+  String get ms_move_title => 'Move workout';
+
+  @override
+  String get ms_move_hint => 'select the target day';
+
+  @override
+  String ms_dest_busy(String name) {
+    return '$name · taken';
+  }
+
+  @override
+  String get ms_dest_free => 'Rest · free';
+
+  @override
+  String get ms_dest_note => 'Taken day: the workouts will swap places.';
+
+  @override
+  String get ms_scope_title => 'APPLY TO';
+
+  @override
+  String get ms_scope_week => 'This week only';
+
+  @override
+  String get ms_scope_all => 'Every week';
+
+  @override
+  String get ms_no_templates =>
+      'You don\'t have workouts yet. Create one in Workouts.';
+
+  @override
+  String get ms_club_section => 'BLDR CLUB';
+
+  @override
+  String get ms_saved_title => 'Week updated';
+
+  @override
+  String ms_saved_moved(String name, String day) {
+    return '$name moved to $day';
+  }
+
+  @override
+  String ms_saved_swapped(String a, String b) {
+    return '$a and $b swapped days';
+  }
+
+  @override
+  String ms_saved_rest(String day) {
+    return '$day is now a rest day';
+  }
+
+  @override
+  String ms_saved_set(String name, String day) {
+    return '$name on $day';
+  }
+
+  @override
+  String get ms_undo => 'UNDO';
+
+  @override
+  String get ms_save_error => 'Couldn\'t save. Your week was restored.';
+
+  @override
+  String get ms_undo_error => 'Couldn\'t undo.';
+
+  @override
+  String get ms_soon => 'Coming soon';
+
+  @override
+  String get ms_split_label => 'TRAINING SPLIT';
+
+  @override
+  String get ms_days_label => 'DAYS OF THE WEEK';
+
+  @override
+  String ms_days_summary(int t, int r) {
+    return '$t workouts · $r rest';
+  }
+
+  @override
+  String get ms_prev_week => 'Previous week';
+
+  @override
+  String get ms_next_week => 'Next week';
+
+  @override
+  String get ms_weekdays_short => 'MON,TUE,WED,THU,FRI,SAT,SUN';
+
+  @override
+  String get ms_weekdays_long =>
+      'Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday';
+
+  @override
+  String get ms_weekdays_letter => 'M,T,W,T,F,S,S';
+
+  @override
+  String get ms_months =>
+      'JANUARY,FEBRUARY,MARCH,APRIL,MAY,JUNE,JULY,AUGUST,SEPTEMBER,OCTOBER,NOVEMBER,DECEMBER';
+
+  @override
+  String get ms_months_short =>
+      'JAN,FEB,MAR,APR,MAY,JUN,JUL,AUG,SEP,OCT,NOV,DEC';
 }

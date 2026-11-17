@@ -8728,6 +8728,384 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Não foi possível duplicar o treino.'**
   String get wd_duplicate_error;
+
+  /// No description provided for @ms_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'MINHA SEMANA'**
+  String get ms_title;
+
+  /// No description provided for @ms_subtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'TOQUE OU ARRASTE PARA AJUSTAR'**
+  String get ms_subtitle;
+
+  /// No description provided for @ms_workouts_planned.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n, plural, =0{0 treinos programados} one{1 treino programado} other{{n} treinos programados}}'**
+  String ms_workouts_planned(int n);
+
+  /// No description provided for @ms_rest_days.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n, plural, =0{0 dias de descanso} one{1 dia de descanso} other{{n} dias de descanso}}'**
+  String ms_rest_days(int n);
+
+  /// No description provided for @ms_instruction.
+  ///
+  /// In pt, this message translates to:
+  /// **'ARRASTE OU TOQUE EM UM TREINO PARA REORGANIZAR'**
+  String get ms_instruction;
+
+  /// No description provided for @ms_read_only.
+  ///
+  /// In pt, this message translates to:
+  /// **'SEMANA PASSADA · SOMENTE LEITURA'**
+  String get ms_read_only;
+
+  /// No description provided for @ms_club_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'AJUSTES SÓ DESTA SEMANA SÃO DO BLDR CLUB'**
+  String get ms_club_hint;
+
+  /// No description provided for @ms_state_today.
+  ///
+  /// In pt, this message translates to:
+  /// **'HOJE'**
+  String get ms_state_today;
+
+  /// No description provided for @ms_state_planned.
+  ///
+  /// In pt, this message translates to:
+  /// **'PLANEJADO'**
+  String get ms_state_planned;
+
+  /// No description provided for @ms_state_free.
+  ///
+  /// In pt, this message translates to:
+  /// **'LIVRE'**
+  String get ms_state_free;
+
+  /// No description provided for @ms_state_done.
+  ///
+  /// In pt, this message translates to:
+  /// **'CONCLUÍDO'**
+  String get ms_state_done;
+
+  /// No description provided for @ms_state_missed.
+  ///
+  /// In pt, this message translates to:
+  /// **'NÃO FEITO'**
+  String get ms_state_missed;
+
+  /// No description provided for @ms_state_in_progress.
+  ///
+  /// In pt, this message translates to:
+  /// **'EM ANDAMENTO'**
+  String get ms_state_in_progress;
+
+  /// No description provided for @ms_rest.
+  ///
+  /// In pt, this message translates to:
+  /// **'DESCANSO'**
+  String get ms_rest;
+
+  /// No description provided for @ms_free_day.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dia livre'**
+  String get ms_free_day;
+
+  /// No description provided for @ms_add_workout.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar treino'**
+  String get ms_add_workout;
+
+  /// No description provided for @ms_management.
+  ///
+  /// In pt, this message translates to:
+  /// **'GERENCIAMENTO'**
+  String get ms_management;
+
+  /// No description provided for @ms_edit_plan.
+  ///
+  /// In pt, this message translates to:
+  /// **'EDITAR PLANO'**
+  String get ms_edit_plan;
+
+  /// No description provided for @ms_register_extra.
+  ///
+  /// In pt, this message translates to:
+  /// **'REGISTRAR EXTRA'**
+  String get ms_register_extra;
+
+  /// No description provided for @ms_footer.
+  ///
+  /// In pt, this message translates to:
+  /// **'Toque para gerenciar · segure a alça para arrastar'**
+  String get ms_footer;
+
+  /// No description provided for @ms_workout_fallback.
+  ///
+  /// In pt, this message translates to:
+  /// **'Treino'**
+  String get ms_workout_fallback;
+
+  /// No description provided for @ms_actions_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ações do dia'**
+  String get ms_actions_title;
+
+  /// No description provided for @ms_swap.
+  ///
+  /// In pt, this message translates to:
+  /// **'Trocar treino'**
+  String get ms_swap;
+
+  /// No description provided for @ms_swap_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolher outro treino do plano'**
+  String get ms_swap_sub;
+
+  /// No description provided for @ms_move.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mover para outro dia'**
+  String get ms_move;
+
+  /// No description provided for @ms_move_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Reprogramar este treino'**
+  String get ms_move_sub;
+
+  /// No description provided for @ms_rest_action.
+  ///
+  /// In pt, this message translates to:
+  /// **'Transformar em descanso'**
+  String get ms_rest_action;
+
+  /// No description provided for @ms_rest_action_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Retirar deste dia sem excluir o treino'**
+  String get ms_rest_action_sub;
+
+  /// No description provided for @ms_start.
+  ///
+  /// In pt, this message translates to:
+  /// **'Iniciar treino'**
+  String get ms_start;
+
+  /// No description provided for @ms_start_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Começar este treino agora'**
+  String get ms_start_sub;
+
+  /// No description provided for @ms_swap_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'escolha um treino do plano'**
+  String get ms_swap_hint;
+
+  /// No description provided for @ms_confirm_swap.
+  ///
+  /// In pt, this message translates to:
+  /// **'CONFIRMAR TROCA'**
+  String get ms_confirm_swap;
+
+  /// No description provided for @ms_add_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar treino'**
+  String get ms_add_title;
+
+  /// No description provided for @ms_confirm_add.
+  ///
+  /// In pt, this message translates to:
+  /// **'ADICIONAR TREINO'**
+  String get ms_confirm_add;
+
+  /// No description provided for @ms_move_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mover treino'**
+  String get ms_move_title;
+
+  /// No description provided for @ms_move_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'selecione o dia de destino'**
+  String get ms_move_hint;
+
+  /// No description provided for @ms_dest_busy.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} · ocupado'**
+  String ms_dest_busy(String name);
+
+  /// No description provided for @ms_dest_free.
+  ///
+  /// In pt, this message translates to:
+  /// **'Descanso · livre'**
+  String get ms_dest_free;
+
+  /// No description provided for @ms_dest_note.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dia ocupado: os treinos trocarão de posição.'**
+  String get ms_dest_note;
+
+  /// No description provided for @ms_scope_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'APLICAR EM'**
+  String get ms_scope_title;
+
+  /// No description provided for @ms_scope_week.
+  ///
+  /// In pt, this message translates to:
+  /// **'Só nesta semana'**
+  String get ms_scope_week;
+
+  /// No description provided for @ms_scope_all.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todas as semanas'**
+  String get ms_scope_all;
+
+  /// No description provided for @ms_no_templates.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você ainda não tem treinos. Crie um em Treinos.'**
+  String get ms_no_templates;
+
+  /// No description provided for @ms_club_section.
+  ///
+  /// In pt, this message translates to:
+  /// **'BLDR CLUB'**
+  String get ms_club_section;
+
+  /// No description provided for @ms_saved_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Semana atualizada'**
+  String get ms_saved_title;
+
+  /// No description provided for @ms_saved_moved.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} movido para {day}'**
+  String ms_saved_moved(String name, String day);
+
+  /// No description provided for @ms_saved_swapped.
+  ///
+  /// In pt, this message translates to:
+  /// **'{a} e {b} trocaram de dia'**
+  String ms_saved_swapped(String a, String b);
+
+  /// No description provided for @ms_saved_rest.
+  ///
+  /// In pt, this message translates to:
+  /// **'{day} virou descanso'**
+  String ms_saved_rest(String day);
+
+  /// No description provided for @ms_saved_set.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} em {day}'**
+  String ms_saved_set(String name, String day);
+
+  /// No description provided for @ms_undo.
+  ///
+  /// In pt, this message translates to:
+  /// **'DESFAZER'**
+  String get ms_undo;
+
+  /// No description provided for @ms_save_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível salvar. Sua semana voltou ao estado anterior.'**
+  String get ms_save_error;
+
+  /// No description provided for @ms_undo_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível desfazer.'**
+  String get ms_undo_error;
+
+  /// No description provided for @ms_soon.
+  ///
+  /// In pt, this message translates to:
+  /// **'Em breve'**
+  String get ms_soon;
+
+  /// No description provided for @ms_split_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'DIVISÃO DE TREINOS'**
+  String get ms_split_label;
+
+  /// No description provided for @ms_days_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'DIAS DA SEMANA'**
+  String get ms_days_label;
+
+  /// No description provided for @ms_days_summary.
+  ///
+  /// In pt, this message translates to:
+  /// **'{t} treinos · {r} descansos'**
+  String ms_days_summary(int t, int r);
+
+  /// No description provided for @ms_prev_week.
+  ///
+  /// In pt, this message translates to:
+  /// **'Semana anterior'**
+  String get ms_prev_week;
+
+  /// No description provided for @ms_next_week.
+  ///
+  /// In pt, this message translates to:
+  /// **'Próxima semana'**
+  String get ms_next_week;
+
+  /// No description provided for @ms_weekdays_short.
+  ///
+  /// In pt, this message translates to:
+  /// **'SEG,TER,QUA,QUI,SEX,SÁB,DOM'**
+  String get ms_weekdays_short;
+
+  /// No description provided for @ms_weekdays_long.
+  ///
+  /// In pt, this message translates to:
+  /// **'segunda-feira,terça-feira,quarta-feira,quinta-feira,sexta-feira,sábado,domingo'**
+  String get ms_weekdays_long;
+
+  /// No description provided for @ms_weekdays_letter.
+  ///
+  /// In pt, this message translates to:
+  /// **'S,T,Q,Q,S,S,D'**
+  String get ms_weekdays_letter;
+
+  /// No description provided for @ms_months.
+  ///
+  /// In pt, this message translates to:
+  /// **'JANEIRO,FEVEREIRO,MARÇO,ABRIL,MAIO,JUNHO,JULHO,AGOSTO,SETEMBRO,OUTUBRO,NOVEMBRO,DEZEMBRO'**
+  String get ms_months;
+
+  /// No description provided for @ms_months_short.
+  ///
+  /// In pt, this message translates to:
+  /// **'JAN,FEV,MAR,ABR,MAI,JUN,JUL,AGO,SET,OUT,NOV,DEZ'**
+  String get ms_months_short;
 }
 
 class _AppLocalizationsDelegate

@@ -1132,3 +1132,65 @@ abstract final class BldrDetailsTextV2 {
   static final exTipLabel = _s(BldrTextV2.s11, _sb, BldrDetailsColorsV2.goldLabel); // 10
   static final exTipText = _s(BldrTextV2.s11, _m, BldrDetailsColorsV2.value); // 11
 }
+
+// Minha semana v2 (282:68 · 285:141 · 285:231 · 285:320 · 278:1487 · 278:1600 · 291:76)
+abstract final class BldrWeekColorsV2 {
+  static const headerButton = Color(0xFF2E2814);
+  static const gold = Color(0xFFD4AD30);
+  static const goldBrand = Color(0xFFD4AF37);
+  static const text = Color(0xFFF5F5F5);
+  static const muted = Color(0xFF919191);
+  static const cardBg = Color(0xFF181818);
+  static const cardBorder = Color(0xFF363636);
+  static const restBorder = Color(0xFF877545);
+  static const todayChip = Color(0xFF40361A);
+  static const chip = Color(0xFF262626);
+  static const restChip = Color(0xFF242424);
+  static const sheetText = Color(0xFFF7F7F7);
+  static const sheetMuted = Color(0xFF9C9C9C);
+  static const editChip = Color(0xFF212121);
+  static const editMuted = Color(0xFF8C8C8C);
+  static const dayRestBorder = Color(0xFF7A7A7A);
+  static const track = Color(0xFF474747);
+  static const snackBg = Color(0xFF171717);
+  static const snackText = Color(0xFFFAFAFA);
+  static const snackMuted = Color(0xFFA6A6A6);
+}
+
+abstract final class BldrWeekTextV2 {
+  static TextStyle _s(double step, FontWeight w, Color c) =>
+      BldrTextV2.scale(step, w, c);
+  static const _sb = FontWeight.w600, _r = FontWeight.w400, _b = FontWeight.w700;
+  static final title = _s(BldrTextV2.s17, _sb, BldrWeekColorsV2.text); // 18
+  static final subtitle = _s(BldrTextV2.s11, _sb, BldrWeekColorsV2.muted); // 9
+  static final range = _s(BldrTextV2.s15, _sb, BldrWeekColorsV2.text); // 15
+  static final summary = _s(BldrTextV2.s11, _r, BldrWeekColorsV2.muted); // 10
+  static final instruction = _s(BldrTextV2.s11, _sb, BldrWeekColorsV2.gold); // 9
+  static final day = _s(BldrTextV2.s11, _sb, BldrWeekColorsV2.muted); // 11
+  static final dayToday = _s(BldrTextV2.s11, _sb, BldrWeekColorsV2.gold); // 11
+  static final name = _s(BldrTextV2.s15, _sb, BldrWeekColorsV2.text); // 16
+  static final restName = _s(BldrTextV2.s15, _sb, BldrWeekColorsV2.muted); // 16
+  static final groups = _s(BldrTextV2.s11, _r, BldrWeekColorsV2.muted); // 10
+  static final chip = _s(BldrTextV2.s11, _sb, BldrWeekColorsV2.muted); // 9
+  static final chipToday = _s(BldrTextV2.s11, _sb, BldrWeekColorsV2.gold); // 9
+  static final add = _s(BldrTextV2.s11, _sb, BldrWeekColorsV2.gold); // 11
+  static final section = _s(BldrTextV2.s11, _sb, BldrWeekColorsV2.muted); // 10
+  static final editPlan = _s(BldrTextV2.s12, _sb, BldrWeekColorsV2.goldBrand); // 12
+  static final extra = _s(BldrTextV2.s11, _sb, BldrWeekColorsV2.text); // 11
+  static final footer = _s(BldrTextV2.s11, _r, BldrWeekColorsV2.muted); // 10
+  static final sheetSub = _s(BldrTextV2.s11, _r, BldrWeekColorsV2.sheetMuted); // 11
+  static final optionTitle = _s(BldrTextV2.s13, _sb, BldrWeekColorsV2.sheetText); // 13
+  static final optionSub = _s(BldrTextV2.s11, _r, BldrWeekColorsV2.sheetMuted); // 10
+  static final pickName = _s(BldrTextV2.s15, _sb, BldrWeekColorsV2.sheetText); // 14
+  static final destName = _s(BldrTextV2.s12, _sb, BldrWeekColorsV2.sheetText); // 12
+  static final confirm = _s(BldrTextV2.s12, _b, BldrColorsV2.goldBright); // 12
+  static final editLabel = _s(BldrTextV2.s11, _sb, BldrWeekColorsV2.editMuted); // 10
+  static final editChip = _s(BldrTextV2.s11, _r, BldrWeekColorsV2.editMuted); // 11
+  static final editChipOn = _s(BldrTextV2.s11, _r, BldrWeekColorsV2.gold); // 11
+  static final editCount = _s(BldrTextV2.s11, _r, BldrWeekColorsV2.gold); // 10
+  static final save = _s(BldrTextV2.s15, _sb, BldrWeekColorsV2.goldBrand); // 14
+  static final duration = _s(BldrTextV2.s12, _sb, BldrWeekColorsV2.gold); // 12
+  static final snackTitle = _s(BldrTextV2.s15, _sb, BldrWeekColorsV2.snackText); // 14
+  static final snackSub = _s(BldrTextV2.s11, _r, BldrWeekColorsV2.snackMuted); // 10
+  static final undo = _s(BldrTextV2.s11, _sb, BldrWeekColorsV2.gold); // 11
+}

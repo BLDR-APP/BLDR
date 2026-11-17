@@ -99,6 +99,47 @@ class ApplyWeekAdjustment {
           ValidationFailure('Esta semana não pode ser alterada.'));
     }
 
+    final built = buildOverrides(
+        adjustment: adjustment, weekStart: weekStart, weekPlan: weekPlan);
+    if (built.isFailure) return Result.failure(built.failureOrNull!);
+    final applied = built.valueOrNull!;
+
+    for (final o in applied) {
+      if (WeekCalendar.dayOf(weekStart, o.diaSemana).isBefore(todayDate)) {
+        return const Result.failure(
+            ValidationFailure('Dias que já passaram não podem ser alterados.'));
+      }
+      if (protectedDays.contains(o.diaSemana)) {
+        return const Result.failure(ValidationFailure(
+            'Dias com treino concluído ou em andamento não podem ser alterados.'));
+      }
+    }
+
+    final existing = await _repo.getOverrides(weekStart);
+    if (existing.isFailure) return Result.failure(existing.failureOrNull!);
+    final existingByDay = {
+      for (final o in existing.valueOrNull!) o.diaSemana: o,
+    };
+
+    final write = await _repo.upsertOverrides(weekStart, applied);
+    if (write.isFailure) return Result.failure(write.failureOrNull!);
+
+    return Result.success(WeekAdjustmentOutcome(
+      weekStart: weekStart,
+      applied: applied,
+      previous: {
+        for (final o in applied) o.diaSemana: existingByDay[o.diaSemana]
+      },
+    ));
+  }
+
+  /// Ajustes que um pedido gera, sem gravar (a tela usa para a prévia
+  /// otimista; [call] usa para gravar). Valida só o destino.
+  static Result<List<WeekOverride>> buildOverrides({
+    required WeekAdjustment adjustment,
+    required DateTime weekStart,
+    required List<PlanDay> weekPlan,
+  }) {
     final byDay = {for (final d in weekPlan) d.diaSemana: d};
     PlanDay dayOf(int d) => byDay[d] ?? PlanDay(diaSemana: d, tipo: 'descanso');
 
@@ -159,33 +200,7 @@ class ApplyWeekAdjustment {
         ];
     }
 
-    for (final o in applied) {
-      if (WeekCalendar.dayOf(weekStart, o.diaSemana).isBefore(todayDate)) {
-        return const Result.failure(
-            ValidationFailure('Dias que já passaram não podem ser alterados.'));
-      }
-      if (protectedDays.contains(o.diaSemana)) {
-        return const Result.failure(ValidationFailure(
-            'Dias com treino concluído ou em andamento não podem ser alterados.'));
-      }
-    }
-
-    final existing = await _repo.getOverrides(weekStart);
-    if (existing.isFailure) return Result.failure(existing.failureOrNull!);
-    final existingByDay = {
-      for (final o in existing.valueOrNull!) o.diaSemana: o,
-    };
-
-    final write = await _repo.upsertOverrides(weekStart, applied);
-    if (write.isFailure) return Result.failure(write.failureOrNull!);
-
-    return Result.success(WeekAdjustmentOutcome(
-      weekStart: weekStart,
-      applied: applied,
-      previous: {
-        for (final o in applied) o.diaSemana: existingByDay[o.diaSemana]
-      },
-    ));
+    return Result.success(applied);
   }
 
   static bool _valid(int d) => d >= 1 && d <= 7;

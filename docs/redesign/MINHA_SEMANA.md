@@ -294,3 +294,23 @@ e aplicar o mesmo merge antes de montar o contexto. Mudança em
 - Edge function `gerar-resposta-havok`: plano da semana = recorrente +
   ajustes, semana pela `user_profiles.timezone` (padrão São Paulo); testes
   Deno. Deploy: `supabase functions deploy gerar-resposta-havok`.
+
+## 11. Passo 3 — tela (17/11)
+- `WeeklyPlanScreen` reescrita no v2 (282:68): cabeçalho com HAVOK no slot
+  de ação, navegação de semanas (passadas só leitura, atual + 4 futuras),
+  resumo, grade 2 colunas com o 7º dia na largura toda, estados Hoje /
+  Planejado / Livre / Concluído / Não feito / Em andamento, arrastar com
+  alça (CLUB), "Gerenciamento".
+- Sheets (todos `BldrV2Sheet`): Ações do dia (285:141), Trocar/Adicionar
+  (285:231) → "Só nesta semana / Todas as semanas", Mover (285:320, tocar no
+  destino aplica), Editar plano (278:1487, HAVOK decide "Em breve"),
+  Registrar extra (278:1600, "+50 XP"). Snackbar "Semana atualizada" +
+  "Desfazer" (291:76). Exclusão de registro com `BldrV2ConfirmDialog`.
+- FREE: Mover, Descanso, "Só nesta semana", arrastar e trocar de semana com
+  cadeado → `ClubPaywallSheet`.
+- Mantidos fora do mockup: "Iniciar treino" (antes "Fazer agora", hoje e
+  dias não feitos) e "Excluir registro" no dia concluído.
+- Saem: XP por dia nos cards e a consulta direta a `xp_events` da tela
+  (Supabase em presentation).
+- **Mudança de regra a confirmar:** antes "Editar plano" era só CLUB; a §7
+  libera para FREE e CLUB — implementado conforme a §7.

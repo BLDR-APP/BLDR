@@ -287,12 +287,18 @@ class _BldrV2StepperState extends State<BldrV2Stepper> {
 class BldrV2SheetOption extends StatelessWidget {
   final IconData icon;
   final String label;
+  final String? subtitle;
+
+  /// Ação exclusiva do BLDR CLUB para quem não tem acesso (cadeado).
+  final bool locked;
   final VoidCallback onTap;
   const BldrV2SheetOption(
       {super.key,
       required this.icon,
       required this.label,
-      required this.onTap});
+      required this.onTap,
+      this.subtitle,
+      this.locked = false});
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -313,13 +319,31 @@ class BldrV2SheetOption extends StatelessWidget {
               Icon(icon, size: 22, color: BldrSheetV2Colors.border),
               const SizedBox(width: 14),
               Expanded(
-                child: Text(label,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: BldrSheetV2Text.option),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(label,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: BldrSheetV2Text.option),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 3),
+                        Text(subtitle!,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: BldrSheetV2Text.label),
+                      ],
+                    ],
+                  ),
+                ),
               ),
-              const Icon(TablerIcons.chevron_right,
-                  size: 18, color: BldrSheetV2Colors.unit),
+              Icon(locked ? TablerIcons.lock : TablerIcons.chevron_right,
+                  size: 18,
+                  color: locked
+                      ? BldrSheetV2Colors.border
+                      : BldrSheetV2Colors.unit),
             ]),
           ),
         ),
