@@ -4756,4 +4756,109 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get sm_less_prs => 'Mostrar menos';
+
+  @override
+  String get wd_eyebrow => 'DETALHES DO TREINO';
+
+  @override
+  String get wd_duration => 'DURAÇÃO';
+
+  @override
+  String get wd_exercises => 'EXERCÍCIOS';
+
+  @override
+  String get wd_volume => 'VOLUME';
+
+  @override
+  String get wd_last_time => 'ÚLTIMA VEZ';
+
+  @override
+  String get wd_muscle_map => 'MUSCLE MAP';
+
+  @override
+  String wd_minutes(int n) {
+    return '$n min';
+  }
+
+  @override
+  String wd_ex_count(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n exercícios',
+      one: '1 exercício',
+      zero: '0 exercícios',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String wd_sets_count(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n séries',
+      one: '1 série',
+      zero: '0 séries',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String wd_reps(String range) {
+    return '$range reps';
+  }
+
+  @override
+  String get wd_start => 'INICIAR TREINO';
+
+  @override
+  String get wd_preview_note => 'Visualização prévia · edição pelo menu';
+
+  @override
+  String get wd_edit => 'Editar treino';
+
+  @override
+  String get wd_duplicate => 'Duplicar treino';
+
+  @override
+  String get wd_delete => 'Excluir treino';
+
+  @override
+  String get wd_delete_title => 'Excluir treino?';
+
+  @override
+  String wd_delete_body(String name) {
+    return 'O treino $name será removido dos seus treinos. Essa ação não pode ser desfeita.';
+  }
+
+  @override
+  String get wd_error => 'Não foi possível carregar o treino.';
+
+  @override
+  String get wd_retry => 'Tentar novamente';
+
+  @override
+  String get wd_empty => 'Este treino ainda não tem exercícios.';
+
+  @override
+  String get wd_options => 'Opções do treino';
+
+  @override
+  String get ex_title => 'EXERCÍCIO';
+
+  @override
+  String get ex_equipment => 'EQUIPAMENTO';
+
+  @override
+  String get ex_sets => 'SÉRIES';
+
+  @override
+  String get ex_how => 'COMO EXECUTAR';
+
+  @override
+  String get ex_tip => 'DICA DE EXECUÇÃO';
+
+  @override
+  String get ex_back => 'VOLTAR AO TREINO';
 }

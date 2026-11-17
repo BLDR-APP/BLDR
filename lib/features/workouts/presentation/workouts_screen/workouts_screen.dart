@@ -42,6 +42,7 @@ import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/acti
 import 'package:bldr_fitness/services/exercise_db_rapid_service.dart';
 import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/create_workout_screen.dart';
 import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/weekly_plan_screen.dart';
+import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/workout_details_screen.dart';
 import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/workout_photo_review_screen.dart';
 import 'package:bldr_fitness/shared/presentation/widgets/bldr_muscle_map.dart';
 
@@ -346,336 +347,37 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
     }
   }
 
-  void _viewWorkoutDetails(Map<String, dynamic> template) {
-    // Only user-created workouts (not public BLDR) can be edited/deleted
-    final isOwned = template['is_public'] != true;
-
-    // Buscado uma única vez por abertura do sheet — reaproveitado pelo
-    // subtítulo de grupos musculares (item 1), pela contagem (item 3) e
-    // pela lista de exercícios (item 4), evitando 3 consultas.
-    final exercisesFuture = getIt<GetTemplateWithExercises>()(template['id'])
-        .then((r) =>
-            r.valueOrNull == null ? null : templateToLegacyMap(r.valueOrNull!));
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: BldrColors.sheetBg,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => FutureBuilder<Map<String, dynamic>?>(
-        future: exercisesFuture,
-        builder: (_, snap) {
-          final loading = snap.connectionState == ConnectionState.waiting;
-          final exercises =
-              ((snap.data ?? {})['workout_template_exercises'] as List?) ?? [];
-
-          // Grupos musculares únicos entre os exercícios do treino.
-          final muscleGroups = <String>{};
-          int totalSets = 0;
-          for (final row in exercises) {
-            final r = (row as Map).cast<String, dynamic>();
-            final ex = (r['exercises'] as Map?)?.cast<String, dynamic>() ?? {};
-            final group = _muscleGroupText(ex['primary_muscle_group']);
-            if (group != null && group.isNotEmpty) muscleGroups.add(group);
-            totalSets += (r['sets'] as int?) ?? 0;
-          }
-
-          return SizedBox(
-            height: MediaQuery.of(context).size.height * 0.85,
-            child: Column(
-              children: [
-                // ── header (fixo) ─────────────────────────────────────
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 36,
-                          height: 4,
-                          decoration: BoxDecoration(
-                              color: BldrColors.textMuted,
-                              borderRadius: BorderRadius.circular(2)),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Item 1 — título = nome curto; subtítulo = grupos
-                      // musculares (nada de repetir o nome como subtítulo).
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(template['name'],
-                                    style: BldrText.cardTitleLg),
-                                if (muscleGroups.isNotEmpty) ...[
-                                  const SizedBox(height: 3),
-                                  Text(muscleGroups.join(' · '),
-                                      style: BldrText.meta),
-                                ],
-                              ],
-                            ),
-                          ),
-                          if (isOwned) ...[
-                            const SizedBox(width: 8),
-                            // Edit button
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.pop(ctx);
-                                _editTemplate(template);
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: BldrColors.goldTintChip,
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                      color: BldrColors.goldBorderChip),
-                                ),
-                                child: const Icon(Icons.edit_outlined,
-                                    color: BldrColors.goldBright, size: 16),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // Delete button
-                            GestureDetector(
-                              onTap: () => _confirmDelete(ctx, template),
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: const Color(0x1FC84040),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                      color: const Color(0x40C84040)),
-                                ),
-                                child: const Icon(Icons.delete_outline_rounded,
-                                    color: Color(0xFFC84040), size: 16),
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-
-                      if (template['description'] != null) ...[
-                        const SizedBox(height: 8),
-                        Text(template['description'],
-                            style: BldrText.description),
-                      ],
-
-                      // Item 2 — chips de metadados, ícone dourado.
-                      const SizedBox(height: 14),
-                      Row(children: [
-                        BldrChip(
-                          label:
-                              '${template['estimated_duration_minutes'] ?? 30} min',
-                          icon: Icons.schedule,
-                          active: true,
-                        ),
-                        // Treinos novos do usuário salvam nível vazio
-                        // (TREINOS_V2): sem chip em vez de "Nível 1".
-                        if (template['difficulty_level'] != null) ...[
-                          const SizedBox(width: 8),
-                          BldrChip(
-                            label: 'Nível ${template['difficulty_level']}',
-                            icon: Icons.bar_chart,
-                            active: true,
-                          ),
-                        ],
-                        const SizedBox(width: 8),
-                        BldrChip(
-                          label: _fmtType(template['workout_type']),
-                          icon: Icons.category,
-                          active: true,
-                        ),
-                      ]),
-                    ],
-                  ),
-                ),
-
-                // ── conteúdo (rolável) ──────────────────────────────────
-                Expanded(
-                  child: loading
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                              color: BldrColors.goldBright))
-                      : exercises.isEmpty
-                          ? Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
-                              child: Text(
-                                  AppLocalizations.of(ctx)
-                                      .workouts_no_exercises,
-                                  style: BldrText.description),
-                            )
-                          : ListView.separated(
-                              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                              itemCount: exercises.length + 1,
-                              separatorBuilder: (_, __) =>
-                                  const SizedBox(height: 8),
-                              itemBuilder: (_, i) {
-                                // Item 3 — cabeçalho "Exercícios" com contagem.
-                                if (i == 0) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 4),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                            AppLocalizations.of(ctx)
-                                                .workouts_exercises_header,
-                                            style: BldrText.sectionTitle),
-                                        Text(
-                                            AppLocalizations.of(ctx)
-                                                .workouts_exercises_count(
-                                                    exercises.length,
-                                                    totalSets),
-                                            style: BldrText.meta),
-                                      ],
-                                    ),
-                                  );
-                                }
-                                final row = (exercises[i - 1] as Map)
-                                    .cast<String, dynamic>();
-                                final ex = (row['exercises'] as Map?)
-                                        ?.cast<String, dynamic>() ??
-                                    {};
-                                final notes = (row['notes'] as String?)?.trim();
-
-                                // Item 4 — "3 séries · 12 reps" + variação
-                                // (notes) quando houver.
-                                final detailParts = [
-                                  if (row['sets'] != null)
-                                    AppLocalizations.of(ctx)
-                                        .workouts_sets(row['sets'] as int),
-                                  if (row['reps'] != null)
-                                    AppLocalizations.of(ctx)
-                                        .workouts_reps(row['reps'] as int),
-                                ];
-                                var subtitle = detailParts.join(' · ');
-                                if (notes != null && notes.isNotEmpty) {
-                                  subtitle = subtitle.isEmpty
-                                      ? notes
-                                      : '$subtitle · $notes';
-                                }
-
-                                return BldrListRow(
-                                  icon: Icons.fitness_center,
-                                  leading: BldrIndexBox(index: i),
-                                  title: ex['name'] ?? 'Exercício',
-                                  subtitle: subtitle.isEmpty ? null : subtitle,
-                                  trailing: const Icon(Icons.chevron_right,
-                                      color: BldrColors.textMuted, size: 18),
-                                  onTap: () => _showExerciseTechnique(ex),
-                                );
-                              },
-                            ),
-                ),
-
-                // ── footer (fixo) — item 5 ──────────────────────────────
-                ClipRRect(
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(
-                        sigmaX: BldrBlur.sheet, sigmaY: BldrBlur.sheet),
-                    child: Container(
-                      padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
-                      decoration: BoxDecoration(
-                        color: BldrColors.sheetBg,
-                        border: Border(
-                          top: BorderSide(color: BldrColors.border),
-                        ),
-                      ),
-                      child: BldrPrimaryButton(
-                        label:
-                            AppLocalizations.of(ctx).workouts_start_workout_btn,
-                        icon: Icons.play_arrow_rounded,
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          _startWorkout(template);
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  /// Abre a técnica do exercício — sheet de leitura, sem alterar dados.
-  void _showExerciseTechnique(Map<String, dynamic> exercise) {
-    final instructions =
-        (exercise['instructions'] as List?)?.cast<String>() ?? const [];
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: BldrColors.sheetBg,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                      color: BldrColors.textMuted,
-                      borderRadius: BorderRadius.circular(2)),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(exercise['name'] ?? 'Exercício',
-                  style: BldrText.cardTitleLg),
-              if (_muscleGroupText(exercise['primary_muscle_group']) !=
-                  null) ...[
-                const SizedBox(height: 4),
-                Text(_muscleGroupText(exercise['primary_muscle_group'])!,
-                    style: BldrText.meta),
-              ],
-              const SizedBox(height: 16),
-              if (instructions.isEmpty)
-                Text(
-                    AppLocalizations.of(context).workouts_technique_unavailable,
-                    style: BldrText.description)
-              else
-                Flexible(
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: instructions.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (_, i) => Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('${i + 1}.',
-                            style: BldrText.body.copyWith(
-                                color: BldrColors.goldBright,
-                                fontWeight: FontWeight.w600)),
-                        const SizedBox(width: 8),
-                        Expanded(
-                            child: Text(instructions[i], style: BldrText.body)),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-          ),
+  /// Detalhes do treino v2 (316:113). Treinos do usuário ganham o menu
+  /// (editar / excluir); "Iniciar" volta para cá e usa o fluxo atual.
+  Future<void> _viewWorkoutDetails(Map<String, dynamic> template) async {
+    final id = template['id'] as String?;
+    if (id == null) return;
+    final l10n = AppLocalizations.of(context);
+    final name = template['name'] as String? ?? '';
+    final result = await Navigator.push<WorkoutDetailsResult>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => WorkoutDetailsScreen(
+          templateId: id,
+          fallbackName: name,
+          isOwned: template['is_public'] != true,
         ),
       ),
     );
+    if (!mounted || result == null) return;
+    switch (result) {
+      case WorkoutDetailsResult.start:
+        _startWorkout(template);
+      case WorkoutDetailsResult.changed:
+        _loadData();
+      case WorkoutDetailsResult.deleted:
+        _loadData();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(l10n.workouts_deleted_snackbar(name)),
+          backgroundColor: BldrColors.surface,
+          behavior: SnackBarBehavior.floating,
+        ));
+    }
   }
 
   /// Carrega o template completo (com exercícios) e abre a edição.
@@ -729,14 +431,6 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
         ));
       }
     }
-  }
-
-  String _fmtType(String? t) {
-    if (t == null || t.isEmpty) return 'Custom';
-    return t
-        .split('_')
-        .map((w) => w.isEmpty ? '' : w[0].toUpperCase() + w.substring(1))
-        .join(' ');
   }
 
   // ── build ─────────────────────────────────────────────────────────────────
@@ -1621,18 +1315,4 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
       ],
     );
   }
-}
-
-/// `Exercise.primaryMuscleGroup` é `dynamic` por design: `String` nos
-/// exercícios da base interna, `List` nos vindos do ExerciseDB (ver
-/// lib/features/workouts/domain/entities/exercise.dart). Cast direto para
-/// `String?` quebra em runtime para exercícios do ExerciseDB — esta função
-/// normaliza os dois formatos para exibição.
-String? _muscleGroupText(dynamic value) {
-  if (value is String) return value.isEmpty ? null : value;
-  if (value is List) {
-    final parts = value.whereType<String>().where((e) => e.isNotEmpty).toList();
-    return parts.isEmpty ? null : parts.join(', ');
-  }
-  return null;
 }

@@ -8548,6 +8548,168 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Mostrar menos'**
   String get sm_less_prs;
+
+  /// No description provided for @wd_eyebrow.
+  ///
+  /// In pt, this message translates to:
+  /// **'DETALHES DO TREINO'**
+  String get wd_eyebrow;
+
+  /// No description provided for @wd_duration.
+  ///
+  /// In pt, this message translates to:
+  /// **'DURAÇÃO'**
+  String get wd_duration;
+
+  /// No description provided for @wd_exercises.
+  ///
+  /// In pt, this message translates to:
+  /// **'EXERCÍCIOS'**
+  String get wd_exercises;
+
+  /// No description provided for @wd_volume.
+  ///
+  /// In pt, this message translates to:
+  /// **'VOLUME'**
+  String get wd_volume;
+
+  /// No description provided for @wd_last_time.
+  ///
+  /// In pt, this message translates to:
+  /// **'ÚLTIMA VEZ'**
+  String get wd_last_time;
+
+  /// No description provided for @wd_muscle_map.
+  ///
+  /// In pt, this message translates to:
+  /// **'MUSCLE MAP'**
+  String get wd_muscle_map;
+
+  /// No description provided for @wd_minutes.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} min'**
+  String wd_minutes(int n);
+
+  /// No description provided for @wd_ex_count.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n, plural, =0{0 exercícios} one{1 exercício} other{{n} exercícios}}'**
+  String wd_ex_count(int n);
+
+  /// No description provided for @wd_sets_count.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n, plural, =0{0 séries} one{1 série} other{{n} séries}}'**
+  String wd_sets_count(int n);
+
+  /// No description provided for @wd_reps.
+  ///
+  /// In pt, this message translates to:
+  /// **'{range} reps'**
+  String wd_reps(String range);
+
+  /// No description provided for @wd_start.
+  ///
+  /// In pt, this message translates to:
+  /// **'INICIAR TREINO'**
+  String get wd_start;
+
+  /// No description provided for @wd_preview_note.
+  ///
+  /// In pt, this message translates to:
+  /// **'Visualização prévia · edição pelo menu'**
+  String get wd_preview_note;
+
+  /// No description provided for @wd_edit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar treino'**
+  String get wd_edit;
+
+  /// No description provided for @wd_duplicate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Duplicar treino'**
+  String get wd_duplicate;
+
+  /// No description provided for @wd_delete.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir treino'**
+  String get wd_delete;
+
+  /// No description provided for @wd_delete_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir treino?'**
+  String get wd_delete_title;
+
+  /// No description provided for @wd_delete_body.
+  ///
+  /// In pt, this message translates to:
+  /// **'O treino {name} será removido dos seus treinos. Essa ação não pode ser desfeita.'**
+  String wd_delete_body(String name);
+
+  /// No description provided for @wd_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível carregar o treino.'**
+  String get wd_error;
+
+  /// No description provided for @wd_retry.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tentar novamente'**
+  String get wd_retry;
+
+  /// No description provided for @wd_empty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este treino ainda não tem exercícios.'**
+  String get wd_empty;
+
+  /// No description provided for @wd_options.
+  ///
+  /// In pt, this message translates to:
+  /// **'Opções do treino'**
+  String get wd_options;
+
+  /// No description provided for @ex_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'EXERCÍCIO'**
+  String get ex_title;
+
+  /// No description provided for @ex_equipment.
+  ///
+  /// In pt, this message translates to:
+  /// **'EQUIPAMENTO'**
+  String get ex_equipment;
+
+  /// No description provided for @ex_sets.
+  ///
+  /// In pt, this message translates to:
+  /// **'SÉRIES'**
+  String get ex_sets;
+
+  /// No description provided for @ex_how.
+  ///
+  /// In pt, this message translates to:
+  /// **'COMO EXECUTAR'**
+  String get ex_how;
+
+  /// No description provided for @ex_tip.
+  ///
+  /// In pt, this message translates to:
+  /// **'DICA DE EXECUÇÃO'**
+  String get ex_tip;
+
+  /// No description provided for @ex_back.
+  ///
+  /// In pt, this message translates to:
+  /// **'VOLTAR AO TREINO'**
+  String get ex_back;
 }
 
 class _AppLocalizationsDelegate

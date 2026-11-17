@@ -4729,4 +4729,107 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sm_less_prs => 'Show less';
+
+  @override
+  String get wd_eyebrow => 'WORKOUT DETAILS';
+
+  @override
+  String get wd_duration => 'DURATION';
+
+  @override
+  String get wd_exercises => 'EXERCISES';
+
+  @override
+  String get wd_volume => 'VOLUME';
+
+  @override
+  String get wd_last_time => 'LAST TIME';
+
+  @override
+  String get wd_muscle_map => 'MUSCLE MAP';
+
+  @override
+  String wd_minutes(int n) {
+    return '$n min';
+  }
+
+  @override
+  String wd_ex_count(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n exercises',
+      one: '1 exercise',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String wd_sets_count(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n sets',
+      one: '1 set',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String wd_reps(String range) {
+    return '$range reps';
+  }
+
+  @override
+  String get wd_start => 'START WORKOUT';
+
+  @override
+  String get wd_preview_note => 'Preview · edit from the menu';
+
+  @override
+  String get wd_edit => 'Edit workout';
+
+  @override
+  String get wd_duplicate => 'Duplicate workout';
+
+  @override
+  String get wd_delete => 'Delete workout';
+
+  @override
+  String get wd_delete_title => 'Delete workout?';
+
+  @override
+  String wd_delete_body(String name) {
+    return '$name will be removed from your workouts. This can\'t be undone.';
+  }
+
+  @override
+  String get wd_error => 'Couldn\'t load the workout.';
+
+  @override
+  String get wd_retry => 'Try again';
+
+  @override
+  String get wd_empty => 'This workout has no exercises yet.';
+
+  @override
+  String get wd_options => 'Workout options';
+
+  @override
+  String get ex_title => 'EXERCISE';
+
+  @override
+  String get ex_equipment => 'EQUIPMENT';
+
+  @override
+  String get ex_sets => 'SETS';
+
+  @override
+  String get ex_how => 'HOW TO DO IT';
+
+  @override
+  String get ex_tip => 'EXECUTION TIP';
+
+  @override
+  String get ex_back => 'BACK TO WORKOUT';
 }

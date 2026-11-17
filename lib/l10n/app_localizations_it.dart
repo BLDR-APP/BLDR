@@ -4739,4 +4739,107 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sm_less_prs => 'Mostra meno';
+
+  @override
+  String get wd_eyebrow => 'DETTAGLI ALLENAMENTO';
+
+  @override
+  String get wd_duration => 'DURATA';
+
+  @override
+  String get wd_exercises => 'ESERCIZI';
+
+  @override
+  String get wd_volume => 'VOLUME';
+
+  @override
+  String get wd_last_time => 'ULTIMA VOLTA';
+
+  @override
+  String get wd_muscle_map => 'MUSCLE MAP';
+
+  @override
+  String wd_minutes(int n) {
+    return '$n min';
+  }
+
+  @override
+  String wd_ex_count(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n esercizi',
+      one: '1 esercizio',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String wd_sets_count(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n serie',
+      one: '1 serie',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String wd_reps(String range) {
+    return '$range rip.';
+  }
+
+  @override
+  String get wd_start => 'INIZIA ALLENAMENTO';
+
+  @override
+  String get wd_preview_note => 'Anteprima · modifica dal menu';
+
+  @override
+  String get wd_edit => 'Modifica allenamento';
+
+  @override
+  String get wd_duplicate => 'Duplica allenamento';
+
+  @override
+  String get wd_delete => 'Elimina allenamento';
+
+  @override
+  String get wd_delete_title => 'Eliminare l\'allenamento?';
+
+  @override
+  String wd_delete_body(String name) {
+    return '$name verrà rimosso dai tuoi allenamenti. L\'azione non può essere annullata.';
+  }
+
+  @override
+  String get wd_error => 'Impossibile caricare l\'allenamento.';
+
+  @override
+  String get wd_retry => 'Riprova';
+
+  @override
+  String get wd_empty => 'Questo allenamento non ha ancora esercizi.';
+
+  @override
+  String get wd_options => 'Opzioni allenamento';
+
+  @override
+  String get ex_title => 'ESERCIZIO';
+
+  @override
+  String get ex_equipment => 'ATTREZZATURA';
+
+  @override
+  String get ex_sets => 'SERIE';
+
+  @override
+  String get ex_how => 'COME ESEGUIRE';
+
+  @override
+  String get ex_tip => 'CONSIGLIO DI ESECUZIONE';
+
+  @override
+  String get ex_back => 'TORNA ALL\'ALLENAMENTO';
 }

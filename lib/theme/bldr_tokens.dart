@@ -1084,3 +1084,51 @@ abstract final class BldrShareTextV2 {
   static final publish =
       _s(BldrTextV2.s12, FontWeight.w600, BldrShareColorsV2.goldBright);
 }
+
+// Detalhes do treino / exercício (316:113 · 320:113 · 322:113)
+abstract final class BldrDetailsColorsV2 {
+  static const headerButton = Color(0xFF212429);
+  static const text = Color(0xFFF5F5F7);
+  static const value = Color(0xFFF0F0F2);
+  static const muted = Color(0xFF9CA1A8);
+  static const label = Color(0xFFA6A8AD);
+  static const exMuted = Color(0xFFA3A8B0);
+  static const goldLabel = Color(0xFFD6B038);
+  static const gold = Color(0xFFD4AF37);
+  static const panelBg = Color(0x42353535); // rgba(53,53,53,.26)
+  static const divider = Color(0x8C57595E); // rgba(87,89,94,.55)
+  static const gifBg = Color(0xFF33363B);
+  static const gifBorder = Color(0x9966696E); // .6
+  static const separator = Color(0xB354575C); // rgba(84,87,92,.7)
+  static const tipBg = Color(0xA6333336); // rgba(51,51,54,.65)
+  static const destructive = Color(0xFFFF0000);
+  static const menuBg = Color(0xFF050505);
+}
+
+abstract final class BldrDetailsTextV2 {
+  static TextStyle _s(double step, FontWeight w, Color c) =>
+      BldrTextV2.scale(step, w, c);
+  static const _b = FontWeight.w700, _sb = FontWeight.w600, _m = FontWeight.w500;
+  static final eyebrow = _s(BldrTextV2.s11, _sb, BldrDetailsColorsV2.muted); // 8
+  static final name = _s(BldrTextV2.s20, _b, BldrDetailsColorsV2.text); // 19
+  static final metricLabel = _s(BldrTextV2.s11, _sb, BldrDetailsColorsV2.label); // 9
+  static final metricValue = _s(BldrTextV2.s15, _sb, BldrDetailsColorsV2.value); // 15
+  static final metricCaption = _s(BldrTextV2.s11, _sb, BldrDetailsColorsV2.goldLabel); // 8
+  static final section = _s(BldrTextV2.s15, _b, BldrDetailsColorsV2.text); // 14
+  static final count = _s(BldrTextV2.s11, _m, BldrDetailsColorsV2.muted); // 10
+  static final exName = _s(BldrTextV2.s11, _sb, BldrDetailsColorsV2.text); // 11
+  static final exSub = _s(BldrTextV2.s11, _m, BldrDetailsColorsV2.muted); // 10
+  static final cta = _s(BldrTextV2.s13, _b, BldrDetailsColorsV2.gold); // 13
+  static final note = _s(BldrTextV2.s11, _m, BldrDetailsColorsV2.muted); // 10
+  static final menuItem = _s(BldrTextV2.s13, _sb, BldrDetailsColorsV2.value);
+  static final exTitle = _s(BldrTextV2.s12, _sb, BldrDetailsColorsV2.exMuted); // 12
+  static final exHeroName = _s(BldrTextV2.s24, _sb, BldrDetailsColorsV2.value); // 23
+  static final exGroups = _s(BldrTextV2.s12, _m, BldrDetailsColorsV2.exMuted); // 12
+  static final exMetaLabel = _s(BldrTextV2.s11, _sb, BldrDetailsColorsV2.exMuted); // 10
+  static final exMetaValue = _s(BldrTextV2.s13, _m, BldrDetailsColorsV2.value); // 13
+  static final exSetsValue = _s(BldrTextV2.s15, _sb, BldrDetailsColorsV2.value); // 14
+  static final exHow = _s(BldrTextV2.s13, _sb, BldrDetailsColorsV2.value); // 13
+  static final exStep = _s(BldrTextV2.s11, _m, BldrDetailsColorsV2.exMuted); // 11
+  static final exTipLabel = _s(BldrTextV2.s11, _sb, BldrDetailsColorsV2.goldLabel); // 10
+  static final exTipText = _s(BldrTextV2.s11, _m, BldrDetailsColorsV2.value); // 11
+}

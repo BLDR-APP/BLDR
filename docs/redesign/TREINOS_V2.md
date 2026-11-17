@@ -392,3 +392,53 @@ Cada etapa termina com `dart analyze lib`, `flutter test test/features` e compar
 - **Feito.** Validado em 320/440 px e textScaler 1,3 (editor, sheet de série,
   confirmação, resumo com 3 PRs, Overlay e Card). Editar série ganhou − / +
   (com digitação) no lugar dos campos de texto; carga 0 = sem carga.
+
+## Etapa 2 — Detalhes do treino e do exercício (316:113, 320:113, 320:214, 322:113) — plano
+
+- **Acesso:** tocar num card de "Meus treinos" (e da Biblioteca BLDR, que
+  usava o mesmo sheet) abre `WorkoutDetailsScreen` no lugar do sheet de
+  detalhe. Menu "···" só em treinos do usuário.
+- **Cabeçalho:** voltar, "DETALHES DO TREINO", nome, "···".
+- **Faixa de performance** (uma linha, divisórias): Duração
+  (`WorkoutDurationEstimator`), Exercícios, Volume e Muscle Map
+  (miniatura, sem toque).
+  - Volume = Σ carga × reps das séries concluídas (não puladas) da última
+    sessão concluída deste template. Origem: `GetWorkoutHistory`
+    (concluídos, últimos 50) → primeira com o mesmo `templateId` →
+    `GetWorkoutDetails` (séries de `workout_exercise_sets`). Sem consulta
+    nova em data/. Sem execução (ou fora das 50 últimas): "—".
+    Legenda "ÚLTIMA VEZ" sob o valor.
+- **Exercícios:** cabeçalho "N exercícios · N séries"; card com GIF
+  (ExerciseDB + fallback), nome, "N séries · X–Y reps"; o card inteiro abre
+  `ExerciseDetailsScreen`.
+- **Ação fixa:** "INICIAR TREINO" → `_startWorkout` atual do hub (fluxo de
+  execução sem mudanças); legenda "Visualização prévia · edição pelo menu"
+  só em treinos do usuário.
+- **Menu (320:113):** Editar treino (editor v2), Duplicar treino (aguarda
+  aprovação — oculto até lá), Excluir treino (vermelho) →
+  `BldrV2ConfirmDialog` destrutivo → exclui → volta ao hub com aviso.
+- **Detalhes do exercício (322:113):** nome, grupos, GIF ampliado,
+  equipamento (`equipmentNeeded`; oculto se vazio), "S × X–Y" deste treino,
+  "COMO EXECUTAR" (`instructions`), "DICA DE EXECUÇÃO" (`tips`; oculta se
+  vazio), "VOLTAR AO TREINO". Só consulta.
+- **Estados:** carregando, erro com "Tentar novamente", treino sem
+  exercícios.
+- **Sai do sheet antigo:** descrição, chips de nível/tipo e o sheet de
+  técnica (substituído pelos detalhes do exercício). Nenhuma ação se perde.
+
+### Duplicar treino — plano (aguarda aprovação)
+- Presentation-only, com use cases existentes: `GetTemplateWithExercises`
+  (template completo) → cópia → `CreateWorkoutTemplate`.
+- Cópia: novo template sem id, nome "<Nome> (cópia)" (no .arb), mesmo tipo,
+  duração recalculada pelo estimador, `isPublic = false`, origem "user";
+  exercícios na mesma ordem com séries, reps, descanso, carga e
+  `set_details` (série a série). Função pura com teste.
+- Domain/data/banco: nenhuma mudança.
+- FREE/CLUB: não existe limite de treinos no FREE hoje (só o limite de
+  exercícios da biblioteca no picker), então não há bloqueio. Templates do
+  Club (outra tabela) não mostram "Duplicar".
+- Depois: aviso "Treino duplicado", volta ao hub e a cópia aparece em
+  "Meus treinos".
+- **Feito (exceto Duplicar, aguardando aprovação).** Validado em 320/440 px
+  e textScaler 1,3; em tela estreita a faixa de performance vira 2 × 2.
+  Sem GIF disponível, a miniatura mostra o ícone de halter.
