@@ -290,3 +290,25 @@ Cada etapa termina com `dart analyze lib`, `flutter test test/features` e compar
   técnica).
 - **Feito.** Validado em 320/440 px e textScaler 1,3 (tela e sheet de
   carga). Os cards do HUD crescem em altura com fonte grande.
+
+## Etapa 6 — Resumo (211:5) — plano
+
+- Selo "✓ CONCLUÍDO", nome, `completedAtLabel`, frase "Boa sessão…".
+- Resumo da sessão: Duração (mm:ss), Volume (milhar + "KG"), Séries,
+  Exercícios — métricas sem dado somem (sem "—").
+- Destaques: "NOVO PR" (primeiro PR de `newPRs`; "+X kg vs. melhor anterior"
+  só com `previousWeightKg`) e "XP GANHO" (`xpEarned`); sem os dois, a seção
+  some; com um só, ocupa a largura toda.
+- Músculos trabalhados: container do mockup com o `BldrMuscleMap` atual na
+  vista dominante; título "Ênfase posterior/anterior"
+  (`MuscleNormalizer.dominantView`); frase do .arb com os 2 principais;
+  até 3 linhas com ALTO (≥ 0,66) / MODERADO (≥ 0,33) — abaixo disso a linha
+  não aparece.
+- Ações: "COMPARTILHAR TREINO" (prévia atual) e "CONCLUIR" (volta ao
+  início, como o "×" e o "Ir para o início" de hoje).
+- Sai: "Compartilhar na comunidade" (vai para o compartilhar, P5) e o card
+  "Performance".
+- **Feito.** Validado em 320/440 px e textScaler 1,3. Em tela estreita
+  (largura útil / escala < 330): métricas em 2×2, destaques empilhados e
+  mapa muscular acima dos detalhes. Mais de um PR: mostra o primeiro.
+  "Compartilhar na comunidade" volta na etapa 7 (tela de compartilhar).

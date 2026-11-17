@@ -8218,6 +8218,144 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'AJUSTAR REPETIÇÕES'**
   String get aw_sheet_reps;
+
+  /// No description provided for @sm_done_badge.
+  ///
+  /// In pt, this message translates to:
+  /// **'CONCLUÍDO'**
+  String get sm_done_badge;
+
+  /// No description provided for @sm_message.
+  ///
+  /// In pt, this message translates to:
+  /// **'Boa sessão. Aqui está o que você construiu hoje.'**
+  String get sm_message;
+
+  /// No description provided for @sm_session.
+  ///
+  /// In pt, this message translates to:
+  /// **'RESUMO DA SESSÃO'**
+  String get sm_session;
+
+  /// No description provided for @sm_duration.
+  ///
+  /// In pt, this message translates to:
+  /// **'DURAÇÃO'**
+  String get sm_duration;
+
+  /// No description provided for @sm_volume.
+  ///
+  /// In pt, this message translates to:
+  /// **'VOLUME'**
+  String get sm_volume;
+
+  /// No description provided for @sm_kg.
+  ///
+  /// In pt, this message translates to:
+  /// **'KG'**
+  String get sm_kg;
+
+  /// No description provided for @sm_sets.
+  ///
+  /// In pt, this message translates to:
+  /// **'SÉRIES'**
+  String get sm_sets;
+
+  /// No description provided for @sm_exercises.
+  ///
+  /// In pt, this message translates to:
+  /// **'EXERCÍCIOS'**
+  String get sm_exercises;
+
+  /// No description provided for @sm_highlights.
+  ///
+  /// In pt, this message translates to:
+  /// **'DESTAQUES'**
+  String get sm_highlights;
+
+  /// No description provided for @sm_new_pr.
+  ///
+  /// In pt, this message translates to:
+  /// **'NOVO PR'**
+  String get sm_new_pr;
+
+  /// No description provided for @sm_pr_value.
+  ///
+  /// In pt, this message translates to:
+  /// **'{exercise} · {kg} kg'**
+  String sm_pr_value(String exercise, String kg);
+
+  /// No description provided for @sm_pr_delta.
+  ///
+  /// In pt, this message translates to:
+  /// **'+{kg} kg vs. melhor anterior'**
+  String sm_pr_delta(String kg);
+
+  /// No description provided for @sm_xp.
+  ///
+  /// In pt, this message translates to:
+  /// **'XP GANHO'**
+  String get sm_xp;
+
+  /// No description provided for @sm_xp_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'nesta sessão'**
+  String get sm_xp_hint;
+
+  /// No description provided for @sm_muscles.
+  ///
+  /// In pt, this message translates to:
+  /// **'MÚSCULOS TRABALHADOS'**
+  String get sm_muscles;
+
+  /// No description provided for @sm_emphasis_back.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ênfase posterior'**
+  String get sm_emphasis_back;
+
+  /// No description provided for @sm_emphasis_front.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ênfase anterior'**
+  String get sm_emphasis_front;
+
+  /// No description provided for @sm_phrase_two.
+  ///
+  /// In pt, this message translates to:
+  /// **'{a} e {b} concentraram a maior parte do estímulo desta sessão.'**
+  String sm_phrase_two(String a, String b);
+
+  /// No description provided for @sm_phrase_one.
+  ///
+  /// In pt, this message translates to:
+  /// **'{a} concentrou a maior parte do estímulo desta sessão.'**
+  String sm_phrase_one(String a);
+
+  /// No description provided for @sm_level_high.
+  ///
+  /// In pt, this message translates to:
+  /// **'ALTO'**
+  String get sm_level_high;
+
+  /// No description provided for @sm_level_moderate.
+  ///
+  /// In pt, this message translates to:
+  /// **'MODERADO'**
+  String get sm_level_moderate;
+
+  /// No description provided for @sm_share.
+  ///
+  /// In pt, this message translates to:
+  /// **'COMPARTILHAR TREINO'**
+  String get sm_share;
+
+  /// No description provided for @sm_finish.
+  ///
+  /// In pt, this message translates to:
+  /// **'CONCLUIR'**
+  String get sm_finish;
 }
 
 class _AppLocalizationsDelegate

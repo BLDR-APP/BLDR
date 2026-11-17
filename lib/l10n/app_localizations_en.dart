@@ -4538,4 +4538,81 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aw_sheet_reps => 'ADJUST REPS';
+
+  @override
+  String get sm_done_badge => 'COMPLETED';
+
+  @override
+  String get sm_message => 'Great session. Here\'s what you built today.';
+
+  @override
+  String get sm_session => 'SESSION SUMMARY';
+
+  @override
+  String get sm_duration => 'DURATION';
+
+  @override
+  String get sm_volume => 'VOLUME';
+
+  @override
+  String get sm_kg => 'KG';
+
+  @override
+  String get sm_sets => 'SETS';
+
+  @override
+  String get sm_exercises => 'EXERCISES';
+
+  @override
+  String get sm_highlights => 'HIGHLIGHTS';
+
+  @override
+  String get sm_new_pr => 'NEW PR';
+
+  @override
+  String sm_pr_value(String exercise, String kg) {
+    return '$exercise · $kg kg';
+  }
+
+  @override
+  String sm_pr_delta(String kg) {
+    return '+$kg kg vs. previous best';
+  }
+
+  @override
+  String get sm_xp => 'XP EARNED';
+
+  @override
+  String get sm_xp_hint => 'this session';
+
+  @override
+  String get sm_muscles => 'MUSCLES WORKED';
+
+  @override
+  String get sm_emphasis_back => 'Posterior emphasis';
+
+  @override
+  String get sm_emphasis_front => 'Anterior emphasis';
+
+  @override
+  String sm_phrase_two(String a, String b) {
+    return '$a and $b took most of the stimulus this session.';
+  }
+
+  @override
+  String sm_phrase_one(String a) {
+    return '$a took most of the stimulus this session.';
+  }
+
+  @override
+  String get sm_level_high => 'HIGH';
+
+  @override
+  String get sm_level_moderate => 'MODERATE';
+
+  @override
+  String get sm_share => 'SHARE WORKOUT';
+
+  @override
+  String get sm_finish => 'DONE';
 }

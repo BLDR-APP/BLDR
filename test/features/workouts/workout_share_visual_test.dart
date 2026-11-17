@@ -6,6 +6,7 @@ import 'package:bldr_fitness/features/workouts/domain/entities/workout_share_dat
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_summary_data.dart';
 import 'package:bldr_fitness/features/workouts/presentation/share/workout_share_templates.dart';
 import 'package:bldr_fitness/features/workouts/presentation/workouts_screen/workout_summary_screen.dart';
+import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/shared/presentation/widgets/bldr_muscle_map.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -143,8 +144,13 @@ void main() {
       theme: ThemeData.dark().copyWith(
         textTheme: ThemeData.dark().textTheme.apply(fontFamily: 'Inter'),
       ),
+      locale: const Locale('pt'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: WorkoutSummaryScreen(data: visualSummary),
     ));
+    // Espera os PNGs do mapa muscular carregarem (golden estável).
+    await tester.runAsync(() => Future.delayed(const Duration(seconds: 1)));
     await tester.pump(const Duration(milliseconds: 300));
     await expectLater(
       find.byType(WorkoutSummaryScreen),

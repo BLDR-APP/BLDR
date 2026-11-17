@@ -921,3 +921,45 @@ abstract final class BldrActiveTextV2 {
   static final cta = _s(BldrTextV2.s15, _b, BldrActiveColorsV2.goldBrand); // 14
   static final nextName = _s(BldrTextV2.s12, _sb, BldrActiveColorsV2.text); // 12
 }
+
+// Resumo (211:5)
+abstract final class BldrSummaryColorsV2 {
+  static const badgeBg = Color(0xFF211B08);
+  static const badgeBorder = Color(0xE6E0B830); // .9
+  static const cardBorder = Color(0xE6303030); // .9
+  static const divider = Color(0xBF303030); // .75
+  static const prBg = Color(0xFF111111);
+  static const doneBg = Color(0x66D4AF37); // .4
+  static const doneText = Color(0xFFF0F0F0);
+}
+
+abstract final class BldrSummaryTextV2 {
+  static TextStyle _s(double step, FontWeight w, Color c) =>
+      BldrTextV2.scale(step, w, c);
+  static const _t = BldrActiveColorsV2.text;
+  static const _mu = BldrActiveColorsV2.muted;
+  static const _g = BldrActiveColorsV2.gold;
+
+  static final badge = _s(BldrTextV2.s11, FontWeight.w700, _g); // 9
+  static final name = _s(BldrTextV2.s32, FontWeight.w700, _t); // 30
+  static final meta = _s(BldrTextV2.s11, FontWeight.w600, _mu); // 10
+  static final message = _s(BldrTextV2.s12, FontWeight.w400, _t); // 12
+  static final section = _s(BldrTextV2.s11, FontWeight.w600, _mu); // 9
+  static final metricLabel = _s(BldrTextV2.s11, FontWeight.w600, _mu); // 8
+  static final metricValue = _s(BldrTextV2.s17, FontWeight.w700, _t); // 18
+  static final metricAccent = _s(BldrTextV2.s17, FontWeight.w700, _g); // 18
+  static final metricSuffix = _s(BldrTextV2.s11, FontWeight.w500, _mu); // 8
+  static final hlLabel = _s(BldrTextV2.s11, FontWeight.w700, _g); // 8
+  static final prValue = _s(BldrTextV2.s15, FontWeight.w700, _t); // 14
+  static final hlHint = _s(BldrTextV2.s11, FontWeight.w400, _mu); // 8/9
+  static final xpValue = _s(BldrTextV2.s24, FontWeight.w700, _t); // 23
+  static final emphasis = _s(BldrTextV2.s15, FontWeight.w700, _t); // 15
+  static final phrase = _s(BldrTextV2.s11, FontWeight.w400, _mu); // 11
+  static final muscle = _s(BldrTextV2.s11, FontWeight.w600, _mu); // 8
+  static final levelHigh = _s(BldrTextV2.s11, FontWeight.w700, _g); // 8
+  static final levelModerate = _s(BldrTextV2.s11, FontWeight.w700, _t); // 8
+  static final share = _s(BldrTextV2.s11, FontWeight.w700,
+      BldrActiveColorsV2.goldBrand); // 11
+  static final done = _s(BldrTextV2.s11, FontWeight.w700,
+      BldrSummaryColorsV2.doneText); // 10
+}

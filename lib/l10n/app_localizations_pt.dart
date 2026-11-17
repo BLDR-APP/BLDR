@@ -4564,4 +4564,81 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get aw_sheet_reps => 'AJUSTAR REPETIÇÕES';
+
+  @override
+  String get sm_done_badge => 'CONCLUÍDO';
+
+  @override
+  String get sm_message => 'Boa sessão. Aqui está o que você construiu hoje.';
+
+  @override
+  String get sm_session => 'RESUMO DA SESSÃO';
+
+  @override
+  String get sm_duration => 'DURAÇÃO';
+
+  @override
+  String get sm_volume => 'VOLUME';
+
+  @override
+  String get sm_kg => 'KG';
+
+  @override
+  String get sm_sets => 'SÉRIES';
+
+  @override
+  String get sm_exercises => 'EXERCÍCIOS';
+
+  @override
+  String get sm_highlights => 'DESTAQUES';
+
+  @override
+  String get sm_new_pr => 'NOVO PR';
+
+  @override
+  String sm_pr_value(String exercise, String kg) {
+    return '$exercise · $kg kg';
+  }
+
+  @override
+  String sm_pr_delta(String kg) {
+    return '+$kg kg vs. melhor anterior';
+  }
+
+  @override
+  String get sm_xp => 'XP GANHO';
+
+  @override
+  String get sm_xp_hint => 'nesta sessão';
+
+  @override
+  String get sm_muscles => 'MÚSCULOS TRABALHADOS';
+
+  @override
+  String get sm_emphasis_back => 'Ênfase posterior';
+
+  @override
+  String get sm_emphasis_front => 'Ênfase anterior';
+
+  @override
+  String sm_phrase_two(String a, String b) {
+    return '$a e $b concentraram a maior parte do estímulo desta sessão.';
+  }
+
+  @override
+  String sm_phrase_one(String a) {
+    return '$a concentrou a maior parte do estímulo desta sessão.';
+  }
+
+  @override
+  String get sm_level_high => 'ALTO';
+
+  @override
+  String get sm_level_moderate => 'MODERADO';
+
+  @override
+  String get sm_share => 'COMPARTILHAR TREINO';
+
+  @override
+  String get sm_finish => 'CONCLUIR';
 }

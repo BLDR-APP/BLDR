@@ -41,3 +41,6 @@ docs/billing/revenuecat_stripe_import_candidates.csv
 # Configuração de build local. Nunca inclui segredos server-side e não é versionada.
 dart_defines.dev.json
 dart_defines.release.json
+
+# Saída de golden tests com falha
+test/**/failures/
