@@ -4701,4 +4701,42 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sh_export_error => 'Impossibile creare l\'immagine. Riprova.';
+
+  @override
+  String get wk_extra_done_title => 'Attività completata';
+
+  @override
+  String wk_workout_done(String name) {
+    return '$name — completato.';
+  }
+
+  @override
+  String wk_extra_done(String name) {
+    return '$name — completata.';
+  }
+
+  @override
+  String get wk_extra_also => 'Anche l\'attività extra è stata registrata.';
+
+  @override
+  String get wk_workout_fallback => 'Allenamento';
+
+  @override
+  String ed_set_title(int n) {
+    return 'SERIE $n';
+  }
+
+  @override
+  String sm_more_prs(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '+$n PR',
+      one: '+1 PR',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sm_less_prs => 'Mostra meno';
 }

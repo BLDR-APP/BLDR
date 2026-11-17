@@ -2,8 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
-import 'package:sizer/sizer.dart';
 
+import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/design_system/bldr_workout_v2_components.dart';
@@ -125,12 +125,6 @@ class CreateWorkoutScreen extends StatefulWidget {
 
 class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
   // ── colours ────────────────────────────────────────────────────────────────
-  static const _gold = Color(0xFFD4AF37);
-  static const _goldBg = Color(0x1FD4AF37);
-  static const _borderGold = Color(0x40D4AF37);
-  static const _surface = Color(0xFF1A1916);
-  static const _card = Color(0xFF1E1C18);
-  static const _muted = Color(0xFF888070);
 
   // ── form state ─────────────────────────────────────────────────────────────
   final _nameCtrl = TextEditingController();
@@ -410,177 +404,72 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
   // ── set editing ───────────────────────────────────────────────────────────
 
   void _editSet(int exIdx, int setIdx, _ExSet current) {
-    double? weight = current.weight;
-    int reps = current.reps;
-    int rest = current.rest;
-
-    final weightCtrl =
-        TextEditingController(text: weight != null ? weight.toString() : '');
-    final repsCtrl = TextEditingController(text: reps.toString());
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: _surface,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom,
-            left: 4.w,
-            right: 4.w,
-            top: 2.h),
-        child: StatefulBuilder(
-          builder: (ctx, setModal) => Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final l10n = AppLocalizations.of(context);
+    var weight = current.weight ?? 0;
+    var reps = current.reps.toDouble();
+    var rest = current.rest;
+    BldrV2Sheet.show<void>(
+      context,
+      title: l10n.ed_set_title(setIdx + 1),
+      child: StatefulBuilder(
+        builder: (ctx, setModal) => Column(children: [
+          Text(l10n.aw_load, style: BldrSheetV2Text.label),
+          const SizedBox(height: 8),
+          BldrV2Stepper(
+            initial: weight,
+            step: 2.5,
+            decimal: true,
+            unit: 'kg',
+            decreaseLabel: l10n.workout_decrease_load,
+            increaseLabel: l10n.workout_increase_load,
+            onChanged: (v) => weight = v,
+          ),
+          const SizedBox(height: 22),
+          Text(l10n.aw_reps, style: BldrSheetV2Text.label),
+          const SizedBox(height: 8),
+          BldrV2Stepper(
+            initial: reps,
+            step: 1,
+            min: 1,
+            max: 100,
+            decreaseLabel: l10n.workout_decrease_reps,
+            increaseLabel: l10n.workout_increase_reps,
+            onChanged: (v) => reps = v,
+          ),
+          const SizedBox(height: 22),
+          Text(l10n.aw_rest, style: BldrSheetV2Text.label),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
             children: [
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                      color: _muted, borderRadius: BorderRadius.circular(2)),
+              for (final sec in const [30, 60, 90, 120, 180])
+                BldrTypeChip(
+                  label: '${sec}s',
+                  width: 64,
+                  selected: rest == sec,
+                  onTap: () => setModal(() => rest = sec),
                 ),
-              ),
-              SizedBox(height: 2.h),
-              Text('Série ${setIdx + 1}',
-                  style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16)),
-              SizedBox(height: 2.h),
-              Row(children: [
-                Expanded(
-                  child: _numField(
-                    label: 'Carga (kg)',
-                    controller: weightCtrl,
-                    hint: '—',
-                    decimal: true,
-                  ),
-                ),
-                SizedBox(width: 3.w),
-                Expanded(
-                  child: _numField(
-                    label: 'Repetições',
-                    controller: repsCtrl,
-                    hint: '10',
-                    decimal: false,
-                  ),
-                ),
-              ]),
-              SizedBox(height: 1.5.h),
-              Text('Descanso', style: TextStyle(color: _muted, fontSize: 13)),
-              SizedBox(height: 0.8.h),
-              Wrap(
-                spacing: 2.w,
-                children: [30, 60, 90, 120, 180].map((s) {
-                  final sel = rest == s;
-                  return GestureDetector(
-                    onTap: () => setModal(() => rest = s),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 3.w, vertical: 0.6.h),
-                      decoration: BoxDecoration(
-                        color: sel ? _goldBg : _card,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                            color: sel
-                                ? _borderGold
-                                : Colors.white.withValues(alpha: 0.1)),
-                      ),
-                      child: Text('${s}s',
-                          style: TextStyle(
-                              color: sel ? _gold : Colors.white,
-                              fontSize: 13,
-                              fontWeight:
-                                  sel ? FontWeight.w600 : FontWeight.w400)),
-                    ),
-                  );
-                }).toList(),
-              ),
-              SizedBox(height: 2.5.h),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    final w = double.tryParse(weightCtrl.text);
-                    final r = int.tryParse(repsCtrl.text) ?? 10;
-                    setState(() {
-                      _exercises[exIdx].sets[setIdx] = current.copyWith(
-                        weight: w,
-                        clearWeight: weightCtrl.text.isEmpty,
-                        reps: r,
-                        rest: rest,
-                      );
-                    });
-                    Navigator.pop(ctx);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _gold,
-                    foregroundColor: Colors.black,
-                    padding: EdgeInsets.symmetric(vertical: 1.6.h),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                  child: const Text('Confirmar',
-                      style:
-                          TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
-                ),
-              ),
-              SizedBox(height: 3.h),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _numField({
-    required String label,
-    required TextEditingController controller,
-    required String hint,
-    required bool decimal,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: TextStyle(color: _muted, fontSize: 13)),
-        SizedBox(height: 0.5.h),
-        TextField(
-          controller: controller,
-          keyboardType: decimal
-              ? const TextInputType.numberWithOptions(decimal: true)
-              : TextInputType.number,
-          inputFormatters: decimal
-              ? [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))]
-              : [FilteringTextInputFormatter.digitsOnly],
-          style: const TextStyle(
-              color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(color: _muted, fontSize: 18),
-            filled: true,
-            fillColor: _card,
-            contentPadding:
-                EdgeInsets.symmetric(horizontal: 3.w, vertical: 1.2.h),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  BorderSide(color: Colors.white.withValues(alpha: 0.07)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide:
-                  BorderSide(color: Colors.white.withValues(alpha: 0.07)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: _gold, width: 1.5),
-            ),
+          const SizedBox(height: 24),
+          BldrV2SheetButton(
+            label: l10n.cw_confirm,
+            onTap: () {
+              setState(() {
+                _exercises[exIdx].sets[setIdx] = current.copyWith(
+                  weight: weight > 0 ? weight : null,
+                  clearWeight: weight <= 0,
+                  reps: reps.round(),
+                  rest: rest,
+                );
+              });
+              Navigator.pop(ctx);
+            },
           ),
-        ),
-      ],
+        ]),
+      ),
     );
   }
 
@@ -593,6 +482,9 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
   // ══ Treinos v2 — editor (179:1590) ═══════════════════════════════════════
 
   final _nameFocus = FocusNode();
+
+  static const double _edThumb = 52;
+  static const double _edThumbGap = 12;
 
   static const _categoryKeys = {
     'Força': 'strength',
@@ -809,14 +701,9 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                width: 36,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 3),
-                  child: Text((idx + 1).toString().padLeft(2, '0'),
-                      style: BldrWorkoutTextV2.edOrder),
-                ),
-              ),
+              // Miniatura do GIF (mesmo container de Montar treino).
+              BldrExerciseMediaFrame(size: _edThumb, child: _exerciseThumb(ex)),
+              const SizedBox(width: _edThumbGap),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -860,7 +747,8 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
           ),
           if (!open) ...[
             Padding(
-              padding: const EdgeInsets.only(left: 36, top: 6, right: 8),
+              padding: const EdgeInsets.only(
+                  left: _edThumb + _edThumbGap, top: 6, right: 8),
               child: Wrap(spacing: 8, runSpacing: 6, children: [
                 _editorChip(setsTxt, BldrWorkoutTextV2.edChipAccent,
                     () => _editSetCount(idx)),
@@ -874,7 +762,8 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
               behavior: HitTestBehavior.opaque,
               onTap: toggle,
               child: Padding(
-                padding: const EdgeInsets.only(left: 36, top: 6),
+                padding:
+                    const EdgeInsets.only(left: _edThumb + _edThumbGap, top: 6),
                 child: Row(children: [
                   Expanded(
                     child: Text(l10n.cw_personalize,
@@ -1501,56 +1390,27 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
       {int min = 1, int max = 99, int step = 1, String suffix = ''}) {
     final l10n = AppLocalizations.of(context);
     var value = initial;
-    return showModalBottomSheet<int>(
-      context: context,
-      backgroundColor: BldrWorkoutColorsV2.sheetBg,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(34))),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModal) => SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(_px, 20, _px, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(title, style: BldrWorkoutTextV2.sheetTitle),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    IconButton(
-                      onPressed: value - step < min
-                          ? null
-                          : () => setModal(() => value -= step),
-                      icon: const Icon(TablerIcons.circle_minus,
-                          color: BldrWorkoutColorsV2.gold),
-                    ),
-                    SizedBox(
-                      width: 120,
-                      child: Text('$value$suffix',
-                          textAlign: TextAlign.center,
-                          style: BldrWorkoutTextV2.title),
-                    ),
-                    IconButton(
-                      onPressed: value + step > max
-                          ? null
-                          : () => setModal(() => value += step),
-                      icon: const Icon(TablerIcons.circle_plus,
-                          color: BldrWorkoutColorsV2.gold),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                BldrGoldRowCta(
-                  label: l10n.cw_confirm,
-                  height: 52,
-                  radius: 18,
-                  onTap: () => Navigator.pop(ctx, value),
-                ),
-              ],
-            ),
+    return BldrV2Sheet.show<int>(
+      context,
+      title: title.toUpperCase(),
+      child: Builder(
+        builder: (ctx) => Column(children: [
+          BldrV2Stepper(
+            initial: initial.toDouble(),
+            step: step.toDouble(),
+            min: min.toDouble(),
+            max: max.toDouble(),
+            unit: suffix.trim().isEmpty ? null : suffix.trim(),
+            decreaseLabel: title,
+            increaseLabel: title,
+            onChanged: (v) => value = v.round(),
           ),
-        ),
+          const SizedBox(height: 24),
+          BldrV2SheetButton(
+            label: l10n.cw_confirm,
+            onTap: () => Navigator.pop(ctx, value),
+          ),
+        ]),
       ),
     );
   }
@@ -1575,24 +1435,13 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
   Future<bool> _confirmOverwrite(bool differs) async {
     if (!differs) return true;
     final l10n = AppLocalizations.of(context);
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: BldrWorkoutColorsV2.sheetBg,
-        title: Text(l10n.cw_overwrite_title, style: BldrWorkoutTextV2.exName),
-        content: Text(l10n.cw_overwrite_body, style: BldrWorkoutTextV2.hint),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l10n.cw_cancel, style: BldrWorkoutTextV2.hint)),
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(l10n.cw_overwrite_confirm,
-                  style: BldrWorkoutTextV2.cta)),
-        ],
-      ),
+    return BldrV2ConfirmDialog.show(
+      context,
+      title: l10n.cw_overwrite_title,
+      message: l10n.cw_overwrite_body,
+      cancelLabel: l10n.cw_cancel,
+      confirmLabel: l10n.cw_overwrite_confirm,
     );
-    return ok ?? false;
   }
 
   Future<void> _editAllReps(int idx) async {

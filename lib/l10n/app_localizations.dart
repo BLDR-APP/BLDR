@@ -8500,6 +8500,54 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Não foi possível gerar a imagem. Tente novamente.'**
   String get sh_export_error;
+
+  /// No description provided for @wk_extra_done_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atividade concluída'**
+  String get wk_extra_done_title;
+
+  /// No description provided for @wk_workout_done.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} — concluído.'**
+  String wk_workout_done(String name);
+
+  /// No description provided for @wk_extra_done.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} — concluída.'**
+  String wk_extra_done(String name);
+
+  /// No description provided for @wk_extra_also.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atividade extra também registrada.'**
+  String get wk_extra_also;
+
+  /// No description provided for @wk_workout_fallback.
+  ///
+  /// In pt, this message translates to:
+  /// **'Treino'**
+  String get wk_workout_fallback;
+
+  /// No description provided for @ed_set_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'SÉRIE {n}'**
+  String ed_set_title(int n);
+
+  /// No description provided for @sm_more_prs.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n, plural, =1{+1 PR} other{+{n} PRs}}'**
+  String sm_more_prs(int n);
+
+  /// No description provided for @sm_less_prs.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar menos'**
+  String get sm_less_prs;
 }
 
 class _AppLocalizationsDelegate

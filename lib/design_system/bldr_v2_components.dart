@@ -41,7 +41,8 @@ class BldrEllipseGlowPainter extends CustomPainter {
     canvas.scale(radii.width, radii.height);
     final rect = Rect.fromCircle(center: Offset.zero, radius: 1);
     final paint = Paint()
-      ..shader = RadialGradient(colors: colors, stops: stops).createShader(rect);
+      ..shader =
+          RadialGradient(colors: colors, stops: stops).createShader(rect);
     canvas.drawCircle(Offset.zero, 1, paint);
     canvas.restore();
   }
@@ -847,9 +848,8 @@ class _WearableStackState extends State<WearableStack>
     });
 
     return Semantics(
-      label: _count > 1
-          ? l10n.wearable_stack_position(_front + 1, _count)
-          : null,
+      label:
+          _count > 1 ? l10n.wearable_stack_position(_front + 1, _count) : null,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -968,8 +968,8 @@ class BldrNavBarV2 extends StatelessWidget {
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(
-                      _icons.length, (i) => _item(i, labels[i])),
+                  children:
+                      List.generate(_icons.length, (i) => _item(i, labels[i])),
                 ),
               ),
               const SizedBox(width: _gap),

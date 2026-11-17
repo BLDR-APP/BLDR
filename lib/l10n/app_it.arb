@@ -2312,5 +2312,13 @@
   "sh_sets": "SERIE",
   "sh_share_text": "Allenamento completato su BLDR",
   "sh_share_error": "L'immagine è stata creata, ma non è stato possibile aprire la condivisione.",
-  "sh_export_error": "Impossibile creare l'immagine. Riprova."
+  "sh_export_error": "Impossibile creare l'immagine. Riprova.",
+  "wk_extra_done_title": "Attività completata",
+  "wk_workout_done": "{name} — completato.",
+  "wk_extra_done": "{name} — completata.",
+  "wk_extra_also": "Anche l'attività extra è stata registrata.",
+  "wk_workout_fallback": "Allenamento",
+  "ed_set_title": "SERIE {n}",
+  "sm_more_prs": "{n, plural, =1{+1 PR} other{+{n} PR}}",
+  "sm_less_prs": "Mostra meno"
 }

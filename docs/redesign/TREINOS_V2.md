@@ -345,3 +345,50 @@ Cada etapa termina com `dart analyze lib`, `flutter test test/features` e compar
 - **Feito.** Validado em 320/440 px e textScaler 1,3 nas duas abas.
   Os templates antigos (Performance, Muscle Map, Minimal) ficam no código
   sem uso na tela, junto com o enum de domínio, até uma limpeza aprovada.
+
+# Pacote 2 — Ajustes e Detalhes
+
+## Etapa 1 — Ajustes visuais — plano
+
+1. **Editor:** a coluna do número dá lugar à miniatura do GIF
+   (`_exerciseThumb` em `BldrExerciseMediaFrame`, mesmo de Montar treino).
+2. **Sheets e confirmações:**
+   - `BldrV2Sheet` passa a rolar quando o conteúdo é alto (máx. 88% da tela)
+     e ganha `BldrV2SheetOption` (linha de opção com ícone).
+   - Novo `BldrV2ConfirmDialog` (320:214): fundo `#050505`, borda dourada,
+     raio 22, título, mensagem, "Cancelar" neutro `#404247` e ação
+     principal com borda dourada; variante destrutiva em vermelho.
+   - Migrados (Home e Treinos):
+     - Home: excluir treino pausado (`active_workout_card_widget`).
+     - Hub: excluir treino; origem da foto (câmera/galeria); dia da semana
+       no card "Minha semana".
+     - Editor/Criar: editar série; editar séries/reps/descanso
+       (`_stepperSheet`, agora com `BldrV2Stepper`); confirmar sobrescrita.
+     - Treino em andamento: encerrar treino; técnica do exercício.
+     - Ficam para a etapa 2 (a tela é substituída): sheet de detalhe do
+       treino e técnica aberta a partir dele, no hub.
+   - Picker "Adicionar exercícios" (179:1117) continua no visual do próprio
+     mockup (sheet de tela cheia com busca), que já é v2.
+3. **Resumo:** primeiro PR no card; "+N PRs" expande a lista com nome,
+   carga e "+X kg vs. melhor anterior" de cada PR (a tela antiga listava
+   todos com nome e carga — nada se perde).
+4. **Compartilhar:** logo oficial `assets/images/launch/bldr_launch.png`
+   (BL/DR dourado, fundo transparente, usado no splash), recortado ao
+   desenho, no Overlay e no Card.
+5. **Backlog:** limpeza pós-rebranding.
+
+### Sheets e dialogs das demais telas (migrar quando forem redesenhadas)
+- Treinos fora do v2: `weekly_plan_screen` (9), `workout_photo_review_screen` (1).
+- Paywall: `ClubPaywallSheet` (Home, hub).
+- Dashboard: `_quickLog` (sem uso — entra na limpeza).
+- HAVOK: `havok_sheet` (3), `havok_memory_sheet` (4), `workout_detail_screen` (1), `panther_fab` (1).
+- Club: `club_workout_screen` (11), `squad_settings_screen` (11), `comunidade_screen` (9), `collective_challenge_detail_screen` (6), `club_cardio_session_screen` (5), `arena_details_screen` (5), `club_active_workout_screen` (4), `create_arena_screen` (3), `join_squad_sheet` (2), `esportes_screen` (2), `club_create_workout_screen` (2), `competition_hub_screen` (1), `club_workout_photo_review_screen` (1), `level_up_modal` (1), `run_card_widget` (1), trackers yoga/wod/round/pool/match (1 cada).
+- Comunidade: `create_post_screen` (4), `community_comments_sheet` (3).
+- Perfil/Configurações: `settings_screen` (9), `profile_screen` (8), `language_selector_sheet` (1).
+- Progresso: `photo_progress_widget` (8), `goal_tracking_widget` (5), `measurements_chart_widget` (2), `progress_screen` (1).
+- Nutrição: `water_intake_widget` (4), `nutrition_screen` (2), `meal_timeline_widget` (2), `firebase_add_food_modal_widget` (2), `food_categories_modal` (1).
+- Auth/Onboarding/Sistema: `login_form_widget` (4), `login_screen` (2), `onboarding_flow` (3), `checkout_screen` (3), `splash_screen` (1), `force_update_dialog` (1), `review_modal` (1), `notification_permission_modal` (1), `whats_new_sheet` (1), `achievement_toast` (1).
+- Portal profissional: `meal_plan_editor_screen` (4), `professional_dashboard_screen` (2), `client_workout_list_screen` (2), `client_diet_screen` (2), `workout_plan_editor_screen` (1).
+- **Feito.** Validado em 320/440 px e textScaler 1,3 (editor, sheet de série,
+  confirmação, resumo com 3 PRs, Overlay e Card). Editar série ganhou − / +
+  (com digitação) no lugar dos campos de texto; carga 0 = sem carga.

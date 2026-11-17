@@ -9,6 +9,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/design_system/bldr_v2_components.dart';
@@ -694,65 +695,40 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
   /// Confirmation dialog before permanently deleting a template.
   /// [closeSheet]: também fecha o sheet de detalhe que abriu o diálogo.
   void _confirmDelete(BuildContext sheetCtx, Map<String, dynamic> template,
-      {bool closeSheet = true}) {
-    showDialog(
-      context: sheetCtx,
-      builder: (dCtx) => AlertDialog(
-        backgroundColor: BldrColors.sheetBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(AppLocalizations.of(dCtx).workouts_delete_title,
-            style: BldrText.cardTitleLg),
-        content: Text(
-          AppLocalizations.of(dCtx).workouts_delete_body(template['name']),
-          style: BldrText.description,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dCtx),
-            child: Text(AppLocalizations.of(dCtx).common_cancel,
-                style: BldrText.buttonSecondary
-                    .copyWith(color: BldrColors.textSecondary)),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(dCtx); // close dialog
-              if (closeSheet) Navigator.pop(sheetCtx); // close detail sheet
-              try {
-                final result = await getIt<DeleteWorkoutTemplate>()(
-                    template['id'] as String);
-                final failure = result.failureOrNull;
-                if (failure != null) throw Exception(failure.message);
-                if (mounted) {
-                  _loadData();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(AppLocalizations.of(context)
-                          .workouts_deleted_snackbar(template['name'])),
-                      backgroundColor: BldrColors.surface,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(AppLocalizations.of(context)
-                          .workouts_delete_error(e.toString())),
-                      backgroundColor: const Color(0xFFC84040),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                }
-              }
-            },
-            child: Text(AppLocalizations.of(dCtx).common_delete,
-                style: const TextStyle(
-                    color: Color(0xFFC84040), fontWeight: FontWeight.w600)),
-          ),
-        ],
-      ),
+      {bool closeSheet = true}) async {
+    final l10n = AppLocalizations.of(context);
+    final ok = await BldrV2ConfirmDialog.show(
+      sheetCtx,
+      title: l10n.workouts_delete_title,
+      message: l10n.workouts_delete_body(template['name']),
+      cancelLabel: l10n.common_cancel,
+      confirmLabel: l10n.common_delete,
+      destructive: true,
     );
+    if (!ok || !mounted) return;
+    if (closeSheet && sheetCtx.mounted) Navigator.pop(sheetCtx);
+    try {
+      final result =
+          await getIt<DeleteWorkoutTemplate>()(template['id'] as String);
+      final failure = result.failureOrNull;
+      if (failure != null) throw Exception(failure.message);
+      if (mounted) {
+        _loadData();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(l10n.workouts_deleted_snackbar(template['name'])),
+          backgroundColor: BldrColors.surface,
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(l10n.workouts_delete_error(e.toString())),
+          backgroundColor: BldrColors.danger,
+          behavior: SnackBarBehavior.floating,
+        ));
+      }
+    }
   }
 
   String _fmtType(String? t) {
@@ -1201,44 +1177,23 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
     }
 
     // PRO user → choose source
-    final source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      backgroundColor: AppTheme.cardDark,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt_outlined,
-                    color: AppTheme.accentGold),
-                title: Text(AppLocalizations.of(ctx).workouts_photo_camera,
-                    style: const TextStyle(color: Colors.white)),
-                onTap: () => Navigator.pop(ctx, ImageSource.camera),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library_outlined,
-                    color: AppTheme.accentGold),
-                title: Text(AppLocalizations.of(ctx).workouts_photo_gallery,
-                    style: const TextStyle(color: Colors.white)),
-                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
-              ),
-            ],
+    final l10n = AppLocalizations.of(context);
+    final source = await BldrV2Sheet.show<ImageSource>(
+      context,
+      title: l10n.hub_menu_photo_title,
+      child: Builder(
+        builder: (ctx) => Column(children: [
+          BldrV2SheetOption(
+            icon: TablerIcons.camera,
+            label: l10n.workouts_photo_camera,
+            onTap: () => Navigator.pop(ctx, ImageSource.camera),
           ),
-        ),
+          BldrV2SheetOption(
+            icon: TablerIcons.photo,
+            label: l10n.workouts_photo_gallery,
+            onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+          ),
+        ]),
       ),
     );
     if (source == null || !mounted) return;

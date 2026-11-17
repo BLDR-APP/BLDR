@@ -261,11 +261,55 @@ class _MetricsCardV2 extends StatelessWidget {
   }
 }
 
-class _HighlightsCardV2 extends StatelessWidget {
+class _HighlightsCardV2 extends StatefulWidget {
   final WorkoutShareData data;
   const _HighlightsCardV2({required this.data});
   @override
+  State<_HighlightsCardV2> createState() => _HighlightsCardV2State();
+}
+
+class _HighlightsCardV2State extends State<_HighlightsCardV2> {
+  bool _showAllPrs = false;
+
+  Widget _prLine(AppLocalizations l10n, PersonalRecordData pr) => Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(top: 2, right: 8),
+              child: Icon(TablerIcons.trophy,
+                  size: 14, color: BldrActiveColorsV2.gold),
+            ),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                      l10n.sm_pr_value(
+                          pr.exerciseName, SummaryV2Format.kg(pr.newWeightKg)),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: BldrSummaryTextV2.prLine),
+                  if (pr.previousWeightKg case final prev?
+                      when pr.newWeightKg > prev)
+                    Text(
+                        l10n.sm_pr_delta(
+                            SummaryV2Format.kg(pr.newWeightKg - prev)),
+                        style: BldrSummaryTextV2.hlHint),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+
+  @override
   Widget build(BuildContext context) {
+    final data = widget.data;
+    final extraPrs = data.prs.length > 1
+        ? data.prs.sublist(1)
+        : const <PersonalRecordData>[];
     final l10n = AppLocalizations.of(context);
     final pr = data.prs.isEmpty ? null : data.prs.first;
     final xp = data.xpEarned;
@@ -325,32 +369,65 @@ class _HighlightsCardV2 extends StatelessWidget {
                   style: BldrSummaryTextV2.hlHint),
             ]),
           );
+    final more = extraPrs.isEmpty
+        ? null
+        : Semantics(
+            button: true,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => setState(() => _showAllPrs = !_showAllPrs),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Text(
+                      _showAllPrs
+                          ? l10n.sm_less_prs
+                          : l10n.sm_more_prs(extraPrs.length),
+                      style: BldrSummaryTextV2.hlLabel),
+                  const SizedBox(width: 4),
+                  Icon(
+                      _showAllPrs
+                          ? TablerIcons.chevron_up
+                          : TablerIcons.chevron_down,
+                      size: 14,
+                      color: BldrActiveColorsV2.gold),
+                ]),
+              ),
+            ),
+          );
     return LayoutBuilder(builder: (context, c) {
       final narrow = _isNarrow(context, c.maxWidth);
+      final boxes = narrow
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (prBox != null) prBox,
+                if (prBox != null && xpBox != null) const SizedBox(height: 12),
+                if (xpBox != null) xpBox,
+              ],
+            )
+          : IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (prBox != null) Expanded(flex: 2, child: prBox),
+                  if (prBox != null && xpBox != null) const SizedBox(width: 12),
+                  if (xpBox != null) Expanded(child: xpBox),
+                ],
+              ),
+            );
       return Container(
         padding: const EdgeInsets.all(13),
         decoration: _cardDecoration(),
-        child: narrow
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (prBox != null) prBox,
-                  if (prBox != null && xpBox != null)
-                    const SizedBox(height: 12),
-                  if (xpBox != null) xpBox,
-                ],
-              )
-            : IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (prBox != null) Expanded(flex: 2, child: prBox),
-                    if (prBox != null && xpBox != null)
-                      const SizedBox(width: 12),
-                    if (xpBox != null) Expanded(child: xpBox),
-                  ],
-                ),
-              ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            boxes,
+            if (more != null) Center(child: more),
+            if (_showAllPrs)
+              for (final pr in extraPrs) _prLine(l10n, pr),
+          ],
+        ),
       );
     });
   }

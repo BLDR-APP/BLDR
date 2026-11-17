@@ -875,37 +875,16 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
     } catch (_) {}
   }
 
-  void _stopWorkout() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: BldrColors.sheetBg,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(AppLocalizations.of(ctx).workout_stop_title,
-            style: BldrText.cardTitleLg),
-        content: Text(AppLocalizations.of(ctx).workout_stop_body,
-            style: BldrText.description),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(AppLocalizations.of(ctx).common_continue_btn,
-                style: BldrText.buttonSecondary),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _finishWorkout();
-            },
-            child: Text(AppLocalizations.of(ctx).workout_stop_btn,
-                style: const TextStyle(
-                    fontFamily: BldrText.family,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: BldrColors.danger)),
-          ),
-        ],
-      ),
+  Future<void> _stopWorkout() async {
+    final l10n = AppLocalizations.of(context);
+    final ok = await BldrV2ConfirmDialog.show(
+      context,
+      title: l10n.workout_stop_title,
+      message: l10n.workout_stop_body,
+      cancelLabel: l10n.common_continue_btn,
+      confirmLabel: l10n.workout_stop_btn,
     );
+    if (ok && mounted) _finishWorkout();
   }
 
   // ── build ─────────────────────────────────────────────────────────────────
@@ -1604,110 +1583,63 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
             : <String>[]);
     final secondaryMuscles = detail?.secondaryMuscles ?? <String>[];
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: BldrColors.sheetBg,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (sheetCtx) => DraggableScrollableSheet(
-        initialChildSize: 0.65,
-        maxChildSize: 0.92,
-        minChildSize: 0.4,
-        expand: false,
-        builder: (_, sc) => Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                      color: BldrColors.textMuted,
-                      borderRadius: BorderRadius.circular(2)),
-                ),
+    final l10n = AppLocalizations.of(context);
+    BldrV2Sheet.show<void>(
+      context,
+      title: resolveExerciseDisplayName(
+        internalName: ex['name'] as String?,
+        exerciseDbName: detail?.name,
+        fallback: l10n.workout_technique_fallback,
+      ),
+      child: Builder(
+        builder: (sheetCtx) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (targetMuscles.isNotEmpty) ...[
+              MuscleVisualizerWidget(
+                targetMuscles: targetMuscles,
+                secondaryMuscles: secondaryMuscles,
+                isPro: _isPro,
+                size: VisualizerSize.full,
+                paywallMessage: l10n.workout_paywall_muscle_message,
+                paywallButtonLabel: l10n.plan_paywall_muscle_btn,
+                onUpgradeTap: () {
+                  Navigator.pop(sheetCtx);
+                  Navigator.pushNamed(context, AppRoutes.checkoutScreen);
+                },
               ),
-              const SizedBox(height: 16),
-              Text(
-                resolveExerciseDisplayName(
-                  internalName: ex['name'] as String?,
-                  exerciseDbName: detail?.name,
-                  fallback:
-                      AppLocalizations.of(sheetCtx).workout_technique_fallback,
-                ),
-                style: BldrText.cardTitleLg,
-              ),
-              const SizedBox(height: 14),
-              // ── Muscle visualizer ─────────────────────────────────────────
-              if (targetMuscles.isNotEmpty)
-                MuscleVisualizerWidget(
-                  targetMuscles: targetMuscles,
-                  secondaryMuscles: secondaryMuscles,
-                  isPro: _isPro,
-                  size: VisualizerSize.full,
-                  paywallMessage: AppLocalizations.of(sheetCtx)
-                      .workout_paywall_muscle_message,
-                  paywallButtonLabel:
-                      AppLocalizations.of(sheetCtx).plan_paywall_muscle_btn,
-                  onUpgradeTap: () {
-                    Navigator.pop(sheetCtx);
-                    Navigator.pushNamed(context, AppRoutes.checkoutScreen);
-                  },
-                ),
-              if (targetMuscles.isNotEmpty) const SizedBox(height: 16),
-              // ── Instructions ──────────────────────────────────────────────
-              if (instructions.isNotEmpty)
-                Text(AppLocalizations.of(sheetCtx).workout_execution_label,
-                    style: BldrText.label),
-              if (instructions.isNotEmpty) const SizedBox(height: 8),
-              Expanded(
-                child: instructions.isEmpty
-                    ? Center(
-                        child: Text(
-                            AppLocalizations.of(sheetCtx)
-                                .workout_no_instructions,
-                            style: BldrText.description),
-                      )
-                    : ListView.separated(
-                        controller: sc,
-                        itemCount: instructions.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 8),
-                        itemBuilder: (_, i) => Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              margin: const EdgeInsets.only(top: 2, right: 8),
-                              width: 20,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                color: BldrColors.goldTint,
-                                shape: BoxShape.circle,
-                                border:
-                                    Border.all(color: BldrColors.goldBorder),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  '${i + 1}',
-                                  style: const TextStyle(
-                                      fontFamily: BldrText.family,
-                                      color: BldrColors.goldBright,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child:
-                                  Text(instructions[i], style: BldrText.body),
-                            ),
-                          ],
-                        ),
-                      ),
-              ),
+              const SizedBox(height: 18),
             ],
-          ),
+            Text(l10n.aw_execution, style: BldrSheetV2Text.label),
+            const SizedBox(height: 10),
+            if (instructions.isEmpty)
+              Text(l10n.workout_no_instructions, style: BldrSheetV2Text.body)
+            else
+              for (var i = 0; i < instructions.length; i++)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 22,
+                        height: 22,
+                        margin: const EdgeInsets.only(right: 10),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: BldrSheetV2Colors.border),
+                        ),
+                        child: Text('${i + 1}', style: BldrActiveTextV2.badge),
+                      ),
+                      Expanded(
+                        child:
+                            Text(instructions[i], style: BldrSheetV2Text.body),
+                      ),
+                    ],
+                  ),
+                ),
+          ],
         ),
       ),
     );

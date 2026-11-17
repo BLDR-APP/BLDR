@@ -61,6 +61,13 @@ Exceções ao Figma:
 - Ícones: sempre Tabler Icons, conforme o nome da camada no Figma. Não usar
   ícones do Material em telas do rebranding.
 
+### Sheets e confirmações (v2)
+
+- Sheets e confirmações: sempre `BldrV2Sheet` e `BldrV2ConfirmDialog`
+  (`lib/design_system/bldr_v2_sheet.dart`). Não usar
+  `showModalBottomSheet`/`AlertDialog` com visual próprio em telas do
+  rebranding.
+
 ### Regras
 
 1. **Presentation-only**, como no resto do redesign. Valores dos mockups

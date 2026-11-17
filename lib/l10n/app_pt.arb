@@ -2337,5 +2337,17 @@
   "sh_sets": "SÉRIES",
   "sh_share_text": "Treino concluído no BLDR",
   "sh_share_error": "A imagem foi gerada, mas não foi possível abrir o compartilhamento.",
-  "sh_export_error": "Não foi possível gerar a imagem. Tente novamente."
+  "sh_export_error": "Não foi possível gerar a imagem. Tente novamente.",
+  "wk_extra_done_title": "Atividade concluída",
+  "wk_workout_done": "{name} — concluído.",
+  "wk_extra_done": "{name} — concluída.",
+  "wk_extra_also": "Atividade extra também registrada.",
+  "wk_workout_fallback": "Treino",
+  "@wk_workout_done": {"placeholders": {"name": {"type": "String"}}},
+  "@wk_extra_done": {"placeholders": {"name": {"type": "String"}}},
+  "ed_set_title": "SÉRIE {n}",
+  "@ed_set_title": {"placeholders": {"n": {"type": "int"}}},
+  "sm_more_prs": "{n, plural, =1{+1 PR} other{+{n} PRs}}",
+  "sm_less_prs": "Mostrar menos",
+  "@sm_more_prs": {"placeholders": {"n": {"type": "int"}}}
 }

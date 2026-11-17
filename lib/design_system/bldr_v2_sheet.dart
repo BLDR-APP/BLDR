@@ -40,6 +40,8 @@ class BldrV2SheetFrame extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
+      constraints:
+          BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.88),
       decoration: BoxDecoration(
         color: BldrSheetV2Colors.bg,
         borderRadius: BorderRadius.circular(46),
@@ -67,7 +69,7 @@ class BldrV2SheetFrame extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: BldrSheetV2Text.title),
               const SizedBox(height: 28),
-              child,
+              Flexible(child: SingleChildScrollView(child: child)),
             ],
           ),
         ),
@@ -154,8 +156,8 @@ class _BldrV2StepperState extends State<BldrV2Stepper> {
 
   void _startRepeat(double delta) {
     _repeat?.cancel();
-    _repeat = Timer.periodic(
-        const Duration(milliseconds: 110), (_) => _bump(delta));
+    _repeat =
+        Timer.periodic(const Duration(milliseconds: 110), (_) => _bump(delta));
   }
 
   void _stopRepeat() {
@@ -206,9 +208,8 @@ class _BldrV2StepperState extends State<BldrV2Stepper> {
           ),
           child: Icon(icon,
               size: 24,
-              color: accent
-                  ? BldrSheetV2Colors.border
-                  : BldrSheetV2Colors.text),
+              color:
+                  accent ? BldrSheetV2Colors.border : BldrSheetV2Colors.text),
         ),
       ),
     );
@@ -280,4 +281,175 @@ class _BldrV2StepperState extends State<BldrV2Stepper> {
       ],
     );
   }
+}
+
+/// Linha de opção dentro de um [BldrV2Sheet] (ícone Tabler + rótulo).
+class BldrV2SheetOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  const BldrV2SheetOption(
+      {super.key,
+      required this.icon,
+      required this.label,
+      required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 56),
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: BldrSheetV2Colors.button,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: BldrSheetV2Colors.buttonBorder),
+            ),
+            child: Row(children: [
+              Icon(icon, size: 22, color: BldrSheetV2Colors.border),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(label,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: BldrSheetV2Text.option),
+              ),
+              const Icon(TablerIcons.chevron_right,
+                  size: 18, color: BldrSheetV2Colors.unit),
+            ]),
+          ),
+        ),
+      );
+}
+
+/// Botão principal de um [BldrV2Sheet] (borda dourada).
+class BldrV2SheetButton extends StatelessWidget {
+  final String label;
+  final VoidCallback? onTap;
+  const BldrV2SheetButton({super.key, required this.label, this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        enabled: onTap != null,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 52),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(17),
+              border: Border.all(color: BldrSheetV2Colors.border),
+            ),
+            child: Text(label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: BldrConfirmV2Text.primary),
+          ),
+        ),
+      );
+}
+
+/// Confirmação v2 (Figma 320:214): fundo `#050505`, borda dourada, raio 22,
+/// título, mensagem, "Cancelar" neutro e ação principal; [destructive]
+/// pinta a ação de vermelho (exclusões). Retorna true só ao confirmar.
+abstract final class BldrV2ConfirmDialog {
+  static Future<bool> show(
+    BuildContext context, {
+    required String title,
+    required String message,
+    required String confirmLabel,
+    required String cancelLabel,
+    bool destructive = false,
+  }) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      barrierColor: BldrConfirmV2Colors.scrim,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(24, 26, 24, 24),
+          decoration: BoxDecoration(
+            color: BldrConfirmV2Colors.bg,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: BldrSheetV2Colors.border),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: BldrConfirmV2Text.title),
+              const SizedBox(height: 14),
+              Text(message, style: BldrConfirmV2Text.message),
+              const SizedBox(height: 40),
+              Row(children: [
+                Expanded(
+                  child: _DialogButton(
+                    label: cancelLabel,
+                    filled: true,
+                    color: BldrConfirmV2Colors.cancelText,
+                    onTap: () => Navigator.pop(ctx, false),
+                  ),
+                ),
+                const SizedBox(width: 11),
+                Expanded(
+                  child: _DialogButton(
+                    label: confirmLabel,
+                    color: destructive
+                        ? BldrConfirmV2Colors.destructive
+                        : BldrSheetV2Colors.border,
+                    onTap: () => Navigator.pop(ctx, true),
+                  ),
+                ),
+              ]),
+            ],
+          ),
+        ),
+      ),
+    );
+    return ok ?? false;
+  }
+}
+
+class _DialogButton extends StatelessWidget {
+  final String label;
+  final Color color;
+  final bool filled;
+  final VoidCallback onTap;
+  const _DialogButton(
+      {required this.label,
+      required this.color,
+      required this.onTap,
+      this.filled = false});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 50),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: filled ? BldrConfirmV2Colors.cancelBg : null,
+              borderRadius: BorderRadius.circular(14),
+              border: filled ? null : Border.all(color: color),
+            ),
+            child: Text(label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: BldrConfirmV2Text.button.copyWith(color: color)),
+          ),
+        ),
+      );
 }

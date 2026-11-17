@@ -4691,4 +4691,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sh_export_error => 'Could not create the image. Try again.';
+
+  @override
+  String get wk_extra_done_title => 'Activity completed';
+
+  @override
+  String wk_workout_done(String name) {
+    return '$name — completed.';
+  }
+
+  @override
+  String wk_extra_done(String name) {
+    return '$name — completed.';
+  }
+
+  @override
+  String get wk_extra_also => 'Extra activity also logged.';
+
+  @override
+  String get wk_workout_fallback => 'Workout';
+
+  @override
+  String ed_set_title(int n) {
+    return 'SET $n';
+  }
+
+  @override
+  String sm_more_prs(int n) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '+$n PRs',
+      one: '+1 PR',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sm_less_prs => 'Show less';
 }

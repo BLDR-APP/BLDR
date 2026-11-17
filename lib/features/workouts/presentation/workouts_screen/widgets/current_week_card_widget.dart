@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 
+import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
-import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/design_system/bldr_workout_v2_components.dart';
 import 'package:bldr_fitness/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
@@ -205,6 +205,7 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
   // ── bottom sheet ──────────────────────────────────────────────────────────
 
   void _showDaySheet(_WeekDay day) {
+    final l10n = AppLocalizations.of(context);
     final isWorkoutDone = day.workoutCompleted;
     final extra = day.extraActivity;
     final isExtraDone = !isWorkoutDone && extra != null;
@@ -215,81 +216,47 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
             ? TablerIcons.check
             : isRest
                 ? TablerIcons.barbell_off
-                : Icons.circle_outlined;
+                : TablerIcons.circle;
     final title = isWorkoutDone
-        ? AppLocalizations.of(context).plan_workout_done
+        ? l10n.plan_workout_done
         : isExtraDone
-            ? 'Atividade concluída'
+            ? l10n.wk_extra_done_title
             : isRest
-                ? AppLocalizations.of(context).plan_rest_day
-                : AppLocalizations.of(context).plan_workout_not_done;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: BldrColors.sheetBg,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (_) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: BldrColors.textMuted,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Icon(
-                    icon,
-                    color: isWorkoutDone || isExtraDone
-                        ? BldrColors.goldBright
-                        : BldrColors.textSecondary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    title,
-                    style: BldrText.cardTitleLg,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                isWorkoutDone
-                    ? '${day.workoutLabel ?? "Treino"} — concluído.'
-                    : isExtraDone
-                        ? '${extra.activityType.label} — concluída.'
-                        : isRest
-                            ? AppLocalizations.of(context).plan_rest_day
-                            : AppLocalizations.of(context).plan_no_record,
-                style: BldrText.description,
-              ),
-              if (isWorkoutDone && extra != null) ...[
-                const SizedBox(height: 4),
-                Text('Atividade extra também registrada.',
-                    style: BldrText.meta),
-              ],
-              if (!isWorkoutDone && !isExtraDone && !isRest) ...[
-                const SizedBox(height: 16),
-                BldrPrimaryButton(
-                  label: AppLocalizations.of(context).plan_view_week_btn,
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-              ],
-            ],
-          ),
-        ),
+                ? l10n.plan_rest_day
+                : l10n.plan_workout_not_done;
+    final body = isWorkoutDone
+        ? l10n.wk_workout_done(day.workoutLabel ?? l10n.wk_workout_fallback)
+        : isExtraDone
+            ? l10n.wk_extra_done(extra.activityType.label)
+            : isRest
+                ? l10n.plan_rest_day
+                : l10n.plan_no_record;
+    BldrV2Sheet.show<void>(
+      context,
+      title: title.toUpperCase(),
+      child: Builder(
+        builder: (ctx) => Column(children: [
+          Icon(icon,
+              size: 28,
+              color: isWorkoutDone || isExtraDone
+                  ? BldrSheetV2Colors.border
+                  : BldrSheetV2Colors.unit),
+          const SizedBox(height: 12),
+          Text(body,
+              textAlign: TextAlign.center, style: BldrSheetV2Text.body),
+          if (isWorkoutDone && extra != null) ...[
+            const SizedBox(height: 6),
+            Text(l10n.wk_extra_also,
+                textAlign: TextAlign.center, style: BldrSheetV2Text.label),
+          ],
+          if (!isWorkoutDone && !isExtraDone && !isRest) ...[
+            const SizedBox(height: 22),
+            BldrV2SheetButton(
+              label: l10n.plan_view_week_btn.toUpperCase(),
+              onTap: () => Navigator.pop(ctx),
+            ),
+          ],
+        ]),
       ),
     );
   }

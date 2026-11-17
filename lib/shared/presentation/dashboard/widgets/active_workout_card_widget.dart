@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:sizer/sizer.dart';
 
+import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
 import 'package:bldr_fitness/core/app_export.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/design_system/bldr_v2_components.dart';
@@ -773,30 +774,13 @@ class _ActiveWorkoutCardWidgetState extends State<ActiveWorkoutCardWidget> {
 
   Future<void> _confirmAndDelete(String workoutId, String source) async {
     final dl = AppLocalizations.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) {
-        final l = AppLocalizations.of(ctx);
-        return AlertDialog(
-          backgroundColor: const Color(0xFF1A1916),
-          title: Text(l.dashboard_delete_paused_title,
-              style: const TextStyle(color: Colors.white)),
-          content: Text(l.dashboard_delete_paused_body,
-              style: const TextStyle(color: Color(0xFF888070))),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(l.common_cancel,
-                  style: const TextStyle(color: Color(0xFF888070))),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(dl.dashboard_delete_btn,
-                  style: const TextStyle(color: Color(0xFFC84040))),
-            ),
-          ],
-        );
-      },
+    final confirmed = await BldrV2ConfirmDialog.show(
+      context,
+      title: dl.dashboard_delete_paused_title,
+      message: dl.dashboard_delete_paused_body,
+      cancelLabel: dl.common_cancel,
+      confirmLabel: dl.dashboard_delete_btn,
+      destructive: true,
     );
     if (confirmed != true || !mounted) return;
     setState(() => pausedSummaries.removeWhere((w) => w['id'] == workoutId));

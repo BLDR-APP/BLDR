@@ -106,6 +106,13 @@ Toda concessão de XP grava em `club_ranking` (total) **e** em
 (`extra_activity_repository_impl.dart`). Resolve o XP semanal do hub e o
 "+50 XP" do extra (ambos escondidos até lá).
 
+### B11. Limpeza pós-rebranding
+
+Remover enum e templates antigos de compartilhamento (Performance/Muscle
+Map/Minimal: `WorkoutShareStyle`, `workout_share_templates.dart` e os testes
+que os cobrem) e outros componentes v1 sem uso (ex.: `_quickLog` do
+dashboard).
+
 ## Prioridade 2 — Habilitam o redesign
 
 ### F1. Ícone por tipo de atividade [CT1, CP2]

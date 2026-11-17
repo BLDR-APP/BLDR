@@ -917,6 +917,33 @@ abstract final class BldrSheetV2Text {
       BldrTextV2.scale(BldrTextV2.s32, FontWeight.w700, BldrSheetV2Colors.text);
   static final unit =
       BldrTextV2.scale(BldrTextV2.s12, FontWeight.w500, BldrSheetV2Colors.unit);
+  static final option =
+      BldrTextV2.scale(BldrTextV2.s15, FontWeight.w600, BldrSheetV2Colors.text);
+  static final label =
+      BldrTextV2.scale(BldrTextV2.s11, FontWeight.w600, BldrSheetV2Colors.unit);
+  static final body =
+      BldrTextV2.scale(BldrTextV2.s13, FontWeight.w400, BldrSheetV2Colors.text);
+}
+
+// Confirmação v2 (320:214)
+abstract final class BldrConfirmV2Colors {
+  static const bg = Color(0xFF050505);
+  static const scrim = Color(0xA8000000); // .66
+  static const cancelBg = Color(0xFF404247);
+  static const cancelText = Color(0xFFF0F0F2);
+  static const destructive = Color(0xFFFF0000);
+  static const message = Color(0xFFA6A8AD);
+}
+
+abstract final class BldrConfirmV2Text {
+  static final title = BldrTextV2.scale(
+      BldrTextV2.s20, FontWeight.w600, BldrConfirmV2Colors.cancelText); // 20
+  static final message = BldrTextV2.scale(
+      BldrTextV2.s12, FontWeight.w500, BldrConfirmV2Colors.message); // 12
+  static final button = BldrTextV2.scale(
+      BldrTextV2.s13, FontWeight.w600, BldrConfirmV2Colors.cancelText); // 13
+  static final primary = BldrTextV2.scale(
+      BldrTextV2.s13, FontWeight.w700, BldrSheetV2Colors.border);
 }
 
 abstract final class BldrActiveColorsV2 {
@@ -1006,6 +1033,7 @@ abstract final class BldrSummaryTextV2 {
   static final prValue = _s(BldrTextV2.s15, FontWeight.w700, _t); // 14
   static final hlHint = _s(BldrTextV2.s11, FontWeight.w400, _mu); // 8/9
   static final xpValue = _s(BldrTextV2.s24, FontWeight.w700, _t); // 23
+  static final prLine = _s(BldrTextV2.s13, FontWeight.w600, _t);
   static final emphasis = _s(BldrTextV2.s15, FontWeight.w700, _t); // 15
   static final phrase = _s(BldrTextV2.s11, FontWeight.w400, _mu); // 11
   static final muscle = _s(BldrTextV2.s11, FontWeight.w600, _mu); // 8

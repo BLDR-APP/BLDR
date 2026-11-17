@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:bldr_fitness/design_system/bldr_logo_mark.dart';
 import 'package:bldr_fitness/design_system/bldr_v2_components.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/bldr_muscle.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_share_data.dart';
@@ -26,28 +27,6 @@ TextStyle _img(double size, FontWeight w, Color c, double scale,
       letterSpacing: letterSpacing == null ? null : letterSpacing * scale,
       decoration: TextDecoration.none,
     );
-
-/// Logo "BL / DR" empilhado (mockup usa CODEX; aqui Montserrat Bold).
-class _StackedLogo extends StatelessWidget {
-  final double size;
-  const _StackedLogo({required this.size});
-  @override
-  Widget build(BuildContext context) {
-    final style = TextStyle(
-      fontFamily: 'Montserrat',
-      fontWeight: FontWeight.w700,
-      fontSize: size,
-      height: 0.8,
-      color: BldrShareColorsV2.gold,
-      decoration: TextDecoration.none,
-    );
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [Text('BL', style: style), Text('DR', style: style)],
-    );
-  }
-}
 
 class _MapView extends StatelessWidget {
   final WorkoutShareData data;
@@ -120,7 +99,7 @@ class WorkoutShareOverlayV2 extends StatelessWidget {
           child: SizedBox(
             width: 288 * s,
             child: Column(mainAxisSize: MainAxisSize.min, children: [
-              _StackedLogo(size: 13 * s),
+              BldrLogoMark(height: 23 * s),
               SizedBox(height: 12 * s),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -203,7 +182,7 @@ class WorkoutShareCardV2 extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _StackedLogo(size: 11.87 * s),
+                    BldrLogoMark(height: 21 * s),
                     const Spacer(),
                     if (data.handle case final h?)
                       Padding(
@@ -259,7 +238,7 @@ class WorkoutShareCardV2 extends StatelessWidget {
                 SizedBox(height: 22 * s),
                 Container(height: 1 * s, color: BldrShareColorsV2.divider),
                 SizedBox(height: 18 * s),
-                _StackedLogo(size: 6.78 * s),
+                BldrLogoMark(height: 12 * s),
               ]),
             ),
           ),

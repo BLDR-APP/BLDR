@@ -443,8 +443,8 @@ class BldrFilterChipV2 extends StatelessWidget {
                     : BldrWorkoutColorsV2.filterBorder),
           ),
           child: Text(label,
-              style: BldrWorkoutTextV2.filter.copyWith(
-                  color: selected ? BldrWorkoutColorsV2.gold : null)),
+              style: BldrWorkoutTextV2.filter
+                  .copyWith(color: selected ? BldrWorkoutColorsV2.gold : null)),
         ),
       ),
     );
@@ -575,8 +575,8 @@ class BldrLibraryExerciseTile extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: BldrWorkoutColorsV2.equipBg,
                           borderRadius: BorderRadius.circular(9),
-                          border:
-                              Border.all(color: BldrWorkoutColorsV2.equipBorder),
+                          border: Border.all(
+                              color: BldrWorkoutColorsV2.equipBorder),
                         ),
                         child: Text(equipment!,
                             maxLines: 1,
@@ -743,7 +743,8 @@ class BldrSmallGoldPill extends StatelessWidget {
                 strokeWidth: 1.5, color: BldrWorkoutColorsV2.gold))
         : (icon == null
             ? null
-            : Icon(icon, size: vertical ? 13 : 18, color: BldrWorkoutColorsV2.gold));
+            : Icon(icon,
+                size: vertical ? 13 : 18, color: BldrWorkoutColorsV2.gold));
     final text = Flexible(
       child: Text(label,
           maxLines: 1,
@@ -866,8 +867,8 @@ class BldrTodayWorkoutCard extends StatelessWidget {
             // 116 × 174 em 440 px; encolhe em telas estreitas para não
             // espremer os textos.
             LayoutBuilder(builder: (context, c) {
-              final w = (MediaQuery.sizeOf(context).width * 0.264)
-                  .clamp(72.0, 116.0);
+              final w =
+                  (MediaQuery.sizeOf(context).width * 0.264).clamp(72.0, 116.0);
               return SizedBox(width: w, height: w * 1.5, child: muscleMap);
             }),
           ],
@@ -896,18 +897,21 @@ class BldrWeekDayCircle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dashed = state == BldrWeekDayState.lost ||
-        state == BldrWeekDayState.rest;
+    final dashed =
+        state == BldrWeekDayState.lost || state == BldrWeekDayState.rest;
     final icon = switch (state) {
-      BldrWeekDayState.workoutDone =>
-        SvgPicture.asset('assets/images/v2/icons/week_barbell.svg',
-            width: 21, height: 13),
-      BldrWeekDayState.extraDone =>
-        SvgPicture.asset('assets/images/v2/icons/week_check.svg',
-            width: 16, height: 11),
-      BldrWeekDayState.lost =>
-        SvgPicture.asset('assets/images/v2/icons/week_barbell_off.svg',
-            width: 24, height: 24),
+      BldrWeekDayState.workoutDone => SvgPicture.asset(
+          'assets/images/v2/icons/week_barbell.svg',
+          width: 21,
+          height: 13),
+      BldrWeekDayState.extraDone => SvgPicture.asset(
+          'assets/images/v2/icons/week_check.svg',
+          width: 16,
+          height: 11),
+      BldrWeekDayState.lost => SvgPicture.asset(
+          'assets/images/v2/icons/week_barbell_off.svg',
+          width: 24,
+          height: 24),
       _ => null,
     };
     return GestureDetector(
@@ -1092,6 +1096,7 @@ class BldrPillWorkoutCard extends StatelessWidget {
 /// Card do "Explorar" (cinza #353535, borda dourada, raio 10,7).
 class BldrExploreCard extends StatelessWidget {
   final IconData? icon;
+
   /// Marca no lugar do ícone (ex.: logo do BLDR Club, como no mockup).
   final Widget? leading;
   final String title;
@@ -1123,8 +1128,8 @@ class BldrExploreCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: BldrWorkoutColorsV2.exploreBg,
             borderRadius: BorderRadius.circular(10.747),
-            border: Border.all(
-                color: BldrWorkoutColorsV2.goldBrand, width: 0.827),
+            border:
+                Border.all(color: BldrWorkoutColorsV2.goldBrand, width: 0.827),
           ),
           child: Row(
             children: [
@@ -1185,8 +1190,7 @@ class BldrDashedEmptyBox extends StatelessWidget {
   final Widget child;
   final double height;
 
-  const BldrDashedEmptyBox(
-      {super.key, required this.child, this.height = 106});
+  const BldrDashedEmptyBox({super.key, required this.child, this.height = 106});
 
   @override
   Widget build(BuildContext context) {
