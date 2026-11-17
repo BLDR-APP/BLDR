@@ -8098,6 +8098,126 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Misto'**
   String get ed_cat_mixed;
+
+  /// No description provided for @aw_hr.
+  ///
+  /// In pt, this message translates to:
+  /// **'FC'**
+  String get aw_hr;
+
+  /// No description provided for @aw_bpm.
+  ///
+  /// In pt, this message translates to:
+  /// **'BPM'**
+  String get aw_bpm;
+
+  /// No description provided for @aw_kcal.
+  ///
+  /// In pt, this message translates to:
+  /// **'KCAL'**
+  String get aw_kcal;
+
+  /// No description provided for @aw_set_of.
+  ///
+  /// In pt, this message translates to:
+  /// **'de {total}'**
+  String aw_set_of(int total);
+
+  /// No description provided for @aw_workout.
+  ///
+  /// In pt, this message translates to:
+  /// **'TREINO'**
+  String get aw_workout;
+
+  /// No description provided for @aw_current.
+  ///
+  /// In pt, this message translates to:
+  /// **'EXERCÍCIO ATUAL'**
+  String get aw_current;
+
+  /// No description provided for @aw_set_badge.
+  ///
+  /// In pt, this message translates to:
+  /// **'SÉRIE {current}/{total}'**
+  String aw_set_badge(int current, int total);
+
+  /// No description provided for @aw_execution.
+  ///
+  /// In pt, this message translates to:
+  /// **'EXECUÇÃO'**
+  String get aw_execution;
+
+  /// No description provided for @aw_target.
+  ///
+  /// In pt, this message translates to:
+  /// **'ALVO  {reps} reps'**
+  String aw_target(int reps);
+
+  /// No description provided for @aw_next_set.
+  ///
+  /// In pt, this message translates to:
+  /// **'SUA PRÓXIMA SÉRIE'**
+  String get aw_next_set;
+
+  /// No description provided for @aw_load.
+  ///
+  /// In pt, this message translates to:
+  /// **'CARGA'**
+  String get aw_load;
+
+  /// No description provided for @aw_reps.
+  ///
+  /// In pt, this message translates to:
+  /// **'REPS'**
+  String get aw_reps;
+
+  /// No description provided for @aw_rest.
+  ///
+  /// In pt, this message translates to:
+  /// **'DESCANSO'**
+  String get aw_rest;
+
+  /// No description provided for @aw_add15.
+  ///
+  /// In pt, this message translates to:
+  /// **'+15 s'**
+  String get aw_add15;
+
+  /// No description provided for @aw_confirm.
+  ///
+  /// In pt, this message translates to:
+  /// **'CONCLUIR SÉRIE'**
+  String get aw_confirm;
+
+  /// No description provided for @aw_next.
+  ///
+  /// In pt, this message translates to:
+  /// **'PRÓXIMO'**
+  String get aw_next;
+
+  /// No description provided for @aw_last.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fim do treino'**
+  String get aw_last;
+
+  /// No description provided for @aw_pause.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pausar treino'**
+  String get aw_pause;
+
+  /// No description provided for @aw_sheet_load.
+  ///
+  /// In pt, this message translates to:
+  /// **'AJUSTAR CARGA'**
+  String get aw_sheet_load;
+
+  /// No description provided for @aw_sheet_reps.
+  ///
+  /// In pt, this message translates to:
+  /// **'AJUSTAR REPETIÇÕES'**
+  String get aw_sheet_reps;
 }
 
 class _AppLocalizationsDelegate

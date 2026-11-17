@@ -4472,4 +4472,70 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ed_cat_mixed => 'Mixed';
+
+  @override
+  String get aw_hr => 'HR';
+
+  @override
+  String get aw_bpm => 'BPM';
+
+  @override
+  String get aw_kcal => 'KCAL';
+
+  @override
+  String aw_set_of(int total) {
+    return 'of $total';
+  }
+
+  @override
+  String get aw_workout => 'WORKOUT';
+
+  @override
+  String get aw_current => 'CURRENT EXERCISE';
+
+  @override
+  String aw_set_badge(int current, int total) {
+    return 'SET $current/$total';
+  }
+
+  @override
+  String get aw_execution => 'EXECUTION';
+
+  @override
+  String aw_target(int reps) {
+    return 'TARGET  $reps reps';
+  }
+
+  @override
+  String get aw_next_set => 'YOUR NEXT SET';
+
+  @override
+  String get aw_load => 'LOAD';
+
+  @override
+  String get aw_reps => 'REPS';
+
+  @override
+  String get aw_rest => 'REST';
+
+  @override
+  String get aw_add15 => '+15 s';
+
+  @override
+  String get aw_confirm => 'COMPLETE SET';
+
+  @override
+  String get aw_next => 'NEXT';
+
+  @override
+  String get aw_last => 'End of workout';
+
+  @override
+  String get aw_pause => 'Pause workout';
+
+  @override
+  String get aw_sheet_load => 'ADJUST LOAD';
+
+  @override
+  String get aw_sheet_reps => 'ADJUST REPS';
 }

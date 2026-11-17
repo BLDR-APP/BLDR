@@ -4498,4 +4498,70 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get ed_cat_mixed => 'Misto';
+
+  @override
+  String get aw_hr => 'FC';
+
+  @override
+  String get aw_bpm => 'BPM';
+
+  @override
+  String get aw_kcal => 'KCAL';
+
+  @override
+  String aw_set_of(int total) {
+    return 'de $total';
+  }
+
+  @override
+  String get aw_workout => 'TREINO';
+
+  @override
+  String get aw_current => 'EXERCÍCIO ATUAL';
+
+  @override
+  String aw_set_badge(int current, int total) {
+    return 'SÉRIE $current/$total';
+  }
+
+  @override
+  String get aw_execution => 'EXECUÇÃO';
+
+  @override
+  String aw_target(int reps) {
+    return 'ALVO  $reps reps';
+  }
+
+  @override
+  String get aw_next_set => 'SUA PRÓXIMA SÉRIE';
+
+  @override
+  String get aw_load => 'CARGA';
+
+  @override
+  String get aw_reps => 'REPS';
+
+  @override
+  String get aw_rest => 'DESCANSO';
+
+  @override
+  String get aw_add15 => '+15 s';
+
+  @override
+  String get aw_confirm => 'CONCLUIR SÉRIE';
+
+  @override
+  String get aw_next => 'PRÓXIMO';
+
+  @override
+  String get aw_last => 'Fim do treino';
+
+  @override
+  String get aw_pause => 'Pausar treino';
+
+  @override
+  String get aw_sheet_load => 'AJUSTAR CARGA';
+
+  @override
+  String get aw_sheet_reps => 'AJUSTAR REPETIÇÕES';
 }

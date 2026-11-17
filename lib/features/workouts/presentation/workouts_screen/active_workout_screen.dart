@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +11,8 @@ import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/routes/app_routes.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
+import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
+import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:bldr_fitness/features/subscription/domain/usecases/resolve_club_access.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/exercise_display_name.dart';
@@ -72,7 +73,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
 
   // ExerciseDB cache: exercise_db_id → ExerciseDetail
   final Map<String, ExerciseDetail> _exDbCache = {};
-  final Set<int> _skippedExerciseIndexes = <int>{};
 
   double _weight = 0;
   int _reps = 0;
@@ -939,421 +939,656 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
                           ],
                         ),
                       )
-                    : Stack(
-                        children: [
-                          Column(
-                            children: [
-                              _buildHeader(),
-                              Expanded(
-                                child: SingleChildScrollView(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: BldrSpacing.pageX),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const SizedBox(height: 16),
-                                      _buildTimeSeriesCards(),
-                                      const SizedBox(height: 14),
-                                      _buildOverallProgress(),
-                                      const SizedBox(height: 22),
-                                      if (_exercises.isNotEmpty) ...[
-                                        _buildCurrentExercise(),
-                                        const SizedBox(height: 18),
-                                        _buildInputRow(),
-                                        const SizedBox(height: 14),
-                                        _buildSeriesList(),
-                                        const SizedBox(height: 22),
-                                        _buildExerciseTimeline(),
-                                        const SizedBox(height: 130),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              _buildFooter(),
-                            ],
-                          ),
-                          // Faixa de descanso — flutua sobre o conteúdo, que
-                          // continua rolável e utilizável por trás dela.
-                          if (_resting)
-                            Positioned(
-                              left: 14,
-                              right: 14,
-                              bottom: 88,
-                              child: _buildRestFloatingStrip(),
-                            ),
-                        ],
-                      ),
+                    : _buildV2Body(),
           ),
         ),
       ),
     );
   }
 
-  // ── header (item 2) ──────────────────────────────────────────────────────
+  // ══ Treino em andamento v2 (179:1319) ══════════════════════════════════════
 
-  Widget _buildHeader() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-          BldrSpacing.pageX, 12, BldrSpacing.pageX, 14),
-      child: Row(
-        children: [
-          Semantics(
-            label: AppLocalizations.of(context).common_back_btn,
-            button: true,
-            child: BldrCircleButton(
-              icon: Icons.chevron_left,
-              size: 36,
-              filled: false,
-              onPressed: _isFinishing ? null : _exitWorkout,
-            ),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                Text(AppLocalizations.of(context).workout_in_progress,
-                    style: BldrText.label),
-                const SizedBox(height: 2),
-                Text(
-                  _effectiveWorkoutName,
-                  style: BldrText.cardTitleLg,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          Semantics(
-            label: AppLocalizations.of(context).workout_stop_label,
-            button: true,
-            child: GestureDetector(
-              onTap: _stopWorkout,
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: const Color(0x24E06B5A), // rgba(224,107,90,0.14)
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0x4DE06B5A)),
-                ),
-                child: const Icon(Icons.stop_rounded,
-                    color: BldrColors.danger, size: 18),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  static const double _px = 18;
 
-  // ── tempo / série (item 3) ───────────────────────────────────────────────
-
-  Widget _buildTimeSeriesCards() {
-    final totalSets = _exercises.isEmpty
-        ? 1
-        : (_exercises[_currentExerciseIdx]['totalSets'] as int);
-
-    return Row(
+  Widget _buildV2Body() {
+    return Column(
       children: [
         Expanded(
-          child: BldrGlassCard(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(_px, 12, _px, 16),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(AppLocalizations.of(context).workout_time_label,
-                    style: BldrText.label),
-                const SizedBox(height: 4),
-                Text(
-                  _formatTime(_elapsedSeconds),
-                  style: const TextStyle(
-                    fontFamily: BldrText.family,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                    color: BldrColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: BldrSpacing.gapCard),
-        Expanded(
-          child: BldrGlassCard(
-            background: BldrColors.goldTintStrong,
-            borderColor: BldrColors.goldBorder,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(AppLocalizations.of(context).workout_set_label,
-                    style:
-                        BldrText.label.copyWith(color: BldrColors.goldBright)),
-                const SizedBox(height: 4),
-                Text(
-                  '$_currentSetNumber de $totalSets',
-                  style: const TextStyle(
-                    fontFamily: BldrText.family,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w600,
-                    color: BldrColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        if (_currentBpm > 0) ...[
-          const SizedBox(width: BldrSpacing.gapCard),
-          Expanded(
-            child: BldrGlassCard(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(children: [
-                    const Icon(Icons.favorite_rounded,
-                        size: 12, color: BldrColors.danger),
-                    const SizedBox(width: 4),
-                    Text('FC', style: BldrText.label),
-                  ]),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${_currentBpm.round()} bpm',
-                    style: const TextStyle(
-                      fontFamily: BldrText.family,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                      color: BldrColors.textPrimary,
-                    ),
-                  ),
+                _v2Header(),
+                const SizedBox(height: 14),
+                _v2Hud(),
+                if (_exercises.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  _v2CurrentExercise(),
+                  const SizedBox(height: 16),
+                  _v2Execution(),
+                  const SizedBox(height: 20),
+                  _v2NextSet(),
+                  const SizedBox(height: 16),
+                  _v2Inputs(),
+                  const SizedBox(height: 16),
+                  _v2Rest(),
                 ],
-              ),
+              ],
             ),
           ),
-        ],
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(_px, 4, _px, 12),
+          child: Column(children: [
+            _v2PrimaryCta(),
+            const SizedBox(height: 10),
+            _v2BottomNav(),
+          ]),
+        ),
       ],
     );
   }
 
-  // ── progresso do treino (item 4) ─────────────────────────────────────────
-
-  Widget _buildOverallProgress() {
-    final totalEx = _exercises.length;
-    final doneEx = _currentExerciseIdx;
-    final totalSets = _totalSetsCount;
-    final progress = totalSets == 0 ? 0.0 : _completedSetsCount / totalSets;
-
-    return Column(
+  Widget _v2Header() {
+    final l10n = AppLocalizations.of(context);
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                Container(
+                  width: 7,
+                  height: 7,
+                  decoration: const BoxDecoration(
+                      color: BldrActiveColorsV2.gold, shape: BoxShape.circle),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(l10n.workout_in_progress,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: BldrActiveTextV2.status),
+                ),
+              ]),
+              const SizedBox(height: 4),
+              Text(_effectiveWorkoutName.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: BldrActiveTextV2.name),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(
-                AppLocalizations.of(context).workout_exercise_of(
-                    totalEx == 0 ? 0 : doneEx + 1, totalEx),
-                style: BldrText.meta),
-            Text(
-                AppLocalizations.of(context)
-                    .workout_percent_done((progress * 100).round()),
-                style: BldrText.meta.copyWith(
-                    color: BldrColors.goldBright, fontWeight: FontWeight.w500)),
+            Text(l10n.workout_time_label, style: BldrActiveTextV2.label),
+            const SizedBox(height: 2),
+            Text(_formatTime(_elapsedSeconds), style: BldrActiveTextV2.timer),
           ],
         ),
-        const SizedBox(height: 8),
-        BldrProgressBar(value: progress, gradient: true),
+        const SizedBox(width: 16),
+        Semantics(
+          button: true,
+          label: l10n.workout_stop_label,
+          child: GestureDetector(
+            onTap: _isFinishing ? null : _stopWorkout,
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              width: 34,
+              height: 34,
+              margin: const EdgeInsets.only(top: 10),
+              decoration: BoxDecoration(
+                color: BldrActiveColorsV2.closeBg,
+                shape: BoxShape.circle,
+                border: Border.all(color: BldrActiveColorsV2.closeBorder),
+              ),
+              child: const Icon(TablerIcons.x,
+                  size: 18, color: BldrActiveColorsV2.muted),
+            ),
+          ),
+        ),
       ],
     );
   }
 
-  // ── exercício atual (item 1 + item 5) ────────────────────────────────────
+  Widget _hudTile(String label, String value,
+      {String? suffix, bool accent = false}) {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 54),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: BldrActiveColorsV2.hudBg,
+        borderRadius: BorderRadius.circular(20),
+        border: accent
+            ? Border.all(color: BldrActiveColorsV2.hudAccentBorder)
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: BldrActiveTextV2.label),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text(value,
+                    style: accent
+                        ? BldrActiveTextV2.hudAccent
+                        : BldrActiveTextV2.hudValue),
+                if (suffix != null) ...[
+                  const SizedBox(width: 6),
+                  Text(suffix, style: BldrActiveTextV2.hudSuffix),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-  Widget _buildCurrentExercise() {
-    if (_exercises.isEmpty) return const SizedBox();
+  Widget _v2Hud() {
+    final l10n = AppLocalizations.of(context);
+    final total = _totalSetsCount;
+    final done = _completedSetsCount;
+    final current = total == 0 ? 0 : (done + 1).clamp(1, total);
+    final pct = total == 0 ? 0 : (done / total * 100).round();
+    final tiles = <Widget>[
+      // FC só com batimento recebido (Watch/HealthKit) — sem "—".
+      if (_currentBpm > 0)
+        _hudTile(l10n.aw_hr, '${_currentBpm.round()}', suffix: l10n.aw_bpm),
+      _hudTile(l10n.aw_kcal, '${_estimatedCalories.round()}'),
+      _hudTile(l10n.workout_set_label, '$current',
+          suffix: l10n.aw_set_of(total)),
+      _hudTile(l10n.aw_workout, '$pct%', accent: true),
+    ];
+    return Row(children: [
+      for (var i = 0; i < tiles.length; i++) ...[
+        if (i > 0) const SizedBox(width: 9),
+        Expanded(child: tiles[i]),
+      ],
+    ]);
+  }
+
+  /// Dados de exibição do exercício atual (nome, músculos, GIF).
+  ({
+    String name,
+    String muscles,
+    String? gifUrl,
+    Map<String, dynamic> ex,
+    ExerciseDetail? detail
+  }) _currentView() {
     final exGroup = _exercises[_currentExerciseIdx];
     final ex = exGroup['exercise'] as Map<String, dynamic>;
     final exerciseDbId = ex['exercise_db_id'] as String?;
     final detail = exerciseDbId != null ? _exDbCache[exerciseDbId] : null;
-
-    // Prefer name from ExerciseDB detail (covers ExerciseDB-picker exercises
-    // that have no row in the internal exercises table).
     final name = resolveExerciseDisplayName(
       internalName: ex['name'] as String?,
       exerciseDbName: detail?.name,
     );
-
-    final equipment = detail != null && detail.equipments.isNotEmpty
-        ? detail.equipments.join(', ')
-        : (_muscleGroupText(ex['primary_muscle_group']) ?? 'Sem equipamento');
-
     final muscle = detail?.targetMuscles.isNotEmpty == true
         ? detail!.targetMuscles.first
         : (_muscleGroupText(ex['primary_muscle_group']) ?? '');
-
-    final secondaryMuscles = detail?.secondaryMuscles ?? <String>[];
-    final muscleSubtitle = secondaryMuscles.isNotEmpty
-        ? '$muscle · ${secondaryMuscles.take(2).join(', ')}'
-        : muscle;
-
+    final secondary = detail?.secondaryMuscles ?? <String>[];
+    final muscles =
+        [muscle, ...secondary.take(2)].where((m) => m.isNotEmpty).join(' • ');
     String? gifUrl = detail?.gifUrl;
     if ((gifUrl == null || gifUrl.isEmpty) && exerciseDbId != null) {
       gifUrl = 'https://static.exercisedb.dev/media/$exerciseDbId.gif';
     }
+    return (
+      name: name,
+      muscles: muscles,
+      gifUrl: gifUrl,
+      ex: ex,
+      detail: detail
+    );
+  }
 
-    return Column(
+  Map<String, dynamic>? get _currentSetRow {
+    final sets =
+        _exercises[_currentExerciseIdx]['sets'] as List<Map<String, dynamic>>;
+    final i = _currentSetNumber - 1;
+    return i >= 0 && i < sets.length ? sets[i] : null;
+  }
+
+  Widget _v2CurrentExercise() {
+    final l10n = AppLocalizations.of(context);
+    final v = _currentView();
+    final totalSets = _exercises[_currentExerciseIdx]['totalSets'] as int;
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Item 5 — título curto + subtítulo (grupos musculares) + chip de
-        // equipamento à direita.
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontFamily: BldrText.family,
-                      fontSize: 21,
-                      fontWeight: FontWeight.w600,
-                      color: BldrColors.textPrimary,
-                      height: 1.2,
-                    ),
-                  ),
-                  if (muscleSubtitle.isNotEmpty) ...[
-                    const SizedBox(height: 3),
-                    Text(muscleSubtitle, style: BldrText.meta),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            BldrChip(
-                icon: Icons.fitness_center, label: equipment, active: true),
-          ],
-        ),
-        const SizedBox(height: 14),
-        // Item 1 — imagem do exercício em card de vidro, nunca fundo branco.
-        SizedBox(
-          height: 168,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                  child: _buildExerciseImageCard(gifUrl, muscle, ex, detail)),
-              const SizedBox(width: 10),
-              MuscleVisualizerWidget(
-                targetMuscles: detail?.targetMuscles ??
-                    (muscle.isNotEmpty ? [muscle] : []),
-                secondaryMuscles: secondaryMuscles,
-                isPro: _isPro,
-                size: VisualizerSize.compact,
-              ),
+              Text(l10n.aw_current, style: BldrActiveTextV2.eyebrow),
+              const SizedBox(height: 4),
+              Text(v.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: BldrActiveTextV2.exName),
+              if (v.muscles.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(v.muscles,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: BldrActiveTextV2.muscles),
+              ],
             ],
           ),
+        ),
+        const SizedBox(width: 10),
+        Container(
+          margin: const EdgeInsets.only(top: 22),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: BldrActiveColorsV2.closeBg,
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(color: BldrActiveColorsV2.badgeBorder),
+          ),
+          child: Text(l10n.aw_set_badge(_currentSetNumber, totalSets),
+              style: BldrActiveTextV2.badge),
         ),
       ],
     );
   }
 
-  Widget _buildExerciseImageCard(String? gifUrl, String muscle,
-      Map<String, dynamic> ex, ExerciseDetail? detail) {
-    return Container(
-      decoration: BoxDecoration(
-        color: BldrColors.surface,
-        borderRadius: BldrRadius.all(BldrRadius.card),
-        border: Border.all(color: BldrColors.border),
-      ),
-      child: ClipRRect(
-        borderRadius: BldrRadius.all(BldrRadius.card),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            if (_isPrefetching)
-              const Center(
-                child: CircularProgressIndicator(
-                    color: BldrColors.goldBright, strokeWidth: 2),
-              )
-            else if (gifUrl != null)
-              ColorFiltered(
-                // A maioria das imagens do ExerciseDB tem fundo branco — em
-                // academia com pouca luz isso ofusca. O multiply escurece
-                // sem lavar o conteúdo da imagem.
-                colorFilter: const ColorFilter.mode(
-                    Color(0xFFB8B8B8), BlendMode.multiply),
-                child: CachedNetworkImage(
-                  imageUrl: gifUrl,
-                  fit: BoxFit.contain,
-                  placeholder: (_, __) => const Center(
-                    child: CircularProgressIndicator(
-                        color: BldrColors.goldBright, strokeWidth: 2),
-                  ),
-                  errorWidget: (_, __, ___) => const Center(
-                    child: Icon(Icons.fitness_center,
-                        color: BldrColors.textMuted, size: 32),
-                  ),
-                ),
-              )
-            else
-              const Center(
-                child: Icon(Icons.fitness_center,
-                    color: BldrColors.textMuted, size: 32),
+  /// Área "Execução" (P4): GIF atual em loop; tocar abre a técnica.
+  Widget _v2Execution() {
+    final l10n = AppLocalizations.of(context);
+    final v = _currentView();
+    final reps = (_currentSetRow?['reps'] as int?) ?? _reps;
+    return Semantics(
+      button: true,
+      label: l10n.workout_see_technique,
+      child: GestureDetector(
+        onTap: () => _showTechniqueSheet(v.ex, v.detail),
+        child: Container(
+          padding: const EdgeInsets.all(13),
+          decoration: BoxDecoration(
+            color: BldrActiveColorsV2.mediaBg,
+            borderRadius: BorderRadius.circular(28),
+            border: Border.all(color: BldrActiveColorsV2.goldBrand),
+          ),
+          child: Column(children: [
+            Container(
+              height: 188,
+              decoration: BoxDecoration(
+                color: BldrActiveColorsV2.mediaInner,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: BldrActiveColorsV2.mediaInnerBorder),
               ),
-            // Gradiente escuro na parte inferior — legibilidade dos badges.
-            const Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: 76,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: [Color(0xBF050505), Color(0x00050505)],
-                    stops: [0.0, 1.0],
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(22),
+                child: Stack(fit: StackFit.expand, children: [
+                  if (_isPrefetching)
+                    const Center(
+                      child: CircularProgressIndicator(
+                          color: BldrActiveColorsV2.gold, strokeWidth: 2),
+                    )
+                  else if (v.gifUrl != null)
+                    ColorFiltered(
+                      // GIFs do ExerciseDB têm fundo branco: o multiply
+                      // escurece sem lavar o conteúdo (mesmo filtro de antes).
+                      colorFilter: const ColorFilter.mode(
+                          Color(0xFFB8B8B8), BlendMode.multiply),
+                      child: CachedNetworkImage(
+                        imageUrl: v.gifUrl!,
+                        fit: BoxFit.contain,
+                        placeholder: (_, __) => const Center(
+                          child: CircularProgressIndicator(
+                              color: BldrActiveColorsV2.gold, strokeWidth: 2),
+                        ),
+                        errorWidget: (_, __, ___) => const Center(
+                          child: Icon(TablerIcons.barbell,
+                              color: BldrActiveColorsV2.muted, size: 32),
+                        ),
+                      ),
+                    )
+                  else
+                    const Center(
+                      child: Icon(TablerIcons.barbell,
+                          color: BldrActiveColorsV2.muted, size: 32),
+                    ),
+                  Positioned(
+                    left: 16,
+                    top: 13,
+                    child:
+                        Text(l10n.aw_execution, style: BldrActiveTextV2.label),
                   ),
-                ),
+                ]),
               ),
             ),
-            if (muscle.isNotEmpty)
-              Positioned(
-                left: 8,
-                bottom: 8,
-                child: BldrBadge(label: muscle, gold: false),
+            const SizedBox(height: 6),
+            Container(
+              constraints: const BoxConstraints(minHeight: 28),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: BldrActiveColorsV2.cueBg,
+                borderRadius: BorderRadius.circular(14),
               ),
-            if (!_isPrefetching)
-              Positioned(
-                right: 8,
-                top: 8,
-                child: GestureDetector(
-                  onTap: () => _showTechniqueSheet(ex, detail),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: BldrColors.goldSolid,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      AppLocalizations.of(context).workout_see_technique,
-                      style: TextStyle(
-                        fontFamily: BldrText.family,
-                        color: Color(0xFF0A0A0A),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-          ],
+              // Cadência oculta ([F]); alvo = reps da série.
+              alignment: Alignment.centerRight,
+              child: Text(l10n.aw_target(reps),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: BldrActiveTextV2.cueTarget),
+            ),
+          ]),
         ),
       ),
     );
+  }
+
+  static String _kgText(double kg) => BldrV2Stepper.format(kg, decimal: true);
+
+  Widget _v2NextSet() {
+    final l10n = AppLocalizations.of(context);
+    final row = _currentSetRow;
+    final kg = (row?['weight_kg'] as num?)?.toDouble() ?? _weight;
+    final reps = (row?['reps'] as int?) ?? _reps;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(15, 13, 15, 14),
+      decoration: BoxDecoration(
+        color: BldrActiveColorsV2.mediaBg,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: BldrActiveColorsV2.cardBorder),
+      ),
+      // "PR possível", "Última vez" e delta ocultos ([F]).
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.aw_next_set, style: BldrActiveTextV2.label),
+          const SizedBox(height: 6),
+          Text('${_kgText(kg)} kg  ×  $reps',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: BldrActiveTextV2.nextSet),
+        ],
+      ),
+    );
+  }
+
+  Widget _inputCard(String label, String value, String? unit,
+      VoidCallback onTap, String semantics) {
+    return Semantics(
+      button: true,
+      label: semantics,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 94),
+          padding: const EdgeInsets.fromLTRB(15, 12, 15, 12),
+          decoration: BoxDecoration(
+            color: BldrActiveColorsV2.cardBg,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: BldrActiveColorsV2.inputBorder),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: BldrActiveTextV2.label),
+              const SizedBox(height: 4),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(value, style: BldrActiveTextV2.inputValue),
+                    if (unit != null) ...[
+                      const SizedBox(width: 8),
+                      Text(unit, style: BldrActiveTextV2.inputUnit),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openLoadSheet() {
+    final l10n = AppLocalizations.of(context);
+    BldrV2Sheet.show<void>(
+      context,
+      title: l10n.aw_sheet_load,
+      child: BldrV2Stepper(
+        initial: _weight,
+        step: 2.5,
+        decimal: true,
+        unit: 'kg',
+        decreaseLabel: l10n.workout_decrease_load,
+        increaseLabel: l10n.workout_increase_load,
+        onChanged: (v) {
+          setState(() => _weight = v);
+          _updateLiveActivity();
+        },
+      ),
+    );
+  }
+
+  void _openRepsSheet() {
+    final l10n = AppLocalizations.of(context);
+    BldrV2Sheet.show<void>(
+      context,
+      title: l10n.aw_sheet_reps,
+      child: BldrV2Stepper(
+        initial: _reps.toDouble(),
+        step: 1,
+        decreaseLabel: l10n.workout_decrease_reps,
+        increaseLabel: l10n.workout_increase_reps,
+        onChanged: (v) {
+          setState(() => _reps = v.round());
+          _updateLiveActivity();
+        },
+      ),
+    );
+  }
+
+  Widget _v2Inputs() {
+    final l10n = AppLocalizations.of(context);
+    return Row(children: [
+      Expanded(
+        child: _inputCard(l10n.aw_load, _kgText(_weight), 'kg', _openLoadSheet,
+            l10n.aw_sheet_load),
+      ),
+      const SizedBox(width: 16),
+      Expanded(
+        child: _inputCard(
+            l10n.aw_reps, '$_reps', null, _openRepsSheet, l10n.aw_sheet_reps),
+      ),
+    ]);
+  }
+
+  /// Card de descanso (P3): fora do descanso mostra o descanso da série;
+  /// descansando, contagem regressiva, "+15 s" e "›" (pular).
+  Widget _v2Rest() {
+    final l10n = AppLocalizations.of(context);
+    final planned = (_currentSetRow?['rest_seconds'] as int?) ?? 90;
+    final seconds = _resting ? _restSecondsLeft : planned;
+    return Container(
+      constraints: const BoxConstraints(minHeight: 52),
+      padding: const EdgeInsets.only(left: 15, right: 4),
+      decoration: BoxDecoration(
+        color: BldrActiveColorsV2.cardBg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: BldrActiveColorsV2.cardBorder),
+      ),
+      child: Row(children: [
+        const Icon(TablerIcons.clock, size: 18, color: BldrActiveColorsV2.gold),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Row(children: [
+            Flexible(
+              child: Text(l10n.aw_rest,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: BldrActiveTextV2.label),
+            ),
+            if (_resting) ...[
+              const SizedBox(width: 6),
+              Semantics(
+                button: true,
+                label: l10n.workout_add_rest_label,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => _addRestSeconds(15),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
+                    child: Text(l10n.aw_add15, style: BldrActiveTextV2.restAdd),
+                  ),
+                ),
+              ),
+            ],
+          ]),
+        ),
+        Text(_formatTime(seconds), style: BldrActiveTextV2.restValue),
+        if (_resting)
+          Semantics(
+            button: true,
+            label: l10n.workout_skip_rest,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _endRestEarly,
+              child: const SizedBox(
+                width: 40,
+                height: 50,
+                child: Icon(TablerIcons.chevron_right,
+                    size: 22, color: BldrActiveColorsV2.gold),
+              ),
+            ),
+          )
+        else
+          const SizedBox(width: 14),
+      ]),
+    );
+  }
+
+  Widget _v2PrimaryCta() {
+    final l10n = AppLocalizations.of(context);
+    final enabled = _confirmingSetId == null;
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      child: GestureDetector(
+        onTap: enabled ? _confirmSet : null,
+        behavior: HitTestBehavior.opaque,
+        child: Opacity(
+          opacity: enabled ? 1 : 0.5,
+          child: Container(
+            height: 56,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(color: BldrActiveColorsV2.goldBrand),
+            ),
+            child: Text(l10n.aw_confirm,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: BldrActiveTextV2.cta),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _v2BottomNav() {
+    final l10n = AppLocalizations.of(context);
+    final hasNext = _currentExerciseIdx < _exercises.length - 1;
+    String nextName = l10n.aw_last;
+    if (hasNext) {
+      final ex = _exercises[_currentExerciseIdx + 1]['exercise']
+          as Map<String, dynamic>;
+      final id = ex['exercise_db_id'] as String?;
+      nextName = resolveExerciseDisplayName(
+        internalName: ex['name'] as String?,
+        exerciseDbName: id != null ? _exDbCache[id]?.name : null,
+      );
+    }
+    final canSkip = _confirmingSetId == null && _exercises.isNotEmpty;
+    // "Anterior" oculto: voltar ao exercício anterior não existe ([F]).
+    return Row(children: [
+      Semantics(
+        button: true,
+        label: l10n.aw_pause,
+        child: GestureDetector(
+          onTap: _isFinishing ? null : _exitWorkout,
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: BldrActiveColorsV2.mediaBg,
+              shape: BoxShape.circle,
+              border: Border.all(color: BldrActiveColorsV2.pauseBorder),
+            ),
+            child: const Icon(TablerIcons.player_pause,
+                size: 20, color: BldrActiveColorsV2.gold),
+          ),
+        ),
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: Semantics(
+          button: true,
+          label: l10n.workout_skip_exercise,
+          child: GestureDetector(
+            // Mesmo "Pular" de hoje (decisão do usuário).
+            onTap: canSkip ? _skipExercise : null,
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              constraints: const BoxConstraints(minHeight: 58),
+              padding: const EdgeInsets.only(left: 13, right: 6),
+              decoration: BoxDecoration(
+                color: BldrActiveColorsV2.mediaBg,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: BldrActiveColorsV2.cardBorder),
+              ),
+              child: Row(children: [
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(l10n.aw_next, style: BldrActiveTextV2.label),
+                      Text(nextName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: BldrActiveTextV2.nextName),
+                    ],
+                  ),
+                ),
+                const SizedBox(
+                  width: 36,
+                  child: Icon(TablerIcons.chevron_right,
+                      size: 22, color: BldrActiveColorsV2.gold),
+                ),
+              ]),
+            ),
+          ),
+        ),
+      ),
+    ]);
   }
 
   void _showTechniqueSheet(Map<String, dynamic> ex, ExerciseDetail? detail) {
@@ -1479,420 +1714,6 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
   }
 
   // ── steppers de carga / repetições (item 6) ─────────────────────────────
-
-  Widget _buildInputRow() {
-    // ⚠️ IntrinsicHeight é obrigatório aqui: Row com CrossAxisAlignment.stretch
-    // direto num Column/SingleChildScrollView de altura não-limitada quebra a
-    // renderização inteira da tela, sem exceção nem log (já aconteceu no
-    // Dashboard — ver BldrTimelineItem).
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: _buildStepper(
-              label: AppLocalizations.of(context).workout_load_kg,
-              valueLabel: _weight == _weight.roundToDouble()
-                  ? _weight.toInt().toString()
-                  : _weight.toStringAsFixed(1),
-              decreaseSemantics:
-                  AppLocalizations.of(context).workout_decrease_load,
-              increaseSemantics:
-                  AppLocalizations.of(context).workout_increase_load,
-              onDecrease: () {
-                setState(() => _weight = (_weight - 2.5).clamp(0, 999));
-                _updateLiveActivity();
-              },
-              onIncrease: () {
-                setState(() => _weight = _weight + 2.5);
-                _updateLiveActivity();
-              },
-            ),
-          ),
-          const SizedBox(width: BldrSpacing.gapCard),
-          Expanded(
-            child: _buildStepper(
-              label: AppLocalizations.of(context).workout_reps_label,
-              valueLabel: '$_reps',
-              decreaseSemantics:
-                  AppLocalizations.of(context).workout_decrease_reps,
-              increaseSemantics:
-                  AppLocalizations.of(context).workout_increase_reps,
-              onDecrease: () {
-                setState(() => _reps = (_reps - 1).clamp(0, 999));
-                _updateLiveActivity();
-              },
-              onIncrease: () {
-                setState(() => _reps = _reps + 1);
-                _updateLiveActivity();
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStepper({
-    required String label,
-    required String valueLabel,
-    required String decreaseSemantics,
-    required String increaseSemantics,
-    required VoidCallback onDecrease,
-    required VoidCallback onIncrease,
-  }) {
-    return BldrGlassCard(
-      child: Column(
-        children: [
-          Text(label, style: BldrText.label),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Semantics(
-                label: decreaseSemantics,
-                button: true,
-                child: BldrCircleButton(
-                    icon: Icons.remove,
-                    size: 38,
-                    filled: false,
-                    onPressed: onDecrease),
-              ),
-              Text(
-                valueLabel,
-                style: const TextStyle(
-                  fontFamily: BldrText.family,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600,
-                  color: BldrColors.textPrimary,
-                ),
-              ),
-              Semantics(
-                label: increaseSemantics,
-                button: true,
-                child: BldrCircleButton(
-                    icon: Icons.add,
-                    size: 38,
-                    filled: false,
-                    onPressed: onIncrease),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── lista de séries (item 8) ─────────────────────────────────────────────
-
-  Widget _buildSeriesList() {
-    if (_exercises.isEmpty) return const SizedBox();
-    final sets =
-        _exercises[_currentExerciseIdx]['sets'] as List<Map<String, dynamic>>;
-
-    return Column(
-      children: List.generate(sets.length, (i) {
-        final setIndex = i + 1;
-        final isDone = setIndex < _currentSetNumber;
-        final isCurrent = setIndex == _currentSetNumber;
-        final state = isDone
-            ? BldrSetRowState.done
-            : isCurrent
-                ? BldrSetRowState.current
-                : BldrSetRowState.pending;
-
-        String? valueLabel;
-        if (isDone) {
-          final w = (sets[i]['weight_kg'] as num?)?.toDouble();
-          final r = sets[i]['reps'] as int?;
-          final parts = <String>[
-            if (w != null)
-              '${w == w.roundToDouble() ? w.toInt() : w.toStringAsFixed(1)} kg',
-            if (r != null) '$r reps',
-          ];
-          valueLabel = parts.isEmpty ? null : parts.join(' · ');
-        }
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child:
-              BldrSetRow(index: setIndex, state: state, valueLabel: valueLabel),
-        );
-      }),
-    );
-  }
-
-  // ── descanso — faixa flutuante ───────────────────────────────────────────
-
-  Widget _buildRestFloatingStrip() {
-    final progress =
-        _restTotalSeconds > 0 ? _restSecondsLeft / _restTotalSeconds : 0.0;
-    final mm = _restSecondsLeft ~/ 60;
-    final ss = _restSecondsLeft % 60;
-    final label = mm > 0 ? '$mm:${ss.toString().padLeft(2, '0')}' : '${ss}s';
-
-    final exGroup =
-        _exercises.isNotEmpty ? _exercises[_currentExerciseIdx] : null;
-    final totalSets = exGroup != null ? exGroup['totalSets'] as int : 1;
-    final nextSet = _currentSetNumber.clamp(1, totalSets);
-
-    return ClipRRect(
-      borderRadius: BldrRadius.all(22),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-          decoration: BoxDecoration(
-            color: const Color(0x29C9A227), // rgba(201,162,39,0.16)
-            borderRadius: BldrRadius.all(22),
-            border: Border.all(
-                color: const Color(0x52E0B830)), // rgba(224,184,48,0.32)
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.45),
-                blurRadius: 28,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 52,
-                height: 52,
-                child: CustomPaint(
-                  painter: _MiniRingPainter(progress: progress.clamp(0.0, 1.0)),
-                  child: Center(
-                    child: Text(
-                      label,
-                      style: const TextStyle(
-                        fontFamily: BldrText.family,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: BldrColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(AppLocalizations.of(context).workout_resting,
-                        style: BldrText.label.copyWith(
-                            fontSize: 10, color: BldrColors.goldBright)),
-                    const SizedBox(height: 2),
-                    Text(
-                        AppLocalizations.of(context)
-                            .workout_next_set(nextSet, totalSets),
-                        style: BldrText.body.copyWith(
-                            fontSize: 12, color: BldrColors.textSecondary)),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              _restActionButton(
-                icon: Icons.add,
-                semanticLabel:
-                    AppLocalizations.of(context).workout_add_rest_label,
-                onTap: () => _addRestSeconds(15),
-              ),
-              const SizedBox(width: 8),
-              _restActionButton(
-                icon: Icons.skip_next_rounded,
-                semanticLabel: AppLocalizations.of(context).workout_skip_rest,
-                onTap: _endRestEarly,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _restActionButton({
-    required IconData icon,
-    required String semanticLabel,
-    required VoidCallback onTap,
-  }) {
-    return Semantics(
-      label: semanticLabel,
-      button: true,
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Container(
-          width: 38,
-          height: 38,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: Color(0x17FFFFFF), // rgba(255,255,255,0.09)
-          ),
-          child: Icon(icon, color: BldrColors.goldBright, size: 18),
-        ),
-      ),
-    );
-  }
-
-  // ── linha do tempo de exercícios ──────────────────────────────────────────
-
-  Widget _buildExerciseTimeline() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(AppLocalizations.of(context).workout_exercises_label,
-            style: BldrText.sectionTitle),
-        const SizedBox(height: 12),
-        ...List.generate(_exercises.length, (i) {
-          final ex = _exercises[i]['exercise'] as Map<String, dynamic>;
-          final exDbId = ex['exercise_db_id'] as String?;
-          final detail = exDbId != null ? _exDbCache[exDbId] : null;
-          final name = resolveExerciseDisplayName(
-            internalName: ex['name'] as String?,
-            exerciseDbName: detail?.name,
-          );
-          final isCurrent = i == _currentExerciseIdx;
-          final isDone = i < _currentExerciseIdx;
-          final isSkipped = _skippedExerciseIndexes.contains(i);
-
-          return BldrTimelineItem(
-            dotStyle: isDone
-                ? BldrTimelineDotStyle.done
-                : isCurrent
-                    ? BldrTimelineDotStyle.next
-                    : BldrTimelineDotStyle.pending,
-            isFirst: i == 0,
-            isLast: i == _exercises.length - 1,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      name,
-                      style: TextStyle(
-                        fontFamily: BldrText.family,
-                        fontSize: 14,
-                        color: isCurrent
-                            ? BldrColors.textPrimary
-                            : isDone
-                                ? BldrColors.textSecondary
-                                : BldrColors.textTertiary,
-                        fontWeight:
-                            isCurrent ? FontWeight.w600 : FontWeight.w400,
-                      ),
-                    ),
-                  ),
-                  if (isCurrent)
-                    BldrBadge(
-                        label:
-                            AppLocalizations.of(context).workout_set_current),
-                  if (!isCurrent && !isDone)
-                    Text(AppLocalizations.of(context).workout_next_up,
-                        style: BldrText.meta),
-                  if (isSkipped)
-                    const Text('Pulado', style: BldrText.meta)
-                  else if (isDone)
-                    const Icon(Icons.check_circle_outline,
-                        color: BldrColors.goldBright, size: 16),
-                ],
-              ),
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
-  // ── rodapé (item 9) ──────────────────────────────────────────────────────
-
-  Widget _buildFooter() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(
-          BldrSpacing.pageX, 12, BldrSpacing.pageX, 18),
-      decoration: BoxDecoration(
-        color: BldrColors.sheetBg,
-        border: Border(top: BorderSide(color: BldrColors.border)),
-      ),
-      child: Row(
-        children: [
-          Semantics(
-            label: AppLocalizations.of(context).workout_skip_exercise,
-            button: true,
-            child: GestureDetector(
-              onTap: _confirmingSetId == null ? _skipExercise : null,
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                width: 56,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: BldrColors.surface,
-                  borderRadius: BldrRadius.all(BldrRadius.button),
-                  border: Border.all(color: BldrColors.border),
-                ),
-                child: const Icon(Icons.skip_next_rounded,
-                    color: BldrColors.textSecondary, size: 22),
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: BldrPrimaryButton(
-              label: AppLocalizations.of(context).workout_confirm_set_btn,
-              icon: Icons.check_rounded,
-              onPressed: _confirmingSetId == null ? _confirmSet : null,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Anel de progresso (faixa de descanso flutuante) ───────────────────────────
-
-class _MiniRingPainter extends CustomPainter {
-  final double progress; // 1.0 = tempo cheio restante, 0.0 = zerado
-
-  const _MiniRingPainter({required this.progress});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2 - 2;
-    const strokeW = 4.0;
-
-    // Trilho
-    canvas.drawCircle(
-      center,
-      radius,
-      Paint()
-        ..color = const Color(0x1FFFFFFF) // rgba(255,255,255,0.12)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = strokeW,
-    );
-
-    // Arco de progresso — esvazia conforme o tempo corre.
-    if (progress > 0) {
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        -math.pi / 2,
-        2 * math.pi * progress,
-        false,
-        Paint()
-          ..color = const Color(0xFFE0B830)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = strokeW
-          ..strokeCap = StrokeCap.round,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(_MiniRingPainter old) => old.progress != progress;
 }
 
 /// `Exercise.primaryMuscleGroup` é `dynamic` por design: `String` nos

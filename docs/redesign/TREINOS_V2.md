@@ -262,3 +262,31 @@ Cada etapa termina com `dart analyze lib`, `flutter test test/features` e compar
 - Salvar em edição usa o estimador (antes: duração do seletor).
 - **Feito.** Validado em 320/440 px e textScaler 1,3 (sem overflow). Chips
   e "Padrão do exercício" quebram linha em telas estreitas em vez de cortar.
+
+## Etapa 5 — Treino em andamento + sheets (179:1319, 179:1401, 179:1496) — plano
+
+- Cabeçalho: "● EM ANDAMENTO", nome, TEMPO, "×" = encerrar treino (diálogo
+  atual `_stopWorkout`). O voltar do sistema continua pausando.
+- HUD: FC (só com batimento recebido; sem "—"), KCAL (`_estimatedCalories`),
+  SÉRIE "X de Y" no treino todo, TREINO % (destaque dourado).
+- Exercício atual: rótulo, nome, músculos, selo "SÉRIE x/y".
+- Execução (P4): GIF atual em loop no container do mockup, sem play; tocar
+  abre o detalhe de técnica atual (que mantém o mapa muscular); faixa
+  inferior só com "ALVO N reps" (cadência oculta).
+- "SUA PRÓXIMA SÉRIE": carga × reps planejadas da série. Ocultos ([F]):
+  "PR possível", "Última vez", delta.
+- Carga e Reps: cards tocáveis que abrem o `BldrV2Sheet` (novo, reutilizável:
+  borda dourada 2 px, raio 46, alça, fundo escurecido) com − / +; tocar no
+  número permite digitar; segurar − / + repete. Valor no degrau 32 (mockup
+  48). Deltas ocultos.
+- Descanso (P3): fora do descanso mostra o descanso da série; descansando,
+  contagem regressiva, "+15 s" e "›" (pular).
+- "CONCLUIR SÉRIE" com borda dourada.
+- Barra inferior: **decisão do usuário** — "Anterior" oculto; "Pausar" =
+  pausar e sair (ação do voltar atual); "Próximo: <exercício> ›" = o "Pular"
+  de hoje.
+- Saem: lista de séries, faixa flutuante de descanso, timeline, chip de
+  equipamento e o mapa muscular ao lado do GIF (continua no detalhe de
+  técnica).
+- **Feito.** Validado em 320/440 px e textScaler 1,3 (tela e sheet de
+  carga). Os cards do HUD crescem em altura com fonte grande.

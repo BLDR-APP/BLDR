@@ -847,3 +847,77 @@ abstract final class BldrWorkoutTextV2 {
   static final edAddSet = _s(BldrTextV2.s11, _b, _g); // 9
   static final edAddCount = _s(BldrTextV2.s11, _sb, _mu); // 9
 }
+
+// ─────────────────────────────────────────────────────────────
+// SHEET V2 + TREINO EM ANDAMENTO (179:1319 / 179:1401 / 179:1496)
+// ─────────────────────────────────────────────────────────────
+
+abstract final class BldrSheetV2Colors {
+  static const bg = Color(0xF2000000); // rgba(0,0,0,.95)
+  static const border = Color(0xFFD4AF37);
+  static const grabber = Color(0xFFCCCCCC);
+  static const scrim = Color(0xB3000000);
+  static const button = Color(0xFF0A0A0A);
+  static const buttonBorder = Color(0xFF3A3A3A);
+  static const indicator = Color(0xA6D4AF37); // .65
+  static const text = Color(0xFFF5F5F5);
+  static const unit = Color(0xFF787878);
+}
+
+abstract final class BldrSheetV2Text {
+  static final title =
+      BldrTextV2.scale(BldrTextV2.s17, FontWeight.w700, BldrSheetV2Colors.text);
+  static final value = // 48 → 32 (degrau máximo)
+      BldrTextV2.scale(BldrTextV2.s32, FontWeight.w700, BldrSheetV2Colors.text);
+  static final unit =
+      BldrTextV2.scale(BldrTextV2.s12, FontWeight.w500, BldrSheetV2Colors.unit);
+}
+
+abstract final class BldrActiveColorsV2 {
+  static const text = Color(0xFFF5F5F5);
+  static const muted = Color(0xFF7D7D7D);
+  static const gold = Color(0xFFE0B830);
+  static const goldBrand = Color(0xFFD4AF37);
+  static const hudBg = Color(0xD10B0B0B); // .82
+  static const hudAccentBorder = Color(0x73D4AF37); // .45
+  static const closeBg = Color(0xFF111111);
+  static const closeBorder = Color(0xFF343434);
+  static const badgeBorder = Color(0xA6D4AF37); // .65
+  static const mediaBg = Color(0xFF0B0B0B);
+  static const mediaInner = Color(0xFF121212);
+  static const mediaInnerBorder = Color(0xFF2A2A2A);
+  static const cueBg = Color(0xFF080808);
+  static const cardBg = Color(0xF00B0B0B); // .94
+  static const cardBorder = Color(0xFF303030);
+  static const inputBorder = Color(0xFF3A3A3A);
+  static const pauseBorder = Color(0x8CD4AF37); // .55
+}
+
+abstract final class BldrActiveTextV2 {
+  static TextStyle _s(double step, FontWeight w, Color c) =>
+      BldrTextV2.scale(step, w, c);
+  static const _b = FontWeight.w700;
+  static const _sb = FontWeight.w600;
+  static const _m = FontWeight.w500;
+  static const _r = FontWeight.w400;
+
+  static final status = _s(BldrTextV2.s11, _sb, BldrActiveColorsV2.gold); // 10
+  static final name = _s(BldrTextV2.s24, _b, BldrActiveColorsV2.text); // 22
+  static final label = _s(BldrTextV2.s11, _sb, BldrActiveColorsV2.muted); // 8/9
+  static final timer = _s(BldrTextV2.s20, _b, BldrActiveColorsV2.text); // 20
+  static final hudValue = _s(BldrTextV2.s15, _b, BldrActiveColorsV2.text); // 15
+  static final hudAccent = _s(BldrTextV2.s15, _b, BldrActiveColorsV2.gold); // 15
+  static final hudSuffix = _s(BldrTextV2.s11, _m, BldrActiveColorsV2.muted); // 8
+  static final eyebrow = _s(BldrTextV2.s11, _sb, BldrActiveColorsV2.gold); // 9
+  static final exName = _s(BldrTextV2.s24, _b, BldrActiveColorsV2.text); // 25
+  static final muscles = _s(BldrTextV2.s11, _r, BldrActiveColorsV2.muted); // 10
+  static final badge = _s(BldrTextV2.s11, _sb, BldrActiveColorsV2.gold); // 9
+  static final cueTarget = _s(BldrTextV2.s11, _sb, BldrActiveColorsV2.gold); // 9
+  static final nextSet = _s(BldrTextV2.s20, _b, BldrActiveColorsV2.text); // 20
+  static final inputValue = _s(BldrTextV2.s32, _b, BldrActiveColorsV2.text); // 30
+  static final inputUnit = _s(BldrTextV2.s11, _m, BldrActiveColorsV2.muted); // 10
+  static final restValue = _s(BldrTextV2.s17, _b, BldrActiveColorsV2.text); // 16
+  static final restAdd = _s(BldrTextV2.s11, _b, BldrActiveColorsV2.gold);
+  static final cta = _s(BldrTextV2.s15, _b, BldrActiveColorsV2.goldBrand); // 14
+  static final nextName = _s(BldrTextV2.s12, _sb, BldrActiveColorsV2.text); // 12
+}
