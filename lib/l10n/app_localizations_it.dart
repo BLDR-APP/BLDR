@@ -4355,4 +4355,65 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get hub_explore_programs_sub => 'Programmi strutturati';
+
+  @override
+  String get hub_library_button => 'Libreria di allenamenti';
+
+  @override
+  String get hub_library_tip => 'Esplora e crea i tuoi allenamenti qui.';
+
+  @override
+  String get hub_menu_library_title => 'LIBRERIA BLDR';
+
+  @override
+  String get hub_menu_library_sub =>
+      'Una libreria di allenamenti creati per te. Scegli, aggiungi,';
+
+  @override
+  String get hub_menu_library_highlight => 'costruisci';
+
+  @override
+  String get hub_menu_programs_title => 'PROGRAMMI DI ALLENAMENTO';
+
+  @override
+  String get hub_menu_programs_sub =>
+      'Sequenze strutturate di esercizi con obiettivi specifici.';
+
+  @override
+  String get hub_menu_create_title => 'CREA ALLENAMENTO';
+
+  @override
+  String get hub_menu_create_sub => 'Crea il tuo allenamento. Scegli tu come.';
+
+  @override
+  String get hub_menu_photo_title => 'IMPORTA DA FOTO';
+
+  @override
+  String get hub_menu_photo_sub =>
+      'Trasforma la tua scheda in un allenamento BLDR.';
+
+  @override
+  String hub_card_exercises(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count esercizi',
+      one: '$count esercizio',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String hub_card_minutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get hub_card_options => 'Opzioni allenamento';
+
+  @override
+  String get hub_card_edit => 'Modifica';
+
+  @override
+  String get hub_empty_cta => 'CREA ALLENAMENTO';
 }

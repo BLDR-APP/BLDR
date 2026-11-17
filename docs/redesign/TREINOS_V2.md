@@ -217,3 +217,24 @@ Ficam ocultos/fora nesta fase:
 8. **Investigar a pendência da persistência por série.** Até lá, a lógica de gravação/leitura das séries só muda o necessário para o visual.
 
 Cada etapa termina com `dart analyze lib`, `flutter test test/features` e comparação com os nodes da etapa.
+
+## Hub revisado (305:1656 / 310:195) — implementado 2026-11-17
+
+- Saíram "Explorar" (inclusive o atalho do BLDR Club) e as pílulas "Criar
+  treino" / "A partir de foto".
+- Botão da Workout Library (`BldrWorkoutLibraryFab`, 70 px): fundo da página
+  (no mockup é transparente; ficaria ilegível sobre os cards), borda e ícone
+  `#D4AF37`. Some enquanto o menu está aberto.
+- Menu flutuante (`BldrWorkoutLibraryMenu`): 220 ms slide + fade; fecha ao
+  tocar fora (sem ação), ao escolher um destino e pelo voltar do Android
+  (`PopScope`). Largura 256/440 da tela (mockup 233) porque os textos subiram
+  para o degrau 11. `book-clone` não existe no `flutter_tabler_icons` 1.43 →
+  SVG do mockup em `assets/images/v2/icons/hub_book_clone.svg`.
+- Programas com cadeado + paywall atual; Biblioteca livre.
+- Dica de primeiro uso: `SharedPreferences` `hub_library_tip_seen_<uid>`.
+- "Meus treinos": carrossel 2×2 (`BldrMyWorkoutsCarousel`), altura constante;
+  card com mapa muscular em cima (30% da largura, 40–58 px) e nome/grupos
+  embaixo na largura toda — ao lado do mapa ficava ilegível em 320 px.
+  Três pontos: Editar / Excluir (Duplicar [F], oculto).
+- pt: `=0` explícito no plural ("0 treinos"), pois a regra do pt trata 0 como
+  "one".

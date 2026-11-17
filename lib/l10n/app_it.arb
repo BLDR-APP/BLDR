@@ -2211,5 +2211,21 @@
   "hub_explore_library": "LIBRERIA BLDR",
   "hub_explore_library_sub": "Allenamenti creati dal team BLDR",
   "hub_explore_programs": "Programmi",
-  "hub_explore_programs_sub": "Programmi strutturati"
+  "hub_explore_programs_sub": "Programmi strutturati",
+  "hub_library_button": "Libreria di allenamenti",
+  "hub_library_tip": "Esplora e crea i tuoi allenamenti qui.",
+  "hub_menu_library_title": "LIBRERIA BLDR",
+  "hub_menu_library_sub": "Una libreria di allenamenti creati per te. Scegli, aggiungi,",
+  "hub_menu_library_highlight": "costruisci",
+  "hub_menu_programs_title": "PROGRAMMI DI ALLENAMENTO",
+  "hub_menu_programs_sub": "Sequenze strutturate di esercizi con obiettivi specifici.",
+  "hub_menu_create_title": "CREA ALLENAMENTO",
+  "hub_menu_create_sub": "Crea il tuo allenamento. Scegli tu come.",
+  "hub_menu_photo_title": "IMPORTA DA FOTO",
+  "hub_menu_photo_sub": "Trasforma la tua scheda in un allenamento BLDR.",
+  "hub_card_exercises": "{count, plural, one{{count} esercizio} other{{count} esercizi}}",
+  "hub_card_minutes": "{minutes} min",
+  "hub_card_options": "Opzioni allenamento",
+  "hub_card_edit": "Modifica",
+  "hub_empty_cta": "CREA ALLENAMENTO"
 }

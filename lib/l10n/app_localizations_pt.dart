@@ -4333,6 +4333,7 @@ class AppLocalizationsPt extends AppLocalizations {
       locale: localeName,
       other: '$count treinos',
       one: '$count treino',
+      zero: '0 treinos',
     );
     return '$_temp0';
   }
@@ -4368,4 +4369,66 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get hub_explore_programs_sub => 'Programas estruturados';
+
+  @override
+  String get hub_library_button => 'Biblioteca de treinos';
+
+  @override
+  String get hub_library_tip => 'Explore e crie seus treinos aqui.';
+
+  @override
+  String get hub_menu_library_title => 'BIBLIOTECA BLDR';
+
+  @override
+  String get hub_menu_library_sub =>
+      'Biblioteca de treinos criados para você. Selecione, adicione,';
+
+  @override
+  String get hub_menu_library_highlight => 'construa';
+
+  @override
+  String get hub_menu_programs_title => 'PROGRAMAS DE TREINO';
+
+  @override
+  String get hub_menu_programs_sub =>
+      'Sequências estruturadas de exercícios com focos específicos.';
+
+  @override
+  String get hub_menu_create_title => 'CRIAR TREINO';
+
+  @override
+  String get hub_menu_create_sub =>
+      'Monte seu próprio treino. Você escolhe como.';
+
+  @override
+  String get hub_menu_photo_title => 'IMPORTAR POR FOTO';
+
+  @override
+  String get hub_menu_photo_sub => 'Transforme sua ficha em um treino do BLDR.';
+
+  @override
+  String hub_card_exercises(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count exercícios',
+      one: '$count exercício',
+      zero: '0 exercícios',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String hub_card_minutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get hub_card_options => 'Opções do treino';
+
+  @override
+  String get hub_card_edit => 'Editar';
+
+  @override
+  String get hub_empty_cta => 'CRIAR TREINO';
 }

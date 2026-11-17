@@ -98,6 +98,14 @@ Grid hardcoded de 10 badges substituído por carrossel dinâmico com todas as 34
 
 ---
 
+### B10. Unificar concessão de XP — prioridade alta (antes de Minha semana)
+
+Toda concessão de XP grava em `club_ranking` (total) **e** em
+`bldr_club.xp_events` (histórico). Hoje treinos só somam no total
+(`add_xp_to_user`) e o extra só grava em `xp_events`
+(`extra_activity_repository_impl.dart`). Resolve o XP semanal do hub e o
+"+50 XP" do extra (ambos escondidos até lá).
+
 ## Prioridade 2 — Habilitam o redesign
 
 ### F1. Ícone por tipo de atividade [CT1, CP2]

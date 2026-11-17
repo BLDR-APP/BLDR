@@ -7832,7 +7832,7 @@ abstract class AppLocalizations {
   /// No description provided for @hub_count.
   ///
   /// In pt, this message translates to:
-  /// **'{count, plural, one{{count} treino} other{{count} treinos}}'**
+  /// **'{count, plural, =0{0 treinos} one{{count} treino} other{{count} treinos}}'**
   String hub_count(int count);
 
   /// No description provided for @hub_card_stats.
@@ -7894,6 +7894,102 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Programas estruturados'**
   String get hub_explore_programs_sub;
+
+  /// No description provided for @hub_library_button.
+  ///
+  /// In pt, this message translates to:
+  /// **'Biblioteca de treinos'**
+  String get hub_library_button;
+
+  /// No description provided for @hub_library_tip.
+  ///
+  /// In pt, this message translates to:
+  /// **'Explore e crie seus treinos aqui.'**
+  String get hub_library_tip;
+
+  /// No description provided for @hub_menu_library_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'BIBLIOTECA BLDR'**
+  String get hub_menu_library_title;
+
+  /// No description provided for @hub_menu_library_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Biblioteca de treinos criados para você. Selecione, adicione,'**
+  String get hub_menu_library_sub;
+
+  /// No description provided for @hub_menu_library_highlight.
+  ///
+  /// In pt, this message translates to:
+  /// **'construa'**
+  String get hub_menu_library_highlight;
+
+  /// No description provided for @hub_menu_programs_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'PROGRAMAS DE TREINO'**
+  String get hub_menu_programs_title;
+
+  /// No description provided for @hub_menu_programs_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sequências estruturadas de exercícios com focos específicos.'**
+  String get hub_menu_programs_sub;
+
+  /// No description provided for @hub_menu_create_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'CRIAR TREINO'**
+  String get hub_menu_create_title;
+
+  /// No description provided for @hub_menu_create_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Monte seu próprio treino. Você escolhe como.'**
+  String get hub_menu_create_sub;
+
+  /// No description provided for @hub_menu_photo_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'IMPORTAR POR FOTO'**
+  String get hub_menu_photo_title;
+
+  /// No description provided for @hub_menu_photo_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Transforme sua ficha em um treino do BLDR.'**
+  String get hub_menu_photo_sub;
+
+  /// No description provided for @hub_card_exercises.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =0{0 exercícios} one{{count} exercício} other{{count} exercícios}}'**
+  String hub_card_exercises(int count);
+
+  /// No description provided for @hub_card_minutes.
+  ///
+  /// In pt, this message translates to:
+  /// **'{minutes} min'**
+  String hub_card_minutes(int minutes);
+
+  /// No description provided for @hub_card_options.
+  ///
+  /// In pt, this message translates to:
+  /// **'Opções do treino'**
+  String get hub_card_options;
+
+  /// No description provided for @hub_card_edit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar'**
+  String get hub_card_edit;
+
+  /// No description provided for @hub_empty_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'CRIAR TREINO'**
+  String get hub_empty_cta;
 }
 
 class _AppLocalizationsDelegate

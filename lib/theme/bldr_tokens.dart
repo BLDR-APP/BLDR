@@ -728,6 +728,15 @@ abstract final class BldrWorkoutColorsV2 {
   static const listCardBorder = Color(0xCFD4AF37); // .81
   static const exploreBg = Color(0xFF353535);
   static const divider = Color(0x66D4AF37);
+
+  // Hub revisado (305:1656 / 310:195)
+  static const libraryMenuBg = Color(0xFF060606);
+  static const libraryMenuBorder = Color(0xFFC9A227);
+  static const libraryMenuDesc = Color(0xFF8C8C8C);
+  static const myCardMapBg = Color(0xF2303336); // rgba(48,51,54,.95)
+  static const myCardMuted = Color(0xFF999CA1);
+  static const myCardDivider = Color(0xF2474A4D); // rgba(71,74,77,.95)
+  static const pageDotIdle = secondary;
 }
 
 /// Textos de Treinos v2 na escala do rebranding (`BldrTextV2.scale`).
@@ -801,4 +810,15 @@ abstract final class BldrWorkoutTextV2 {
   static final emptySub = _s(BldrTextV2.s11, _r, BldrWorkoutColorsV2.secondary); // 8
   static final exploreTitle = _s(BldrTextV2.s11, _r, Colors.white); // 6,6
   static final exploreSub = _s(BldrTextV2.s11, _r, BldrWorkoutColorsV2.secondary); // 4,1
+
+  // ── Hub revisado (305:1656 / 310:195) ──
+  static final myHeader = _s(BldrTextV2.s11, _r, _t); // 10
+  static final myCount = _s(BldrTextV2.s11, _sb, BldrWorkoutColorsV2.goldBrand); // 9
+  static final myCardName = _s(BldrTextV2.s15, _b, _t); // 14
+  static final myCardGroups = _s(BldrTextV2.s11, _m, BldrWorkoutColorsV2.myCardMuted); // 9
+  static final myCardStats = _s(BldrTextV2.s11, _m, BldrWorkoutColorsV2.myCardMuted); // 9
+  static final myCardMinutes = _s(BldrTextV2.s11, _sb, BldrWorkoutColorsV2.goldBrand); // 9
+  static final menuTitle = _s(BldrTextV2.s11, _r, Colors.white); // 10,8
+  static final menuDesc = _s(BldrTextV2.s11, _r, BldrWorkoutColorsV2.libraryMenuDesc); // 8
+  static final tip = _s(BldrTextV2.s12, _m, Colors.white);
 }

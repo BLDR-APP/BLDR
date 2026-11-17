@@ -2211,5 +2211,21 @@
   "hub_explore_library": "BLDR LIBRARY",
   "hub_explore_library_sub": "Workouts built by the BLDR team",
   "hub_explore_programs": "Programs",
-  "hub_explore_programs_sub": "Structured programs"
+  "hub_explore_programs_sub": "Structured programs",
+  "hub_library_button": "Workout library",
+  "hub_library_tip": "Explore and create your workouts here.",
+  "hub_menu_library_title": "BLDR LIBRARY",
+  "hub_menu_library_sub": "A library of workouts made for you. Pick, add,",
+  "hub_menu_library_highlight": "build",
+  "hub_menu_programs_title": "TRAINING PROGRAMS",
+  "hub_menu_programs_sub": "Structured exercise sequences with specific goals.",
+  "hub_menu_create_title": "CREATE WORKOUT",
+  "hub_menu_create_sub": "Build your own workout. You choose how.",
+  "hub_menu_photo_title": "IMPORT FROM PHOTO",
+  "hub_menu_photo_sub": "Turn your workout sheet into a BLDR workout.",
+  "hub_card_exercises": "{count, plural, one{{count} exercise} other{{count} exercises}}",
+  "hub_card_minutes": "{minutes} min",
+  "hub_card_options": "Workout options",
+  "hub_card_edit": "Edit",
+  "hub_empty_cta": "CREATE WORKOUT"
 }

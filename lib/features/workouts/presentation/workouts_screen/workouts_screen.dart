@@ -5,11 +5,16 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
+import 'package:bldr_fitness/design_system/bldr_v2_components.dart';
+import 'package:bldr_fitness/design_system/bldr_workout_hub_v2_components.dart';
 import 'package:bldr_fitness/design_system/bldr_workout_v2_components.dart';
+import 'package:bldr_fitness/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/esportes_screen.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_duration_estimator.dart';
 import 'package:bldr_fitness/shared/presentation/dashboard/home_v2_formatters.dart';
@@ -24,7 +29,6 @@ import 'package:bldr_fitness/services/workout_photo_service.dart';
 import 'package:bldr_fitness/theme/app_theme.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 import 'package:bldr_fitness/widgets/custom_error_widget.dart';
-import 'package:bldr_fitness/features/club/presentation/bldr_club/bldr_club_screen.dart';
 import 'package:bldr_fitness/features/club/programs_page.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/club_active_workout_screen.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/bldr_muscle.dart';
@@ -73,9 +77,17 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
   // ── Hub v2 (Figma 249:18901 / 179:2) ──────────────────────────────────────
   /// 0 = Treino, 1 = Esportes.
   int _hubTab = 0;
+
   /// Templates carregados, por id — duração estimada e grupos musculares.
   Map<String, WorkoutTemplate> _templatesById = {};
   WorkoutTemplate? _todayTemplateEntity;
+
+  // ── Hub revisado (305:1656 / 310:195) ──────────────────────────────────────
+  /// Menu flutuante da Workout Library aberto (o botão some enquanto isso).
+  bool _libraryMenuOpen = false;
+
+  /// Dica de primeiro uso do botão (uma vez por usuário).
+  bool _showLibraryTip = false;
 
   /// Key that lets us call reload() on the card after editing the plan.
   final _weekCardKey = GlobalKey<CurrentWeekCardWidgetState>();
@@ -84,6 +96,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
   void initState() {
     super.initState();
     _loadData();
+    _checkLibraryTip();
     // Prefetch ExerciseDB catalog in the background so ActiveWorkoutScreen
     // gets instant cache hits instead of N individual network calls.
     unawaited(
@@ -411,23 +424,9 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
                             const SizedBox(width: 8),
                             // Edit button
                             GestureDetector(
-                              onTap: () async {
-                                // Load full template data (with exercises) then open edit screen
+                              onTap: () {
                                 Navigator.pop(ctx);
-                                final fullResult =
-                                    await getIt<GetTemplateWithExercises>()(
-                                        template['id']);
-                                final full = fullResult.valueOrNull;
-                                if (!mounted || full == null) return;
-                                final updated = await Navigator.push<bool>(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => CreateWorkoutScreen(
-                                      editTemplate: full,
-                                    ),
-                                  ),
-                                );
-                                if (updated == true && mounted) _loadData();
+                                _editTemplate(template);
                               },
                               child: Container(
                                 padding: const EdgeInsets.all(8),
@@ -678,8 +677,24 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
     );
   }
 
+  /// Carrega o template completo (com exercícios) e abre a edição.
+  Future<void> _editTemplate(Map<String, dynamic> template) async {
+    final fullResult = await getIt<GetTemplateWithExercises>()(template['id']);
+    final full = fullResult.valueOrNull;
+    if (!mounted || full == null) return;
+    final updated = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreateWorkoutScreen(editTemplate: full),
+      ),
+    );
+    if (updated == true && mounted) _loadData();
+  }
+
   /// Confirmation dialog before permanently deleting a template.
-  void _confirmDelete(BuildContext sheetCtx, Map<String, dynamic> template) {
+  /// [closeSheet]: também fecha o sheet de detalhe que abriu o diálogo.
+  void _confirmDelete(BuildContext sheetCtx, Map<String, dynamic> template,
+      {bool closeSheet = true}) {
     showDialog(
       context: sheetCtx,
       builder: (dCtx) => AlertDialog(
@@ -701,7 +716,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
           TextButton(
             onPressed: () async {
               Navigator.pop(dCtx); // close dialog
-              Navigator.pop(sheetCtx); // close detail sheet
+              if (closeSheet) Navigator.pop(sheetCtx); // close detail sheet
               try {
                 final result = await getIt<DeleteWorkoutTemplate>()(
                     template['id'] as String);
@@ -789,87 +804,103 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
       );
     }
 
-    return Scaffold(
-      backgroundColor: BldrColors.bgBase,
-      body: BldrBackground(
-        v2: true,
-        child: SafeArea(
-          child: RefreshIndicator(
-            onRefresh: _loadData,
-            color: BldrColors.goldBright,
-            backgroundColor: BldrColors.surface,
-            child: CustomScrollView(
-              physics: const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics()),
-              slivers: [
-                // ── Cabeçalho v2: abas Treino / Esportes + busca ─────────
+    return PopScope(
+      // Android: o voltar do sistema fecha o menu em vez de sair da tela.
+      canPop: !_libraryMenuOpen,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && _libraryMenuOpen) _closeLibraryMenu();
+      },
+      child: Scaffold(
+        backgroundColor: BldrColors.bgBase,
+        body: Stack(
+          children: [
+            Positioned.fill(child: _buildHubScroll()),
+            ..._buildLibraryOverlay(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHubScroll() {
+    return BldrBackground(
+      v2: true,
+      child: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: _loadData,
+          color: BldrColors.goldBright,
+          backgroundColor: BldrColors.surface,
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics()),
+            slivers: [
+              // ── Cabeçalho v2: abas Treino / Esportes + busca ─────────
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(_hubPx, 20, _hubPx, 0),
+                sliver: SliverToBoxAdapter(child: _buildHeader()),
+              ),
+
+              // ── Treino de hoje ──────────────────────────────────────
+              if (_todayWorkout != null)
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(_hubPx, 20, _hubPx, 0),
-                  sliver: SliverToBoxAdapter(child: _buildHeader()),
+                  padding:
+                      const EdgeInsets.fromLTRB(_hubPx - 2, 18, _hubPx - 2, 0),
+                  sliver: SliverToBoxAdapter(child: _buildTodayHero()),
                 ),
 
-                // ── Treino de hoje ──────────────────────────────────────
-                if (_todayWorkout != null)
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(_hubPx - 2, 18, _hubPx - 2, 0),
-                    sliver: SliverToBoxAdapter(child: _buildTodayHero()),
-                  ),
-
-                // ── Minha semana ────────────────────────────────────────
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(_hubPx, 16, _hubPx, 0),
-                  sliver: SliverToBoxAdapter(
-                    child: CurrentWeekCardWidget(
-                      key: _weekCardKey,
-                      onViewPlan: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const WeeklyPlanScreen()),
-                        );
-                        await _loadData();
-                        _weekCardKey.currentState?.reload();
-                      },
-                    ),
+              // ── Minha semana ────────────────────────────────────────
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(_hubPx, 16, _hubPx, 0),
+                sliver: SliverToBoxAdapter(
+                  child: CurrentWeekCardWidget(
+                    key: _weekCardKey,
+                    onViewPlan: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const WeeklyPlanScreen()),
+                      );
+                      await _loadData();
+                      _weekCardKey.currentState?.reload();
+                    },
                   ),
                 ),
+              ),
 
-                const SliverPadding(
-                  padding: EdgeInsets.only(top: 24),
-                  sliver: SliverToBoxAdapter(child: BldrGoldDivider()),
+              const SliverPadding(
+                padding: EdgeInsets.only(top: 24),
+                sliver: SliverToBoxAdapter(child: BldrGoldDivider()),
+              ),
+
+              // ── Meus treinos ────────────────────────────────────────
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(_hubPx, 10, _hubPx, 0),
+                sliver: SliverToBoxAdapter(
+                  child: _buildMyWorkoutsSection(),
                 ),
+              ),
 
-                // ── Meus treinos ────────────────────────────────────────
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(_hubPx, 10, _hubPx, 0),
-                  sliver: SliverToBoxAdapter(
-                    child: _buildMyWorkoutsSection(),
-                  ),
-                ),
+              const SliverPadding(
+                padding: EdgeInsets.only(top: 14),
+                sliver: SliverToBoxAdapter(child: BldrGoldDivider()),
+              ),
 
-                const SliverPadding(
-                  padding: EdgeInsets.only(top: 10),
-                  sliver: SliverToBoxAdapter(child: BldrGoldDivider()),
-                ),
-
-                // ── Explorar ────────────────────────────────────────────
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(_hubPx + 15, 4, _hubPx + 15, 0),
-                  sliver: SliverToBoxAdapter(child: _buildExplorSection()),
-                ),
-
-                if (_bldrExpanded)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 18),
-                      child: _buildBldrSection(),
-                    ),
-                  ),
-
+              if (_bldrExpanded)
                 SliverToBoxAdapter(
-                    child: const SizedBox(height: BldrSpacing.navClearance)),
-              ],
-            ),
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 18),
+                    child: _buildBldrSection(),
+                  ),
+                ),
+
+              // Folga para o botão da Workout Library nunca cobrir o
+              // último conteúdo.
+              const SliverToBoxAdapter(
+                  child: SizedBox(
+                      height: BldrSpacing.navClearance +
+                          BldrWorkoutLibraryFab.size +
+                          _fabGap * 2)),
+            ],
           ),
         ),
       ),
@@ -1056,8 +1087,8 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
 
   // ── T6: meus treinos section ──────────────────────────────────────────────
 
-  /// "Meus treinos" v2: título + pílulas Criar treino / A partir de foto,
-  /// lista vertical de cards em pílula e a contagem.
+  /// "Meus treinos" (309:493): cabeçalho com contagem e carrossel 2×2
+  /// paginado; vazio → área tracejada com "Criar treino".
   Widget _buildMyWorkoutsSection() {
     final l10n = AppLocalizations.of(context);
     final list = _filtered(_myWorkouts);
@@ -1070,63 +1101,48 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
               child: Text(l10n.hub_my_workouts,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: BldrWorkoutTextV2.hubSection
-                      .copyWith(color: BldrWorkoutColorsV2.text)),
+                  style: BldrWorkoutTextV2.myHeader),
             ),
-            Flexible(
-              child: BldrSmallGoldPill(
-                vertical: true,
-                height: 40,
-                icon: TablerIcons.plus,
-                label: l10n.hub_create,
-                onTap: _openCreateWorkout,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Flexible(
-              child: BldrSmallGoldPill(
-                vertical: true,
-                height: 40,
-                icon: TablerIcons.camera,
-                label: l10n.hub_from_photo,
-                loading: _analyzingPhoto,
-                onTap: _onCreateFromPhoto,
-              ),
-            ),
+            const SizedBox(width: 8),
+            Text(l10n.hub_count(list.length).toUpperCase(),
+                maxLines: 1, style: BldrWorkoutTextV2.myCount),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 14),
         if (list.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 28),
-            child: BldrDashedEmptyBox(
+          BldrDashedEmptyBox(
+            height: 150,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(TablerIcons.barbell,
-                      size: 18, color: BldrWorkoutColorsV2.text),
-                  const SizedBox(height: 10),
+                      size: 20, color: BldrWorkoutColorsV2.text),
+                  const SizedBox(height: 8),
                   Text(l10n.hub_empty_title,
                       textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: BldrWorkoutTextV2.emptyTitle),
-                  const SizedBox(height: 2),
-                  Text(l10n.hub_empty_sub,
-                      textAlign: TextAlign.center,
-                      style: BldrWorkoutTextV2.emptySub),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: 180,
+                    child: BldrOutlineCta(
+                      label: l10n.hub_empty_cta,
+                      icon: TablerIcons.plus,
+                      onPressed: _openCreateWorkout,
+                    ),
+                  ),
                 ],
               ),
             ),
           )
         else
-          for (final w in list) ...[
-            _buildCompactWorkoutCard(w, false),
-            const SizedBox(height: 8),
-          ],
-        const SizedBox(height: 4),
-        Center(
-          child: Text(l10n.hub_count(list.length),
-              style: BldrWorkoutTextV2.countGold),
-        ),
+          BldrMyWorkoutsCarousel(
+            itemCount: list.length,
+            itemBuilder: (_, i, mapW) => _buildMyWorkoutCard(list[i], mapW),
+          ),
       ],
     );
   }
@@ -1140,7 +1156,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
     });
   }
 
-  Widget _buildCompactWorkoutCard(Map<String, dynamic> workout, bool selected) {
+  Widget _buildMyWorkoutCard(Map<String, dynamic> workout, double mapW) {
     final l10n = AppLocalizations.of(context);
     final mapData = _muscleDataForLegacy(workout, consumer: 'MiniCard');
     final entity = _templatesById[workout['id']];
@@ -1149,11 +1165,21 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
     final minutes = entity == null
         ? (workout['estimated_duration_minutes'] as int? ?? 0)
         : WorkoutDurationEstimator.estimateTemplate(entity.exercises);
-    return BldrPillWorkoutCard(
+    return BldrMyWorkoutCard(
       name: workout['name'] as String? ?? 'Treino',
-      muscles: entity == null ? '' : HomeV2Format.muscleGroups(entity),
-      stats: l10n.hub_card_stats(exerciseCount, minutes),
+      groups: entity == null ? '' : HomeV2Format.muscleGroups(entity),
+      exercises: l10n.hub_card_exercises(exerciseCount),
+      minutes: l10n.hub_card_minutes(minutes),
+      mapWidth: mapW,
       onTap: () => _viewWorkoutDetails(workout),
+      editLabel: l10n.hub_card_edit,
+      deleteLabel: l10n.common_delete,
+      optionsLabel: l10n.hub_card_options,
+      onAction: (action) => switch (action) {
+        BldrMyWorkoutAction.edit => _editTemplate(workout),
+        BldrMyWorkoutAction.delete =>
+          _confirmDelete(context, workout, closeSheet: false),
+      },
       muscleMap: FittedBox(
         fit: BoxFit.contain,
         child: BldrMuscleMap(
@@ -1166,7 +1192,6 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
   }
 
   // ── T8: criar treino / a partir de foto ──────────────────────────────────
-
 
   Future<void> _onCreateFromPhoto() async {
     // Free user → upsell
@@ -1289,49 +1314,153 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
     );
   }
 
-  /// "Explorar" v2: Club e Programas com cadeado (regra de acesso atual);
-  /// Biblioteca BLDR é só o atalho (o carrossel saiu do hub).
-  Widget _buildExplorSection() {
+  // ── Workout Library: botão + menu flutuante ──────────────────────────────
+
+  static const double _fabGap = 8;
+  static const _menuAnim = Duration(milliseconds: 220);
+
+  void _toggleLibraryMenu() {
+    setState(() {
+      _libraryMenuOpen = !_libraryMenuOpen;
+      _showLibraryTip = false;
+    });
+    _markLibraryTipSeen();
+  }
+
+  void _closeLibraryMenu() => setState(() => _libraryMenuOpen = false);
+
+  /// Fecha o menu e então executa o destino.
+  void _selectLibraryItem(VoidCallback action) {
+    _closeLibraryMenu();
+    action();
+  }
+
+  String get _libraryTipKey {
+    final uid = getIt<GetCurrentUser>()()?.id ?? 'anon';
+    return 'hub_library_tip_seen_$uid';
+  }
+
+  Future<void> _checkLibraryTip() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool(_libraryTipKey) ?? false) return;
+      if (mounted) setState(() => _showLibraryTip = true);
+    } catch (_) {}
+  }
+
+  Future<void> _markLibraryTipSeen() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_libraryTipKey, true);
+    } catch (_) {}
+  }
+
+  void _dismissLibraryTip() {
+    if (!_showLibraryTip) return;
+    setState(() => _showLibraryTip = false);
+    _markLibraryTipSeen();
+  }
+
+  List<Widget> _buildLibraryOverlay() {
     final l10n = AppLocalizations.of(context);
-    return Column(
-      children: [
-        Text(l10n.hub_explore, style: BldrWorkoutTextV2.hubSection),
-        const SizedBox(height: 10),
-        Row(children: [
-          Expanded(
-            child: BldrExploreCard(
-              // Mockup: logo "BLDR CLUB SVG" (não é ícone) — asset atual.
-              leading: Image.asset('assets/images/BLDR_CLUB.png',
-                  width: 20, height: 17, fit: BoxFit.contain),
-              title: l10n.hub_explore_club,
-              subtitle: l10n.hub_explore_club_sub,
-              locked: !_isPro,
-              onTap: () => _openClubDestination((_) => const BldrClubScreen()),
+    // Com extendBody no dashboard, o padding inferior já inclui a navbar.
+    final bottom = MediaQuery.paddingOf(context).bottom + _fabGap;
+    final screenW = MediaQuery.sizeOf(context).width;
+    final menuW = (screenW * 256 / 440).clamp(220.0, screenW - _hubPx * 2);
+    final items = [
+      BldrLibraryMenuItem(
+        icon: SvgPicture.asset('assets/images/v2/icons/hub_book_clone.svg'),
+        title: l10n.hub_menu_library_title,
+        description: l10n.hub_menu_library_sub,
+        highlight: l10n.hub_menu_library_highlight,
+        onTap: () => _selectLibraryItem(_openBldrLibrary),
+      ),
+      BldrLibraryMenuItem(
+        icon: const Icon(TablerIcons.tic_tac,
+            size: 24, color: BldrWorkoutColorsV2.goldBrand),
+        title: l10n.hub_menu_programs_title,
+        description: l10n.hub_menu_programs_sub,
+        locked: !_isPro,
+        onTap: () => _selectLibraryItem(
+            () => _openClubDestination((_) => const ClubProgramsPage())),
+      ),
+      BldrLibraryMenuItem(
+        icon: const Icon(TablerIcons.barbell,
+            size: 24, color: BldrWorkoutColorsV2.goldBrand),
+        title: l10n.hub_menu_create_title,
+        description: l10n.hub_menu_create_sub,
+        onTap: () => _selectLibraryItem(_openCreateWorkout),
+      ),
+      BldrLibraryMenuItem(
+        icon: _analyzingPhoto
+            ? const Padding(
+                padding: EdgeInsets.all(4),
+                child: CircularProgressIndicator(
+                    strokeWidth: 1.5, color: BldrWorkoutColorsV2.goldBrand))
+            : const Icon(TablerIcons.camera,
+                size: 24, color: BldrWorkoutColorsV2.goldBrand),
+        title: l10n.hub_menu_photo_title,
+        description: l10n.hub_menu_photo_sub,
+        onTap: () => _selectLibraryItem(_onCreateFromPhoto),
+      ),
+    ];
+    return [
+      // Toque fora fecha o menu sem executar nada.
+      if (_libraryMenuOpen)
+        Positioned.fill(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _closeLibraryMenu,
+          ),
+        ),
+      // Dica de primeiro uso: some no primeiro toque em qualquer lugar.
+      if (_showLibraryTip && !_libraryMenuOpen)
+        Positioned.fill(
+          child: Listener(
+            behavior: HitTestBehavior.translucent,
+            onPointerDown: (_) => _dismissLibraryTip(),
+          ),
+        ),
+      if (_showLibraryTip && !_libraryMenuOpen)
+        Positioned(
+          right: _hubPx,
+          bottom: bottom + BldrWorkoutLibraryFab.size + 10,
+          child:
+              IgnorePointer(child: BldrLibraryTip(text: l10n.hub_library_tip)),
+        ),
+      Positioned(
+        right: _hubPx,
+        bottom: bottom,
+        child: IgnorePointer(
+          ignoring: _libraryMenuOpen,
+          child: AnimatedOpacity(
+            opacity: _libraryMenuOpen ? 0 : 1,
+            duration: _menuAnim,
+            child: BldrWorkoutLibraryFab(
+              semanticLabel: l10n.hub_library_button,
+              onTap: _toggleLibraryMenu,
             ),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: BldrExploreCard(
-              icon: TablerIcons.books,
-              title: l10n.hub_explore_library,
-              subtitle: l10n.hub_explore_library_sub,
-              onTap: _openBldrLibrary,
+        ),
+      ),
+      Positioned(
+        right: _hubPx,
+        bottom: bottom,
+        child: IgnorePointer(
+          ignoring: !_libraryMenuOpen,
+          child: AnimatedSlide(
+            offset: _libraryMenuOpen ? Offset.zero : const Offset(0, 0.08),
+            duration: _menuAnim,
+            curve: Curves.easeOutCubic,
+            child: AnimatedOpacity(
+              opacity: _libraryMenuOpen ? 1 : 0,
+              duration: _menuAnim,
+              child: BldrWorkoutLibraryMenu(items: items, width: menuW),
             ),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: BldrExploreCard(
-              icon: TablerIcons.route,
-              title: l10n.hub_explore_programs,
-              subtitle: l10n.hub_explore_programs_sub,
-              locked: !_isPro,
-              onTap: () =>
-                  _openClubDestination((_) => const ClubProgramsPage()),
-            ),
-          ),
-        ]),
-      ],
-    );
+        ),
+      ),
+    ];
   }
 
   void _openBldrLibrary() {
@@ -1420,7 +1549,6 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
       ),
     );
   }
-
 
   BldrMuscleMapData _muscleDataForLegacy(
     Map<String, dynamic> workout, {
