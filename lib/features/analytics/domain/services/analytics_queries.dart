@@ -9,22 +9,87 @@ import 'package:bldr_fitness/features/analytics/domain/services/workout_analytic
 import 'package:bldr_fitness/features/integrations/domain/entities/canonical_health.dart';
 import 'package:bldr_fitness/features/integrations/domain/repositories/canonical_health_reader.dart';
 import 'package:bldr_fitness/features/progress/domain/repositories/progress_repository.dart';
+import 'package:bldr_fitness/features/workouts/domain/repositories/canonical_workout_reader.dart';
 
 class WorkoutAnalyticsQuery {
-  final WorkoutAnalyticsEngine _engine;
-  const WorkoutAnalyticsQuery(this._engine);
+  final CanonicalWorkoutReader _reader;
+  const WorkoutAnalyticsQuery(this._reader);
+
   Future<Result<WorkoutAnalyticsSummary>> call(
-          {required String userId, required WorkoutAnalyticsRange range}) =>
-      _engine.summarize(userId: userId, range: range);
+          {required String userId,
+          required WorkoutAnalyticsRange range,
+          bool comparePreviousPeriod = true,
+          int pageSize = 50,
+          int maxPages = 50}) =>
+      WorkoutAnalyticsEngine(_ValidatingWorkoutReader(_reader)).summarize(
+        userId: userId,
+        range: range,
+        comparePreviousPeriod: comparePreviousPeriod,
+        pageSize: pageSize,
+        maxPages: maxPages,
+      );
+}
+
+/// Mantém as garantias de paginação da Query Layer sem alterar o reader
+/// canônico ou repetir os cálculos do [WorkoutAnalyticsEngine].
+class _ValidatingWorkoutReader implements CanonicalWorkoutReader {
+  final CanonicalWorkoutReader _delegate;
+  final Set<String> _seenSessionIds = {};
+  final Set<String> _issuedCursorTokens = {};
+
+  _ValidatingWorkoutReader(this._delegate);
+
+  @override
+  Future<Result<CanonicalWorkoutPage>> history({
+    required String userId,
+    CanonicalWorkoutCursor? cursor,
+    int limit = 20,
+  }) async {
+    final result = await _delegate.history(
+      userId: userId,
+      cursor: cursor,
+      limit: limit,
+    );
+    if (result.isFailure) return Result.failure(result.failureOrNull!);
+
+    final page = result.valueOrNull!;
+    if (page.hasMore && page.nextCursor == null) {
+      return const Result.failure(
+        ValidationFailure('Página de histórico de treinos sem cursor.'),
+      );
+    }
+    final next = page.nextCursor;
+    if (next != null && !_issuedCursorTokens.add(next.toString())) {
+      return const Result.failure(
+        ValidationFailure('Cursor do histórico de treinos repetido.'),
+      );
+    }
+    return Result.success(CanonicalWorkoutPage(
+      sessions: page.sessions
+          .where((session) => _seenSessionIds.add(session.id))
+          .toList(growable: false),
+      nextCursor: next,
+      hasMore: page.hasMore,
+    ));
+  }
 }
 
 class ProgressAnalyticsQuery {
   final ProgressRepository _repository;
   const ProgressAnalyticsQuery(this._repository);
+
   Future<Result<ProgressAnalyticsSummary>> call(
-      {required WorkoutAnalyticsRange range}) async {
+      {required WorkoutAnalyticsRange range, int limit = 50}) async {
+    if (!range.end.isAfter(range.start) || limit <= 0) {
+      return const Result.failure(
+        ValidationFailure('Parâmetros inválidos para analytics de progresso.'),
+      );
+    }
     final r = await _repository.measurements(
-        startDate: range.start, endDate: range.end, limit: 50);
+      startDate: range.start,
+      endDate: range.end,
+      limit: limit,
+    );
     return r.map((m) => const ProgressAnalyticsEngine()
         .summarize(range: range, measurements: m));
   }
