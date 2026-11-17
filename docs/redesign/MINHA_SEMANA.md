@@ -157,8 +157,9 @@ Snackbar "Semana atualizada · <descrição>" + "DESFAZER" por ~5 s.
     opção "Só nesta semana" e a navegação entre semanas.
   - No FREE, as ações exclusivas aparecem com cadeado e abrem o
     `ClubPaywallSheet` atual (via `ResolveClubAccess`).
-- **"+50 XP" do extra:** escondido até a correção do sistema de XP
-  (BACKLOG_FUNCIONAL B10, que vem antes da implementação desta tela).
+- **"+50 XP" do extra:** **aparece**, como hoje (decisão revista em
+  17/11: a unificação de XP foi adiada — BACKLOG B10). O XP do extra continua
+  gravado só em `xp_events` até a B10.
 - **"HAVOK decide":** chip exibido desabilitado, com "Em breve".
 - **Dias já passados da semana atual (D3):** somente leitura, como as
   semanas passadas.
@@ -170,7 +171,7 @@ Snackbar "Semana atualizada · <descrição>" + "DESFAZER" por ~5 s.
 
 ## 8. Plano de implementação (ordem)
 
-1. BACKLOG_FUNCIONAL B10 (XP unificado) — pré-requisito.
+1. ~~BACKLOG_FUNCIONAL B10 (XP unificado) — pré-requisito.~~ Adiado em 17/11; Minha semana segue sem ele.
 2. Migration `weekly_plan_overrides` + RLS (criada, aplicada pelo usuário).
 3. Domain: `PlanDayOverride`, métodos no `WeeklyPlanRepository`, use cases
    `GetWeekPlan`, `ApplyWeekAdjustment`, `UndoWeekAdjustment`; resolver com

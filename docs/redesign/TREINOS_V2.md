@@ -57,7 +57,8 @@ fallback atual do app. O botão de play do mockup não se aplica (proposta P4).
 13. GIFs atuais em todos os espaços de mídia; "vídeo do exercício" sai da lista de [F].
 
 ## Verificações feitas
-- **XP da semana — fica oculto nesta fase.** Conferido no Supabase: as RLS permitem leitura de `bldr_club.xp_events` para autenticados, mas `add_xp_to_user` não grava em `xp_events` (só atualiza `club_ranking.xp_total`); nos últimos 30 dias há só 2 eventos ("Treino Livre Concluído"). Registrado no BACKLOG_FUNCIONAL.md.
+- **Atualização 2026-11-17:** a unificação de XP foi adiada (BACKLOG B10); a métrica XP voltou a aparecer no card "Minha semana" do hub com a fonte atual (`GetClubXpBetween` / `xp_events`), ciente de que ela é incompleta até a B10.
+- **(Histórico) XP da semana — ficava oculto.** Conferido no Supabase: as RLS permitem leitura de `bldr_club.xp_events` para autenticados, mas `add_xp_to_user` não grava em `xp_events` (só atualiza `club_ranking.xp_total`); nos últimos 30 dias há só 2 eventos ("Treino Livre Concluído"). Registrado no BACKLOG_FUNCIONAL.md.
 - **Timeline de exercícios:** só exibe; não tem toque nem navegação para outro exercício. Nada se perde ao remover.
 - **Lista de séries:** só exibe; não permite editar uma série concluída. Nada se perde ao remover.
 - **Faixa flutuante de descanso:** tem duas ações — "+15 s" e "pular descanso". Precisam ir para o card de descanso (P3).
@@ -119,7 +120,7 @@ fallback atual do app. O botão de play do mockup não se aplica (proposta P4).
 - [V] Card "Treino de hoje": nome, "N exercícios · ~min", "Iniciar treino", toque para alterar — `_buildTodayHero`, `GetTemplateWithExercises`, `WeeklyPlanScreen`; muscle map atual.
 - [V] "Minha semana" com estados por dia — `CurrentWeekCardWidget` (`_DayStatus`).
 - [V] Treinos e Extras — `completedByDay`, `GetExtraActivities`.
-- XP da semana: oculto nesta fase (layout pronto); depende de `add_xp_to_user` gravar em `xp_events` (backlog).
+- XP da semana: visível com a fonte atual (`xp_events`, incompleta até a B10).
 - [V] "Ver semana" → `WeeklyPlanScreen` sem mudança visual.
 - [V] "Meus treinos" vazio, "Criar treino", "A partir de foto" — `_buildMyWorkoutsSection`, `_buildCreateCta`, `_onCreateFromPhoto`.
 - [V] Explorar: BLDR Club, Biblioteca BLDR, Programas (cadeado) — `_buildExplorSection`, `ResolveClubAccess`.
@@ -215,7 +216,7 @@ Ficam ocultos/fora nesta fase:
 ## Ordem de implementação
 1. ✅ **Base:** função de duração (P1) + persistência por série (P2: migration, domain, data, testes).
 2. ✅ **Criar treino:** passo 1, Montar treino e picker (179:981, 179:1015, 179:1117).
-3. ✅ **Hub** vazio e com treinos (249:18901, 179:2), incluindo abas, card da semana (XP oculto) e lista de treinos.
+3. ✅ **Hub** vazio e com treinos (249:18901, 179:2), incluindo abas, card da semana (XP visível desde 17/11) e lista de treinos.
 4. ✅ **Editor** (179:1590).
 5. ✅ **Treino em andamento** + sheets de carga e reps (179:1319, 179:1401, 179:1496).
 6. ✅ **Resumo** (211:5).
@@ -442,3 +443,8 @@ Cada etapa termina com `dart analyze lib`, `flutter test test/features` e compar
 - **Feito.** Duplicar implementado após aprovação. Validado em 320/440 px
   e textScaler 1,3; em tela estreita a faixa de performance vira 2 × 2.
   Sem GIF disponível, a miniatura mostra o ícone de halter.
+
+
+## Fora do escopo / fase futura
+
+- Modalidades de treino pendentes: HIIT, Indoor Cardio, Yoga, Pilates e Hyrox (frames no Figma `guqp4TpJiiCKjhSgzqxSjg`: `249:18336`, `249:17229`, `241:16153`, `241:15031`, `241:13922`). Quase nada existe no app: cada modalidade precisa de estrutura própria (blocos/rounds, posturas, segmentos), treino em andamento com timer próprio e integração com histórico, resumo e XP. Fazer uma por vez, começando pela HIIT, com especificação funcional antes da implementação. Até lá, os chips dessas modalidades em Criar treino ficam desabilitados com "Em breve".

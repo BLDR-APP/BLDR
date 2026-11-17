@@ -98,13 +98,47 @@ Grid hardcoded de 10 badges substituído por carrossel dinâmico com todas as 34
 
 ---
 
-### B10. Unificar concessão de XP — prioridade alta (antes de Minha semana)
+### B13. 🚨 URGENTE (segurança) — chave service_role exposta
 
-Toda concessão de XP grava em `club_ranking` (total) **e** em
-`bldr_club.xp_events` (histórico). Hoje treinos só somam no total
-(`add_xp_to_user`) e o extra só grava em `xp_events`
-(`extra_activity_repository_impl.dart`). Resolve o XP semanal do hub e o
-"+50 XP" do extra (ambos escondidos até lá).
+A chave `service_role` está em texto aberto no trigger `tribunal-notification`
+e vazou. Plano:
+1. O trigger passa a ler a chave do Supabase Vault (nada de chave no SQL).
+2. Criar uma chave secreta nova (`sb_secret_...`), enviada no header `apikey`.
+3. Migrar o app para a chave publicável.
+4. Desativar as chaves legadas e revogar o JWT secret legado.
+
+### B14. Segurança — `add_xp_to_user` aceita qualquer usuário
+
+`add_xp_to_user` é `SECURITY DEFINER` e aceita qualquer `p_user_id`: qualquer
+usuário logado pode somar XP a qualquer conta. Corrigir junto com a B10
+(XP só para `auth.uid()`, ou concessão só pelo servidor).
+
+### B15. `check_weekly_goal` conta qualquer evento como treino
+
+O trigger conta qualquer linha de `bldr_club.xp_events` (foto de progresso,
+atividade extra) como treino da meta semanal. Deve contar só treinos.
+
+### B10. Unificar concessão de XP — adiado (depois de B13/B14)
+
+Diagnóstico (2026-11-17): treinos e nutrição só somam no total
+(`add_xp_to_user`); atividade extra e foto de progresso só gravam em
+`xp_events`; corrida, conquistas (app e edge function
+`backfill-achievements`) e os triggers da Arena gravam nos dois.
+
+Plano:
+- Função única `grant_xp` gravando total (`club_ranking`) e histórico
+  (`bldr_club.xp_events`), com `reason` em código fixo e o texto exibido no
+  `metadata`.
+- Fim da gravação dupla (corrida, conquistas, backfill-achievements,
+  triggers da Arena) e das escritas diretas em `xp_events` (extra, foto).
+- Filtro do feed da comunidade por origem (hoje `xp_events` é também o feed).
+- Rever os triggers de `xp_events` (`check_weekly_goal`,
+  `collective_xp_total_progress`) para não contar em dobro.
+- Avaliar backfill do histórico (treinos, extras; refeições estão no
+  Firestore).
+
+Até lá o XP funciona como hoje: métrica XP do hub e "XP esta semana" leem
+`xp_events` (incompletos), e o "+50 XP" do extra aparece.
 
 ### B11. Limpeza pós-rebranding
 
@@ -112,6 +146,10 @@ Remover enum e templates antigos de compartilhamento (Performance/Muscle
 Map/Minimal: `WorkoutShareStyle`, `workout_share_templates.dart` e os testes
 que os cobrem) e outros componentes v1 sem uso (ex.: `_quickLog` do
 dashboard).
+
+### B12. Modalidades de treino (fase futura)
+
+Modalidades de treino pendentes: HIIT, Indoor Cardio, Yoga, Pilates e Hyrox (frames no Figma `guqp4TpJiiCKjhSgzqxSjg`: `249:18336`, `249:17229`, `241:16153`, `241:15031`, `241:13922`). Quase nada existe no app: cada modalidade precisa de estrutura própria (blocos/rounds, posturas, segmentos), treino em andamento com timer próprio e integração com histórico, resumo e XP. Fazer uma por vez, começando pela HIIT, com especificação funcional antes da implementação. Até lá, os chips dessas modalidades em Criar treino ficam desabilitados com "Em breve".
 
 ## Prioridade 2 — Habilitam o redesign
 

@@ -58,6 +58,10 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
   /// Atividades extras da semana (métrica "Extras" do hub v2).
   int _extrasCount = 0;
 
+  /// XP da semana (fonte atual: bldr_club.xp_events via GetClubXpBetween).
+  /// Incompleto até a unificação de XP (BACKLOG B10).
+  int? _weekXp;
+
   /// Allows a parent to force-reload after the user edits the plan.
   Future<void> reload() => _load();
   List<_WeekDay> _days = [];
@@ -122,6 +126,8 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
       final extrasResult =
           await getIt<GetExtraActivities>()(weekStart, weekEnd);
       final extras = extrasResult.valueOrNull ?? const <ExtraActivity>[];
+      final weekXp =
+          (await getIt<GetClubXpBetween>()(weekStart, weekEnd)).valueOrNull;
 
       // Build map: dayIndex (0=Mon) → sessão concluída
       final Map<int, WorkoutSession> completedByDay = {};
@@ -192,6 +198,7 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
         setState(() {
           _days = days;
           _extrasCount = extras.length;
+          _weekXp = weekXp;
           _loading = false;
         });
       }
@@ -264,9 +271,7 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
   // ── build ─────────────────────────────────────────────────────────────────
 
   /// "Minha semana" v2 (Figma 249:18901 / 179:2): dias em círculos ligados
-  /// por linhas douradas e métricas Treinos · Extras. A métrica XP fica
-  /// pronta e oculta ([_showXp]) até `add_xp_to_user` gravar em xp_events.
-  static const bool _showXp = false;
+  /// por linhas douradas e métricas Treinos · Extras · XP.
 
   @override
   Widget build(BuildContext context) {
@@ -323,10 +328,8 @@ class CurrentWeekCardWidgetState extends State<CurrentWeekCardWidget> {
                 _metric('$completed', l10n.hub_week_workouts),
                 _divider(),
                 _metric('$_extrasCount', l10n.hub_week_extras),
-                if (_showXp) ...[
-                  _divider(),
-                  _metric('—', l10n.hub_week_xp),
-                ],
+                _divider(),
+                _metric('${_weekXp ?? 0}', l10n.hub_week_xp),
               ],
             ),
           ),
