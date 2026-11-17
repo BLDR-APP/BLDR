@@ -12,8 +12,13 @@
 -- reconciliação (que o app trata como CLUB); usá-lo aqui recusaria gravações
 -- que o app libera. Ver BACKLOG_FUNCIONAL.md (B16).
 --
--- Antes de aplicar: conferir que `weekly_plan_days.club_template_id` existe
--- (a coluna foi criada direto no banco, fora das migrations).
+-- Tipos conferidos no banco (17/11): weekly_plan_days.template_id = uuid
+-- (FK para workout_templates, mantida aqui); weekly_plan_days.club_template_id
+-- = text sem FK, embora club_workout_templates.id seja uuid. Aqui
+-- club_template_id segue o weekly_plan_days (text, sem FK) para a mesclagem
+-- não precisar de conversão. Um template do Club apagado deixa o id órfão,
+-- como já acontece no plano recorrente (o app mostra só o nome).
+-- public.update_updated_at_column() existe.
 
 create table if not exists public.weekly_plan_overrides (
   id               uuid primary key default gen_random_uuid(),
@@ -22,7 +27,9 @@ create table if not exists public.weekly_plan_overrides (
   dia_semana       smallint not null check (dia_semana between 1 and 7),
   tipo             text not null check (tipo in ('treino', 'descanso')),
   template_id      uuid references public.workout_templates(id) on delete set null,
-  club_template_id uuid references public.club_workout_templates(id) on delete set null,
+  -- text sem FK, igual a weekly_plan_days.club_template_id (opção A):
+  -- a mesclagem com o plano recorrente não precisa de conversão.
+  club_template_id text,
   template_name    text,
   source           text not null default 'user',
   created_at       timestamptz not null default now(),
