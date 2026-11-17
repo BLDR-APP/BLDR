@@ -213,7 +213,7 @@ Ficam ocultos/fora nesta fase:
 4. ✅ **Editor** (179:1590).
 5. ✅ **Treino em andamento** + sheets de carga e reps (179:1319, 179:1401, 179:1496).
 6. ✅ **Resumo** (211:5).
-7. **Compartilhar** Overlay e Card + comunidade (241:12891, 241:12890).
+7. ✅ **Compartilhar** Overlay e Card + comunidade (241:12891, 241:12890).
 8. **Investigar a pendência da persistência por série.** Até lá, a lógica de gravação/leitura das séries só muda o necessário para o visual.
 
 Cada etapa termina com `dart analyze lib`, `flutter test test/features` e comparação com os nodes da etapa.
