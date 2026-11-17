@@ -181,3 +181,102 @@ Snackbar "Semana atualizada · <descrição>" + "DESFAZER" por ~5 s.
    `weekly_plan_days`.
 6. Hub (card da semana, Treino de hoje) e Home passam a usar `GetWeekPlan`.
 7. Tela v2 (frames 282:68 … 291:76) com gating CLUB (cadeado + paywall).
+
+## 9. Passo 1 — plano técnico (aprovado em 17/11)
+
+### Migration (criada, não aplicada)
+`supabase/migrations/20261117000031_weekly_plan_overrides.sql`:
+
+```sql
+create table if not exists public.weekly_plan_overrides (
+  id               uuid primary key default gen_random_uuid(),
+  user_id          uuid not null references auth.users(id) on delete cascade,
+  week_start       date not null,                       -- segunda-feira (local)
+  dia_semana       smallint not null check (dia_semana between 1 and 7),
+  tipo             text not null check (tipo in ('treino','descanso')),
+  template_id      uuid references public.workout_templates(id) on delete set null,
+  club_template_id uuid references public.club_workout_templates(id) on delete set null,
+  template_name    text,
+  source           text not null default 'user',
+  created_at       timestamptz not null default now(),
+  updated_at       timestamptz not null default now(),
+  unique (user_id, week_start, dia_semana),
+  constraint weekly_plan_overrides_monday check (extract(isodow from week_start) = 1)
+);
+
+create index if not exists weekly_plan_overrides_user_week_idx
+  on public.weekly_plan_overrides (user_id, week_start);
+
+alter table public.weekly_plan_overrides enable row level security;
+create policy "wpo_select" on public.weekly_plan_overrides for select using (auth.uid() = user_id);
+create policy "wpo_insert" on public.weekly_plan_overrides for insert with check (auth.uid() = user_id);
+create policy "wpo_update" on public.weekly_plan_overrides for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create policy "wpo_delete" on public.weekly_plan_overrides for delete using (auth.uid() = user_id);
+
+create trigger update_weekly_plan_overrides_updated_at
+  before update on public.weekly_plan_overrides
+  for each row execute function public.update_updated_at_column();
+```
+Mesmas colunas de `weekly_plan_days` (inclusive `club_template_id` e
+`source`), mais `week_start`. `public.update_updated_at_column()` e
+`public.club_workout_templates` existem nas migrations. A coluna
+`club_template_id` de `weekly_plan_days` não está em nenhuma migration
+(foi criada direto no banco) — conferir antes de aplicar.
+
+### Domain
+- `WeekOverride` (entidade): `weekStart`, `diaSemana`, `tipo`, `treino`
+  (mesmo `WorkoutTemplate` resumido do `PlanDay`).
+- `WeekPlanMerger` (função pura): `merge(recurring, overrides) → List<PlanDay>`
+  — para cada dia, o ajuste da semana substitui a linha recorrente.
+- `PlanDayTypeResolver.trainingDays` ganha `overrides` opcional (lista
+  vazia = comportamento atual). Ordem: ajuste da semana → linha recorrente
+  → `rest_days` → frequência.
+- `WeeklyPlanRepository` ganha `getOverrides(weekStart)`,
+  `upsertOverrides(weekStart, List<WeekOverride>)`,
+  `deleteOverrides(weekStart, List<int> dias)`.
+- Use cases:
+  - `GetWeekPlan(weekStart)` → `List<PlanDay>` já mesclado (7 dias). É o
+    único ponto de leitura do plano da semana.
+  - `ApplyWeekAdjustment` (mover, trocar, descanso, adicionar) — valida as
+    regras (passo 2) e devolve o estado anterior para desfazer.
+  - `UndoWeekAdjustment` — regrava o estado anterior (upsert/delete).
+  - Acesso CLUB via `ResolveClubAccess` dentro de `ApplyWeekAdjustment`
+    (o banco não sabe o plano do usuário; a regra fica no app).
+- Testes em `test/features/workouts/` com repository fake.
+
+### Data
+- Datasource: `getOverrides`, `upsertOverrides` (`onConflict:
+  user_id,week_start,dia_semana`), `deleteOverrides`.
+- Repository: mesmo mapeamento de `weekly_plan_days` (template pessoal ×
+  Club, `template_name` sem id).
+- Nada muda em `weekly_plan_days` nem nos métodos atuais.
+
+### Quem passa a usar `GetWeekPlan(semana atual)`
+`GetWeeklyPlan()` continua existindo (é o plano recorrente, usado pelo
+"Editar plano"). Leitores do "plano desta semana" trocam para
+`GetWeekPlan(segunda desta semana)`, sem outra mudança — o retorno é o mesmo
+`List<PlanDay>`:
+- Hub: card "Treino de hoje" (`workouts_screen`) e card "Minha semana".
+- Home: card "Treino de hoje" (`active_workout_card_widget`).
+- `WeeklyPlanScreen` (semana navegada).
+- Widget da tela inicial (`widget_data_service`) e confirmação de treino do
+  wearable (`wearable_workout_confirmation_screen`).
+- `TodayWorkoutResolver` não muda: recebe o plano já mesclado.
+
+### Edge function do HAVOK (D6)
+`gerar-resposta-havok` passa a ler `weekly_plan_overrides` da semana atual
+e aplicar o mesmo merge antes de montar o contexto. Mudança em
+`supabase/functions`, publicada pelo usuário.
+
+### Ajustes da aprovação (17/11)
+- `week_start` é `date`, a segunda-feira na data **local** do aparelho,
+  nunca em UTC. Testes cobrem a virada (ex.: domingo 23h em São Paulo
+  continua na semana que começou na segunda anterior).
+- Regra CLUB no banco: avaliada — `bldr_club.is_club_member` não equivale ao
+  `ResolveClubAccess` (ignora Apple legado em reconciliação). A checagem fica
+  no app; RLS só por usuário. Backlog B16.
+- Migration criada, não aplicada:
+  `supabase/migrations/20261117000031_weekly_plan_overrides.sql`. O usuário
+  confere `weekly_plan_days.club_template_id` antes de aplicar.
+- Ao terminar a mudança na edge function do HAVOK, entregar o comando de
+  deploy.

@@ -118,6 +118,18 @@ usuário logado pode somar XP a qualquer conta. Corrigir junto com a B10
 O trigger conta qualquer linha de `bldr_club.xp_events` (foto de progresso,
 atividade extra) como treino da meta semanal. Deve contar só treinos.
 
+### B16. Regra CLUB dos ajustes da semana também no banco
+
+Hoje a regra CLUB de `weekly_plan_overrides` fica só no app
+(`ResolveClubAccess`). O banco tem `bldr_club.is_club_member` (espelho do
+RevenueCat, escrito só pelo webhook), mas ele trata usuários Apple legados em
+reconciliação como Free, enquanto o app os trata como CLUB — usar a função na
+RLS recusaria gravações que o app libera. Quando a reconciliação Apple →
+RevenueCat terminar (ou houver uma função de banco equivalente ao
+`ResolveClubAccess`), adicionar nas policies de insert/update:
+`with check (auth.uid() = user_id and bldr_club.is_club_member(auth.uid()))`
+— exige `grant execute` da função para `authenticated`.
+
 ### B10. Unificar concessão de XP — adiado (depois de B13/B14)
 
 Diagnóstico (2026-11-17): treinos e nutrição só somam no total
