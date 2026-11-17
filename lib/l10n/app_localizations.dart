@@ -9106,6 +9106,582 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'JAN,FEV,MAR,ABR,MAI,JUN,JUL,AGO,SET,OUT,NOV,DEZ'**
   String get ms_months_short;
+
+  /// No description provided for @comm_shortcut_search.
+  ///
+  /// In pt, this message translates to:
+  /// **'Buscar na comunidade'**
+  String get comm_shortcut_search;
+
+  /// No description provided for @comm_shortcut_private.
+  ///
+  /// In pt, this message translates to:
+  /// **'Posts privados'**
+  String get comm_shortcut_private;
+
+  /// No description provided for @comm_shortcut_challenges.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desafios'**
+  String get comm_shortcut_challenges;
+
+  /// No description provided for @comm_shortcut_ranking.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ranking'**
+  String get comm_shortcut_ranking;
+
+  /// No description provided for @comm_shortcut_notifications.
+  ///
+  /// In pt, this message translates to:
+  /// **'Notificações'**
+  String get comm_shortcut_notifications;
+
+  /// No description provided for @comm_create_post.
+  ///
+  /// In pt, this message translates to:
+  /// **'Criar publicação'**
+  String get comm_create_post;
+
+  /// No description provided for @comm_tab_explore.
+  ///
+  /// In pt, this message translates to:
+  /// **'Explorar'**
+  String get comm_tab_explore;
+
+  /// No description provided for @comm_tab_following.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seguindo'**
+  String get comm_tab_following;
+
+  /// No description provided for @comm_tab_squads.
+  ///
+  /// In pt, this message translates to:
+  /// **'Squads'**
+  String get comm_tab_squads;
+
+  /// No description provided for @comm_new_posts.
+  ///
+  /// In pt, this message translates to:
+  /// **'Novas publicações'**
+  String get comm_new_posts;
+
+  /// No description provided for @comm_follow.
+  ///
+  /// In pt, this message translates to:
+  /// **'SEGUIR'**
+  String get comm_follow;
+
+  /// No description provided for @comm_following_btn.
+  ///
+  /// In pt, this message translates to:
+  /// **'SEGUINDO'**
+  String get comm_following_btn;
+
+  /// No description provided for @comm_time_now.
+  ///
+  /// In pt, this message translates to:
+  /// **'agora'**
+  String get comm_time_now;
+
+  /// No description provided for @comm_time_min.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} min'**
+  String comm_time_min(int n);
+
+  /// No description provided for @comm_time_hour.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} h'**
+  String comm_time_hour(int n);
+
+  /// No description provided for @comm_time_day.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} d'**
+  String comm_time_day(int n);
+
+  /// No description provided for @comm_type_workout.
+  ///
+  /// In pt, this message translates to:
+  /// **'TREINO CONCLUÍDO'**
+  String get comm_type_workout;
+
+  /// No description provided for @comm_type_pr.
+  ///
+  /// In pt, this message translates to:
+  /// **'NOVO PR'**
+  String get comm_type_pr;
+
+  /// No description provided for @comm_type_streak.
+  ///
+  /// In pt, this message translates to:
+  /// **'SEQUÊNCIA'**
+  String get comm_type_streak;
+
+  /// No description provided for @comm_type_activity.
+  ///
+  /// In pt, this message translates to:
+  /// **'ATIVIDADE'**
+  String get comm_type_activity;
+
+  /// No description provided for @comm_type_imported.
+  ///
+  /// In pt, this message translates to:
+  /// **'ATIVIDADE IMPORTADA'**
+  String get comm_type_imported;
+
+  /// No description provided for @comm_metric_volume.
+  ///
+  /// In pt, this message translates to:
+  /// **'{value} kg volume'**
+  String comm_metric_volume(String value);
+
+  /// No description provided for @comm_metric_sets.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} séries'**
+  String comm_metric_sets(int n);
+
+  /// No description provided for @comm_metric_prs.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} PRs'**
+  String comm_metric_prs(int n);
+
+  /// No description provided for @comm_view_workout.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ver treino'**
+  String get comm_view_workout;
+
+  /// No description provided for @comm_label_distance.
+  ///
+  /// In pt, this message translates to:
+  /// **'DISTÂNCIA'**
+  String get comm_label_distance;
+
+  /// No description provided for @comm_label_duration.
+  ///
+  /// In pt, this message translates to:
+  /// **'DURAÇÃO'**
+  String get comm_label_duration;
+
+  /// No description provided for @comm_label_hr.
+  ///
+  /// In pt, this message translates to:
+  /// **'FC MÉDIA'**
+  String get comm_label_hr;
+
+  /// No description provided for @comm_label_strain.
+  ///
+  /// In pt, this message translates to:
+  /// **'STRAIN'**
+  String get comm_label_strain;
+
+  /// No description provided for @comm_label_load.
+  ///
+  /// In pt, this message translates to:
+  /// **'CARGA'**
+  String get comm_label_load;
+
+  /// No description provided for @comm_label_reps.
+  ///
+  /// In pt, this message translates to:
+  /// **'REPS'**
+  String get comm_label_reps;
+
+  /// No description provided for @comm_label_e1rm.
+  ///
+  /// In pt, this message translates to:
+  /// **'1RM ESTIMADO'**
+  String get comm_label_e1rm;
+
+  /// No description provided for @comm_streak_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} dias seguidos'**
+  String comm_streak_title(int n);
+
+  /// No description provided for @comm_activity_default.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atividade'**
+  String get comm_activity_default;
+
+  /// No description provided for @comm_empty_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma publicação ainda'**
+  String get comm_empty_title;
+
+  /// No description provided for @comm_empty_body.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seja o primeiro a compartilhar!'**
+  String get comm_empty_body;
+
+  /// No description provided for @comm_error_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Erro ao carregar o feed'**
+  String get comm_error_title;
+
+  /// No description provided for @comm_retry.
+  ///
+  /// In pt, this message translates to:
+  /// **'TENTAR NOVAMENTE'**
+  String get comm_retry;
+
+  /// No description provided for @comm_following_empty_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Siga atletas'**
+  String get comm_following_empty_title;
+
+  /// No description provided for @comm_following_empty_body.
+  ///
+  /// In pt, this message translates to:
+  /// **'Veja aqui as publicações de quem você segue.'**
+  String get comm_following_empty_body;
+
+  /// No description provided for @comm_following_empty_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'BUSCAR ATLETAS'**
+  String get comm_following_empty_cta;
+
+  /// No description provided for @comm_my_squad.
+  ///
+  /// In pt, this message translates to:
+  /// **'MEU SQUAD'**
+  String get comm_my_squad;
+
+  /// No description provided for @comm_my_squads.
+  ///
+  /// In pt, this message translates to:
+  /// **'MEUS SQUADS'**
+  String get comm_my_squads;
+
+  /// No description provided for @comm_squad_meta.
+  ///
+  /// In pt, this message translates to:
+  /// **'Modo {mode} · {members} membros'**
+  String comm_squad_meta(String mode, int members);
+
+  /// No description provided for @comm_squad_week.
+  ///
+  /// In pt, this message translates to:
+  /// **'Semana {week}'**
+  String comm_squad_week(int week);
+
+  /// No description provided for @comm_mode_alpha.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alfa'**
+  String get comm_mode_alpha;
+
+  /// No description provided for @comm_mode_survivor.
+  ///
+  /// In pt, this message translates to:
+  /// **'Survivor'**
+  String get comm_mode_survivor;
+
+  /// No description provided for @comm_mode_roadrunner.
+  ///
+  /// In pt, this message translates to:
+  /// **'Roadrunner'**
+  String get comm_mode_roadrunner;
+
+  /// No description provided for @comm_mode_hustle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hustle'**
+  String get comm_mode_hustle;
+
+  /// No description provided for @comm_squad_trained_today.
+  ///
+  /// In pt, this message translates to:
+  /// **'TREINARAM HOJE'**
+  String get comm_squad_trained_today;
+
+  /// No description provided for @comm_squad_ranking.
+  ///
+  /// In pt, this message translates to:
+  /// **'RANKING'**
+  String get comm_squad_ranking;
+
+  /// No description provided for @comm_activity_section.
+  ///
+  /// In pt, this message translates to:
+  /// **'ATIVIDADE RECENTE'**
+  String get comm_activity_section;
+
+  /// No description provided for @comm_activity_checkin.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fez check-in no squad.'**
+  String get comm_activity_checkin;
+
+  /// No description provided for @comm_squad_create_join.
+  ///
+  /// In pt, this message translates to:
+  /// **'+  CRIAR OU ENTRAR EM UM SQUAD'**
+  String get comm_squad_create_join;
+
+  /// No description provided for @comm_squad_sheet_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Criar ou entrar'**
+  String get comm_squad_sheet_title;
+
+  /// No description provided for @comm_squad_code.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tenho um código de convite'**
+  String get comm_squad_code;
+
+  /// No description provided for @comm_squad_code_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Entre em um Squad privado.'**
+  String get comm_squad_code_sub;
+
+  /// No description provided for @comm_squad_new.
+  ///
+  /// In pt, this message translates to:
+  /// **'Criar novo Squad'**
+  String get comm_squad_new;
+
+  /// No description provided for @comm_squad_new_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Defina as regras e convide seus amigos.'**
+  String get comm_squad_new_sub;
+
+  /// No description provided for @comm_squad_empty_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você não está em nenhum squad'**
+  String get comm_squad_empty_title;
+
+  /// No description provided for @comm_squad_empty_body.
+  ///
+  /// In pt, this message translates to:
+  /// **'Crie ou entre em um squad para competir com amigos.'**
+  String get comm_squad_empty_body;
+
+  /// No description provided for @comm_actions_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ações da publicação'**
+  String get comm_actions_title;
+
+  /// No description provided for @comm_action_delete.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir publicação'**
+  String get comm_action_delete;
+
+  /// No description provided for @comm_action_delete_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Remove a publicação, os comentários e as reações'**
+  String get comm_action_delete_sub;
+
+  /// No description provided for @comm_action_block.
+  ///
+  /// In pt, this message translates to:
+  /// **'Bloquear perfil'**
+  String get comm_action_block;
+
+  /// No description provided for @comm_action_block_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Vocês deixam de ver as publicações um do outro'**
+  String get comm_action_block_sub;
+
+  /// No description provided for @comm_action_report.
+  ///
+  /// In pt, this message translates to:
+  /// **'Denunciar'**
+  String get comm_action_report;
+
+  /// No description provided for @comm_action_report_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Conteúdo impróprio ou que viola as regras'**
+  String get comm_action_report_sub;
+
+  /// No description provided for @comm_delete_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir publicação?'**
+  String get comm_delete_title;
+
+  /// No description provided for @comm_delete_msg.
+  ///
+  /// In pt, this message translates to:
+  /// **'A publicação, seus comentários e suas reações serão removidos.'**
+  String get comm_delete_msg;
+
+  /// No description provided for @comm_delete_confirm.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir'**
+  String get comm_delete_confirm;
+
+  /// No description provided for @comm_cancel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cancelar'**
+  String get comm_cancel;
+
+  /// No description provided for @comm_block_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Bloquear {name}?'**
+  String comm_block_title(String name);
+
+  /// No description provided for @comm_block_msg.
+  ///
+  /// In pt, this message translates to:
+  /// **'Vocês deixarão de ver as publicações um do outro na comunidade.'**
+  String get comm_block_msg;
+
+  /// No description provided for @comm_block_confirm.
+  ///
+  /// In pt, this message translates to:
+  /// **'Bloquear'**
+  String get comm_block_confirm;
+
+  /// No description provided for @comm_report_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Denunciar publicação'**
+  String get comm_report_title;
+
+  /// No description provided for @comm_report_spam.
+  ///
+  /// In pt, this message translates to:
+  /// **'Spam'**
+  String get comm_report_spam;
+
+  /// No description provided for @comm_report_spam_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Conteúdo repetitivo ou propaganda'**
+  String get comm_report_spam_sub;
+
+  /// No description provided for @comm_report_harassment.
+  ///
+  /// In pt, this message translates to:
+  /// **'Assédio'**
+  String get comm_report_harassment;
+
+  /// No description provided for @comm_report_harassment_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ofensas ou ataques a alguém'**
+  String get comm_report_harassment_sub;
+
+  /// No description provided for @comm_report_inappropriate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Conteúdo impróprio'**
+  String get comm_report_inappropriate;
+
+  /// No description provided for @comm_report_inappropriate_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nudez, violência ou conteúdo sensível'**
+  String get comm_report_inappropriate_sub;
+
+  /// No description provided for @comm_report_false.
+  ///
+  /// In pt, this message translates to:
+  /// **'Informação falsa'**
+  String get comm_report_false;
+
+  /// No description provided for @comm_report_false_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dados ou resultados enganosos'**
+  String get comm_report_false_sub;
+
+  /// No description provided for @comm_report_other.
+  ///
+  /// In pt, this message translates to:
+  /// **'Outro motivo'**
+  String get comm_report_other;
+
+  /// No description provided for @comm_report_other_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Algo que não está na lista'**
+  String get comm_report_other_sub;
+
+  /// No description provided for @comm_deleted.
+  ///
+  /// In pt, this message translates to:
+  /// **'Publicação excluída.'**
+  String get comm_deleted;
+
+  /// No description provided for @comm_blocked.
+  ///
+  /// In pt, this message translates to:
+  /// **'Perfil bloqueado.'**
+  String get comm_blocked;
+
+  /// No description provided for @comm_reported.
+  ///
+  /// In pt, this message translates to:
+  /// **'Denúncia enviada para análise.'**
+  String get comm_reported;
+
+  /// No description provided for @comm_react_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Reagir'**
+  String get comm_react_title;
+
+  /// No description provided for @comm_react_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'Reagir à publicação'**
+  String get comm_react_label;
+
+  /// No description provided for @comm_comments_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comentários'**
+  String get comm_comments_label;
+
+  /// No description provided for @comm_share_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'Compartilhar'**
+  String get comm_share_label;
+
+  /// No description provided for @comm_more_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mais ações'**
+  String get comm_more_label;
+
+  /// No description provided for @comm_share_text.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} no BLDR: {detail}'**
+  String comm_share_text(String name, String detail);
+
+  /// No description provided for @comm_share_text_simple.
+  ///
+  /// In pt, this message translates to:
+  /// **'Confira a publicação de {name} no BLDR.'**
+  String comm_share_text_simple(String name);
 }
 
 class _AppLocalizationsDelegate

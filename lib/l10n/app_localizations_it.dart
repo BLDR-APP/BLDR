@@ -5079,4 +5079,323 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get ms_months_short =>
       'GEN,FEB,MAR,APR,MAG,GIU,LUG,AGO,SET,OTT,NOV,DIC';
+
+  @override
+  String get comm_shortcut_search => 'Cerca nella community';
+
+  @override
+  String get comm_shortcut_private => 'Post privati';
+
+  @override
+  String get comm_shortcut_challenges => 'Sfide';
+
+  @override
+  String get comm_shortcut_ranking => 'Classifica';
+
+  @override
+  String get comm_shortcut_notifications => 'Notifiche';
+
+  @override
+  String get comm_create_post => 'Crea post';
+
+  @override
+  String get comm_tab_explore => 'Esplora';
+
+  @override
+  String get comm_tab_following => 'Seguiti';
+
+  @override
+  String get comm_tab_squads => 'Squad';
+
+  @override
+  String get comm_new_posts => 'Nuovi post';
+
+  @override
+  String get comm_follow => 'SEGUI';
+
+  @override
+  String get comm_following_btn => 'SEGUITO';
+
+  @override
+  String get comm_time_now => 'ora';
+
+  @override
+  String comm_time_min(int n) {
+    return '$n min';
+  }
+
+  @override
+  String comm_time_hour(int n) {
+    return '$n h';
+  }
+
+  @override
+  String comm_time_day(int n) {
+    return '$n g';
+  }
+
+  @override
+  String get comm_type_workout => 'ALLENAMENTO COMPLETATO';
+
+  @override
+  String get comm_type_pr => 'NUOVO PR';
+
+  @override
+  String get comm_type_streak => 'SERIE';
+
+  @override
+  String get comm_type_activity => 'ATTIVITÀ';
+
+  @override
+  String get comm_type_imported => 'ATTIVITÀ IMPORTATA';
+
+  @override
+  String comm_metric_volume(String value) {
+    return '$value kg volume';
+  }
+
+  @override
+  String comm_metric_sets(int n) {
+    return '$n serie';
+  }
+
+  @override
+  String comm_metric_prs(int n) {
+    return '$n PR';
+  }
+
+  @override
+  String get comm_view_workout => 'Vedi allenamento';
+
+  @override
+  String get comm_label_distance => 'DISTANZA';
+
+  @override
+  String get comm_label_duration => 'DURATA';
+
+  @override
+  String get comm_label_hr => 'FC MEDIA';
+
+  @override
+  String get comm_label_strain => 'STRAIN';
+
+  @override
+  String get comm_label_load => 'CARICO';
+
+  @override
+  String get comm_label_reps => 'RIPETIZIONI';
+
+  @override
+  String get comm_label_e1rm => '1RM STIMATO';
+
+  @override
+  String comm_streak_title(int n) {
+    return '$n giorni di fila';
+  }
+
+  @override
+  String get comm_activity_default => 'Attività';
+
+  @override
+  String get comm_empty_title => 'Ancora nessun post';
+
+  @override
+  String get comm_empty_body => 'Sii il primo a condividere!';
+
+  @override
+  String get comm_error_title => 'Errore nel caricare il feed';
+
+  @override
+  String get comm_retry => 'RIPROVA';
+
+  @override
+  String get comm_following_empty_title => 'Segui atleti';
+
+  @override
+  String get comm_following_empty_body => 'Qui vedi i post di chi segui.';
+
+  @override
+  String get comm_following_empty_cta => 'CERCA ATLETI';
+
+  @override
+  String get comm_my_squad => 'IL MIO SQUAD';
+
+  @override
+  String get comm_my_squads => 'I MIEI SQUAD';
+
+  @override
+  String comm_squad_meta(String mode, int members) {
+    return 'Modalità $mode · $members membri';
+  }
+
+  @override
+  String comm_squad_week(int week) {
+    return 'Settimana $week';
+  }
+
+  @override
+  String get comm_mode_alpha => 'Alfa';
+
+  @override
+  String get comm_mode_survivor => 'Survivor';
+
+  @override
+  String get comm_mode_roadrunner => 'Roadrunner';
+
+  @override
+  String get comm_mode_hustle => 'Hustle';
+
+  @override
+  String get comm_squad_trained_today => 'ALLENATI OGGI';
+
+  @override
+  String get comm_squad_ranking => 'CLASSIFICA';
+
+  @override
+  String get comm_activity_section => 'ATTIVITÀ RECENTE';
+
+  @override
+  String get comm_activity_checkin => 'Ha fatto check-in nello squad.';
+
+  @override
+  String get comm_squad_create_join => '+  CREA O ENTRA IN UNO SQUAD';
+
+  @override
+  String get comm_squad_sheet_title => 'Crea o entra';
+
+  @override
+  String get comm_squad_code => 'Ho un codice invito';
+
+  @override
+  String get comm_squad_code_sub => 'Entra in uno Squad privato.';
+
+  @override
+  String get comm_squad_new => 'Crea un nuovo Squad';
+
+  @override
+  String get comm_squad_new_sub => 'Definisci le regole e invita i tuoi amici.';
+
+  @override
+  String get comm_squad_empty_title => 'Non sei in nessuno squad';
+
+  @override
+  String get comm_squad_empty_body =>
+      'Crea o entra in uno squad per sfidare gli amici.';
+
+  @override
+  String get comm_actions_title => 'Azioni del post';
+
+  @override
+  String get comm_action_delete => 'Elimina post';
+
+  @override
+  String get comm_action_delete_sub =>
+      'Rimuove il post, i commenti e le reazioni';
+
+  @override
+  String get comm_action_block => 'Blocca profilo';
+
+  @override
+  String get comm_action_block_sub =>
+      'Non vedrete più i post l\'uno dell\'altro';
+
+  @override
+  String get comm_action_report => 'Segnala';
+
+  @override
+  String get comm_action_report_sub =>
+      'Contenuto inappropriato o che viola le regole';
+
+  @override
+  String get comm_delete_title => 'Eliminare il post?';
+
+  @override
+  String get comm_delete_msg =>
+      'Il post, i commenti e le reazioni verranno rimossi.';
+
+  @override
+  String get comm_delete_confirm => 'Elimina';
+
+  @override
+  String get comm_cancel => 'Annulla';
+
+  @override
+  String comm_block_title(String name) {
+    return 'Bloccare $name?';
+  }
+
+  @override
+  String get comm_block_msg =>
+      'Non vedrete più i post l\'uno dell\'altro nella community.';
+
+  @override
+  String get comm_block_confirm => 'Blocca';
+
+  @override
+  String get comm_report_title => 'Segnala post';
+
+  @override
+  String get comm_report_spam => 'Spam';
+
+  @override
+  String get comm_report_spam_sub => 'Contenuto ripetitivo o pubblicità';
+
+  @override
+  String get comm_report_harassment => 'Molestie';
+
+  @override
+  String get comm_report_harassment_sub => 'Offese o attacchi a qualcuno';
+
+  @override
+  String get comm_report_inappropriate => 'Contenuto inappropriato';
+
+  @override
+  String get comm_report_inappropriate_sub =>
+      'Nudità, violenza o contenuti sensibili';
+
+  @override
+  String get comm_report_false => 'Informazione falsa';
+
+  @override
+  String get comm_report_false_sub => 'Dati o risultati ingannevoli';
+
+  @override
+  String get comm_report_other => 'Altro motivo';
+
+  @override
+  String get comm_report_other_sub => 'Qualcosa che non è nell\'elenco';
+
+  @override
+  String get comm_deleted => 'Post eliminato.';
+
+  @override
+  String get comm_blocked => 'Profilo bloccato.';
+
+  @override
+  String get comm_reported => 'Segnalazione inviata per la revisione.';
+
+  @override
+  String get comm_react_title => 'Reagisci';
+
+  @override
+  String get comm_react_label => 'Reagisci al post';
+
+  @override
+  String get comm_comments_label => 'Commenti';
+
+  @override
+  String get comm_share_label => 'Condividi';
+
+  @override
+  String get comm_more_label => 'Altre azioni';
+
+  @override
+  String comm_share_text(String name, String detail) {
+    return '$name su BLDR: $detail';
+  }
+
+  @override
+  String comm_share_text_simple(String name) {
+    return 'Guarda il post di $name su BLDR.';
+  }
 }

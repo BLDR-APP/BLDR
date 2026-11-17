@@ -1194,3 +1194,94 @@ abstract final class BldrWeekTextV2 {
   static final snackSub = _s(BldrTextV2.s11, _r, BldrWeekColorsV2.snackMuted); // 10
   static final undo = _s(BldrTextV2.s11, _sb, BldrWeekColorsV2.gold); // 11
 }
+
+// ── Comunidade v2 (Figma UAUhuDakeseJsEfb8ynv5h: 4:2, 4:108, 6:8) ──────────
+abstract final class BldrCommunityColorsV2 {
+  static const text = Color(0xFFF5F5F5);
+  static const muted = Color(0xFF7A7A7A);
+  static const squadMuted = Color(0xFF787878);
+  static const gold = BldrColorsV2.goldBright; // #E0B830
+  static const goldBrand = BldrColorsV2.gold; // #D4AF37 — selo CLUB, foto
+  static const divider = Color(0xFF242424);
+  static const icon = Color(0xFF9A9A9A);
+  static const shortcutFill = Color(0x337A7A7A); // #7A7A7A .2
+  static const shortcutBorder = Color(0xFF585757);
+  static const avatarBg = Color(0xFF080808);
+  static const surface = Color(0xFF090909); // card do squad, botão seguir
+  static const squadBorder = Color(0xE6403612); // rgba(64,54,18,.9)
+  static const metricDivider = Color(0xB3332E1A); // rgba(51,46,26,.7)
+  static const discoverBorder = Color(0xFF292929);
+  static const moreBg = Color(0xFF0A0A0A);
+  static const moreBorder = Color(0xFF333333);
+  static const danger = Color(0xFFD94D4D);
+  static const badge = Color(0xFFE53935);
+}
+
+abstract final class BldrCommunityTextV2 {
+  static TextStyle _s(double step, FontWeight w, Color c) =>
+      BldrTextV2.scale(step, w, c);
+  static const _b = FontWeight.w700,
+      _sb = FontWeight.w600,
+      _m = FontWeight.w500,
+      _r = FontWeight.w400;
+  static const _c = BldrCommunityColorsV2.text;
+  static const _mu = BldrCommunityColorsV2.muted;
+  static const _g = BldrCommunityColorsV2.gold;
+  static const _sm = BldrCommunityColorsV2.squadMuted;
+
+  static final title = _s(BldrTextV2.s28, _b, _c); // 27
+  static final tabOn = _s(BldrTextV2.s11, _b, _g); // 11
+  static final tabOff = _s(BldrTextV2.s11, _m, _mu); // 11
+  // Post
+  static final initials = _s(BldrTextV2.s11, _b, _g); // 9
+  static final name = _s(BldrTextV2.s12, _b, _c); // 12
+  static final meta = _s(BldrTextV2.s11, _r, _mu); // 9
+  static final follow = _s(BldrTextV2.s11, _b, _g); // 8
+  static final more = _s(BldrTextV2.s12, _b, _mu); // 12
+  static final body = _s(BldrTextV2.s11, _r, _c); // 11
+  static final type = _s(BldrTextV2.s11, _b, _g); // 9
+  static final postTitle = _s(BldrTextV2.s15, _b, _c); // 15
+  static final metrics = _s(BldrTextV2.s11, _m, _mu); // 9
+  static final source = _s(BldrTextV2.s11, _sb, _mu); // 8
+  static final value = _s(BldrTextV2.s17, _b, _c); // 18
+  static final valueLabel = _s(BldrTextV2.s11, _sb, _mu); // 8
+  static final count = _s(BldrTextV2.s11, _m, _mu); // 8
+  static final countOn = _s(BldrTextV2.s11, _m, _c); // 8
+  // Squads
+  static final eyebrow = _s(BldrTextV2.s11, _b, _g); // 9
+  static final squadName = _s(BldrTextV2.s20, _b, _c); // 21
+  static final squadMeta = _s(BldrTextV2.s11, _m, _sm); // 10
+  static final metricValue = _s(BldrTextV2.s20, _b, _g); // 20
+  static final metricLabel = _s(BldrTextV2.s11, _b, _sm); // 9
+  static final plusLabel = _s(BldrTextV2.s11, _b, _sm); // 9
+  static final section = _s(BldrTextV2.s11, _b, _sm); // 10
+  static final discoverTitle = _s(BldrTextV2.s15, _b, _c); // 14
+  static final discoverSub = _s(BldrTextV2.s11, _r, _sm); // 9
+  static final chevron = _s(BldrTextV2.s20, _r, _g); // 22
+  static final activityName = _s(BldrTextV2.s11, _b, _c); // 11
+  static final activityMeta = _s(BldrTextV2.s11, _r, _sm); // 8
+  static final activityBody = _s(BldrTextV2.s11, _r, _c); // 10
+  static final cta = _s(BldrTextV2.s11, _b, _g); // 9
+  // Sheet de ações (6:70)
+  static final sheetHandle = _s(BldrTextV2.s11, _m, _mu); // 9
+  static final rowTitle = _s(BldrTextV2.s12, _sb, _c); // 12
+  static final rowTitleDanger =
+      _s(BldrTextV2.s12, _sb, BldrCommunityColorsV2.danger); // 12
+  static final rowSub = _s(BldrTextV2.s11, _r, _mu); // 9
+  static final emoji = _s(BldrTextV2.s28, _r, _c);
+}
+
+abstract final class BldrCommunityV2 {
+  static const double pageX = 22;
+  static const double avatar = 38;
+  static const double avatarRing = 0.9;
+  static const double shortcut = 22;
+  static const double shortcutIcon = 14;
+  static const double shortcutGap = 7;
+  static const double fab = 52;
+  static const double photoRadius = 18;
+  static const double photoHeight = 190;
+  static const double squadRadius = 20;
+  static const double ctaRadius = 17;
+  static const double followHeight = 26;
+}

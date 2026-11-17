@@ -5065,4 +5065,323 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get ms_months_short =>
       'JAN,FEB,MAR,APR,MAY,JUN,JUL,AUG,SEP,OCT,NOV,DEC';
+
+  @override
+  String get comm_shortcut_search => 'Search community';
+
+  @override
+  String get comm_shortcut_private => 'Private posts';
+
+  @override
+  String get comm_shortcut_challenges => 'Challenges';
+
+  @override
+  String get comm_shortcut_ranking => 'Leaderboard';
+
+  @override
+  String get comm_shortcut_notifications => 'Notifications';
+
+  @override
+  String get comm_create_post => 'Create post';
+
+  @override
+  String get comm_tab_explore => 'Explore';
+
+  @override
+  String get comm_tab_following => 'Following';
+
+  @override
+  String get comm_tab_squads => 'Squads';
+
+  @override
+  String get comm_new_posts => 'New posts';
+
+  @override
+  String get comm_follow => 'FOLLOW';
+
+  @override
+  String get comm_following_btn => 'FOLLOWING';
+
+  @override
+  String get comm_time_now => 'now';
+
+  @override
+  String comm_time_min(int n) {
+    return '$n min';
+  }
+
+  @override
+  String comm_time_hour(int n) {
+    return '$n h';
+  }
+
+  @override
+  String comm_time_day(int n) {
+    return '$n d';
+  }
+
+  @override
+  String get comm_type_workout => 'WORKOUT COMPLETED';
+
+  @override
+  String get comm_type_pr => 'NEW PR';
+
+  @override
+  String get comm_type_streak => 'STREAK';
+
+  @override
+  String get comm_type_activity => 'ACTIVITY';
+
+  @override
+  String get comm_type_imported => 'IMPORTED ACTIVITY';
+
+  @override
+  String comm_metric_volume(String value) {
+    return '$value kg volume';
+  }
+
+  @override
+  String comm_metric_sets(int n) {
+    return '$n sets';
+  }
+
+  @override
+  String comm_metric_prs(int n) {
+    return '$n PRs';
+  }
+
+  @override
+  String get comm_view_workout => 'View workout';
+
+  @override
+  String get comm_label_distance => 'DISTANCE';
+
+  @override
+  String get comm_label_duration => 'DURATION';
+
+  @override
+  String get comm_label_hr => 'AVG HR';
+
+  @override
+  String get comm_label_strain => 'STRAIN';
+
+  @override
+  String get comm_label_load => 'LOAD';
+
+  @override
+  String get comm_label_reps => 'REPS';
+
+  @override
+  String get comm_label_e1rm => 'EST. 1RM';
+
+  @override
+  String comm_streak_title(int n) {
+    return '$n days in a row';
+  }
+
+  @override
+  String get comm_activity_default => 'Activity';
+
+  @override
+  String get comm_empty_title => 'No posts yet';
+
+  @override
+  String get comm_empty_body => 'Be the first to share!';
+
+  @override
+  String get comm_error_title => 'Couldn\'t load the feed';
+
+  @override
+  String get comm_retry => 'TRY AGAIN';
+
+  @override
+  String get comm_following_empty_title => 'Follow athletes';
+
+  @override
+  String get comm_following_empty_body =>
+      'See posts from people you follow here.';
+
+  @override
+  String get comm_following_empty_cta => 'FIND ATHLETES';
+
+  @override
+  String get comm_my_squad => 'MY SQUAD';
+
+  @override
+  String get comm_my_squads => 'MY SQUADS';
+
+  @override
+  String comm_squad_meta(String mode, int members) {
+    return '$mode mode · $members members';
+  }
+
+  @override
+  String comm_squad_week(int week) {
+    return 'Week $week';
+  }
+
+  @override
+  String get comm_mode_alpha => 'Alpha';
+
+  @override
+  String get comm_mode_survivor => 'Survivor';
+
+  @override
+  String get comm_mode_roadrunner => 'Roadrunner';
+
+  @override
+  String get comm_mode_hustle => 'Hustle';
+
+  @override
+  String get comm_squad_trained_today => 'TRAINED TODAY';
+
+  @override
+  String get comm_squad_ranking => 'RANKING';
+
+  @override
+  String get comm_activity_section => 'RECENT ACTIVITY';
+
+  @override
+  String get comm_activity_checkin => 'Checked in to the squad.';
+
+  @override
+  String get comm_squad_create_join => '+  CREATE OR JOIN A SQUAD';
+
+  @override
+  String get comm_squad_sheet_title => 'Create or join';
+
+  @override
+  String get comm_squad_code => 'I have an invite code';
+
+  @override
+  String get comm_squad_code_sub => 'Join a private Squad.';
+
+  @override
+  String get comm_squad_new => 'Create a new Squad';
+
+  @override
+  String get comm_squad_new_sub => 'Set the rules and invite your friends.';
+
+  @override
+  String get comm_squad_empty_title => 'You\'re not in any squad';
+
+  @override
+  String get comm_squad_empty_body =>
+      'Create or join a squad to compete with friends.';
+
+  @override
+  String get comm_actions_title => 'Post actions';
+
+  @override
+  String get comm_action_delete => 'Delete post';
+
+  @override
+  String get comm_action_delete_sub =>
+      'Removes the post, comments and reactions';
+
+  @override
+  String get comm_action_block => 'Block profile';
+
+  @override
+  String get comm_action_block_sub => 'You\'ll stop seeing each other\'s posts';
+
+  @override
+  String get comm_action_report => 'Report';
+
+  @override
+  String get comm_action_report_sub =>
+      'Inappropriate content or rule violation';
+
+  @override
+  String get comm_delete_title => 'Delete post?';
+
+  @override
+  String get comm_delete_msg =>
+      'The post, its comments and reactions will be removed.';
+
+  @override
+  String get comm_delete_confirm => 'Delete';
+
+  @override
+  String get comm_cancel => 'Cancel';
+
+  @override
+  String comm_block_title(String name) {
+    return 'Block $name?';
+  }
+
+  @override
+  String get comm_block_msg =>
+      'You\'ll stop seeing each other\'s posts in the community.';
+
+  @override
+  String get comm_block_confirm => 'Block';
+
+  @override
+  String get comm_report_title => 'Report post';
+
+  @override
+  String get comm_report_spam => 'Spam';
+
+  @override
+  String get comm_report_spam_sub => 'Repetitive content or advertising';
+
+  @override
+  String get comm_report_harassment => 'Harassment';
+
+  @override
+  String get comm_report_harassment_sub => 'Insults or attacks on someone';
+
+  @override
+  String get comm_report_inappropriate => 'Inappropriate content';
+
+  @override
+  String get comm_report_inappropriate_sub =>
+      'Nudity, violence or sensitive content';
+
+  @override
+  String get comm_report_false => 'False information';
+
+  @override
+  String get comm_report_false_sub => 'Misleading data or results';
+
+  @override
+  String get comm_report_other => 'Other reason';
+
+  @override
+  String get comm_report_other_sub => 'Something not on the list';
+
+  @override
+  String get comm_deleted => 'Post deleted.';
+
+  @override
+  String get comm_blocked => 'Profile blocked.';
+
+  @override
+  String get comm_reported => 'Report sent for review.';
+
+  @override
+  String get comm_react_title => 'React';
+
+  @override
+  String get comm_react_label => 'React to post';
+
+  @override
+  String get comm_comments_label => 'Comments';
+
+  @override
+  String get comm_share_label => 'Share';
+
+  @override
+  String get comm_more_label => 'More actions';
+
+  @override
+  String comm_share_text(String name, String detail) {
+    return '$name on BLDR: $detail';
+  }
+
+  @override
+  String comm_share_text_simple(String name) {
+    return 'Check out $name\'s post on BLDR.';
+  }
 }
