@@ -107,6 +107,13 @@ e vazou. Plano:
 3. Migrar o app para a chave publicável.
 4. Desativar as chaves legadas e revogar o JWT secret legado.
 
+**Decisão (17/11/2026):** B13 executar junto com o build de lançamento do
+rebranding, antes de desativar as chaves legadas. A migration
+`20261117000032_b13_tribunal_notification_vault.sql` fica como proposta, sem
+aplicar. Até lá, nada na Comunidade cria notificações novas nem altera o chat
+do squad ou o trigger `tribunal-notification` (eventos de squad, "subiu no
+ranking", anexo no chat).
+
 ### B14. Segurança — `add_xp_to_user` aceita qualquer usuário
 
 `add_xp_to_user` é `SECURITY DEFINER` e aceita qualquer `p_user_id`: qualquer
@@ -129,6 +136,22 @@ RevenueCat terminar (ou houver uma função de banco equivalente ao
 `ResolveClubAccess`), adicionar nas policies de insert/update:
 `with check (auth.uid() = user_id and bldr_club.is_club_member(auth.uid()))`
 — exige `grant execute` da função para `authenticated`.
+
+### B17. Limpeza dos duelos (descontinuados — D7 do COMUNIDADE_V2)
+
+Os duelos saíram da interface na Comunidade v2 (sem pontos de entrada no
+ranking, perfil, hub do Club ou notificações de convite). Tabelas e dados
+foram mantidos. Limpeza futura: remover `myDuels`, `respondDuel`,
+`pendingDuelInvite`, `checkActiveDuel` e `sendDuelInvite` do
+`ChallengeRepository`, datasource e use cases; entidades `Duel`,
+`DuelInvite` e `ActiveDuelStatus`; textos nos `.arb`; e, depois de exportar
+os dados, as tabelas, RPCs, triggers e crons de duelo no schema `bldr_club`.
+
+### B18. Comunidade — itens adiados (COMUNIDADE_V2 §12)
+
+- Atividade manual com modalidades no criar post (D3; junto da B12).
+- Múltiplas fotos por post (D5; S10).
+- Mensagem direta / posts privados recebidos e enviados (D12; S6). Depende da B13.
 
 ### B10. Unificar concessão de XP — adiado (depois de B13/B14)
 
