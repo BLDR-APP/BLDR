@@ -8356,6 +8356,150 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'CONCLUIR'**
   String get sm_finish;
+
+  /// No description provided for @sh_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'COMPARTILHAR'**
+  String get sh_title;
+
+  /// No description provided for @sh_subtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolha como seu treino vai para o Story'**
+  String get sh_subtitle;
+
+  /// No description provided for @sh_tab_overlay.
+  ///
+  /// In pt, this message translates to:
+  /// **'OVERLAY'**
+  String get sh_tab_overlay;
+
+  /// No description provided for @sh_tab_card.
+  ///
+  /// In pt, this message translates to:
+  /// **'CARD'**
+  String get sh_tab_card;
+
+  /// No description provided for @sh_preview_overlay.
+  ///
+  /// In pt, this message translates to:
+  /// **'PREVIEW DO OVERLAY'**
+  String get sh_preview_overlay;
+
+  /// No description provided for @sh_preview_card.
+  ///
+  /// In pt, this message translates to:
+  /// **'PREVIEW DO CARD'**
+  String get sh_preview_card;
+
+  /// No description provided for @sh_transparent.
+  ///
+  /// In pt, this message translates to:
+  /// **'FUNDO TRANSPARENTE'**
+  String get sh_transparent;
+
+  /// No description provided for @sh_transparent_note.
+  ///
+  /// In pt, this message translates to:
+  /// **'O conteúdo acima é exportado com fundo transparente.'**
+  String get sh_transparent_note;
+
+  /// No description provided for @sh_card_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Exportado em 1080 × 1920'**
+  String get sh_card_hint;
+
+  /// No description provided for @sh_overlay_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Overlay essencial'**
+  String get sh_overlay_title;
+
+  /// No description provided for @sh_overlay_body.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome, Muscle Map e métricas. Sem card, PR ou informações redundantes.'**
+  String get sh_overlay_body;
+
+  /// No description provided for @sh_card_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Card editorial BLDR'**
+  String get sh_card_title;
+
+  /// No description provided for @sh_card_body.
+  ///
+  /// In pt, this message translates to:
+  /// **'Muscle Map em destaque, métricas integradas e menos linguagem de interface.'**
+  String get sh_card_body;
+
+  /// No description provided for @sh_share.
+  ///
+  /// In pt, this message translates to:
+  /// **'COMPARTILHAR'**
+  String get sh_share;
+
+  /// No description provided for @sh_sharing.
+  ///
+  /// In pt, this message translates to:
+  /// **'GERANDO IMAGEM…'**
+  String get sh_sharing;
+
+  /// No description provided for @sh_note.
+  ///
+  /// In pt, this message translates to:
+  /// **'Formato otimizado para Instagram Stories'**
+  String get sh_note;
+
+  /// No description provided for @sh_publish.
+  ///
+  /// In pt, this message translates to:
+  /// **'Publicar na comunidade'**
+  String get sh_publish;
+
+  /// No description provided for @sh_completed.
+  ///
+  /// In pt, this message translates to:
+  /// **'WORKOUT COMPLETED'**
+  String get sh_completed;
+
+  /// No description provided for @sh_duration.
+  ///
+  /// In pt, this message translates to:
+  /// **'DURAÇÃO'**
+  String get sh_duration;
+
+  /// No description provided for @sh_volume.
+  ///
+  /// In pt, this message translates to:
+  /// **'VOLUME'**
+  String get sh_volume;
+
+  /// No description provided for @sh_sets.
+  ///
+  /// In pt, this message translates to:
+  /// **'SÉRIES'**
+  String get sh_sets;
+
+  /// No description provided for @sh_share_text.
+  ///
+  /// In pt, this message translates to:
+  /// **'Treino concluído no BLDR'**
+  String get sh_share_text;
+
+  /// No description provided for @sh_share_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'A imagem foi gerada, mas não foi possível abrir o compartilhamento.'**
+  String get sh_share_error;
+
+  /// No description provided for @sh_export_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível gerar a imagem. Tente novamente.'**
+  String get sh_export_error;
 }
 
 class _AppLocalizationsDelegate

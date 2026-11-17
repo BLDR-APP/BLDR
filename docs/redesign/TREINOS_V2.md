@@ -210,9 +210,9 @@ Ficam ocultos/fora nesta fase:
 1. ✅ **Base:** função de duração (P1) + persistência por série (P2: migration, domain, data, testes).
 2. ✅ **Criar treino:** passo 1, Montar treino e picker (179:981, 179:1015, 179:1117).
 3. ✅ **Hub** vazio e com treinos (249:18901, 179:2), incluindo abas, card da semana (XP oculto) e lista de treinos.
-4. **Editor** (179:1590).
-5. **Treino em andamento** + sheets de carga e reps (179:1319, 179:1401, 179:1496).
-6. **Resumo** (211:5).
+4. ✅ **Editor** (179:1590).
+5. ✅ **Treino em andamento** + sheets de carga e reps (179:1319, 179:1401, 179:1496).
+6. ✅ **Resumo** (211:5).
 7. **Compartilhar** Overlay e Card + comunidade (241:12891, 241:12890).
 8. **Investigar a pendência da persistência por série.** Até lá, a lógica de gravação/leitura das séries só muda o necessário para o visual.
 
@@ -312,3 +312,30 @@ Cada etapa termina com `dart analyze lib`, `flutter test test/features` e compar
   (largura útil / escala < 330): métricas em 2×2, destaques empilhados e
   mapa muscular acima dos detalhes. Mais de um PR: mostra o primeiro.
   "Compartilhar na comunidade" volta na etapa 7 (tela de compartilhar).
+
+## Etapa 7 — Compartilhar: Overlay e Card (241:12891, 241:12890) — plano
+
+- `WorkoutSharePreview` v2: "‹", "COMPARTILHAR", subtítulo; abas OVERLAY /
+  CARD (substituem Performance, Muscle Map e Minimal); prévia; título e
+  texto do formato; "COMPARTILHAR" (exporter atual, 1080 de largura);
+  nota "Formato otimizado para Instagram Stories"; "Publicar na comunidade ›"
+  (P5) abrindo o `CreatePostScreen` com treino, origem e PRs, como o resumo
+  fazia.
+- Overlay: canvas 9:16 transparente com logo, mapa frente/costas atual,
+  duração/volume/séries e @usuário. Na prévia, o canvas fica sobre um
+  fundo escuro com "FUNDO TRANSPARENTE" e a nota de exportação (fora da
+  área exportada).
+- Card: 9:16 opaco `#050505` com o brilho dourado do fundo oficial, logo,
+  @usuário, "WORKOUT COMPLETED", data, mapa frente/costas, métricas,
+  divisor e logo no rodapé; exportação 1080 × 1920.
+- O enum de domínio `WorkoutShareStyle` e os templates antigos não mudam
+  (presentation-only); a tela passa a usar um enum de apresentação.
+- Texto **dentro da imagem exportada** segue as proporções do mockup
+  (escala pela largura do canvas), não a escala tipográfica da UI: é
+  conteúdo de imagem. Textos da tela seguem a escala (mínimo 11).
+- Logo: o mockup usa a fonte CODEX (não está no projeto); usa "BL/DR"
+  empilhado em Montserrat Bold dourado.
+- Sem @usuário (perfil indisponível), a linha some.
+- **Feito.** Validado em 320/440 px e textScaler 1,3 nas duas abas.
+  Os templates antigos (Performance, Muscle Map, Minimal) ficam no código
+  sem uso na tela, junto com o enum de domínio, até uma limpeza aprovada.

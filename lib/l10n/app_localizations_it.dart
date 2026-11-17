@@ -4625,4 +4625,80 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get sm_finish => 'FINE';
+
+  @override
+  String get sh_title => 'CONDIVIDI';
+
+  @override
+  String get sh_subtitle => 'Scegli come il tuo allenamento va nella Story';
+
+  @override
+  String get sh_tab_overlay => 'OVERLAY';
+
+  @override
+  String get sh_tab_card => 'CARD';
+
+  @override
+  String get sh_preview_overlay => 'ANTEPRIMA OVERLAY';
+
+  @override
+  String get sh_preview_card => 'ANTEPRIMA CARD';
+
+  @override
+  String get sh_transparent => 'SFONDO TRASPARENTE';
+
+  @override
+  String get sh_transparent_note =>
+      'Il contenuto sopra viene esportato con sfondo trasparente.';
+
+  @override
+  String get sh_card_hint => 'Esportato a 1080 × 1920';
+
+  @override
+  String get sh_overlay_title => 'Overlay essenziale';
+
+  @override
+  String get sh_overlay_body =>
+      'Nome, Muscle Map e metriche. Niente card, PR o informazioni ridondanti.';
+
+  @override
+  String get sh_card_title => 'Card editoriale BLDR';
+
+  @override
+  String get sh_card_body =>
+      'Muscle Map in primo piano, metriche integrate e meno linguaggio d\'interfaccia.';
+
+  @override
+  String get sh_share => 'CONDIVIDI';
+
+  @override
+  String get sh_sharing => 'GENERAZIONE IMMAGINE…';
+
+  @override
+  String get sh_note => 'Formato ottimizzato per le Instagram Stories';
+
+  @override
+  String get sh_publish => 'Pubblica nella community';
+
+  @override
+  String get sh_completed => 'WORKOUT COMPLETED';
+
+  @override
+  String get sh_duration => 'DURATA';
+
+  @override
+  String get sh_volume => 'VOLUME';
+
+  @override
+  String get sh_sets => 'SERIE';
+
+  @override
+  String get sh_share_text => 'Allenamento completato su BLDR';
+
+  @override
+  String get sh_share_error =>
+      'L\'immagine è stata creata, ma non è stato possibile aprire la condivisione.';
+
+  @override
+  String get sh_export_error => 'Impossibile creare l\'immagine. Riprova.';
 }

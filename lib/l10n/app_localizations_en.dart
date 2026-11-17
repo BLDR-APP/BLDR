@@ -4615,4 +4615,80 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sm_finish => 'DONE';
+
+  @override
+  String get sh_title => 'SHARE';
+
+  @override
+  String get sh_subtitle => 'Choose how your workout goes to your Story';
+
+  @override
+  String get sh_tab_overlay => 'OVERLAY';
+
+  @override
+  String get sh_tab_card => 'CARD';
+
+  @override
+  String get sh_preview_overlay => 'OVERLAY PREVIEW';
+
+  @override
+  String get sh_preview_card => 'CARD PREVIEW';
+
+  @override
+  String get sh_transparent => 'TRANSPARENT BACKGROUND';
+
+  @override
+  String get sh_transparent_note =>
+      'The content above is exported with a transparent background.';
+
+  @override
+  String get sh_card_hint => 'Exported at 1080 × 1920';
+
+  @override
+  String get sh_overlay_title => 'Essential overlay';
+
+  @override
+  String get sh_overlay_body =>
+      'Name, Muscle Map and metrics. No card, PRs or redundant info.';
+
+  @override
+  String get sh_card_title => 'BLDR editorial card';
+
+  @override
+  String get sh_card_body =>
+      'Muscle Map up front, integrated metrics and less interface language.';
+
+  @override
+  String get sh_share => 'SHARE';
+
+  @override
+  String get sh_sharing => 'GENERATING IMAGE…';
+
+  @override
+  String get sh_note => 'Optimized for Instagram Stories';
+
+  @override
+  String get sh_publish => 'Post to community';
+
+  @override
+  String get sh_completed => 'WORKOUT COMPLETED';
+
+  @override
+  String get sh_duration => 'DURATION';
+
+  @override
+  String get sh_volume => 'VOLUME';
+
+  @override
+  String get sh_sets => 'SETS';
+
+  @override
+  String get sh_share_text => 'Workout completed on BLDR';
+
+  @override
+  String get sh_share_error =>
+      'The image was created, but sharing could not be opened.';
+
+  @override
+  String get sh_export_error => 'Could not create the image. Try again.';
 }

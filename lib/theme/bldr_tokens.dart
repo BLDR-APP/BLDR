@@ -414,17 +414,27 @@ abstract final class BldrTextV2 {
 
   // Header
   static final greeting = _base.copyWith(
-      fontSize: 13, fontWeight: FontWeight.w500, color: BldrColorsV2.textSecondary);
+      fontSize: 13,
+      fontWeight: FontWeight.w500,
+      color: BldrColorsV2.textSecondary);
   static final title = _base.copyWith(
-      fontSize: 31, fontWeight: FontWeight.w700, color: BldrColorsV2.textPrimary);
+      fontSize: 31,
+      fontWeight: FontWeight.w700,
+      color: BldrColorsV2.textPrimary);
   static final avatarInitial = _base.copyWith(
-      fontSize: 14, fontWeight: FontWeight.w700, color: BldrColorsV2.goldBright);
+      fontSize: 14,
+      fontWeight: FontWeight.w700,
+      color: BldrColorsV2.goldBright);
 
   // Nível / XP
   static final level = _base.copyWith(
-      fontSize: 13, fontWeight: FontWeight.w600, color: BldrColorsV2.textPrimary);
+      fontSize: 13,
+      fontWeight: FontWeight.w600,
+      color: BldrColorsV2.textPrimary);
   static final xp = _base.copyWith(
-      fontSize: 11, fontWeight: FontWeight.w500, color: BldrColorsV2.textSecondary);
+      fontSize: 11,
+      fontWeight: FontWeight.w500,
+      color: BldrColorsV2.textSecondary);
 
   // Chips
   static final statValue = _base.copyWith(
@@ -434,7 +444,9 @@ abstract final class BldrTextV2 {
 
   // WHOOP
   static final whoopToday = _base.copyWith(
-      fontSize: 10, fontWeight: FontWeight.w400, color: BldrColorsV2.whoopToday);
+      fontSize: 10,
+      fontWeight: FontWeight.w400,
+      color: BldrColorsV2.whoopToday);
   static final ringValue =
       _base.copyWith(fontSize: 16, fontWeight: FontWeight.w600);
   static final ringLabel = _base.copyWith(
@@ -442,11 +454,17 @@ abstract final class BldrTextV2 {
 
   // Treino de hoje
   static final trainLabel = _base.copyWith(
-      fontSize: 11, fontWeight: FontWeight.w600, color: BldrColorsV2.trainLabel);
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      color: BldrColorsV2.trainLabel);
   static final trainTitle = _base.copyWith(
-      fontSize: 25, fontWeight: FontWeight.w700, color: BldrColorsV2.textPrimary);
+      fontSize: 25,
+      fontWeight: FontWeight.w700,
+      color: BldrColorsV2.textPrimary);
   static final trainMuscles = _base.copyWith(
-      fontSize: 11, fontWeight: FontWeight.w400, color: BldrColorsV2.textSecondary);
+      fontSize: 11,
+      fontWeight: FontWeight.w400,
+      color: BldrColorsV2.textSecondary);
   static final trainMeta = _base.copyWith(
       fontSize: 11, fontWeight: FontWeight.w500, color: BldrColorsV2.trainMeta);
   static final cta = _base.copyWith(
@@ -464,7 +482,9 @@ abstract final class BldrTextV2 {
 
   // Cards de estado do wearable (57:382 / 57:381)
   static final wearableLabel = _base.copyWith(
-      fontSize: 10, fontWeight: FontWeight.w600, color: BldrColorsV2.goldBright);
+      fontSize: 10,
+      fontWeight: FontWeight.w600,
+      color: BldrColorsV2.goldBright);
   static final wearableTitle = _base.copyWith(
       fontSize: 19, fontWeight: FontWeight.w600, color: BldrColorsV2.tileValue);
   static final wearableBody11 = _base.copyWith(
@@ -478,7 +498,9 @@ abstract final class BldrTextV2 {
   static final wearableCta = _base.copyWith(
       fontSize: 12, fontWeight: FontWeight.w600, color: BldrColorsV2.gold);
   static final wearableLink = _base.copyWith(
-      fontSize: 11, fontWeight: FontWeight.w600, color: BldrColorsV2.goldBright);
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      color: BldrColorsV2.goldBright);
 
   // Treino concluído (57:379) — cores de BldrTrainColorsV2
   static final doneStat =
@@ -494,19 +516,31 @@ abstract final class BldrTextV2 {
 
   // Havok (57:390 / 57:389)
   static final havokBannerLabel = _base.copyWith(
-      fontSize: 8.719, fontWeight: FontWeight.w600, color: BldrColorsV2.goldBright);
+      fontSize: 8.719,
+      fontWeight: FontWeight.w600,
+      color: BldrColorsV2.goldBright);
   static final havokBannerText = _base.copyWith(
-      fontSize: 11.334, fontWeight: FontWeight.w500, color: BldrColorsV2.textWhite);
+      fontSize: 11.334,
+      fontWeight: FontWeight.w500,
+      color: BldrColorsV2.textWhite);
   static final havokBannerChevron = _base.copyWith(
-      fontSize: 20.925, fontWeight: FontWeight.w700, color: BldrColorsV2.goldBright);
+      fontSize: 20.925,
+      fontWeight: FontWeight.w700,
+      color: BldrColorsV2.goldBright);
   static final havokLabel = _base.copyWith(
-      fontSize: 11, fontWeight: FontWeight.w600, color: BldrColorsV2.goldBright);
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      color: BldrColorsV2.goldBright);
   static final havokClose = _base.copyWith(
-      fontSize: 19, fontWeight: FontWeight.w500, color: BldrHavokColorsV2.muted);
+      fontSize: 19,
+      fontWeight: FontWeight.w500,
+      color: BldrHavokColorsV2.muted);
   static final havokTitle = _base.copyWith(
       fontSize: 17, fontWeight: FontWeight.w600, color: BldrColorsV2.textWhite);
   static final havokBody = _base.copyWith(
-      fontSize: 12, fontWeight: FontWeight.w400, color: BldrHavokColorsV2.muted);
+      fontSize: 12,
+      fontWeight: FontWeight.w400,
+      color: BldrHavokColorsV2.muted);
   static final havokCta = _base.copyWith(
       fontSize: 12, fontWeight: FontWeight.w700, color: BldrColorsV2.gold);
 }
@@ -797,10 +831,13 @@ abstract final class BldrWorkoutTextV2 {
 
   // ── Hub (249:18901 / 179:2) ──
   static final hubTabActive = _s(BldrTextV2.s17, _sb, _g); // 16
-  static final hubTab = _s(BldrTextV2.s17, _sb, BldrWorkoutColorsV2.tabIdle); // 16
-  static final todayLabel = _s(BldrTextV2.s12, _r, BldrWorkoutColorsV2.goldBrand); // 12
+  static final hubTab =
+      _s(BldrTextV2.s17, _sb, BldrWorkoutColorsV2.tabIdle); // 16
+  static final todayLabel =
+      _s(BldrTextV2.s12, _r, BldrWorkoutColorsV2.goldBrand); // 12
   static final todayName = _s(BldrTextV2.s12, _b, Colors.white); // 12
-  static final todayHint = _s(BldrTextV2.s12, _r, BldrWorkoutColorsV2.secondary); // 12
+  static final todayHint =
+      _s(BldrTextV2.s12, _r, BldrWorkoutColorsV2.secondary); // 12
   static final pillLabel = _s(BldrTextV2.s11, _b, _g); // 7 / 5,4
   static final metaWhite = _s(BldrTextV2.s11, _r, Colors.white); // 7 / 8
   static final hubSection = _s(BldrTextV2.s11, _r, Colors.white); // 10
@@ -808,23 +845,32 @@ abstract final class BldrWorkoutTextV2 {
   static final weekValue = _s(BldrTextV2.s15, _r, Colors.white); // 14
   static final weekLabel = _s(BldrTextV2.s11, _r, Colors.white); // 9
   static final cardName = _s(BldrTextV2.s15, _b, Colors.white); // 14
-  static final cardMuscles = _s(BldrTextV2.s11, _m, BldrWorkoutColorsV2.secondary); // 9
+  static final cardMuscles =
+      _s(BldrTextV2.s11, _m, BldrWorkoutColorsV2.secondary); // 9
   static final cardStats = _s(BldrTextV2.s11, _m, _t); // 8
-  static final countGold = _s(BldrTextV2.s11, _r, BldrWorkoutColorsV2.goldBrand); // 6
+  static final countGold =
+      _s(BldrTextV2.s11, _r, BldrWorkoutColorsV2.goldBrand); // 6
   static final emptyTitle = _s(BldrTextV2.s11, _r, Colors.white); // 8 (Inter)
-  static final emptySub = _s(BldrTextV2.s11, _r, BldrWorkoutColorsV2.secondary); // 8
+  static final emptySub =
+      _s(BldrTextV2.s11, _r, BldrWorkoutColorsV2.secondary); // 8
   static final exploreTitle = _s(BldrTextV2.s11, _r, Colors.white); // 6,6
-  static final exploreSub = _s(BldrTextV2.s11, _r, BldrWorkoutColorsV2.secondary); // 4,1
+  static final exploreSub =
+      _s(BldrTextV2.s11, _r, BldrWorkoutColorsV2.secondary); // 4,1
 
   // ── Hub revisado (305:1656 / 310:195) ──
   static final myHeader = _s(BldrTextV2.s11, _r, _t); // 10
-  static final myCount = _s(BldrTextV2.s11, _sb, BldrWorkoutColorsV2.goldBrand); // 9
+  static final myCount =
+      _s(BldrTextV2.s11, _sb, BldrWorkoutColorsV2.goldBrand); // 9
   static final myCardName = _s(BldrTextV2.s15, _b, _t); // 14
-  static final myCardGroups = _s(BldrTextV2.s11, _m, BldrWorkoutColorsV2.myCardMuted); // 9
-  static final myCardStats = _s(BldrTextV2.s11, _m, BldrWorkoutColorsV2.myCardMuted); // 9
-  static final myCardMinutes = _s(BldrTextV2.s11, _sb, BldrWorkoutColorsV2.goldBrand); // 9
+  static final myCardGroups =
+      _s(BldrTextV2.s11, _m, BldrWorkoutColorsV2.myCardMuted); // 9
+  static final myCardStats =
+      _s(BldrTextV2.s11, _m, BldrWorkoutColorsV2.myCardMuted); // 9
+  static final myCardMinutes =
+      _s(BldrTextV2.s11, _sb, BldrWorkoutColorsV2.goldBrand); // 9
   static final menuTitle = _s(BldrTextV2.s11, _r, Colors.white); // 10,8
-  static final menuDesc = _s(BldrTextV2.s11, _r, BldrWorkoutColorsV2.libraryMenuDesc); // 8
+  static final menuDesc =
+      _s(BldrTextV2.s11, _r, BldrWorkoutColorsV2.libraryMenuDesc); // 8
   static final tip = _s(BldrTextV2.s12, _m, Colors.white);
 
   // ── Editor (179:1590) ──
@@ -906,20 +952,27 @@ abstract final class BldrActiveTextV2 {
   static final label = _s(BldrTextV2.s11, _sb, BldrActiveColorsV2.muted); // 8/9
   static final timer = _s(BldrTextV2.s20, _b, BldrActiveColorsV2.text); // 20
   static final hudValue = _s(BldrTextV2.s15, _b, BldrActiveColorsV2.text); // 15
-  static final hudAccent = _s(BldrTextV2.s15, _b, BldrActiveColorsV2.gold); // 15
-  static final hudSuffix = _s(BldrTextV2.s11, _m, BldrActiveColorsV2.muted); // 8
+  static final hudAccent =
+      _s(BldrTextV2.s15, _b, BldrActiveColorsV2.gold); // 15
+  static final hudSuffix =
+      _s(BldrTextV2.s11, _m, BldrActiveColorsV2.muted); // 8
   static final eyebrow = _s(BldrTextV2.s11, _sb, BldrActiveColorsV2.gold); // 9
   static final exName = _s(BldrTextV2.s24, _b, BldrActiveColorsV2.text); // 25
   static final muscles = _s(BldrTextV2.s11, _r, BldrActiveColorsV2.muted); // 10
   static final badge = _s(BldrTextV2.s11, _sb, BldrActiveColorsV2.gold); // 9
-  static final cueTarget = _s(BldrTextV2.s11, _sb, BldrActiveColorsV2.gold); // 9
+  static final cueTarget =
+      _s(BldrTextV2.s11, _sb, BldrActiveColorsV2.gold); // 9
   static final nextSet = _s(BldrTextV2.s20, _b, BldrActiveColorsV2.text); // 20
-  static final inputValue = _s(BldrTextV2.s32, _b, BldrActiveColorsV2.text); // 30
-  static final inputUnit = _s(BldrTextV2.s11, _m, BldrActiveColorsV2.muted); // 10
-  static final restValue = _s(BldrTextV2.s17, _b, BldrActiveColorsV2.text); // 16
+  static final inputValue =
+      _s(BldrTextV2.s32, _b, BldrActiveColorsV2.text); // 30
+  static final inputUnit =
+      _s(BldrTextV2.s11, _m, BldrActiveColorsV2.muted); // 10
+  static final restValue =
+      _s(BldrTextV2.s17, _b, BldrActiveColorsV2.text); // 16
   static final restAdd = _s(BldrTextV2.s11, _b, BldrActiveColorsV2.gold);
   static final cta = _s(BldrTextV2.s15, _b, BldrActiveColorsV2.goldBrand); // 14
-  static final nextName = _s(BldrTextV2.s12, _sb, BldrActiveColorsV2.text); // 12
+  static final nextName =
+      _s(BldrTextV2.s12, _sb, BldrActiveColorsV2.text); // 12
 }
 
 // Resumo (211:5)
@@ -958,8 +1011,48 @@ abstract final class BldrSummaryTextV2 {
   static final muscle = _s(BldrTextV2.s11, FontWeight.w600, _mu); // 8
   static final levelHigh = _s(BldrTextV2.s11, FontWeight.w700, _g); // 8
   static final levelModerate = _s(BldrTextV2.s11, FontWeight.w700, _t); // 8
-  static final share = _s(BldrTextV2.s11, FontWeight.w700,
-      BldrActiveColorsV2.goldBrand); // 11
-  static final done = _s(BldrTextV2.s11, FontWeight.w700,
-      BldrSummaryColorsV2.doneText); // 10
+  static final share =
+      _s(BldrTextV2.s11, FontWeight.w700, BldrActiveColorsV2.goldBrand); // 11
+  static final done =
+      _s(BldrTextV2.s11, FontWeight.w700, BldrSummaryColorsV2.doneText); // 10
+}
+
+// Compartilhar v2 (241:12891 / 241:12890)
+abstract final class BldrShareColorsV2 {
+  static const gold = Color(0xFFD4AF37);
+  static const goldBright = Color(0xFFE0B830);
+  static const text = Color(0xFFF5F5F5);
+  static const label = Color(0xFF7A7A7A);
+  static const muted = Color(0xFF7D7D7D);
+  static const divider = Color(0xFF2E2E2E);
+  static const panelBg = Color(0xFF0B0B0B);
+  static const panelBorder = Color(0xE6303030); // .9
+  static const canvasBg = Color(0xE6111111); // #111 · .9
+}
+
+abstract final class BldrShareTextV2 {
+  static TextStyle _s(double step, FontWeight w, Color c) =>
+      BldrTextV2.scale(step, w, c);
+  static final back =
+      _s(BldrTextV2.s28, FontWeight.w400, BldrShareColorsV2.text); // 30
+  static final title =
+      _s(BldrTextV2.s15, FontWeight.w700, BldrShareColorsV2.text); // 15
+  static final subtitle =
+      _s(BldrTextV2.s11, FontWeight.w400, BldrShareColorsV2.muted); // 9
+  static final tab =
+      _s(BldrTextV2.s11, FontWeight.w700, BldrShareColorsV2.muted); // 9
+  static final tabActive =
+      _s(BldrTextV2.s11, FontWeight.w700, BldrShareColorsV2.gold); // 9
+  static final hint =
+      _s(BldrTextV2.s11, FontWeight.w600, BldrShareColorsV2.muted); // 7/8
+  static final infoTitle =
+      _s(BldrTextV2.s11, FontWeight.w700, BldrShareColorsV2.text); // 11
+  static final infoBody =
+      _s(BldrTextV2.s11, FontWeight.w400, BldrShareColorsV2.muted); // 9
+  static final cta =
+      _s(BldrTextV2.s11, FontWeight.w700, BldrShareColorsV2.gold); // 11
+  static final note =
+      _s(BldrTextV2.s11, FontWeight.w400, BldrShareColorsV2.muted); // 8
+  static final publish =
+      _s(BldrTextV2.s12, FontWeight.w600, BldrShareColorsV2.goldBright);
 }
