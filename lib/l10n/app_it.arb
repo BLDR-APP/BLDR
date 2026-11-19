@@ -3116,5 +3116,7 @@
   "nutri2_saved_delete_msg": "\"{name}\" verrà rimosso dai pasti salvati. Il diario non cambia.",
   "nutri2_saved_delete_confirm": "Elimina",
   "nutri2_toast_saved_deleted": "Pasto salvato eliminato",
-  "nutri2_toast_saved_delete_error": "Impossibile eliminare il pasto"
+  "nutri2_toast_saved_delete_error": "Impossibile eliminare il pasto",
+  "nutri2_ml_note": "1 ml ≈ 1 g (calcolo approssimato)",
+  "nutri2_unit_weight_g": "PESO DI 1 UNITÀ (g)"
 }

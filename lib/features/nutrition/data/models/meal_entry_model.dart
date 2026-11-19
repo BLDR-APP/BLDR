@@ -61,6 +61,8 @@ class MealEntryModel {
         'sodium': updated.macros.sodium,
         'fiber': updated.macros.fiber,
         'added_sugar': updated.macros.addedSugar,
+        // Unidade escolhida na edição (g/ml, 1 ml ≈ 1 g).
+        'unit': updated.unit,
         'updated_at': FieldValue.serverTimestamp(),
       };
 }

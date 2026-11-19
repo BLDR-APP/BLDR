@@ -842,10 +842,15 @@ class PortionResult {
   final double grams;
   final NutritionMealSlot slot;
   final bool remove;
-  const PortionResult(this.grams, this.slot) : remove = false;
+
+  /// 'g' ou 'ml' escolhido (1 ml ≈ 1 g no cálculo).
+  final String unit;
+  const PortionResult(this.grams, this.slot, {this.unit = 'g'})
+      : remove = false;
   const PortionResult.remove(this.slot)
       : grams = 0,
-        remove = true;
+        remove = true,
+        unit = 'g';
 }
 
 abstract final class NutritionPortionSheet {
@@ -889,6 +894,7 @@ abstract final class NutritionPortionSheet {
           food: food,
           slot: slot,
           initialGrams: entry.quantityGrams,
+          initialMl: entry.isLiquid,
           editing: true),
     );
   }
@@ -899,11 +905,15 @@ class _PortionBody extends StatefulWidget {
   final NutritionMealSlot slot;
   final double initialGrams;
   final bool editing;
+
+  /// Unidade inicial; sem valor, a base do alimento.
+  final bool? initialMl;
   const _PortionBody({
     required this.food,
     required this.slot,
     required this.initialGrams,
     this.editing = false,
+    this.initialMl,
   });
 
   @override
@@ -917,6 +927,10 @@ class _PortionBodyState extends State<_PortionBody> {
   late double _unitWeight = _savedUnit ?? 50;
   late double _qty = _byUnit ? 1 : widget.initialGrams.roundToDouble();
   late NutritionMealSlot _slot = widget.slot;
+
+  /// g/ml selecionável (aprovado: 1 ml ≈ 1 g quando difere da base).
+  late bool _ml = widget.initialMl ?? widget.food.isLiquid;
+  String get _unit => _ml ? 'ml' : 'g';
   late final _unitCtrl =
       TextEditingController(text: NumberFormat('0.#').format(_unitWeight));
 
@@ -1137,9 +1151,7 @@ class _PortionBodyState extends State<_PortionBody> {
             ]),
           if (_byUnit) ...[
             const SizedBox(height: 14),
-            _label(widget.food.isLiquid
-                ? l.nutri2_unit_weight_ml
-                : l.nutri2_unit_weight),
+            _label(_ml ? l.nutri2_unit_weight_ml : l.nutri2_unit_weight_g),
             if (widget.food.unitDescription != null) ...[
               Text(widget.food.unitDescription!,
                   style: BldrNutritionTextV2.hint),
@@ -1175,17 +1187,20 @@ class _PortionBodyState extends State<_PortionBody> {
             // Base de cálculo do alimento: g (sólido) ou ml (líquido, N4).
             SizedBox(
                 width: 88,
-                child: _segment('g', !widget.food.isLiquid, null,
+                child: _segment('g', !_ml, () => setState(() => _ml = false),
                     height: 38, radius: 14)),
             const SizedBox(width: 8),
             SizedBox(
                 width: 88,
-                child: _segment('ml', widget.food.isLiquid, null,
+                child: _segment('ml', _ml, () => setState(() => _ml = true),
                     height: 38, radius: 14)),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(l.nutri2_measure_hint,
-                  maxLines: 2,
+              child: Text(
+                  _ml != widget.food.isLiquid
+                      ? l.nutri2_ml_note
+                      : l.nutri2_measure_hint,
+                  maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   style: BldrNutritionTextV2.hint),
             ),
@@ -1197,7 +1212,7 @@ class _PortionBodyState extends State<_PortionBody> {
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(
-                  widget.food.isLiquid
+                  _ml
                       ? l.nutri2_per_ml(gramsText)
                       : l.nutri2_per_grams(gramsText),
                   style: BldrNutritionTextV2.perGrams),
@@ -1249,7 +1264,8 @@ class _PortionBodyState extends State<_PortionBody> {
           BldrNutritionCta(
             label: widget.editing ? l.nutri2_save_changes : l.nutri2_add_cta,
             onTap: _grams > 0
-                ? () => Navigator.pop(context, PortionResult(_grams, _slot))
+                ? () => Navigator.pop(
+                    context, PortionResult(_grams, _slot, unit: _unit))
                 : null,
           ),
           if (widget.editing)

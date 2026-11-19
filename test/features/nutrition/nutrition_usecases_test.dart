@@ -168,6 +168,20 @@ void main() {
       expect(xp.bonusAwards, 0, reason: 'dia incompleto: sem bônus');
     });
 
+    test('unidade escolhida na porção vai para o registro (1 ml ≈ 1 g)',
+        () async {
+      await logMeal(
+        userId: 'u1',
+        mealType: 'Lunch',
+        mealDate: DateTime(2026, 1, 1),
+        food: food,
+        quantityGrams: 200,
+        unit: 'ml',
+      );
+      expect(diary.entries.last.unit, 'ml');
+      expect(diary.entries.last.quantityGrams, 200);
+    });
+
     test('concede bônus de 150 XP quando as 4 refeições ficam completas',
         () async {
       diary.entries.addAll([

@@ -7434,4 +7434,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get nutri2_toast_saved_delete_error =>
       'Não foi possível excluir a refeição';
+
+  @override
+  String get nutri2_ml_note => '1 ml ≈ 1 g (cálculo aproximado)';
+
+  @override
+  String get nutri2_unit_weight_g => 'PESO DE 1 UNIDADE (g)';
 }

@@ -136,6 +136,19 @@ void main() {
     expect(find.textContaining('200 ml'), findsOneWidget);
     expect(find.textContaining('150g'), findsOneWidget);
   });
+
+  test('edição troca a unidade e grava unit no update', () async {
+    final diary = FakeDiaryRepository();
+    final rice = MealEntry(
+        id: 'g', userId: 'u', mealType: 'snack', date: _day, foodName: 'Suco',
+        quantityGrams: 100,
+        macros: const MacroNutrients(calories: 50, protein: 0, carbs: 12, fat: 0));
+    await UpdateMealQuantity(diary)(entry: rice, newQuantityGrams: 300, newUnit: 'ml');
+    final up = diary.updates['g']!;
+    expect(up.unit, 'ml');
+    expect(up.macros.calories, 150);
+    expect(MealEntryModel.toQuantityUpdate(up)['unit'], 'ml');
+  });
 }
 
 class _Catalog implements FoodCatalogRepository {

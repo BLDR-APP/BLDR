@@ -164,4 +164,20 @@ void main() {
     });
     expect(_searched.last, FoodCountry.us);
   });
+
+  testWidgets('porção: ml selecionável num alimento em g, com nota 1 ml ≈ 1 g',
+      (t) async {
+    final r = await _open(
+        t, (c) => NutritionPortionSheet.add(c, food: _oats, slot: lunch),
+        (t) async {
+      expect(find.text('Base de cálculo do alimento'), findsOneWidget);
+      await t.tap(find.text('ml'));
+      await t.pump();
+      expect(find.text('1 ml ≈ 1 g (cálculo aproximado)'), findsOneWidget);
+      expect(find.text('por 100 ml'), findsOneWidget);
+      await t.tap(find.text('ADICIONAR ALIMENTO'));
+    });
+    expect(r?.unit, 'ml');
+    expect(r?.grams, 100);
+  });
 }

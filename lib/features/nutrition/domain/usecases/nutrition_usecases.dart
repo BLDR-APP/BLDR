@@ -350,6 +350,7 @@ class UpdateMealQuantity {
   Future<Result<void>> call({
     required MealEntry entry,
     required double newQuantityGrams,
+    String? newUnit,
   }) {
     if (entry.id == null) {
       return Future.value(
@@ -357,6 +358,7 @@ class UpdateMealQuantity {
     }
     final per100g = entry.per100g;
     final updated = entry.copyWith(
+      unit: newUnit,
       quantityGrams: newQuantityGrams,
       macros: FoodItem(
         name: entry.foodName,
@@ -391,6 +393,10 @@ class LogMeal {
     required FoodItem food,
     required double quantityGrams,
     String? createdBy,
+
+    /// Unidade escolhida na porção ('g'/'ml'); padrão = base do alimento.
+    /// A quantidade é usada como gramas (1 ml ≈ 1 g).
+    String? unit,
   }) async {
     final entry = MealEntry(
       userId: userId,
@@ -402,7 +408,7 @@ class LogMeal {
       createdBy: food.createdBy ?? createdBy,
       quantityGrams: quantityGrams,
       macros: food.macrosFor(quantityGrams).rounded(),
-      unit: food.unit,
+      unit: unit ?? food.unit,
     );
 
     final saved = await _diary.addEntry(entry);

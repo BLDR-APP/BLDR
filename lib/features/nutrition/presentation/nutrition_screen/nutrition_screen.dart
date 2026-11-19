@@ -190,6 +190,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
       mealDate: date,
       food: food,
       quantityGrams: portion.grams,
+      unit: portion.unit,
     );
     if (!mounted) return;
     if (r.isFailure) {
@@ -285,7 +286,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
     if (r.remove) return _removeFood(entry);
     final l = AppLocalizations.of(context);
     final res = await getIt<UpdateMealQuantity>()(
-        entry: entry, newQuantityGrams: r.grams);
+        entry: entry, newQuantityGrams: r.grams, newUnit: r.unit);
     if (!mounted) return;
     if (res.isFailure) {
       context.toast.error(l.nutri2_toast_save_error);

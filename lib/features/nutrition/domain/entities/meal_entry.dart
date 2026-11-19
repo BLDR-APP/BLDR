@@ -33,7 +33,8 @@ class MealEntry {
     this.unit = 'g',
   });
 
-  MealEntry copyWith({double? quantityGrams, MacroNutrients? macros}) =>
+  MealEntry copyWith(
+          {double? quantityGrams, MacroNutrients? macros, String? unit}) =>
       MealEntry(
         id: id,
         userId: userId,
@@ -45,7 +46,7 @@ class MealEntry {
         createdBy: createdBy,
         quantityGrams: quantityGrams ?? this.quantityGrams,
         macros: macros ?? this.macros,
-        unit: unit,
+        unit: unit ?? this.unit,
       );
 
   /// Reconstrói os valores por 100g a partir dos totais gravados

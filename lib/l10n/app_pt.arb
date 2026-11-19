@@ -3248,5 +3248,7 @@
   "@nutri2_saved_delete_msg": {"placeholders": {"name": {"type": "String"}}},
   "nutri2_saved_delete_confirm": "Excluir",
   "nutri2_toast_saved_deleted": "Refeição salva excluída",
-  "nutri2_toast_saved_delete_error": "Não foi possível excluir a refeição"
+  "nutri2_toast_saved_delete_error": "Não foi possível excluir a refeição",
+  "nutri2_ml_note": "1 ml ≈ 1 g (cálculo aproximado)",
+  "nutri2_unit_weight_g": "PESO DE 1 UNIDADE (g)"
 }

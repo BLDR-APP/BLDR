@@ -13324,6 +13324,18 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Não foi possível excluir a refeição'**
   String get nutri2_toast_saved_delete_error;
+
+  /// No description provided for @nutri2_ml_note.
+  ///
+  /// In pt, this message translates to:
+  /// **'1 ml ≈ 1 g (cálculo aproximado)'**
+  String get nutri2_ml_note;
+
+  /// No description provided for @nutri2_unit_weight_g.
+  ///
+  /// In pt, this message translates to:
+  /// **'PESO DE 1 UNIDADE (g)'**
+  String get nutri2_unit_weight_g;
 }
 
 class _AppLocalizationsDelegate

@@ -210,7 +210,7 @@ adicionam ao diário reaproveitando `CopyMeal`.
 - Telas estreitas: cards de macro empilhados, macros dos alimentos em 2ª linha, chips em várias linhas, atalhos 2 × 2.
 - Ícone do HAVOK saiu do cabeçalho (acesso pela NavBar).
 - Carrossel de categorias usa as categorias reais de cada base (BR 16; EUA/Canadá 22 cada), não os nomes ilustrativos do Figma.
-- Porção: unidade de medida segue a base do alimento (g ou ml), sem conversão entre elas; campo de peso da unidade aparece no modo Unidade.
+- Porção: g e ml selecionáveis em Porção e Unidade (padrão = base do alimento). Quando difere da base, o cálculo assume **1 ml ≈ 1 g** e mostra a nota; campo de peso da unidade aparece no modo Unidade.
 - Linhas de alimento do catálogo mostram valores por 100 g/ml (a base não tem porção padrão).
 - Refeições salvas: destino por chips (não dropdown); excluir sem frame (estilo de "Remover alimento"); sem edição de nome.
 - Sucesso de adição por toast no topo (não a pílula inferior de 102:307).
@@ -226,6 +226,7 @@ O IQD é calculado na hora, somando os registros do dia, mas usa o **snapshot** 
 
 ### Dívidas conhecidas
 - EUA/Canadá usam **açúcar total** como se fosse adicionado (aproximação aprovada; penaliza mais).
+- ml em alimento de base g (e vice-versa) usa **1 ml ≈ 1 g** (aprovado): erro baixo em bebidas/iogurte, alto em óleo (~8%) e mel (~40%).
 - Dois documentos do BR com chaves digitadas errado (`calories_per_1A00g`, `fat_per_1B00g`) — correção de dados no Firestore.
 - Catálogo em memória por sessão: alimento novo na base só aparece na busca após reabrir o app.
 - Textos fixos fora do `.arb` mantidos na T5 (lista em `TOAST_V2.md` §6).
