@@ -456,6 +456,8 @@ void setupInjection({Map<String, dynamic> config = const {}}) {
       () => GetPublicClubProfile(getIt<ChallengeRepository>()));
   getIt.registerFactory(() => GetMyRankingEntry(getIt<ChallengeRepository>()));
   getIt.registerFactory(() => GetPastChallenges(getIt<ChallengeRepository>()));
+  getIt.registerFactory(
+      () => GetChallengeStandings(getIt<ChallengeRepository>()));
   getIt.registerFactory(() => GetRunActivities(getIt<ClubWorkoutRepository>()));
   getIt.registerFactory(() => SaveRunActivity(getIt<ClubWorkoutRepository>()));
   getIt.registerFactory(() => SaveMatchSession(getIt<ClubWorkoutRepository>()));

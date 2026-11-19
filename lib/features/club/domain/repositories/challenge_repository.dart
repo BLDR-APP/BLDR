@@ -1,4 +1,5 @@
 import 'package:bldr_fitness/core/errors/result.dart';
+import 'package:bldr_fitness/features/club/domain/entities/challenge_hub_rules.dart';
 import 'package:bldr_fitness/features/club/domain/entities/challenges.dart';
 
 /// Comunidade competitiva do Club: feed de XP, ranking, duelos 1x1 e
@@ -78,6 +79,10 @@ abstract class ChallengeRepository {
   Future<Result<void>> addComment(String challengeId, String content);
 
   Future<Result<void>> reportChallenge(String challengeId, String reason);
+
+  /// Minha posição em cada desafio informado (só onde participo).
+  Future<Result<Map<String, ChallengeStanding>>> challengeStandings(
+      List<String> challengeIds);
 
   /// Desafios encerrados nos quais o usuário participou.
   Future<Result<List<PastChallengeEntry>>> pastChallenges({int limit = 20});

@@ -2,6 +2,7 @@ import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/paused_workout_summary.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_session.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_template.dart';
+import 'package:bldr_fitness/features/club/domain/entities/challenge_hub_rules.dart';
 import 'package:bldr_fitness/features/club/domain/entities/challenges.dart';
 import 'package:bldr_fitness/features/club/domain/entities/club_community.dart';
 import 'package:bldr_fitness/features/club/domain/entities/havok_thread.dart';
@@ -712,6 +713,15 @@ class GetMyRankingEntry {
   const GetMyRankingEntry(this._repo);
 
   Future<Result<ClubRankingEntry?>> call() => _repo.myRankingEntry();
+}
+
+class GetChallengeStandings {
+  final ChallengeRepository _repo;
+  const GetChallengeStandings(this._repo);
+
+  Future<Result<Map<String, ChallengeStanding>>> call(
+          List<String> challengeIds) =>
+      _repo.challengeStandings(challengeIds);
 }
 
 class GetPastChallenges {

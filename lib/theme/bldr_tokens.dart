@@ -1243,6 +1243,62 @@ abstract final class BldrCommunityColorsV2 {
   );
 }
 
+/// Desafios (121:893, 141:941, 141:990, 143:1006, 121:960, 121:980, 121:1016).
+abstract final class BldrChallengeColorsV2 {
+  static const cardBorder = Color(0x54C9A227); // rgba(201,162,39,.33)
+  static const rowBorder = Color(0xFF212121);
+  static const cover = Color(0xFF171611);
+  static const track = Color(0xFF292929);
+  static const fill = Color(0xFFC9A227);
+  static const fillStart = Color(0xFF7A641A);
+  static const done = Color(0xFF33C766);
+  static const pillBg = Color(0xFF1F1F1F);
+  static const pillBorder = Color(0xFF474747);
+  static const chipOnBg = Color(0x1FD4AF37); // rgba(212,175,55,.12)
+  static const chipOffBorder = Color(0xFF404040);
+  static const selectBg = Color(0xFF0B0B0B);
+  static const selectBorder = Color(0x54D4AF37); // rgba(212,175,55,.33)
+}
+
+abstract final class BldrChallengeTextV2 {
+  static TextStyle _s(double step, FontWeight w, Color c) =>
+      BldrTextV2.scale(step, w, c);
+  static const _b = FontWeight.w700, _sb = FontWeight.w600, _r = FontWeight.w400;
+  static const _c = BldrCommunityColorsV2.text;
+  static const _mu = BldrCommunityColorsV2.muted;
+  static const _g = BldrChallengeColorsV2.fill;
+
+  static final heading = _s(BldrTextV2.s24, _b, _c); // 22
+  static final subtitle =
+      _s(BldrTextV2.s12, _r, BldrCommunityColorsV2.composeMuted); // 12
+  static final create = _s(BldrTextV2.s11, _sb, BldrCommunityColorsV2.goldBrand); // 11
+  static final tabOn = _s(BldrTextV2.s13, _sb, _g); // 13
+  static final tabOff = _s(BldrTextV2.s13, _r, _mu); // 13
+  static final section = _s(BldrTextV2.s11, _sb, _mu); // 9-10
+  static final featured = _s(BldrTextV2.s15, _b, _c); // 15
+  static final cardTitle = _s(BldrTextV2.s13, _b, _c); // 13
+  static final smallTitle = _s(BldrTextV2.s11, _b, _c); // 11
+  static final meta = _s(BldrTextV2.s11, _r, _mu); // 8-9
+  static final progress = _s(BldrTextV2.s12, _b, _c); // 12
+  static final rank = _s(BldrTextV2.s11, _b, BldrCommunityColorsV2.gold); // 10
+  static final goal = _s(BldrTextV2.s11, _sb, _g); // 10
+  static final cta = _s(BldrTextV2.s11, _sb, BldrCommunityColorsV2.gold); // 9
+  static final pill = _s(BldrTextV2.s11, _sb, _mu); // 8
+  static final position = _s(BldrTextV2.s17, _b, _c); // 17
+  static final positionSm = _s(BldrTextV2.s15, _b, _c); // 14
+  static final sheetBody = _s(BldrTextV2.s11, _r, _c); // 10
+  static final step = _s(BldrTextV2.s11, _sb, BldrCommunityColorsV2.gold); // 8
+  static final pickerTitle = _s(BldrTextV2.s11, _sb, _c); // 11
+  static final selectTitle = _s(BldrTextV2.s13, _sb, _c); // 13
+  static final targetValue = _s(BldrTextV2.s20, _b, _c); // 20
+  static final durationValue = _s(BldrTextV2.s15, _sb, _c); // 15
+  static final chipOn = _s(BldrTextV2.s11, _sb, BldrCommunityColorsV2.goldBrand); // 9
+  static final chipOff = _s(BldrTextV2.s11, _sb, _mu); // 9
+  static final infoValue = _s(BldrTextV2.s11, _r, _c); // 10
+  static final reviewValue = _s(BldrTextV2.s11, _b, _c); // 11
+  static final reviewNote = _s(BldrTextV2.s11, _sb, _c); // 9
+}
+
 abstract final class BldrCommunityTextV2 {
   static TextStyle _s(double step, FontWeight w, Color c) =>
       BldrTextV2.scale(step, w, c);

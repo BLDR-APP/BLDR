@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 
 import 'package:bldr_fitness/core/errors/failure.dart';
 import 'package:bldr_fitness/core/errors/result.dart';
+import 'package:bldr_fitness/features/club/domain/entities/challenge_hub_rules.dart';
 import 'package:bldr_fitness/features/club/domain/entities/challenges.dart';
 import 'package:bldr_fitness/features/club/domain/repositories/challenge_repository.dart';
 import 'package:bldr_fitness/features/club/data/datasources/supabase_challenges_datasource.dart';
@@ -193,6 +194,7 @@ class ChallengeRepositoryImpl implements ChallengeRepository {
                 isOfficial: c['is_official'] as bool? ?? false,
                 participantCount: counts[id] ?? 0,
                 joined: joined.contains(id),
+                createdAt: DateTime.tryParse(c['created_at']?.toString() ?? ''),
               );
             })
             .where((c) => c.endsAt == null || c.endsAt!.isAfter(now))
@@ -610,6 +612,25 @@ class ChallengeRepositoryImpl implements ChallengeRepository {
       });
 
   @override
+  Future<Result<Map<String, ChallengeStanding>>> challengeStandings(
+          List<String> challengeIds) =>
+      _guard(() async {
+        if (challengeIds.isEmpty) return <String, ChallengeStanding>{};
+        final uid = _requireUser();
+        final rows = await _datasource.participantContributions(challengeIds);
+        final byChallenge = <String, Map<String, int>>{};
+        for (final r in rows) {
+          (byChallenge[r['challenge_id'].toString()] ??= {})[
+              r['user_id'].toString()] = (r['contribution'] as num?)?.toInt() ?? 0;
+        }
+        return {
+          for (final e in byChallenge.entries)
+            if (ChallengeHubRules.standing(e.value, uid) case final s?)
+              e.key: s,
+        };
+      });
+
+  @override
   Future<Result<List<PastChallengeEntry>>> pastChallenges({int limit = 20}) =>
       _guard(() async {
         final uid = _requireUser();
@@ -620,6 +641,8 @@ class ChallengeRepositoryImpl implements ChallengeRepository {
             title: (r['title'] as String?) ?? '',
             description: r['description'] as String?,
             challengeType: r['challenge_type'] as String?,
+            targetValue: r['target_value'] as num?,
+            currentValue: r['current_value'] as num?,
             rewardXp: (r['reward_xp'] as num?)?.toInt(),
             coverImageUrl: r['cover_image_url'] as String?,
             endsAt: DateTime.tryParse(r['ends_at']?.toString() ?? ''),

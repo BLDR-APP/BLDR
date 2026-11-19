@@ -8,7 +8,7 @@ import 'package:bldr_fitness/design_system/bldr_community_v2_components.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/features/club/domain/repositories/arena_repository.dart';
 import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
-import 'package:bldr_fitness/features/club/presentation/bldr_club/create_collective_challenge_screen.dart';
+import 'package:bldr_fitness/features/club/presentation/bldr_club/challenges_v2/challenges_hub_screen.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/notifications_screen.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_post.dart';
 import 'package:bldr_fitness/features/community/domain/repositories/community_feed_repository.dart';
@@ -363,15 +363,10 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
           BldrCommunityShortcut(
             icon: TablerIcons.target_arrow,
             semanticLabel: l10n.comm_shortcut_challenges,
-            onTap: () async {
-              final created = await Navigator.push<bool>(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const CreateCollectiveChallengeScreen(),
-                ),
-              );
-              if (created == true) _loadFeed(refresh: true);
-            },
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const ChallengesHubScreen()),
+            ),
           ),
           BldrCommunityShortcut(
             icon: TablerIcons.trophy,

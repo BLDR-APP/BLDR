@@ -125,7 +125,7 @@ class SupabaseChallengesDatasource {
         .schema('bldr_club')
         .from('collective_challenges')
         .select(
-            'id, title, description, challenge_type, target_value, current_value, reward_xp, reward_badge, cover_image_url, ends_at, status, created_by, is_official')
+            'id, title, description, challenge_type, target_value, current_value, reward_xp, reward_badge, cover_image_url, ends_at, status, created_by, is_official, created_at')
         .eq('status', 'active')
         .order('created_at', ascending: false)
         .limit(limit);
@@ -154,7 +154,7 @@ class SupabaseChallengesDatasource {
         .schema('bldr_club')
         .from('collective_challenges')
         .select(
-            'id, title, description, challenge_type, ends_at, status, reward_xp, cover_image_url')
+            'id, title, description, challenge_type, target_value, current_value, ends_at, status, reward_xp, cover_image_url')
         .inFilter('id', challengeIds)
         .order('ends_at', ascending: false)
         .limit(limit);
@@ -187,6 +187,16 @@ class SupabaseChallengesDatasource {
     return counts;
   }
 
+  Future<List<Map<String, dynamic>>> participantContributions(
+      List<String> challengeIds) async {
+    final rows = await _client
+        .schema('bldr_club')
+        .from('collective_challenge_participants')
+        .select('challenge_id, user_id, contribution')
+        .inFilter('challenge_id', challengeIds);
+    return List<Map<String, dynamic>>.from(rows);
+  }
+
   Future<Set<String>> joinedChallengeIds(
       String userId, List<String> challengeIds) async {
     final rows = await _client
@@ -211,15 +221,20 @@ class SupabaseChallengesDatasource {
   /// como no comportamento original).
   Future<String?> uploadChallengeCover(String userId, String filePath) async {
     try {
-      final ext = filePath.split('.').last;
+      final ext = filePath.split('.').last.toLowerCase();
+      final isPng = ext == 'png';
+      // A policy do bucket exige a pasta <auth.uid()>/.
       final path =
-          'collective_challenges/${userId}_${DateTime.now().millisecondsSinceEpoch}.$ext';
-      await _client.storage.from('Images').upload(
+          '$userId/${DateTime.now().millisecondsSinceEpoch}.${isPng ? 'png' : 'jpg'}';
+      await _client.storage.from('challenge-covers').upload(
             path,
             File(filePath),
-            fileOptions: const FileOptions(upsert: true),
+            fileOptions: FileOptions(
+              upsert: true,
+              contentType: isPng ? 'image/png' : 'image/jpeg',
+            ),
           );
-      return _client.storage.from('Images').getPublicUrl(path);
+      return _client.storage.from('challenge-covers').getPublicUrl(path);
     } catch (_) {
       return null;
     }

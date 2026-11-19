@@ -6233,4 +6233,276 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get sq_ended => 'Squad encerrado.';
+
+  @override
+  String get chal_title => 'Desafios';
+
+  @override
+  String get chal_subtitle => 'Compita, evolua e acompanhe seu progresso.';
+
+  @override
+  String get chal_create => 'Criar';
+
+  @override
+  String get chal_tab_active => 'ATIVOS';
+
+  @override
+  String get chal_tab_discover => 'DESCOBRIR';
+
+  @override
+  String get chal_tab_done => 'CONCLUÍDOS';
+
+  @override
+  String get chal_sec_featured => 'EM DESTAQUE';
+
+  @override
+  String get chal_sec_others => 'OUTROS DESAFIOS';
+
+  @override
+  String get chal_sec_ending => 'PRÓXIMOS A TERMINAR';
+
+  @override
+  String get chal_sec_recommended => 'RECOMENDADOS PARA VOCÊ';
+
+  @override
+  String get chal_sec_trending => 'EM ALTA';
+
+  @override
+  String get chal_sec_new => 'NOVOS DESAFIOS';
+
+  @override
+  String get chal_sec_last => 'ÚLTIMO RESULTADO';
+
+  @override
+  String get chal_sec_history => 'HISTÓRICO';
+
+  @override
+  String chal_days_left(int days) {
+    return '$days dias restantes';
+  }
+
+  @override
+  String get chal_last_day => 'Último dia';
+
+  @override
+  String chal_participants(String a) {
+    return '$a participantes';
+  }
+
+  @override
+  String chal_ends_in(int days, int pct) {
+    return 'Termina em $days dias · $pct% concluído';
+  }
+
+  @override
+  String get chal_view => 'VER DESAFIO';
+
+  @override
+  String chal_prog_xp(String a, String b) {
+    return '$a / $b XP';
+  }
+
+  @override
+  String chal_prog_workouts(String a, String b) {
+    return '$a / $b treinos';
+  }
+
+  @override
+  String chal_prog_streak(String a, String b) {
+    return '$a / $b dias';
+  }
+
+  @override
+  String chal_goal(String a) {
+    return 'META · $a';
+  }
+
+  @override
+  String chal_unit_xp(String a) {
+    return '$a XP';
+  }
+
+  @override
+  String chal_unit_workouts(String a) {
+    return '$a treinos';
+  }
+
+  @override
+  String chal_unit_streak(String a) {
+    return '$a dias de streak';
+  }
+
+  @override
+  String chal_duration_days(int days) {
+    return '$days dias';
+  }
+
+  @override
+  String chal_ended_on(String a) {
+    return 'Encerrado em $a';
+  }
+
+  @override
+  String get chal_ended => 'ENCERRADO';
+
+  @override
+  String get chal_position => 'POSIÇÃO';
+
+  @override
+  String chal_of_total(String a) {
+    return 'de $a';
+  }
+
+  @override
+  String get chal_empty_active => 'Você ainda não participa de nenhum desafio.';
+
+  @override
+  String get chal_empty_discover => 'Nenhum desafio novo por aqui agora.';
+
+  @override
+  String get chal_empty_done => 'Seus desafios encerrados aparecem aqui.';
+
+  @override
+  String get chal_load_error => 'Não foi possível carregar os desafios.';
+
+  @override
+  String get chal_retry => 'TENTAR NOVAMENTE';
+
+  @override
+  String get chal_how => 'COMO FUNCIONA';
+
+  @override
+  String get chal_how_xp =>
+      'Cada XP ganho durante o desafio soma para a meta do grupo.';
+
+  @override
+  String get chal_how_workouts =>
+      'Cada treino concluído durante o desafio soma para a meta do grupo.';
+
+  @override
+  String get chal_how_streak =>
+      'Sua maior sequência de dias treinados durante o desafio soma para a meta do grupo.';
+
+  @override
+  String get chal_join => 'PARTICIPAR DO DESAFIO';
+
+  @override
+  String get chal_see_all => 'VER TUDO';
+
+  @override
+  String get chal_new_title => 'Criar desafio';
+
+  @override
+  String get chal_step1 => '1 DE 3 · DETALHES';
+
+  @override
+  String get chal_step2 => '2 DE 3 · REGRAS';
+
+  @override
+  String get chal_step3 => '3 DE 3 · REVISÃO';
+
+  @override
+  String get chal_cover => 'IMAGEM DE CAPA';
+
+  @override
+  String get chal_cover_add => 'Adicionar imagem de capa';
+
+  @override
+  String get chal_cover_hint => 'JPG ou PNG · até 5 MB';
+
+  @override
+  String get chal_cover_big => 'A imagem precisa ter até 5 MB.';
+
+  @override
+  String get chal_cover_note =>
+      'A capa aparecerá no Hub e no detalhe do desafio.';
+
+  @override
+  String get chal_name => 'NOME DO DESAFIO';
+
+  @override
+  String get chal_name_hint => 'Ex.: 30 dias sem falhar';
+
+  @override
+  String get chal_desc => 'DESCRIÇÃO';
+
+  @override
+  String get chal_desc_hint => 'Explique a proposta do desafio...';
+
+  @override
+  String get chal_continue => 'CONTINUAR';
+
+  @override
+  String get chal_counts => 'O QUE CONTA?';
+
+  @override
+  String get chal_metric_workouts => 'Treinos concluídos';
+
+  @override
+  String get chal_metric_workouts_sub => 'Cada treino finalizado no BLDR';
+
+  @override
+  String get chal_metric_streak => 'Maior streak';
+
+  @override
+  String get chal_metric_streak_sub => 'Consistência por dias seguidos';
+
+  @override
+  String get chal_metric_xp => 'XP acumulado';
+
+  @override
+  String get chal_metric_xp_sub => 'Todo XP ganho durante o desafio';
+
+  @override
+  String get chal_goal_label => 'META';
+
+  @override
+  String get chal_duration => 'Duração';
+
+  @override
+  String get chal_duration_upper => 'DURAÇÃO';
+
+  @override
+  String get chal_who => 'QUEM PODE PARTICIPAR?';
+
+  @override
+  String get chal_public => 'PÚBLICO';
+
+  @override
+  String get chal_friends_soon => 'AMIGOS · EM BREVE';
+
+  @override
+  String get chal_squad_soon => 'SQUAD · EM BREVE';
+
+  @override
+  String get chal_public_note =>
+      'Desafios públicos podem aparecer em Descobrir.';
+
+  @override
+  String get chal_metrics_title => 'Métricas disponíveis';
+
+  @override
+  String get chal_metrics_list =>
+      'Treinos concluídos · Maior streak · XP acumulado';
+
+  @override
+  String chal_review_meta(String a, int days) {
+    return '$a · $days dias de duração';
+  }
+
+  @override
+  String get chal_before => 'ANTES DE PUBLICAR';
+
+  @override
+  String get chal_before_title => 'O desafio começa quando você publicar.';
+
+  @override
+  String get chal_before_body =>
+      'Depois de publicar, você poderá ajustar a meta na tela do desafio. A métrica principal não muda.';
+
+  @override
+  String get chal_publish => 'PUBLICAR DESAFIO';
+
+  @override
+  String get chal_publishing => 'PUBLICANDO...';
 }

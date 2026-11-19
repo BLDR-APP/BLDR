@@ -6197,4 +6197,275 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sq_ended => 'Squad ended.';
+
+  @override
+  String get chal_title => 'Challenges';
+
+  @override
+  String get chal_subtitle => 'Compete, improve and track your progress.';
+
+  @override
+  String get chal_create => 'Create';
+
+  @override
+  String get chal_tab_active => 'ACTIVE';
+
+  @override
+  String get chal_tab_discover => 'DISCOVER';
+
+  @override
+  String get chal_tab_done => 'COMPLETED';
+
+  @override
+  String get chal_sec_featured => 'FEATURED';
+
+  @override
+  String get chal_sec_others => 'OTHER CHALLENGES';
+
+  @override
+  String get chal_sec_ending => 'ENDING SOON';
+
+  @override
+  String get chal_sec_recommended => 'RECOMMENDED FOR YOU';
+
+  @override
+  String get chal_sec_trending => 'TRENDING';
+
+  @override
+  String get chal_sec_new => 'NEW CHALLENGES';
+
+  @override
+  String get chal_sec_last => 'LATEST RESULT';
+
+  @override
+  String get chal_sec_history => 'HISTORY';
+
+  @override
+  String chal_days_left(int days) {
+    return '$days days left';
+  }
+
+  @override
+  String get chal_last_day => 'Last day';
+
+  @override
+  String chal_participants(String a) {
+    return '$a participants';
+  }
+
+  @override
+  String chal_ends_in(int days, int pct) {
+    return 'Ends in $days days · $pct% complete';
+  }
+
+  @override
+  String get chal_view => 'VIEW CHALLENGE';
+
+  @override
+  String chal_prog_xp(String a, String b) {
+    return '$a / $b XP';
+  }
+
+  @override
+  String chal_prog_workouts(String a, String b) {
+    return '$a / $b workouts';
+  }
+
+  @override
+  String chal_prog_streak(String a, String b) {
+    return '$a / $b days';
+  }
+
+  @override
+  String chal_goal(String a) {
+    return 'GOAL · $a';
+  }
+
+  @override
+  String chal_unit_xp(String a) {
+    return '$a XP';
+  }
+
+  @override
+  String chal_unit_workouts(String a) {
+    return '$a workouts';
+  }
+
+  @override
+  String chal_unit_streak(String a) {
+    return '$a streak days';
+  }
+
+  @override
+  String chal_duration_days(int days) {
+    return '$days days';
+  }
+
+  @override
+  String chal_ended_on(String a) {
+    return 'Ended on $a';
+  }
+
+  @override
+  String get chal_ended => 'ENDED';
+
+  @override
+  String get chal_position => 'POSITION';
+
+  @override
+  String chal_of_total(String a) {
+    return 'of $a';
+  }
+
+  @override
+  String get chal_empty_active => 'You haven\'t joined any challenge yet.';
+
+  @override
+  String get chal_empty_discover => 'No new challenges right now.';
+
+  @override
+  String get chal_empty_done => 'Your finished challenges show up here.';
+
+  @override
+  String get chal_load_error => 'Couldn\'t load challenges.';
+
+  @override
+  String get chal_retry => 'TRY AGAIN';
+
+  @override
+  String get chal_how => 'HOW IT WORKS';
+
+  @override
+  String get chal_how_xp =>
+      'Every XP earned during the challenge counts toward the group goal.';
+
+  @override
+  String get chal_how_workouts =>
+      'Every workout completed during the challenge counts toward the group goal.';
+
+  @override
+  String get chal_how_streak =>
+      'Your longest training streak during the challenge counts toward the group goal.';
+
+  @override
+  String get chal_join => 'JOIN CHALLENGE';
+
+  @override
+  String get chal_see_all => 'SEE ALL';
+
+  @override
+  String get chal_new_title => 'Create challenge';
+
+  @override
+  String get chal_step1 => '1 OF 3 · DETAILS';
+
+  @override
+  String get chal_step2 => '2 OF 3 · RULES';
+
+  @override
+  String get chal_step3 => '3 OF 3 · REVIEW';
+
+  @override
+  String get chal_cover => 'COVER IMAGE';
+
+  @override
+  String get chal_cover_add => 'Add cover image';
+
+  @override
+  String get chal_cover_hint => 'JPG or PNG · up to 5 MB';
+
+  @override
+  String get chal_cover_big => 'The image must be 5 MB or less.';
+
+  @override
+  String get chal_cover_note =>
+      'The cover appears in the Hub and on the challenge details.';
+
+  @override
+  String get chal_name => 'CHALLENGE NAME';
+
+  @override
+  String get chal_name_hint => 'E.g. 30 days without missing';
+
+  @override
+  String get chal_desc => 'DESCRIPTION';
+
+  @override
+  String get chal_desc_hint => 'Explain what the challenge is about...';
+
+  @override
+  String get chal_continue => 'CONTINUE';
+
+  @override
+  String get chal_counts => 'WHAT COUNTS?';
+
+  @override
+  String get chal_metric_workouts => 'Completed workouts';
+
+  @override
+  String get chal_metric_workouts_sub => 'Each workout finished in BLDR';
+
+  @override
+  String get chal_metric_streak => 'Longest streak';
+
+  @override
+  String get chal_metric_streak_sub => 'Consistency over consecutive days';
+
+  @override
+  String get chal_metric_xp => 'Accumulated XP';
+
+  @override
+  String get chal_metric_xp_sub => 'All XP earned during the challenge';
+
+  @override
+  String get chal_goal_label => 'GOAL';
+
+  @override
+  String get chal_duration => 'Duration';
+
+  @override
+  String get chal_duration_upper => 'DURATION';
+
+  @override
+  String get chal_who => 'WHO CAN JOIN?';
+
+  @override
+  String get chal_public => 'PUBLIC';
+
+  @override
+  String get chal_friends_soon => 'FRIENDS · SOON';
+
+  @override
+  String get chal_squad_soon => 'SQUAD · SOON';
+
+  @override
+  String get chal_public_note => 'Public challenges may appear in Discover.';
+
+  @override
+  String get chal_metrics_title => 'Available metrics';
+
+  @override
+  String get chal_metrics_list =>
+      'Completed workouts · Longest streak · Accumulated XP';
+
+  @override
+  String chal_review_meta(String a, int days) {
+    return '$a · $days days long';
+  }
+
+  @override
+  String get chal_before => 'BEFORE PUBLISHING';
+
+  @override
+  String get chal_before_title => 'The challenge starts when you publish.';
+
+  @override
+  String get chal_before_body =>
+      'After publishing you can adjust the goal on the challenge screen. The main metric can\'t change.';
+
+  @override
+  String get chal_publish => 'PUBLISH CHALLENGE';
+
+  @override
+  String get chal_publishing => 'PUBLISHING...';
 }

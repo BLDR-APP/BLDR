@@ -11164,6 +11164,480 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Squad encerrado.'**
   String get sq_ended;
+
+  /// No description provided for @chal_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desafios'**
+  String get chal_title;
+
+  /// No description provided for @chal_subtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Compita, evolua e acompanhe seu progresso.'**
+  String get chal_subtitle;
+
+  /// No description provided for @chal_create.
+  ///
+  /// In pt, this message translates to:
+  /// **'Criar'**
+  String get chal_create;
+
+  /// No description provided for @chal_tab_active.
+  ///
+  /// In pt, this message translates to:
+  /// **'ATIVOS'**
+  String get chal_tab_active;
+
+  /// No description provided for @chal_tab_discover.
+  ///
+  /// In pt, this message translates to:
+  /// **'DESCOBRIR'**
+  String get chal_tab_discover;
+
+  /// No description provided for @chal_tab_done.
+  ///
+  /// In pt, this message translates to:
+  /// **'CONCLUÍDOS'**
+  String get chal_tab_done;
+
+  /// No description provided for @chal_sec_featured.
+  ///
+  /// In pt, this message translates to:
+  /// **'EM DESTAQUE'**
+  String get chal_sec_featured;
+
+  /// No description provided for @chal_sec_others.
+  ///
+  /// In pt, this message translates to:
+  /// **'OUTROS DESAFIOS'**
+  String get chal_sec_others;
+
+  /// No description provided for @chal_sec_ending.
+  ///
+  /// In pt, this message translates to:
+  /// **'PRÓXIMOS A TERMINAR'**
+  String get chal_sec_ending;
+
+  /// No description provided for @chal_sec_recommended.
+  ///
+  /// In pt, this message translates to:
+  /// **'RECOMENDADOS PARA VOCÊ'**
+  String get chal_sec_recommended;
+
+  /// No description provided for @chal_sec_trending.
+  ///
+  /// In pt, this message translates to:
+  /// **'EM ALTA'**
+  String get chal_sec_trending;
+
+  /// No description provided for @chal_sec_new.
+  ///
+  /// In pt, this message translates to:
+  /// **'NOVOS DESAFIOS'**
+  String get chal_sec_new;
+
+  /// No description provided for @chal_sec_last.
+  ///
+  /// In pt, this message translates to:
+  /// **'ÚLTIMO RESULTADO'**
+  String get chal_sec_last;
+
+  /// No description provided for @chal_sec_history.
+  ///
+  /// In pt, this message translates to:
+  /// **'HISTÓRICO'**
+  String get chal_sec_history;
+
+  /// No description provided for @chal_days_left.
+  ///
+  /// In pt, this message translates to:
+  /// **'{days} dias restantes'**
+  String chal_days_left(int days);
+
+  /// No description provided for @chal_last_day.
+  ///
+  /// In pt, this message translates to:
+  /// **'Último dia'**
+  String get chal_last_day;
+
+  /// No description provided for @chal_participants.
+  ///
+  /// In pt, this message translates to:
+  /// **'{a} participantes'**
+  String chal_participants(String a);
+
+  /// No description provided for @chal_ends_in.
+  ///
+  /// In pt, this message translates to:
+  /// **'Termina em {days} dias · {pct}% concluído'**
+  String chal_ends_in(int days, int pct);
+
+  /// No description provided for @chal_view.
+  ///
+  /// In pt, this message translates to:
+  /// **'VER DESAFIO'**
+  String get chal_view;
+
+  /// No description provided for @chal_prog_xp.
+  ///
+  /// In pt, this message translates to:
+  /// **'{a} / {b} XP'**
+  String chal_prog_xp(String a, String b);
+
+  /// No description provided for @chal_prog_workouts.
+  ///
+  /// In pt, this message translates to:
+  /// **'{a} / {b} treinos'**
+  String chal_prog_workouts(String a, String b);
+
+  /// No description provided for @chal_prog_streak.
+  ///
+  /// In pt, this message translates to:
+  /// **'{a} / {b} dias'**
+  String chal_prog_streak(String a, String b);
+
+  /// No description provided for @chal_goal.
+  ///
+  /// In pt, this message translates to:
+  /// **'META · {a}'**
+  String chal_goal(String a);
+
+  /// No description provided for @chal_unit_xp.
+  ///
+  /// In pt, this message translates to:
+  /// **'{a} XP'**
+  String chal_unit_xp(String a);
+
+  /// No description provided for @chal_unit_workouts.
+  ///
+  /// In pt, this message translates to:
+  /// **'{a} treinos'**
+  String chal_unit_workouts(String a);
+
+  /// No description provided for @chal_unit_streak.
+  ///
+  /// In pt, this message translates to:
+  /// **'{a} dias de streak'**
+  String chal_unit_streak(String a);
+
+  /// No description provided for @chal_duration_days.
+  ///
+  /// In pt, this message translates to:
+  /// **'{days} dias'**
+  String chal_duration_days(int days);
+
+  /// No description provided for @chal_ended_on.
+  ///
+  /// In pt, this message translates to:
+  /// **'Encerrado em {a}'**
+  String chal_ended_on(String a);
+
+  /// No description provided for @chal_ended.
+  ///
+  /// In pt, this message translates to:
+  /// **'ENCERRADO'**
+  String get chal_ended;
+
+  /// No description provided for @chal_position.
+  ///
+  /// In pt, this message translates to:
+  /// **'POSIÇÃO'**
+  String get chal_position;
+
+  /// No description provided for @chal_of_total.
+  ///
+  /// In pt, this message translates to:
+  /// **'de {a}'**
+  String chal_of_total(String a);
+
+  /// No description provided for @chal_empty_active.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você ainda não participa de nenhum desafio.'**
+  String get chal_empty_active;
+
+  /// No description provided for @chal_empty_discover.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum desafio novo por aqui agora.'**
+  String get chal_empty_discover;
+
+  /// No description provided for @chal_empty_done.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seus desafios encerrados aparecem aqui.'**
+  String get chal_empty_done;
+
+  /// No description provided for @chal_load_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível carregar os desafios.'**
+  String get chal_load_error;
+
+  /// No description provided for @chal_retry.
+  ///
+  /// In pt, this message translates to:
+  /// **'TENTAR NOVAMENTE'**
+  String get chal_retry;
+
+  /// No description provided for @chal_how.
+  ///
+  /// In pt, this message translates to:
+  /// **'COMO FUNCIONA'**
+  String get chal_how;
+
+  /// No description provided for @chal_how_xp.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cada XP ganho durante o desafio soma para a meta do grupo.'**
+  String get chal_how_xp;
+
+  /// No description provided for @chal_how_workouts.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cada treino concluído durante o desafio soma para a meta do grupo.'**
+  String get chal_how_workouts;
+
+  /// No description provided for @chal_how_streak.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sua maior sequência de dias treinados durante o desafio soma para a meta do grupo.'**
+  String get chal_how_streak;
+
+  /// No description provided for @chal_join.
+  ///
+  /// In pt, this message translates to:
+  /// **'PARTICIPAR DO DESAFIO'**
+  String get chal_join;
+
+  /// No description provided for @chal_see_all.
+  ///
+  /// In pt, this message translates to:
+  /// **'VER TUDO'**
+  String get chal_see_all;
+
+  /// No description provided for @chal_new_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Criar desafio'**
+  String get chal_new_title;
+
+  /// No description provided for @chal_step1.
+  ///
+  /// In pt, this message translates to:
+  /// **'1 DE 3 · DETALHES'**
+  String get chal_step1;
+
+  /// No description provided for @chal_step2.
+  ///
+  /// In pt, this message translates to:
+  /// **'2 DE 3 · REGRAS'**
+  String get chal_step2;
+
+  /// No description provided for @chal_step3.
+  ///
+  /// In pt, this message translates to:
+  /// **'3 DE 3 · REVISÃO'**
+  String get chal_step3;
+
+  /// No description provided for @chal_cover.
+  ///
+  /// In pt, this message translates to:
+  /// **'IMAGEM DE CAPA'**
+  String get chal_cover;
+
+  /// No description provided for @chal_cover_add.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar imagem de capa'**
+  String get chal_cover_add;
+
+  /// No description provided for @chal_cover_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'JPG ou PNG · até 5 MB'**
+  String get chal_cover_hint;
+
+  /// No description provided for @chal_cover_big.
+  ///
+  /// In pt, this message translates to:
+  /// **'A imagem precisa ter até 5 MB.'**
+  String get chal_cover_big;
+
+  /// No description provided for @chal_cover_note.
+  ///
+  /// In pt, this message translates to:
+  /// **'A capa aparecerá no Hub e no detalhe do desafio.'**
+  String get chal_cover_note;
+
+  /// No description provided for @chal_name.
+  ///
+  /// In pt, this message translates to:
+  /// **'NOME DO DESAFIO'**
+  String get chal_name;
+
+  /// No description provided for @chal_name_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ex.: 30 dias sem falhar'**
+  String get chal_name_hint;
+
+  /// No description provided for @chal_desc.
+  ///
+  /// In pt, this message translates to:
+  /// **'DESCRIÇÃO'**
+  String get chal_desc;
+
+  /// No description provided for @chal_desc_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Explique a proposta do desafio...'**
+  String get chal_desc_hint;
+
+  /// No description provided for @chal_continue.
+  ///
+  /// In pt, this message translates to:
+  /// **'CONTINUAR'**
+  String get chal_continue;
+
+  /// No description provided for @chal_counts.
+  ///
+  /// In pt, this message translates to:
+  /// **'O QUE CONTA?'**
+  String get chal_counts;
+
+  /// No description provided for @chal_metric_workouts.
+  ///
+  /// In pt, this message translates to:
+  /// **'Treinos concluídos'**
+  String get chal_metric_workouts;
+
+  /// No description provided for @chal_metric_workouts_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cada treino finalizado no BLDR'**
+  String get chal_metric_workouts_sub;
+
+  /// No description provided for @chal_metric_streak.
+  ///
+  /// In pt, this message translates to:
+  /// **'Maior streak'**
+  String get chal_metric_streak;
+
+  /// No description provided for @chal_metric_streak_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Consistência por dias seguidos'**
+  String get chal_metric_streak_sub;
+
+  /// No description provided for @chal_metric_xp.
+  ///
+  /// In pt, this message translates to:
+  /// **'XP acumulado'**
+  String get chal_metric_xp;
+
+  /// No description provided for @chal_metric_xp_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todo XP ganho durante o desafio'**
+  String get chal_metric_xp_sub;
+
+  /// No description provided for @chal_goal_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'META'**
+  String get chal_goal_label;
+
+  /// No description provided for @chal_duration.
+  ///
+  /// In pt, this message translates to:
+  /// **'Duração'**
+  String get chal_duration;
+
+  /// No description provided for @chal_duration_upper.
+  ///
+  /// In pt, this message translates to:
+  /// **'DURAÇÃO'**
+  String get chal_duration_upper;
+
+  /// No description provided for @chal_who.
+  ///
+  /// In pt, this message translates to:
+  /// **'QUEM PODE PARTICIPAR?'**
+  String get chal_who;
+
+  /// No description provided for @chal_public.
+  ///
+  /// In pt, this message translates to:
+  /// **'PÚBLICO'**
+  String get chal_public;
+
+  /// No description provided for @chal_friends_soon.
+  ///
+  /// In pt, this message translates to:
+  /// **'AMIGOS · EM BREVE'**
+  String get chal_friends_soon;
+
+  /// No description provided for @chal_squad_soon.
+  ///
+  /// In pt, this message translates to:
+  /// **'SQUAD · EM BREVE'**
+  String get chal_squad_soon;
+
+  /// No description provided for @chal_public_note.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desafios públicos podem aparecer em Descobrir.'**
+  String get chal_public_note;
+
+  /// No description provided for @chal_metrics_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Métricas disponíveis'**
+  String get chal_metrics_title;
+
+  /// No description provided for @chal_metrics_list.
+  ///
+  /// In pt, this message translates to:
+  /// **'Treinos concluídos · Maior streak · XP acumulado'**
+  String get chal_metrics_list;
+
+  /// No description provided for @chal_review_meta.
+  ///
+  /// In pt, this message translates to:
+  /// **'{a} · {days} dias de duração'**
+  String chal_review_meta(String a, int days);
+
+  /// No description provided for @chal_before.
+  ///
+  /// In pt, this message translates to:
+  /// **'ANTES DE PUBLICAR'**
+  String get chal_before;
+
+  /// No description provided for @chal_before_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'O desafio começa quando você publicar.'**
+  String get chal_before_title;
+
+  /// No description provided for @chal_before_body.
+  ///
+  /// In pt, this message translates to:
+  /// **'Depois de publicar, você poderá ajustar a meta na tela do desafio. A métrica principal não muda.'**
+  String get chal_before_body;
+
+  /// No description provided for @chal_publish.
+  ///
+  /// In pt, this message translates to:
+  /// **'PUBLICAR DESAFIO'**
+  String get chal_publish;
+
+  /// No description provided for @chal_publishing.
+  ///
+  /// In pt, this message translates to:
+  /// **'PUBLICANDO...'**
+  String get chal_publishing;
 }
 
 class _AppLocalizationsDelegate
