@@ -109,7 +109,7 @@ e vazou. Plano:
 
 **Decisão (17/11/2026):** B13 executar junto com o build de lançamento do
 rebranding, antes de desativar as chaves legadas. A migration
-`20261117000032_b13_tribunal_notification_vault.sql` fica como proposta, sem
+`docs/redesign/pendente/20261117000032_b13_tribunal_notification_vault.sql` fica como proposta, sem
 aplicar. Até lá, nada na Comunidade cria notificações novas nem altera o chat
 do squad ou o trigger `tribunal-notification` (eventos de squad, "subiu no
 ranking", anexo no chat).
