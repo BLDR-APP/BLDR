@@ -108,10 +108,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
 
   Future<void> _save() async {
     if (!_macrosValid) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(AppLocalizations.of(context)!.goals_macros_exceed),
-        backgroundColor: Colors.redAccent,
-      ));
+      context.toast.warning(AppLocalizations.of(context)!.goals_macros_exceed);
       return;
     }
     setState(() => _saving = true);

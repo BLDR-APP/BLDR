@@ -1,4 +1,5 @@
 import 'package:fl_chart/fl_chart.dart';
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
@@ -304,21 +305,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             if (updatedProfile != null) {
               setState(() => _userProfile = updatedProfile);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(AppLocalizations.of(context)!.profile_updated),
-                  backgroundColor: AppTheme.successGreen,
-                ),
-              );
+              context.toast.success(AppLocalizations.of(context)!.profile_updated);
             }
           } catch (e) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                    AppLocalizations.of(context)!.profile_update_error('$e')),
-                backgroundColor: AppTheme.errorRed,
-              ),
-            );
+            context.toast.error(AppLocalizations.of(context)!.profile_update_error('$e'));
           }
         },
       ),
@@ -478,10 +468,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           source: ImageSource.camera, maxWidth: 1024, imageQuality: 85);
       if (photo != null) await _uploadProfileImage(photo);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content:
-              Text(AppLocalizations.of(context)!.profile_camera_error('$e')),
-          backgroundColor: AppTheme.errorRed));
+      context.toast.error(AppLocalizations.of(context)!.profile_camera_error('$e'));
     }
   }
 
@@ -492,10 +479,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           source: ImageSource.gallery, maxWidth: 2048, imageQuality: 90);
       if (image != null) await _uploadProfileImage(image);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content:
-              Text(AppLocalizations.of(context)!.profile_gallery_error('$e')),
-          backgroundColor: AppTheme.errorRed));
+      context.toast.error(AppLocalizations.of(context)!.profile_gallery_error('$e'));
     }
   }
 
@@ -529,16 +513,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (updatedProfile != null) {
         if (!mounted) return;
         setState(() => _userProfile = updatedProfile);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(AppLocalizations.of(context)!.profile_photo_updated),
-            backgroundColor: AppTheme.successGreen));
+        context.toast.success(AppLocalizations.of(context)!.profile_photo_updated);
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              AppLocalizations.of(context)!.profile_photo_update_error('$e')),
-          backgroundColor: AppTheme.errorRed));
+      context.toast.error(AppLocalizations.of(context)!.profile_photo_update_error('$e'));
     }
   }
 
@@ -552,16 +531,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (updatedProfile != null) {
         if (!mounted) return;
         setState(() => _userProfile = updatedProfile);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(AppLocalizations.of(context)!.profile_photo_removed),
-            backgroundColor: AppTheme.successGreen));
+        context.toast.success(AppLocalizations.of(context)!.profile_photo_removed);
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              AppLocalizations.of(context)!.profile_photo_remove_error('$e')),
-          backgroundColor: AppTheme.errorRed));
+      context.toast.error(AppLocalizations.of(context)!.profile_photo_remove_error('$e'));
     }
   }
 
@@ -602,10 +576,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (e) {
       if (!mounted) return;
       if (!e.toString().contains('_settings_redirect')) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(AppLocalizations.of(context)!
-                .profile_notifications_error('$e')),
-            backgroundColor: AppTheme.errorRed));
+        context.toast.error(AppLocalizations.of(context)!
+                .profile_notifications_error('$e'));
       }
       setState(() => _notificationsEnabled = !newValue);
     } finally {
@@ -724,14 +696,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             }
                           }
                           Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text(AppLocalizations.of(context)!
-                                  .profile_measurements_saved),
-                              backgroundColor: AppTheme.successGreen));
+                          context.toast.success(AppLocalizations.of(context)!
+                                  .profile_measurements_saved);
                         } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text('Erro ao salvar: $e'),
-                              backgroundColor: AppTheme.errorRed));
+                          context.toast.error('Erro ao salvar: $e');
                         }
                       },
                       style: ElevatedButton.styleFrom(

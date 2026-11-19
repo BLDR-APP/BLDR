@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sizer/sizer.dart';
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 
 import 'package:bldr_fitness/core/app_export.dart';
@@ -252,12 +253,7 @@ class _EditProfileDialogWidgetState extends State<EditProfileDialogWidget> {
                 onPressed: () {
                   final name = _nameController.text.trim();
                   if (name.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(l10n.edit_profile_name_required),
-                        backgroundColor: AppTheme.errorRed,
-                      ),
-                    );
+                    context.toast.warning(l10n.edit_profile_name_required);
                     return;
                   }
                   if (_usernameError != null) return;

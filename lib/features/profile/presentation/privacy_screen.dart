@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -68,10 +69,8 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
   Future<void> _save() async {
     final dn = _displayNameCtrl.text.trim();
     if (_useDisplayName && dn.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(AppLocalizations.of(context)!.privacy_nickname_required),
-        backgroundColor: Colors.redAccent,
-      ));
+      context.toast
+          .warning(AppLocalizations.of(context)!.privacy_nickname_required);
       return;
     }
 
@@ -92,14 +91,9 @@ class _PrivacyScreenState extends State<PrivacyScreen> {
     setState(() => _saving = false);
 
     result.fold(
-      onFailure: (f) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(f.message),
-        backgroundColor: Colors.redAccent,
-      )),
-      onSuccess: (_) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(AppLocalizations.of(context)!.privacy_saved),
-        backgroundColor: Colors.green,
-      )),
+      onFailure: (f) => context.toast.error(f.message),
+      onSuccess: (_) => context.toast
+          .success(AppLocalizations.of(context)!.privacy_saved),
     );
   }
 

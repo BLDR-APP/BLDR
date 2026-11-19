@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -188,15 +189,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             );
             if (updatedProfile != null) {
               setState(() => _userProfile = updatedProfile);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Perfil atualizado com sucesso!'),
-                  backgroundColor: AppTheme.successGreen));
+              context.toast.success('Perfil atualizado com sucesso!');
             }
           } catch (e) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(
-                    AppLocalizations.of(context)!.profile_update_error('$e')),
-                backgroundColor: AppTheme.errorRed));
+            context.toast.error(AppLocalizations.of(context)!.profile_update_error('$e'));
           }
         },
       ),
@@ -376,10 +372,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } catch (e) {
       if (!mounted) return;
       if (!e.toString().contains('_settings_redirect')) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(AppLocalizations.of(context)!
-                .profile_notifications_error('$e')),
-            backgroundColor: AppTheme.errorRed));
+        context.toast.error(AppLocalizations.of(context)!
+                .profile_notifications_error('$e'));
       }
       setState(() => _notificationsEnabled = !newValue);
     } finally {
@@ -447,10 +441,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 AppRoutes.loginScreen, (route) => false);
           } catch (e) {
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(AppLocalizations.of(context)!
-                      .settings_sign_out_error('$e')),
-                  backgroundColor: AppTheme.errorRed));
+              context.toast.error(AppLocalizations.of(context)!
+                      .settings_sign_out_error('$e'));
             }
           }
         },
@@ -478,10 +470,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 AppRoutes.loginScreen, (route) => false);
           } catch (e) {
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                  content: Text(AppLocalizations.of(context)!
-                      .settings_delete_account_error('$e')),
-                  backgroundColor: AppTheme.errorRed));
+              context.toast.error(AppLocalizations.of(context)!
+                      .settings_delete_account_error('$e'));
             }
           }
         },
