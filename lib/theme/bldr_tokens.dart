@@ -1498,3 +1498,64 @@ abstract final class BldrCommunityV2 {
   static const double ctaRadius = 17;
   static const double followHeight = 26;
 }
+
+// ── Toast & Feedback v2 ────────────────────────────────────────────────────
+// Figma i7tNK50cQOCmGJkVQvjLoN, canvas 53:184 (símbolos lidos um a um por
+// get_design_context). Fundo preto puro, borda de 1 px na cor da variante.
+
+abstract final class BldrToastColorsV2 {
+  static const bg = Color(0xFF000000);
+  static const text = Color(0xFFF4F4F5);
+  static const textMuted = Color(0xFFA2A3AB);
+  // Bordas / acentos por variante
+  static const success = Color(0xFF32BA00); // 55:8
+  static const info = Color(0xFF83B9E6); // 55:13
+  static const warning = Color(0xFFEDC200); // 55:18 / 60:3
+  static const error = Color(0xFFB20000); // 55:23 / 60:10
+  static const gold = BldrColorsV2.gold; // base, undo, achievement, goal…
+  // Barra de progresso do Goal expandido (67:3)
+  static const progressTrack = Color(0xFF1E1E1E);
+  static const progressGradient = BldrColorsV2.levelFillGradient;
+  // Quick reply (62:24) — reservado para DM
+  static const field = Color(0xFF171717);
+  static const fieldBorder = Color(0xFF333333);
+}
+
+abstract final class BldrToastTextV2 {
+  static TextStyle _s(double step, FontWeight w, Color c) =>
+      BldrTextV2.scale(step, w, c);
+  static const _sb = FontWeight.w600;
+  static const _m = FontWeight.w500;
+  static final compact =
+      _s(BldrTextV2.s13, _sb, BldrToastColorsV2.text); // 13
+  static final undoAction =
+      _s(BldrTextV2.s13, _sb, BldrToastColorsV2.gold); // 13
+  static final title = _s(BldrTextV2.s15, _sb, BldrToastColorsV2.text); // 14
+  static final description =
+      _s(BldrTextV2.s12, _m, BldrToastColorsV2.textMuted); // 12
+  static final action = _s(BldrTextV2.s11, _sb, BldrToastColorsV2.gold); // 11
+  static final secondaryAction =
+      _s(BldrTextV2.s11, _sb, BldrToastColorsV2.textMuted); // 11
+  static final progressLabel =
+      _s(BldrTextV2.s11, _m, BldrToastColorsV2.textMuted); // 11
+}
+
+abstract final class BldrToastV2 {
+  static const double compactHeight = 45;
+  static const double compactRadius = 27;
+  static const double expandedRadius = 26;
+  static const double expandedMaxWidth = 360;
+  static const double border = 1;
+  static const double icon = 24;
+  static const double chevron = 20;
+  static const double padX = 16;
+  static const double iconGap = 10;
+  static const double expandedPadTop = 14;
+  static const double expandedTextLeft = 50; // 16 + 24 + 10
+  static const double progressHeight = 4;
+  static const double topGap = 8; // abaixo da safe area
+  static const Duration enter = Duration(milliseconds: 220);
+  static const Duration compactDuration = Duration(milliseconds: 3000);
+  static const Duration expandedDuration = Duration(milliseconds: 5000);
+  static const Duration undoDuration = Duration(milliseconds: 5000);
+}
