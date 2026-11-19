@@ -923,6 +923,13 @@ abstract final class BldrSheetV2Text {
       BldrTextV2.scale(BldrTextV2.s11, FontWeight.w600, BldrSheetV2Colors.unit);
   static final body =
       BldrTextV2.scale(BldrTextV2.s13, FontWeight.w400, BldrSheetV2Colors.text);
+  // Cabeçalho à esquerda (sheets de Nutrição, 102:311 / 102:316)
+  static final eyebrow = BldrTextV2.scale(
+      BldrTextV2.s11, FontWeight.w700, BldrColorsV2.goldBright); // 10
+  static final titleLeft = BldrTextV2.scale(
+      BldrTextV2.s24, FontWeight.w700, BldrSheetV2Colors.text); // 24
+  static final subtitle = BldrTextV2.scale(
+      BldrTextV2.s11, FontWeight.w400, BldrSheetV2Colors.unit); // 10
 }
 
 // Confirmação v2 (320:214)
@@ -1589,6 +1596,12 @@ abstract final class BldrNutritionColorsV2 {
   static const macroCardBorder = Color(0xFF2B2B2B);
   static const divider = Color(0xFF1F1F1F);
   static const fabBg = Color(0xFF000000);
+  // Sheets (102:311 água; 102:308 porção)
+  static const quantityCardBg = Color(0xFF0E0E0E);
+  static const quantityCardBorder = Color(0xFF2E2E2E);
+  static const stepButtonBg = Color(0xFF090909);
+  static const chipBg = Color(0xFF0E0E0E);
+  static const chipActiveBg = Color(0xFF000000);
 }
 
 abstract final class BldrNutritionTextV2 {
@@ -1637,6 +1650,15 @@ abstract final class BldrNutritionTextV2 {
   static final foodQty = _s(BldrTextV2.s11, _r, _mu); // 7.2
   static final foodMacros = _s(BldrTextV2.s11, _m, _mu); // 7.1
   static final addFood = _s(BldrTextV2.s11, _b, _g); // 8
+  // Sheets
+  static final stepGlyph = _s(BldrTextV2.s20, _m, _g); // 22
+  static final amount = _s(BldrTextV2.s32, _b, _t); // 30
+  static final amountUnit = _s(BldrTextV2.s11, _m, _mu); // 10
+  static final chip = _s(BldrTextV2.s11, _m, _t); // 9
+  static final chipActive = _s(BldrTextV2.s11, _b, _g); // 9
+  static final sheetValue = _s(BldrTextV2.s15, _b, _t); // 15
+  static final cta = _s(BldrTextV2.s11, _b, BldrNutritionColorsV2.gold); // 11
+  static final link = _s(BldrTextV2.s11, _m, _mu); // 8 (helper)
 }
 
 abstract final class BldrNutritionV2 {

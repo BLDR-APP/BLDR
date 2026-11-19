@@ -15,6 +15,7 @@ import 'package:bldr_fitness/features/nutrition/presentation/mappers/legacy_ui_m
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/Firebase/firebase_add_food_modal_widget.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/food_categories_modal.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_hub_sections.dart';
+import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_water_sheet.dart';
 import 'package:bldr_fitness/features/progress/domain/usecases/progress_usecases.dart';
 import 'package:bldr_fitness/features/subscription/domain/usecases/resolve_club_access.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
@@ -196,8 +197,20 @@ class _NutritionScreenState extends State<NutritionScreen> {
     if (result.isSuccess) await _loadData(silent: true);
   }
 
+  /// Sheet de água (102:311): adiciona via LogWater ou remove via
+  /// RemoveWater (link mantido do app atual).
   Future<void> _addWater() async {
-    await getIt<LogWater>()(250);
+    final r = await _overlay(() => NutritionWaterSheet.show(context,
+        intakeMl: _waterMl, goalMl: _goals.waterMl));
+    if (r == null || !mounted) return;
+    if (r.addMl != null) {
+      await getIt<LogWater>()(r.addMl!);
+    } else if (r.remove) {
+      final amount = await _overlay(
+          () => NutritionWaterSheet.showRemove(context, intakeMl: _waterMl));
+      if (amount == null) return;
+      await getIt<RemoveWater>()(amount);
+    }
     await _loadData(silent: true);
   }
 

@@ -6746,4 +6746,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nutri2_yesterday => 'Yesterday';
+
+  @override
+  String get nutri2_water_sheet_eyebrow => 'HYDRATION';
+
+  @override
+  String get nutri2_water_sheet_title => 'Add water';
+
+  @override
+  String get nutri2_water_sheet_subtitle => 'Log how much you just drank.';
+
+  @override
+  String get nutri2_water_quick => 'QUICK ADD';
+
+  @override
+  String get nutri2_water_custom => 'CUSTOM';
+
+  @override
+  String get nutri2_water_today => 'TODAY';
+
+  @override
+  String nutri2_water_today_value(String value, String goal) {
+    return '$value L of $goal L';
+  }
+
+  @override
+  String get nutri2_water_cta => 'ADD WATER';
+
+  @override
+  String get nutri2_water_less => 'Decrease';
+
+  @override
+  String get nutri2_water_more => 'Increase';
+
+  @override
+  String get nutri2_water_remove_title => 'Remove water';
 }

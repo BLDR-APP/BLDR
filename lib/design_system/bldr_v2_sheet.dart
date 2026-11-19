@@ -10,10 +10,14 @@ import 'package:bldr_fitness/theme/bldr_tokens.dart';
 /// borda dourada 2 px, raio 46, alça, título centralizado e fundo da tela
 /// escurecido por trás.
 abstract final class BldrV2Sheet {
+  /// Com [eyebrow], usa o cabeçalho alinhado à esquerda dos sheets de
+  /// Nutrição (eyebrow dourado, título 24 e [subtitle] opcional).
   static Future<T?> show<T>(
     BuildContext context, {
     required String title,
     required Widget child,
+    String? eyebrow,
+    String? subtitle,
   }) {
     return showModalBottomSheet<T>(
       context: context,
@@ -23,7 +27,8 @@ abstract final class BldrV2Sheet {
       elevation: 0,
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
-        child: BldrV2SheetFrame(title: title, child: child),
+        child: BldrV2SheetFrame(
+            title: title, eyebrow: eyebrow, subtitle: subtitle, child: child),
       ),
     );
   }
@@ -33,8 +38,15 @@ abstract final class BldrV2Sheet {
 class BldrV2SheetFrame extends StatelessWidget {
   final String title;
   final Widget child;
+  final String? eyebrow;
+  final String? subtitle;
 
-  const BldrV2SheetFrame({super.key, required this.title, required this.child});
+  const BldrV2SheetFrame(
+      {super.key,
+      required this.title,
+      required this.child,
+      this.eyebrow,
+      this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -62,13 +74,39 @@ class BldrV2SheetFrame extends StatelessWidget {
                   borderRadius: BorderRadius.circular(100),
                 ),
               ),
-              const SizedBox(height: 32),
-              Text(title,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: BldrSheetV2Text.title),
-              const SizedBox(height: 28),
+              if (eyebrow == null) ...[
+                const SizedBox(height: 32),
+                Text(title,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: BldrSheetV2Text.title),
+                const SizedBox(height: 28),
+              ] else ...[
+                const SizedBox(height: 24),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(eyebrow!, style: BldrSheetV2Text.eyebrow),
+                      const SizedBox(height: 4),
+                      Text(title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: BldrSheetV2Text.titleLeft),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 4),
+                        Text(subtitle!,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: BldrSheetV2Text.subtitle),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+              ],
               Flexible(child: SingleChildScrollView(child: child)),
             ],
           ),

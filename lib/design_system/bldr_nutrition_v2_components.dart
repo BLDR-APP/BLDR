@@ -745,3 +745,217 @@ class BldrNutritionFab extends StatelessWidget {
     );
   }
 }
+
+// ── Sheets de Nutrição (102:311 / 102:308) ──────────────────────────────────
+
+/// Card de quantidade − valor + (água, porção). Tocar no valor permite
+/// digitar.
+class BldrQuantityCard extends StatefulWidget {
+  final int value;
+  final String unit;
+  final int step;
+  final int min;
+  final int max;
+  final ValueChanged<int> onChanged;
+  final String decreaseLabel;
+  final String increaseLabel;
+  const BldrQuantityCard({
+    super.key,
+    required this.value,
+    required this.unit,
+    required this.onChanged,
+    required this.decreaseLabel,
+    required this.increaseLabel,
+    this.step = 50,
+    this.min = 1,
+    this.max = 5000,
+  });
+
+  @override
+  State<BldrQuantityCard> createState() => BldrQuantityCardState();
+}
+
+class BldrQuantityCardState extends State<BldrQuantityCard> {
+  bool _editing = false;
+  final _ctrl = TextEditingController();
+  final _focus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focus.addListener(() {
+      if (!_focus.hasFocus && _editing) _commit();
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    _focus.dispose();
+    super.dispose();
+  }
+
+  void _set(int v) => widget.onChanged(v.clamp(widget.min, widget.max));
+
+  /// Abre a digitação do valor (ex.: chip "PERSONALIZADO").
+  void startEditing() {
+    if (_editing) return;
+    _ctrl.text = '${widget.value}';
+    _ctrl.selection =
+        TextSelection(baseOffset: 0, extentOffset: _ctrl.text.length);
+    setState(() => _editing = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _focus.requestFocus());
+  }
+
+  void _commit() {
+    final v = int.tryParse(_ctrl.text.trim());
+    setState(() => _editing = false);
+    if (v != null) _set(v);
+  }
+
+  Widget _button(String glyph, String label, int delta) => Semantics(
+        button: true,
+        label: label,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => _set(widget.value + delta),
+          child: Container(
+            width: 48,
+            height: 48,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: BldrNutritionColorsV2.stepButtonBg,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: BldrNutritionColorsV2.gold, width: 0.7),
+            ),
+            child: Text(glyph, style: BldrNutritionTextV2.stepGlyph),
+          ),
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) => Container(
+        constraints: const BoxConstraints(minHeight: 84),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: BldrNutritionColorsV2.quantityCardBg,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+              color: BldrNutritionColorsV2.quantityCardBorder, width: 0.8),
+        ),
+        child: Row(children: [
+          _button('−', widget.decreaseLabel, -widget.step),
+          Expanded(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _editing ? null : startEditing,
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                SizedBox(
+                  height: 40,
+                  child: _editing
+                      ? TextField(
+                          controller: _ctrl,
+                          focusNode: _focus,
+                          textAlign: TextAlign.center,
+                          keyboardType: TextInputType.number,
+                          style: BldrNutritionTextV2.amount,
+                          cursorColor: BldrNutritionColorsV2.gold,
+                          onSubmitted: (_) => _commit(),
+                          decoration: const InputDecoration(
+                              isDense: true,
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.zero),
+                        )
+                      : FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text('${widget.value}',
+                              maxLines: 1, style: BldrNutritionTextV2.amount),
+                        ),
+                ),
+                Text(widget.unit, style: BldrNutritionTextV2.amountUnit),
+              ]),
+            ),
+          ),
+          _button('+', widget.increaseLabel, widget.step),
+        ]),
+      );
+}
+
+/// Chip de seleção dos sheets (presets de água, tipo de porção, refeição).
+class BldrNutritionChip extends StatelessWidget {
+  final String label;
+  final bool active;
+  final VoidCallback? onTap;
+  const BldrNutritionChip(
+      {super.key, required this.label, required this.active, this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        selected: active,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 38),
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: active
+                  ? BldrNutritionColorsV2.chipActiveBg
+                  : BldrNutritionColorsV2.chipBg,
+              borderRadius: BorderRadius.circular(19),
+              border: active
+                  ? Border.all(color: BldrNutritionColorsV2.gold, width: 1.2)
+                  : null,
+            ),
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(label,
+                  maxLines: 1,
+                  style: active
+                      ? BldrNutritionTextV2.chipActive
+                      : BldrNutritionTextV2.chip),
+            ),
+          ),
+        ),
+      );
+}
+
+/// CTA dos sheets de Nutrição: borda dourada, raio 20, altura 52.
+class BldrNutritionCta extends StatelessWidget {
+  final String label;
+  final VoidCallback? onTap;
+  final Color? color;
+  const BldrNutritionCta(
+      {super.key, required this.label, this.onTap, this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    final c = color ?? BldrNutritionColorsV2.gold;
+    return Semantics(
+      button: true,
+      enabled: onTap != null,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Opacity(
+          opacity: onTap == null ? 0.4 : 1,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 52),
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: c),
+            ),
+            child: Text(label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: BldrNutritionTextV2.cta.copyWith(color: c)),
+          ),
+        ),
+      ),
+    );
+  }
+}

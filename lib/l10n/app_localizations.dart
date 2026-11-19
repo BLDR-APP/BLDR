@@ -12148,6 +12148,72 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Ontem'**
   String get nutri2_yesterday;
+
+  /// No description provided for @nutri2_water_sheet_eyebrow.
+  ///
+  /// In pt, this message translates to:
+  /// **'HIDRATAÇÃO'**
+  String get nutri2_water_sheet_eyebrow;
+
+  /// No description provided for @nutri2_water_sheet_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar água'**
+  String get nutri2_water_sheet_title;
+
+  /// No description provided for @nutri2_water_sheet_subtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Registre quanto você bebeu agora.'**
+  String get nutri2_water_sheet_subtitle;
+
+  /// No description provided for @nutri2_water_quick.
+  ///
+  /// In pt, this message translates to:
+  /// **'ADICIONAR RÁPIDO'**
+  String get nutri2_water_quick;
+
+  /// No description provided for @nutri2_water_custom.
+  ///
+  /// In pt, this message translates to:
+  /// **'PERSONALIZADO'**
+  String get nutri2_water_custom;
+
+  /// No description provided for @nutri2_water_today.
+  ///
+  /// In pt, this message translates to:
+  /// **'HOJE'**
+  String get nutri2_water_today;
+
+  /// No description provided for @nutri2_water_today_value.
+  ///
+  /// In pt, this message translates to:
+  /// **'{value} L de {goal} L'**
+  String nutri2_water_today_value(String value, String goal);
+
+  /// No description provided for @nutri2_water_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'ADICIONAR ÁGUA'**
+  String get nutri2_water_cta;
+
+  /// No description provided for @nutri2_water_less.
+  ///
+  /// In pt, this message translates to:
+  /// **'Diminuir'**
+  String get nutri2_water_less;
+
+  /// No description provided for @nutri2_water_more.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aumentar'**
+  String get nutri2_water_more;
+
+  /// No description provided for @nutri2_water_remove_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Remover água'**
+  String get nutri2_water_remove_title;
 }
 
 class _AppLocalizationsDelegate

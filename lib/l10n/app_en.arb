@@ -2920,5 +2920,16 @@
   "nutri2_remove_food": "Remove food",
   "nutri2_date_sheet_title": "Choose day",
   "nutri2_today": "Today",
-  "nutri2_yesterday": "Yesterday"
+  "nutri2_yesterday": "Yesterday",
+  "nutri2_water_sheet_eyebrow": "HYDRATION",
+  "nutri2_water_sheet_title": "Add water",
+  "nutri2_water_sheet_subtitle": "Log how much you just drank.",
+  "nutri2_water_quick": "QUICK ADD",
+  "nutri2_water_custom": "CUSTOM",
+  "nutri2_water_today": "TODAY",
+  "nutri2_water_today_value": "{value} L of {goal} L",
+  "nutri2_water_cta": "ADD WATER",
+  "nutri2_water_less": "Decrease",
+  "nutri2_water_more": "Increase",
+  "nutri2_water_remove_title": "Remove water"
 }
