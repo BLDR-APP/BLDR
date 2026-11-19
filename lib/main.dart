@@ -21,6 +21,8 @@ import 'dart:async';
 import 'package:app_links/app_links.dart';
 import 'package:bldr_fitness/core/app_export.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
+import 'package:bldr_fitness/core/toast/toast_controller.dart';
+import 'package:bldr_fitness/core/toast/toast_host.dart';
 import 'package:bldr_fitness/features/integrations/data/live_activity_service.dart';
 import 'package:bldr_fitness/features/integrations/data/watch_service.dart';
 import 'package:bldr_fitness/features/integrations/data/widget_data_service.dart';
@@ -369,8 +371,17 @@ class MyApp extends StatelessWidget {
               return GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-                child:
-                    AchievementOverlay(child: child ?? const SizedBox.shrink()),
+                // Toast v2 acima das conquistas; a fila espera enquanto
+                // há conquista no topo (AchievementToast segue até a T4).
+                child: Consumer<AchievementProvider>(
+                  builder: (context, achievements, inner) => ToastHost(
+                    controller: getIt<ToastController>(),
+                    paused: achievements.hasPending,
+                    child: inner!,
+                  ),
+                  child: AchievementOverlay(
+                      child: child ?? const SizedBox.shrink()),
+                ),
               );
             },
           ),

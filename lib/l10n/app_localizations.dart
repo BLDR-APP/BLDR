@@ -11902,6 +11902,18 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'CANCELAR'**
   String get comm_squad_cancel;
+
+  /// No description provided for @toast_undo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desfazer'**
+  String get toast_undo;
+
+  /// No description provided for @toast_dismiss_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Deslize para cima para dispensar'**
+  String get toast_dismiss_hint;
 }
 
 class _AppLocalizationsDelegate

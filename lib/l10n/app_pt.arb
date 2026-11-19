@@ -2979,5 +2979,7 @@
   "comm_photo_camera_sub": "Abrir a câmera",
   "comm_add_photo_record": "Adicionar foto ao registro",
   "comm_squad_sheet_sub": "Escolha como você quer participar de um Squad.",
-  "comm_squad_cancel": "CANCELAR"
+  "comm_squad_cancel": "CANCELAR",
+  "toast_undo": "Desfazer",
+  "toast_dismiss_hint": "Deslize para cima para dispensar"
 }

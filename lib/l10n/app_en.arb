@@ -2879,5 +2879,7 @@
   "comm_photo_camera_sub": "Open the camera",
   "comm_add_photo_record": "Add photo to the record",
   "comm_squad_sheet_sub": "Choose how you want to join a Squad.",
-  "comm_squad_cancel": "CANCEL"
+  "comm_squad_cancel": "CANCEL",
+  "toast_undo": "Undo",
+  "toast_dismiss_hint": "Swipe up to dismiss"
 }

@@ -6645,4 +6645,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get comm_squad_cancel => 'CANCELAR';
+
+  @override
+  String get toast_undo => 'Desfazer';
+
+  @override
+  String get toast_dismiss_hint => 'Deslize para cima para dispensar';
 }

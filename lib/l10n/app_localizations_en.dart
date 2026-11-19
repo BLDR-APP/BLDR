@@ -6607,4 +6607,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get comm_squad_cancel => 'CANCEL';
+
+  @override
+  String get toast_undo => 'Undo';
+
+  @override
+  String get toast_dismiss_hint => 'Swipe up to dismiss';
 }
