@@ -15,6 +15,7 @@ import 'package:bldr_fitness/features/nutrition/domain/entities/daily_nutrition_
 import 'package:bldr_fitness/features/nutrition/domain/entities/meal_entry.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/nutrition_goals.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/saved_meal.dart';
+import 'package:bldr_fitness/features/nutrition/domain/repositories/daily_flags_repository.dart';
 import 'package:bldr_fitness/features/nutrition/domain/usecases/nutrition_usecases.dart';
 import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/achievements/domain/usecases/achievement_usecases.dart';
@@ -214,9 +215,14 @@ class _NutritionScreenState extends State<NutritionScreen> {
       unawaited(getIt<TryIncrementOperation>()('calorie_goal', 1));
     }
     // T4: Goal da meta calórica (mesmo evento `calorie_goal`), só ao cruzar.
+    // Persistido por dia (data local): no máximo uma vez por dia, mesmo
+    // removendo/adicionando alimentos ou reabrindo o app.
     if (_isToday &&
         nutritionGoalCrossed(
-            before: kcalBefore, after: kcal, goal: _goals.calories)) {
+            before: kcalBefore, after: kcal, goal: _goals.calories) &&
+        await getIt<DailyFlagsRepository>()
+            .firstTimeToday('nutrition_calorie_goal', _selectedDate) &&
+        mounted) {
       final l = AppLocalizations.of(context);
       final fmt = NumberFormat.decimalPattern(l.localeName);
       context.toast.goal(

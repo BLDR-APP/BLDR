@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get_it/get_it.dart';
+import 'package:bldr_fitness/features/nutrition/data/repositories/daily_flags_repository_impl.dart';
+import 'package:bldr_fitness/features/nutrition/domain/repositories/daily_flags_repository.dart';
 import 'package:bldr_fitness/features/nutrition/data/repositories/food_country_repository_impl.dart';
 import 'package:bldr_fitness/features/nutrition/domain/repositories/food_country_repository.dart';
 import 'package:bldr_fitness/core/toast/toast_controller.dart';
@@ -155,6 +157,8 @@ void setupInjection({Map<String, dynamic> config = const {}}) {
       () => FirestoreNutritionDatasource(FirebaseFirestore.instance));
   getIt.registerLazySingleton<SupabaseXpDatasource>(
       () => SupabaseXpDatasource(SupabaseService.instance.client));
+  getIt.registerLazySingleton<DailyFlagsRepository>(
+      () => DailyFlagsRepositoryImpl());
   getIt.registerLazySingleton<FoodCountryRepository>(
       () => FoodCountryRepositoryImpl());
   getIt.registerFactory(() => GetFoodCountry(getIt<FoodCountryRepository>()));
