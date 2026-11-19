@@ -5,14 +5,13 @@ import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_community_v2_components.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
-import 'package:bldr_fitness/features/achievements/domain/entities/achievement.dart';
-import 'package:bldr_fitness/features/achievements/domain/usecases/achievement_usecases.dart';
 import 'package:bldr_fitness/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_post.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_social_profile.dart';
 import 'package:bldr_fitness/features/community/domain/repositories/community_feed_repository.dart';
 import 'package:bldr_fitness/features/community/presentation/hub_v2/community_post_tile_v2.dart';
+import 'package:bldr_fitness/features/community/presentation/hub_v2/community_v2_format.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 
@@ -35,7 +34,7 @@ class _CommunitySocialProfileScreenState
   CommunitySocialProfile? _profile;
   CommunityFollowCounts _counts = const CommunityFollowCounts();
   List<CommunityPost> _posts = [];
-  List<UnlockedAchievement> _achievements = const [];
+  CommunityProfileStats? _stats;
   int? _workouts;
   int _rank = 0;
 
@@ -57,9 +56,7 @@ class _CommunitySocialProfileScreenState
     final counts = await _repo.fetchFollowCounts(id);
     final posts = await _repo.fetchUserPosts(id);
     final club = await getIt<GetPublicClubProfile>()(id);
-    // A RLS só libera as conquistas do próprio usuário.
-    final achievements =
-        _isMe ? (await getIt<GetUserAchievements>()(id)).valueOrNull : null;
+    final stats = await _repo.fetchProfileStats(id);
     if (!mounted) return;
     setState(() {
       _loading = false;
@@ -69,7 +66,7 @@ class _CommunitySocialProfileScreenState
       _posts = posts.valueOrNull ?? [];
       _workouts = club.valueOrNull?.totalWorkouts;
       _rank = club.valueOrNull?.rankPosition ?? 0;
-      _achievements = achievements ?? const [];
+      _stats = stats.valueOrNull;
     });
   }
 
@@ -191,6 +188,8 @@ class _CommunitySocialProfileScreenState
     }
     final bio = profile.bio?.trim();
     final city = profile.city?.trim();
+    final stats = _stats;
+    final achievements = stats?.achievements ?? const <String>[];
     const pad = EdgeInsets.symmetric(horizontal: BldrCommunityV2.pageX);
     return RefreshIndicator(
       color: BldrCommunityColorsV2.gold,
@@ -220,13 +219,10 @@ class _CommunitySocialProfileScreenState
                           Row(
                             children: [
                               Flexible(
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(profile.displayName,
-                                      maxLines: 1,
-                                      style: BldrCommunityTextV2.profileName),
-                                ),
+                                child: Text(profile.displayName,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: BldrCommunityTextV2.profileName),
                               ),
                               if (profile.isClubMember) ...[
                                 const SizedBox(width: 6),
@@ -280,42 +276,26 @@ class _CommunitySocialProfileScreenState
                         style: BldrCommunityTextV2.profileFollowing),
                   ],
                 ),
-                if (_workouts case final workouts?) ...[
+                if (_workouts != null || stats != null) ...[
                   const SizedBox(height: 22),
                   Text(l10n.comm_section_performance,
                       style: BldrCommunityTextV2.section),
                   const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      color: BldrCommunityColorsV2.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                          color: BldrCommunityColorsV2.goldBrand, width: 0.8),
-                    ),
-                    child: Column(
-                      children: [
-                        Text('$workouts', style: BldrCommunityTextV2.perfValue),
-                        Text(l10n.comm_label_workouts,
-                            style: BldrCommunityTextV2.valueLabel),
-                      ],
-                    ),
-                  ),
+                  _PerformanceCard(workouts: _workouts, stats: stats),
                 ],
-                if (_achievements.isNotEmpty) ...[
+                if (achievements.isNotEmpty) ...[
                   const SizedBox(height: 22),
                   Text(l10n.comm_section_achievements,
                       style: BldrCommunityTextV2.section),
                   const SizedBox(height: 8),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       for (var i = 0; i < 3; i++) ...[
                         if (i > 0) const SizedBox(width: 8),
                         Expanded(
-                          child: i < _achievements.length
-                              ? _AchievementCard(
-                                  name: _achievements[i].achievementName)
+                          child: i < achievements.length
+                              ? _AchievementCard(name: achievements[i])
                               : const SizedBox.shrink(),
                         ),
                       ],
@@ -359,6 +339,91 @@ class _CommunitySocialProfileScreenState
   }
 }
 
+/// Card de performance (76:853): números e melhores marcas.
+class _PerformanceCard extends StatelessWidget {
+  final int? workouts;
+  final CommunityProfileStats? stats;
+
+  const _PerformanceCard({required this.workouts, required this.stats});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context).toString();
+    final prs = stats?.bestPrs ?? const <CommunityProfilePr>[];
+    final numbers = <(String, String)>[
+      if (workouts != null) ('$workouts', l10n.comm_label_workouts),
+      if (stats != null)
+        ('${stats!.activeWeeks}', l10n.comm_label_active_weeks),
+    ];
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: BldrCommunityColorsV2.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: BldrCommunityColorsV2.goldBrand, width: 0.8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          IntrinsicHeight(
+            child: Row(
+              children: [
+                for (var i = 0; i < numbers.length; i++) ...[
+                  if (i > 0)
+                    Container(
+                        width: 1, color: BldrCommunityColorsV2.metricDivider),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Text(numbers[i].$1,
+                            maxLines: 1, style: BldrCommunityTextV2.perfValue),
+                        Text(numbers[i].$2,
+                            maxLines: 2,
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
+                            style: BldrCommunityTextV2.valueLabel),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (prs.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            const BldrCommunitySheetDivider(),
+            const SizedBox(height: 12),
+            Text(l10n.comm_section_best_prs, style: BldrCommunityTextV2.type),
+            const SizedBox(height: 4),
+            for (final pr in prs)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 5),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(pr.exercise,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: BldrCommunityTextV2.detailLabel),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '${CommunityV2Format.kg(pr.weightKg, locale)} × ${pr.reps}',
+                      maxLines: 1,
+                      style: BldrCommunityTextV2.detailValue,
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _AchievementCard extends StatelessWidget {
   final String name;
   const _AchievementCard({required this.name});
@@ -386,7 +451,7 @@ class _AchievementCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(name,
-              maxLines: 2,
+              maxLines: 3,
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
               style: BldrCommunityTextV2.achievement),

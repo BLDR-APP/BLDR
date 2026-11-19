@@ -64,6 +64,31 @@ void main() {
     });
   });
 
+  group('CommunityProfileStats', () {
+    test('lê PRs, semanas ativas e conquistas da RPC', () {
+      final stats = CommunityProfileStats.fromRow(const {
+        'best_prs': [
+          {'exercise': 'Agachamento', 'weight_kg': 150, 'reps': 3, 'e1rm': 165},
+        ],
+        'active_weeks': 8,
+        'achievements': [
+          {'name': 'Veterano', 'achieved_at': '2026-11-01T10:00:00Z'},
+        ],
+      });
+      expect(stats.bestPrs.single.exercise, 'Agachamento');
+      expect(stats.bestPrs.single.weightKg, 150);
+      expect(stats.activeWeeks, 8);
+      expect(stats.achievements, ['Veterano']);
+    });
+
+    test('campos ausentes viram vazios', () {
+      final stats = CommunityProfileStats.fromRow(const {});
+      expect(stats.bestPrs, isEmpty);
+      expect(stats.activeWeeks, 0);
+      expect(stats.achievements, isEmpty);
+    });
+  });
+
   test('perfil usa o nome, depois o usuário e por fim Atleta', () {
     expect(
         const CommunitySocialProfile(id: 'a', fullName: ' Ana ', username: 'x')

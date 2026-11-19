@@ -339,6 +339,24 @@ class CommunityFeedRepositoryImpl implements CommunityFeedRepository {
   }
 
   @override
+  Future<Result<CommunityProfileStats?>> fetchProfileStats(
+      String userId) async {
+    try {
+      final rows = await _client
+          .rpc('public_profile_stats', params: {'p_user': userId}) as List;
+      return Result.success(rows.isEmpty
+          ? null
+          : CommunityProfileStats.fromRow(
+              Map<String, dynamic>.from(rows.first as Map)));
+    } catch (e) {
+      return Result.failure(ServerFailure(
+        'Não foi possível carregar as estatísticas do perfil.',
+        cause: e,
+      ));
+    }
+  }
+
+  @override
   Future<Result<List<CommunityPost>>> fetchUserPosts(
     String userId, {
     int limit = 20,

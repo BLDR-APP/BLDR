@@ -5745,4 +5745,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String comm_open_profile(String name) {
     return 'Abrir perfil de $name';
   }
+
+  @override
+  String get comm_label_active_weeks => 'SEMANAS ATIVAS';
+
+  @override
+  String get comm_section_best_prs => 'MELHORES PRS';
 }

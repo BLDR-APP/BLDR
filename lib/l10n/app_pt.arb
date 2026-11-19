@@ -2675,5 +2675,7 @@
   "comm_profile_error": "Não foi possível carregar este perfil.",
   "comm_profile_actions": "Ações do perfil",
   "comm_open_profile": "Abrir perfil de {name}",
-  "@comm_open_profile": {"placeholders": {"name": {"type": "String"}}}
+  "@comm_open_profile": {"placeholders": {"name": {"type": "String"}}},
+  "comm_label_active_weeks": "SEMANAS ATIVAS",
+  "comm_section_best_prs": "MELHORES PRS"
 }

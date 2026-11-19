@@ -153,6 +153,14 @@ os dados, as tabelas, RPCs, triggers e crons de duelo no schema `bldr_club`.
 - Múltiplas fotos por post (D5; S10).
 - Mensagem direta / posts privados recebidos e enviados (D12; S6). Depende da B13.
 
+### B20. Testes de streak falham à noite no fuso de Brasília
+
+Três testes de `GetCurrentStreak` em
+`test/features/club/consolidated_workout_history_test.dart` falham no fuso de
+Brasília à noite (a partir das 21h, quando em UTC já é o dia seguinte) e passam
+com `TZ=UTC`. Investigar se o cálculo usa UTC: se usar, a sequência pode aparecer
+zerada para o usuário nesse horário.
+
 ### B10. Unificar concessão de XP — adiado (depois de B13/B14)
 
 Diagnóstico (2026-11-17): treinos e nutrição só somam no total

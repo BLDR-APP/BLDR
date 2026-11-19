@@ -59,3 +59,52 @@ class CommunityFollowCounts {
         following: following,
       );
 }
+
+/// Melhor marca de um exercício no perfil.
+class CommunityProfilePr {
+  final String exercise;
+  final double weightKg;
+  final int reps;
+  final double e1rm;
+
+  const CommunityProfilePr({
+    required this.exercise,
+    required this.weightKg,
+    required this.reps,
+    required this.e1rm,
+  });
+
+  factory CommunityProfilePr.fromJson(Map<String, dynamic> json) =>
+      CommunityProfilePr(
+        exercise: json['exercise'] as String,
+        weightKg: (json['weight_kg'] as num).toDouble(),
+        reps: (json['reps'] as num).toInt(),
+        e1rm: (json['e1rm'] as num).toDouble(),
+      );
+}
+
+/// Estatísticas públicas do perfil (RPC `public_profile_stats`).
+class CommunityProfileStats {
+  final List<CommunityProfilePr> bestPrs;
+  final int activeWeeks;
+  final List<String> achievements;
+
+  const CommunityProfileStats({
+    this.bestPrs = const [],
+    this.activeWeeks = 0,
+    this.achievements = const [],
+  });
+
+  factory CommunityProfileStats.fromRow(Map<String, dynamic> row) =>
+      CommunityProfileStats(
+        bestPrs: [
+          for (final item in (row['best_prs'] as List? ?? const []))
+            CommunityProfilePr.fromJson(Map<String, dynamic>.from(item as Map)),
+        ],
+        activeWeeks: (row['active_weeks'] as num?)?.toInt() ?? 0,
+        achievements: [
+          for (final item in (row['achievements'] as List? ?? const []))
+            (item as Map)['name'] as String,
+        ],
+      );
+}

@@ -39,6 +39,11 @@ class _FakeCommunityFeedRepository implements CommunityFeedRepository {
       const Result.success(CommunityFollowCounts());
 
   @override
+  Future<Result<CommunityProfileStats?>> fetchProfileStats(
+          String userId) async =>
+      const Result.success(null);
+
+  @override
   Future<Result<List<CommunityPost>>> fetchUserPosts(
     String userId, {
     int limit = 20,

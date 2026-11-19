@@ -2609,5 +2609,7 @@
   "comm_profile_no_posts": "No posts yet.",
   "comm_profile_error": "Couldn't load this profile.",
   "comm_profile_actions": "Profile actions",
-  "comm_open_profile": "Open {name}'s profile"
+  "comm_open_profile": "Open {name}'s profile",
+  "comm_label_active_weeks": "ACTIVE WEEKS",
+  "comm_section_best_prs": "BEST PRS"
 }

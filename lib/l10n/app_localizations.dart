@@ -10282,6 +10282,18 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Abrir perfil de {name}'**
   String comm_open_profile(String name);
+
+  /// No description provided for @comm_label_active_weeks.
+  ///
+  /// In pt, this message translates to:
+  /// **'SEMANAS ATIVAS'**
+  String get comm_label_active_weeks;
+
+  /// No description provided for @comm_section_best_prs.
+  ///
+  /// In pt, this message translates to:
+  /// **'MELHORES PRS'**
+  String get comm_section_best_prs;
 }
 
 class _AppLocalizationsDelegate

@@ -42,6 +42,9 @@ abstract class CommunityFeedRepository {
 
   Future<Result<CommunityFollowCounts>> fetchFollowCounts(String userId);
 
+  /// Null quando o perfil é privado ou há bloqueio entre os usuários.
+  Future<Result<CommunityProfileStats?>> fetchProfileStats(String userId);
+
   /// Publicações públicas de um perfil, das mais novas para as mais antigas.
   Future<Result<List<CommunityPost>>> fetchUserPosts(
     String userId, {

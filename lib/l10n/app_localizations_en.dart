@@ -5711,4 +5711,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String comm_open_profile(String name) {
     return 'Open $name\'s profile';
   }
+
+  @override
+  String get comm_label_active_weeks => 'ACTIVE WEEKS';
+
+  @override
+  String get comm_section_best_prs => 'BEST PRS';
 }

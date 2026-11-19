@@ -2609,5 +2609,7 @@
   "comm_profile_no_posts": "Ancora nessun post.",
   "comm_profile_error": "Impossibile caricare questo profilo.",
   "comm_profile_actions": "Azioni del profilo",
-  "comm_open_profile": "Apri il profilo di {name}"
+  "comm_open_profile": "Apri il profilo di {name}",
+  "comm_label_active_weeks": "SETTIMANE ATTIVE",
+  "comm_section_best_prs": "MIGLIORI PR"
 }
