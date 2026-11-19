@@ -166,3 +166,22 @@ render em 320, 440 e 320 com escala 1,3, e comparação com o `get_screenshot` d
 - Conta FREE vs. CLUB: blur do IQD e checkout.
 - Scanner (N6): permissão de câmera negada/concedida, flash, código inexistente.
 - Teclado aberto nos sheets de porção e cadastro sem overflow (iPhone SE).
+
+## 7. N7 — Refeições salvas: proposta (não implementada)
+
+A estrutura atual não tem onde guardar uma refeição salva: `user_meals` é o
+diário (um documento por alimento consumido, com data) e `user_favorites`
+guarda alimentos avulsos por 100 g. Nenhum campo agrupa vários alimentos sob
+um nome reutilizável.
+
+**Como se criaria (proposta):** no "⋯" da refeição expandida, ao lado de
+"Copiar refeição", uma ação "Salvar como refeição" que pede um nome e grava
+os alimentos atuais (nome, `food_item_id`, quantidade e macros totais, igual
+ao snapshot do diário). A lista 102:318 lê essas refeições; 102:319/320
+adicionam ao diário reaproveitando `CopyMeal`.
+
+**Opções de dado (precisa de aprovação):**
+- A) Coleção nova `user_saved_meals` `{user_id, name, items: [...], created_at}`.
+- B) Reusar `user_favorites` com `type: 'meal'` e `items` — evita coleção nova,
+  mas exige que o leitor de favoritos ignore `type == 'meal'`
+  (mudança em `favorites()`).

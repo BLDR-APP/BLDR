@@ -147,3 +147,23 @@ existe, o feedback é um SnackBar comum ou falta dado) · **Inexistente** ·
 - Modo avião liga/desliga (T2).
 - VoiceOver lê o toast.
 - Dispensar com swipe para cima.
+
+## 6. Status da varredura (T5)
+
+Primeira leva concluída: nutrition (0, zerado na N4), community, workouts,
+profile e progress. Restam 106 `showSnackBar` no app: club 58, auth 19,
+professional_portal 15, shared/widgets/services 10, subscription 1,
+integrations 1, mais as 2 exceções abaixo.
+
+**Exceções mantidas como SnackBar (decidir):**
+1. `community_comments_panel_v2.dart` — erro ao comentar com ação
+   "Tentar novamente" (texto fixo, fora do .arb). O compact só tem ação no
+   Desfazer; o Expanded Error pediria título e descrição que não existem.
+2. `weekly_plan_screen.dart` — "Semana atualizada" + Desfazer: visual
+   próprio do Figma de Treinos (291:76); o mockup prevalece.
+
+**Dívida registrada:** textos fixos em português que já existiam e foram
+mantidos (regra da T5: não alterar texto): "Dê um nome ao treino",
+"Adicione ao menos um exercício", "Erro ao salvar: …", "Não foi possível
+iniciar o treino.", "Selecione ao menos um exercício para continuar",
+"Perfil atualizado com sucesso!". Devem ir para os `.arb` numa passada de i18n.
