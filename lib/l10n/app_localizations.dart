@@ -9886,6 +9886,222 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'O histórico deste atleta não está disponível.'**
   String get comm_pr_private;
+
+  /// No description provided for @comm_compose_prompt.
+  ///
+  /// In pt, this message translates to:
+  /// **'O que você quer compartilhar?'**
+  String get comm_compose_prompt;
+
+  /// No description provided for @comm_compose_workout.
+  ///
+  /// In pt, this message translates to:
+  /// **'Treino'**
+  String get comm_compose_workout;
+
+  /// No description provided for @comm_compose_wearable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Wearable'**
+  String get comm_compose_wearable;
+
+  /// No description provided for @comm_compose_photo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Foto'**
+  String get comm_compose_photo;
+
+  /// No description provided for @comm_visibility.
+  ///
+  /// In pt, this message translates to:
+  /// **'Visibilidade'**
+  String get comm_visibility;
+
+  /// No description provided for @comm_vis_public.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comunidade'**
+  String get comm_vis_public;
+
+  /// No description provided for @comm_vis_public_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Qualquer pessoa pode ver'**
+  String get comm_vis_public_sub;
+
+  /// No description provided for @comm_vis_squad.
+  ///
+  /// In pt, this message translates to:
+  /// **'Um squad'**
+  String get comm_vis_squad;
+
+  /// No description provided for @comm_vis_squad_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolha um squad do qual você participa'**
+  String get comm_vis_squad_sub;
+
+  /// No description provided for @comm_vis_private.
+  ///
+  /// In pt, this message translates to:
+  /// **'Só eu'**
+  String get comm_vis_private;
+
+  /// No description provided for @comm_vis_private_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Visível apenas para você'**
+  String get comm_vis_private_sub;
+
+  /// No description provided for @comm_vis_no_squad.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você não participa de nenhum squad.'**
+  String get comm_vis_no_squad;
+
+  /// No description provided for @comm_pick_squad.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolher squad'**
+  String get comm_pick_squad;
+
+  /// No description provided for @comm_publish.
+  ///
+  /// In pt, this message translates to:
+  /// **'PUBLICAR'**
+  String get comm_publish;
+
+  /// No description provided for @comm_change.
+  ///
+  /// In pt, this message translates to:
+  /// **'ALTERAR'**
+  String get comm_change;
+
+  /// No description provided for @comm_workout_selected.
+  ///
+  /// In pt, this message translates to:
+  /// **'TREINO SELECIONADO'**
+  String get comm_workout_selected;
+
+  /// No description provided for @comm_wearable_selected.
+  ///
+  /// In pt, this message translates to:
+  /// **'{source} · SELECIONADO'**
+  String comm_wearable_selected(String source);
+
+  /// No description provided for @comm_workout_fallback.
+  ///
+  /// In pt, this message translates to:
+  /// **'Treino concluído'**
+  String get comm_workout_fallback;
+
+  /// No description provided for @comm_include_prs.
+  ///
+  /// In pt, this message translates to:
+  /// **'Incluir PRs na publicação'**
+  String get comm_include_prs;
+
+  /// No description provided for @comm_add_photo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar foto'**
+  String get comm_add_photo;
+
+  /// No description provided for @comm_optional.
+  ///
+  /// In pt, this message translates to:
+  /// **'Opcional'**
+  String get comm_optional;
+
+  /// No description provided for @comm_photo_attached.
+  ///
+  /// In pt, this message translates to:
+  /// **'FOTO ANEXADA'**
+  String get comm_photo_attached;
+
+  /// No description provided for @comm_photo_one.
+  ///
+  /// In pt, this message translates to:
+  /// **'1 foto'**
+  String get comm_photo_one;
+
+  /// No description provided for @comm_photo_swap.
+  ///
+  /// In pt, this message translates to:
+  /// **'TROCAR'**
+  String get comm_photo_swap;
+
+  /// No description provided for @comm_photo_remove.
+  ///
+  /// In pt, this message translates to:
+  /// **'REMOVER'**
+  String get comm_photo_remove;
+
+  /// No description provided for @comm_photo_gallery.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolher da galeria'**
+  String get comm_photo_gallery;
+
+  /// No description provided for @comm_photo_camera.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tirar foto'**
+  String get comm_photo_camera;
+
+  /// No description provided for @comm_pick_workout.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolher treino'**
+  String get comm_pick_workout;
+
+  /// No description provided for @comm_pick_workout_empty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum treino recente.'**
+  String get comm_pick_workout_empty;
+
+  /// No description provided for @comm_pick_wearable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolher origem'**
+  String get comm_pick_wearable;
+
+  /// No description provided for @comm_wearable_recent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ver 10 registros recentes'**
+  String get comm_wearable_recent;
+
+  /// No description provided for @comm_wearable_soon.
+  ///
+  /// In pt, this message translates to:
+  /// **'Em breve'**
+  String get comm_wearable_soon;
+
+  /// No description provided for @comm_wearable_note.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ao selecionar uma origem, você vê os 10 treinos e atividades mais recentes registrados nela.'**
+  String get comm_wearable_note;
+
+  /// No description provided for @comm_records_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Registros recentes'**
+  String get comm_records_title;
+
+  /// No description provided for @comm_records_empty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma atividade recente.'**
+  String get comm_records_empty;
+
+  /// No description provided for @comm_publish_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível publicar. Tente novamente.'**
+  String get comm_publish_error;
 }
 
 class _AppLocalizationsDelegate

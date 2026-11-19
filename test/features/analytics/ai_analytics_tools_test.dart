@@ -1,13 +1,11 @@
 import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/analytics/domain/entities/ai_tool_contracts.dart';
-import 'package:bldr_fitness/features/analytics/domain/entities/workout_analytics.dart';
 import 'package:bldr_fitness/features/analytics/domain/services/ai_analytics_tools.dart';
 import 'package:bldr_fitness/features/analytics/domain/services/analytics_queries.dart';
 import 'package:bldr_fitness/features/integrations/domain/entities/canonical_health.dart';
 import 'package:bldr_fitness/features/integrations/domain/repositories/canonical_health_reader.dart';
 import 'package:bldr_fitness/features/progress/domain/entities/body_measurement.dart';
 import 'package:bldr_fitness/features/progress/domain/repositories/progress_repository.dart';
-import 'package:bldr_fitness/features/workouts/domain/entities/canonical_workout.dart';
 import 'package:bldr_fitness/features/workouts/domain/repositories/canonical_workout_reader.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -33,8 +31,9 @@ void main() {
 
   test('progress tool preserves measurements returned by the query', () async {
     final repository = _ProgressRepository();
-    final result = await ProgressAnalyticsTool(ProgressAnalyticsQuery(repository))
-        .execute(context, arguments);
+    final result =
+        await ProgressAnalyticsTool(ProgressAnalyticsQuery(repository))
+            .execute(context, arguments);
 
     final measurements = result.metrics['measurements'] as Map<String, Object?>;
     expect(result.status, AiToolStatus.success);
@@ -104,7 +103,8 @@ class _ProgressRepository implements ProgressRepository {
   }
 
   @override
-  Future<Result<void>> deleteMeasurement(String id) => throw UnimplementedError();
+  Future<Result<void>> deleteMeasurement(String id) =>
+      throw UnimplementedError();
   @override
   Future<Result<DailyWaterIntake>> dailyWaterIntake(DateTime date) =>
       throw UnimplementedError();
@@ -114,9 +114,11 @@ class _ProgressRepository implements ProgressRepository {
   Future<Result<MeasurementProgress>> measurementProgress({
     required String measurementType,
     int daysPeriod = 30,
-  }) => throw UnimplementedError();
+  }) =>
+      throw UnimplementedError();
   @override
-  Future<Result<BodyMeasurement>> recordMeasurement(BodyMeasurement measurement) =>
+  Future<Result<BodyMeasurement>> recordMeasurement(
+          BodyMeasurement measurement) =>
       throw UnimplementedError();
   @override
   Future<Result<void>> removeWater(int amountMl) => throw UnimplementedError();
@@ -128,7 +130,8 @@ class _HealthReader implements CanonicalHealthReader {
     required String userId,
     Duration lookback = const Duration(days: 7),
     int limit = 20,
-  }) async => const Result.success([]);
+  }) async =>
+      const Result.success([]);
 
   @override
   Future<Result<CanonicalHealthDailyPage>> whoopDailySnapshots({
@@ -137,7 +140,8 @@ class _HealthReader implements CanonicalHealthReader {
     required DateTime end,
     DateTime? beforeDate,
     int limit = 30,
-  }) async => Result.success(
+  }) async =>
+      Result.success(
         CanonicalHealthDailyPage(
           availability: CanonicalHealthAvailability.data,
           snapshots: [

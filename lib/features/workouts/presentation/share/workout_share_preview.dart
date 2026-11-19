@@ -5,7 +5,8 @@ import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:bldr_fitness/design_system/bldr_components.dart';
-import 'package:bldr_fitness/features/community/presentation/create_post_screen.dart';
+import 'package:bldr_fitness/features/community/domain/entities/community_post_draft.dart';
+import 'package:bldr_fitness/features/community/presentation/hub_v2/community_create_post_sheet_v2.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_share_data.dart';
 import 'package:bldr_fitness/features/workouts/presentation/share/workout_share_exporter.dart';
 import 'package:bldr_fitness/features/workouts/presentation/share/workout_share_v2_templates.dart';
@@ -91,15 +92,18 @@ class _WorkoutSharePreviewState extends State<WorkoutSharePreview> {
   /// P5: mesmo fluxo que o resumo usava (treino, origem e PRs).
   void _publish() {
     final s = widget.data.summary;
-    Navigator.push(
+    CommunityCreatePostSheetV2.show(
       context,
-      MaterialPageRoute(
-        builder: (_) => CreatePostScreen(
-          preselectedWorkoutId: s.workoutId,
-          preselectedSource: s.source,
-          preselectedPrs: s.newPRs,
-        ),
-      ),
+      preselectedWorkoutId: s.workoutId,
+      preselectedSource: s.source,
+      preselectedPrs: [
+        for (final pr in s.newPRs)
+          CommunityDraftPr(
+            exerciseName: pr.exerciseName,
+            weightKg: pr.newWeightKg,
+            e1rm: pr.newE1rm,
+          ),
+      ],
     );
   }
 

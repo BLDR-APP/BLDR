@@ -89,11 +89,10 @@ class WearableActivityGridCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              Text(
-                activity,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: BldrText.cardTitle,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(activity, maxLines: 1, style: BldrText.cardTitle),
               ),
               const Spacer(),
               if (strain != null)

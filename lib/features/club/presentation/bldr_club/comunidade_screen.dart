@@ -17,9 +17,9 @@ import 'package:bldr_fitness/features/community/domain/entities/community_post.d
 import 'package:bldr_fitness/features/community/domain/repositories/community_feed_repository.dart';
 import 'package:bldr_fitness/features/community/presentation/community_comments_sheet.dart';
 import 'package:bldr_fitness/features/community/presentation/community_profile_search_screen.dart';
-import 'package:bldr_fitness/features/community/presentation/create_post_screen.dart';
 import 'package:bldr_fitness/features/community/domain/usecases/edit_community_post.dart';
 import 'package:bldr_fitness/features/community/presentation/hub_v2/community_content_sheets_v2.dart';
+import 'package:bldr_fitness/features/community/presentation/hub_v2/community_create_post_sheet_v2.dart';
 import 'package:bldr_fitness/features/community/presentation/hub_v2/community_post_card_v2.dart';
 import 'package:bldr_fitness/features/community/presentation/hub_v2/community_squads_tab_v2.dart';
 import 'package:bldr_fitness/features/community/presentation/ranking_screen.dart';
@@ -555,11 +555,9 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
               bottom: MediaQuery.paddingOf(context).bottom + 72, right: 4),
           child: BldrCommunityFab(
             semanticLabel: l10n.comm_create_post,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const CreatePostScreen()),
-              ).then((_) => _loadFeed(refresh: true));
+            onTap: () async {
+              final created = await CommunityCreatePostSheetV2.show(context);
+              if (created) _loadFeed(refresh: true);
             },
           ),
         ),

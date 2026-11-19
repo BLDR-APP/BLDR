@@ -1215,6 +1215,16 @@ abstract final class BldrCommunityColorsV2 {
   static const moreBorder = Color(0xFF333333);
   static const danger = Color(0xFFD94D4D);
   static const badge = Color(0xFFE53935);
+  // Criar publicação (50:892, 44:606, 32:354)
+  static const composeMuted = Color(0xFF8F8F8F);
+  static const composeBorder = Color(0xFF2E2E2E);
+  static const pillBg = Color(0xFF030303);
+  static const photoBorder = Color(0xFF33332E);
+  static const photoActionBg = Color(0xFF0E0E0D);
+  static const photoGradient = LinearGradient(
+    colors: [Color(0xFF2E2514), Color(0xFF17140F), Color(0xFF0B0B0A)],
+    stops: [0, 0.55, 1],
+  );
 }
 
 abstract final class BldrCommunityTextV2 {
@@ -1278,6 +1288,17 @@ abstract final class BldrCommunityTextV2 {
   static final prValue = _s(BldrTextV2.s28, _b, _c); // 26
   static final prDelta = _s(BldrTextV2.s11, _sb, _g); // 10
   static final historyDate = _s(BldrTextV2.s11, _m, _mu); // 10
+  // Criar publicação
+  static const _cm = BldrCommunityColorsV2.composeMuted;
+  static final composeHint = _s(BldrTextV2.s15, _r, _cm); // 15
+  static final composeInput = _s(BldrTextV2.s15, _r, _c);
+  static final composeTab = _s(BldrTextV2.s11, _m, _cm); // 9
+  static final composeTabOn = _s(BldrTextV2.s11, _sb, _g); // 9
+  static final composeEyebrow = _s(BldrTextV2.s11, _b, _g); // 8
+  static final composeMeta = _s(BldrTextV2.s11, _m, _cm); // 9
+  static final composeAction = _s(BldrTextV2.s11, _sb, _c); // 9
+  static final composeRemove = _s(BldrTextV2.s11, _b, _cm); // 7
+  static final composePhoto = _s(BldrTextV2.s11, _sb, _c); // 10
 }
 
 abstract final class BldrCommunityV2 {

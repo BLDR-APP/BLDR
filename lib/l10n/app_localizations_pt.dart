@@ -5532,4 +5532,116 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get comm_pr_private => 'O histórico deste atleta não está disponível.';
+
+  @override
+  String get comm_compose_prompt => 'O que você quer compartilhar?';
+
+  @override
+  String get comm_compose_workout => 'Treino';
+
+  @override
+  String get comm_compose_wearable => 'Wearable';
+
+  @override
+  String get comm_compose_photo => 'Foto';
+
+  @override
+  String get comm_visibility => 'Visibilidade';
+
+  @override
+  String get comm_vis_public => 'Comunidade';
+
+  @override
+  String get comm_vis_public_sub => 'Qualquer pessoa pode ver';
+
+  @override
+  String get comm_vis_squad => 'Um squad';
+
+  @override
+  String get comm_vis_squad_sub => 'Escolha um squad do qual você participa';
+
+  @override
+  String get comm_vis_private => 'Só eu';
+
+  @override
+  String get comm_vis_private_sub => 'Visível apenas para você';
+
+  @override
+  String get comm_vis_no_squad => 'Você não participa de nenhum squad.';
+
+  @override
+  String get comm_pick_squad => 'Escolher squad';
+
+  @override
+  String get comm_publish => 'PUBLICAR';
+
+  @override
+  String get comm_change => 'ALTERAR';
+
+  @override
+  String get comm_workout_selected => 'TREINO SELECIONADO';
+
+  @override
+  String comm_wearable_selected(String source) {
+    return '$source · SELECIONADO';
+  }
+
+  @override
+  String get comm_workout_fallback => 'Treino concluído';
+
+  @override
+  String get comm_include_prs => 'Incluir PRs na publicação';
+
+  @override
+  String get comm_add_photo => 'Adicionar foto';
+
+  @override
+  String get comm_optional => 'Opcional';
+
+  @override
+  String get comm_photo_attached => 'FOTO ANEXADA';
+
+  @override
+  String get comm_photo_one => '1 foto';
+
+  @override
+  String get comm_photo_swap => 'TROCAR';
+
+  @override
+  String get comm_photo_remove => 'REMOVER';
+
+  @override
+  String get comm_photo_gallery => 'Escolher da galeria';
+
+  @override
+  String get comm_photo_camera => 'Tirar foto';
+
+  @override
+  String get comm_pick_workout => 'Escolher treino';
+
+  @override
+  String get comm_pick_workout_empty => 'Nenhum treino recente.';
+
+  @override
+  String get comm_pick_wearable => 'Escolher origem';
+
+  @override
+  String get comm_wearable_recent => 'Ver 10 registros recentes';
+
+  @override
+  String get comm_wearable_soon => 'Em breve';
+
+  @override
+  String get comm_wearable_note =>
+      'Ao selecionar uma origem, você vê os 10 treinos e atividades mais recentes registrados nela.';
+
+  @override
+  String get comm_records_title => 'Registros recentes';
+
+  @override
+  String get comm_records_empty => 'Nenhuma atividade recente.';
+
+  @override
+  String get comm_publish_error =>
+      'Não foi possível publicar. Tente novamente.';
 }

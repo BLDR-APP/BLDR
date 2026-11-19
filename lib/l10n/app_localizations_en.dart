@@ -5499,4 +5499,115 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get comm_pr_private => 'This athlete\'s history isn\'t available.';
+
+  @override
+  String get comm_compose_prompt => 'What do you want to share?';
+
+  @override
+  String get comm_compose_workout => 'Workout';
+
+  @override
+  String get comm_compose_wearable => 'Wearable';
+
+  @override
+  String get comm_compose_photo => 'Photo';
+
+  @override
+  String get comm_visibility => 'Visibility';
+
+  @override
+  String get comm_vis_public => 'Community';
+
+  @override
+  String get comm_vis_public_sub => 'Anyone can see it';
+
+  @override
+  String get comm_vis_squad => 'A squad';
+
+  @override
+  String get comm_vis_squad_sub => 'Choose a squad you belong to';
+
+  @override
+  String get comm_vis_private => 'Only me';
+
+  @override
+  String get comm_vis_private_sub => 'Visible only to you';
+
+  @override
+  String get comm_vis_no_squad => 'You\'re not in any squad.';
+
+  @override
+  String get comm_pick_squad => 'Choose squad';
+
+  @override
+  String get comm_publish => 'PUBLISH';
+
+  @override
+  String get comm_change => 'CHANGE';
+
+  @override
+  String get comm_workout_selected => 'SELECTED WORKOUT';
+
+  @override
+  String comm_wearable_selected(String source) {
+    return '$source · SELECTED';
+  }
+
+  @override
+  String get comm_workout_fallback => 'Completed workout';
+
+  @override
+  String get comm_include_prs => 'Include PRs in the post';
+
+  @override
+  String get comm_add_photo => 'Add photo';
+
+  @override
+  String get comm_optional => 'Optional';
+
+  @override
+  String get comm_photo_attached => 'PHOTO ATTACHED';
+
+  @override
+  String get comm_photo_one => '1 photo';
+
+  @override
+  String get comm_photo_swap => 'SWAP';
+
+  @override
+  String get comm_photo_remove => 'REMOVE';
+
+  @override
+  String get comm_photo_gallery => 'Choose from gallery';
+
+  @override
+  String get comm_photo_camera => 'Take photo';
+
+  @override
+  String get comm_pick_workout => 'Choose workout';
+
+  @override
+  String get comm_pick_workout_empty => 'No recent workouts.';
+
+  @override
+  String get comm_pick_wearable => 'Choose source';
+
+  @override
+  String get comm_wearable_recent => 'View 10 recent records';
+
+  @override
+  String get comm_wearable_soon => 'Coming soon';
+
+  @override
+  String get comm_wearable_note =>
+      'When you select a source, you\'ll see its 10 most recent workouts and activities.';
+
+  @override
+  String get comm_records_title => 'Recent records';
+
+  @override
+  String get comm_records_empty => 'No recent activity.';
+
+  @override
+  String get comm_publish_error => 'Couldn\'t publish. Try again.';
 }
