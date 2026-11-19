@@ -8,6 +8,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/exercise.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/workout_template.dart';
 import 'package:bldr_fitness/services/exercise_db_rapid_service.dart';
@@ -52,10 +53,7 @@ class _WorkoutPhotoReviewScreenState
   void _proceed() {
     final confirmed = _items.where((i) => i.selected && i.match.match != null);
     if (confirmed.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Selecione ao menos um exercício para continuar'),
-        behavior: SnackBarBehavior.floating,
-      ));
+      context.toast.warning('Selecione ao menos um exercício para continuar');
       return;
     }
 

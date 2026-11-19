@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
@@ -122,11 +123,7 @@ class _WorkoutDetailsScreenState extends State<WorkoutDetailsScreen> {
     _duplicating = false;
     if (!mounted) return;
     if (result.isFailure) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(l10n.wd_duplicate_error),
-        backgroundColor: BldrColors.danger,
-        behavior: SnackBarBehavior.floating,
-      ));
+      context.toast.error(l10n.wd_duplicate_error);
       return;
     }
     _close(WorkoutDetailsResult.duplicated);
@@ -148,11 +145,7 @@ class _WorkoutDetailsScreenState extends State<WorkoutDetailsScreen> {
     if (!mounted) return;
     final failure = result.failureOrNull;
     if (failure != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(l10n.workouts_delete_error(failure.message)),
-        backgroundColor: BldrColors.danger,
-        behavior: SnackBarBehavior.floating,
-      ));
+      context.toast.error(l10n.workouts_delete_error(failure.message));
       return;
     }
     _close(WorkoutDetailsResult.deleted);

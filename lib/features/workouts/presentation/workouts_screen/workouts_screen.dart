@@ -9,6 +9,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/features/workouts/domain/usecases/week_plan_usecases.dart';
 import 'package:bldr_fitness/features/workouts/domain/entities/week_override.dart';
 import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
@@ -29,7 +30,6 @@ import 'package:bldr_fitness/features/workouts/presentation/mappers/legacy_ui_ma
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/routes/app_routes.dart';
 import 'package:bldr_fitness/services/workout_photo_service.dart';
-import 'package:bldr_fitness/theme/app_theme.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 import 'package:bldr_fitness/widgets/custom_error_widget.dart';
 import 'package:bldr_fitness/features/club/programs_page.dart';
@@ -285,11 +285,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
       final name = template['name'] as String? ?? 'Treino';
       final templateId = template['id'] as String?;
       if (templateId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Não foi possível iniciar o treino.'),
-          backgroundColor: BldrColors.danger,
-          behavior: SnackBarBehavior.floating,
-        ));
+        context.toast.error('Não foi possível iniciar o treino.');
         return;
       }
       final isClub = template['source'] == 'club';
@@ -306,11 +302,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
       if (session == null) {
         final failure = startResult.failureOrNull;
         if (failure != null && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(failure.message),
-            backgroundColor: BldrColors.danger,
-            behavior: SnackBarBehavior.floating,
-          ));
+          context.toast.error(failure.message);
         }
         return;
       }
@@ -339,13 +331,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
       });
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context).workouts_start_error),
-          backgroundColor: AppTheme.errorRed,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      context.toast.error(AppLocalizations.of(context).workouts_start_error);
     }
   }
 
@@ -374,18 +360,10 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
         _loadData();
       case WorkoutDetailsResult.duplicated:
         _loadData();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l10n.wd_duplicated),
-          backgroundColor: BldrColors.surface,
-          behavior: SnackBarBehavior.floating,
-        ));
+        context.toast.success(l10n.wd_duplicated);
       case WorkoutDetailsResult.deleted:
         _loadData();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l10n.workouts_deleted_snackbar(name)),
-          backgroundColor: BldrColors.surface,
-          behavior: SnackBarBehavior.floating,
-        ));
+        context.toast.success(l10n.workouts_deleted_snackbar(name));
     }
   }
 
@@ -425,19 +403,11 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
       if (failure != null) throw Exception(failure.message);
       if (mounted) {
         _loadData();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l10n.workouts_deleted_snackbar(template['name'])),
-          backgroundColor: BldrColors.surface,
-          behavior: SnackBarBehavior.floating,
-        ));
+        context.toast.success(l10n.workouts_deleted_snackbar(template['name']));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(l10n.workouts_delete_error(e.toString())),
-          backgroundColor: BldrColors.danger,
-          behavior: SnackBarBehavior.floating,
-        ));
+        context.toast.error(l10n.workouts_delete_error(e.toString()));
       }
     }
   }
@@ -916,11 +886,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
 
       if (!mounted) return;
       if (matches.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content:
-              Text(AppLocalizations.of(context).workouts_photo_no_exercises),
-          behavior: SnackBarBehavior.floating,
-        ));
+        context.toast.warning(AppLocalizations.of(context).workouts_photo_no_exercises);
         return;
       }
 
@@ -933,12 +899,7 @@ class _WorkoutsScreenState extends State<WorkoutsScreen> {
       if (mounted) _loadData();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              AppLocalizations.of(context).workouts_photo_error(e.toString())),
-          backgroundColor: AppTheme.errorRed,
-          behavior: SnackBarBehavior.floating,
-        ));
+        context.toast.error(AppLocalizations.of(context).workouts_photo_error(e.toString()));
       }
     } finally {
       if (mounted) setState(() => _analyzingPhoto = false);

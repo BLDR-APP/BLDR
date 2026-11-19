@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_post_draft.dart';
 import 'package:bldr_fitness/features/community/presentation/hub_v2/community_create_post_sheet_v2.dart';
@@ -73,14 +74,12 @@ class _WorkoutSharePreviewState extends State<WorkoutSharePreview> {
       } catch (error, stackTrace) {
         debugPrint('[WorkoutShare][share] ${error.runtimeType}\n$stackTrace');
         if (mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(l10n.sh_share_error)));
+          context.toast.error(l10n.sh_share_error);
         }
       }
     } catch (error, stackTrace) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(l10n.sh_export_error)));
+        context.toast.error(l10n.sh_export_error);
       }
       debugPrint(
           '[WorkoutShare][${stage.name}] ${error.runtimeType}\n$stackTrace');

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
@@ -283,19 +284,11 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
   Future<void> _save() async {
     final name = _nameCtrl.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Dê um nome ao treino'),
-        backgroundColor: Colors.redAccent,
-        behavior: SnackBarBehavior.floating,
-      ));
+      context.toast.warning('Dê um nome ao treino');
       return;
     }
     if (_exercises.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Adicione ao menos um exercício'),
-        backgroundColor: Colors.redAccent,
-        behavior: SnackBarBehavior.floating,
-      ));
+      context.toast.warning('Adicione ao menos um exercício');
       return;
     }
 
@@ -359,11 +352,7 @@ class _CreateWorkoutScreenState extends State<CreateWorkoutScreen> {
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Erro ao salvar: $e'),
-          backgroundColor: Colors.redAccent,
-          behavior: SnackBarBehavior.floating,
-        ));
+        context.toast.error('Erro ao salvar: $e');
       }
     } finally {
       if (mounted) setState(() => _saving = false);

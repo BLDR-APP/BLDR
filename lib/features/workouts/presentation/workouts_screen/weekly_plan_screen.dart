@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
@@ -384,17 +385,10 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
     if (mounted) _showSaved(l10n.ms_saved_set(tpl.name, _dayLong(dia)));
   }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: Text(message),
-        backgroundColor: BldrColors.danger,
-        behavior: SnackBarBehavior.floating,
-      ));
-  }
+  void _showError(String message) => context.toast.error(message);
 
-  /// Snackbar "Semana atualizada" + "Desfazer" (Figma 291:76).
+  /// Snackbar "Semana atualizada" + "Desfazer" (Figma 291:76). Mantido:
+  /// visual próprio do mockup de Treinos (exceção da T5).
   void _showSaved(String message, {VoidCallback? onUndo}) {
     final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context)
@@ -907,10 +901,7 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
       return;
     }
     unawaited(WidgetDataService.updateAll());
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(l10n.plan_save_success),
-      behavior: SnackBarBehavior.floating,
-    ));
+    context.toast.success(l10n.plan_save_success);
     _load();
   }
 
@@ -1004,10 +995,7 @@ class _WeeklyPlanScreenState extends State<WeeklyPlanScreen> {
                 if (f != null) {
                   _showError(l10n.plan_extra_register_error(f.message));
                 } else {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text(l10n.plan_extra_register_success),
-                    behavior: SnackBarBehavior.floating,
-                  ));
+                  context.toast.success(l10n.plan_extra_register_success);
                   _load();
                 }
               },

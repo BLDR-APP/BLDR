@@ -6,6 +6,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/models/exercise_model.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/routes/app_routes.dart';
@@ -533,9 +534,7 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
       );
       if (result.failureOrNull != null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(result.failureOrNull!.message),
-          ));
+          context.toast.error(result.failureOrNull!.message);
         }
         return;
       }
@@ -808,10 +807,8 @@ class _ActiveWorkoutScreenState extends State<ActiveWorkoutScreen>
       _isFinishing = false;
       sessionProvider.markActive(widget.workoutId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(result.failureOrNull?.message ??
-              'Não foi possível concluir o treino. Tente novamente.'),
-        ));
+        context.toast.error(result.failureOrNull?.message ??
+              'Não foi possível concluir o treino. Tente novamente.');
       }
       return;
     }
