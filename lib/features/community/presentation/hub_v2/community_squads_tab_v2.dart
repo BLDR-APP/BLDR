@@ -395,7 +395,10 @@ class _CreateOrJoinCta extends StatelessWidget {
       context,
       title: l10n.comm_squad_sheet_title,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(l10n.comm_squad_sheet_sub, style: BldrCommunityTextV2.sheetSub),
+          const SizedBox(height: 14),
           Builder(
             builder: (ctx) => BldrV2SheetOption(
               icon: TablerIcons.key,
@@ -411,6 +414,23 @@ class _CreateOrJoinCta extends StatelessWidget {
               label: l10n.comm_squad_new,
               subtitle: l10n.comm_squad_new_sub,
               onTap: () => Navigator.pop(ctx, 'create'),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Builder(
+            builder: (ctx) => Semantics(
+              button: true,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => Navigator.pop(ctx),
+                child: Container(
+                  width: double.infinity,
+                  constraints: const BoxConstraints(minHeight: 44),
+                  alignment: Alignment.center,
+                  child: Text(l10n.comm_squad_cancel,
+                      style: BldrCommunityTextV2.sqLabel),
+                ),
+              ),
             ),
           ),
         ],

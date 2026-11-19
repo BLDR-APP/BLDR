@@ -5248,7 +5248,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get comm_squad_create_join => '+  CREATE OR JOIN A SQUAD';
 
   @override
-  String get comm_squad_sheet_title => 'Create or join';
+  String get comm_squad_sheet_title => 'CREATE OR JOIN';
 
   @override
   String get comm_squad_code => 'I have an invite code';
@@ -5578,13 +5578,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get comm_photo_remove => 'REMOVE';
 
   @override
-  String get comm_photo_gallery => 'Choose from gallery';
+  String get comm_photo_gallery => 'Gallery';
 
   @override
   String get comm_photo_camera => 'Take photo';
 
   @override
-  String get comm_pick_workout => 'Choose workout';
+  String get comm_pick_workout => 'Select workout';
 
   @override
   String get comm_pick_workout_empty => 'No recent workouts.';
@@ -6584,4 +6584,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get priv_empty => 'You haven\'t published private posts yet.';
+
+  @override
+  String comm_pick_workout_sub(int n) {
+    return '$n most recent workouts';
+  }
+
+  @override
+  String get comm_photo_sheet_sub => 'Add a photo to the post';
+
+  @override
+  String get comm_photo_gallery_sub => 'Pick an existing photo';
+
+  @override
+  String get comm_photo_camera_sub => 'Open the camera';
+
+  @override
+  String get comm_add_photo_record => 'Add photo to the record';
+
+  @override
+  String get comm_squad_sheet_sub => 'Choose how you want to join a Squad.';
+
+  @override
+  String get comm_squad_cancel => 'CANCEL';
 }

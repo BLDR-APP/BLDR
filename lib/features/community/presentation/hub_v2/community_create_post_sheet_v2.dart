@@ -162,16 +162,22 @@ class _CommunityCreatePostSheetV2State
       title: l10n.comm_add_photo,
       child: Builder(
         builder: (ctx) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(l10n.comm_photo_sheet_sub,
+                style: BldrCommunityTextV2.sheetSub),
+            const SizedBox(height: 14),
             BldrV2SheetOption(
               icon: TablerIcons.photo,
               label: l10n.comm_photo_gallery,
+              subtitle: l10n.comm_photo_gallery_sub,
               onTap: () => Navigator.pop(ctx, ImageSource.gallery),
             ),
             const SizedBox(height: 10),
             BldrV2SheetOption(
               icon: TablerIcons.camera,
               label: l10n.comm_photo_camera,
+              subtitle: l10n.comm_photo_camera_sub,
               onTap: () => Navigator.pop(ctx, ImageSource.camera),
             ),
           ],
@@ -540,7 +546,7 @@ class _CommunityCreatePostSheetV2State
                           size: 17, color: BldrCommunityColorsV2.gold),
                       const SizedBox(width: 8),
                       Expanded(
-                        child: Text(l10n.comm_add_photo,
+                        child: Text(l10n.comm_add_photo_record,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: BldrCommunityTextV2.composeAction),
@@ -777,7 +783,13 @@ class _WorkoutPicker extends StatelessWidget {
       );
     }
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(l10n.comm_pick_workout_sub(workouts.length),
+              style: BldrCommunityTextV2.sheetSub),
+        ),
         for (final w in workouts)
           _SourceRow(
             icon: TablerIcons.barbell,

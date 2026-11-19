@@ -9434,7 +9434,7 @@ abstract class AppLocalizations {
   /// No description provided for @comm_squad_sheet_title.
   ///
   /// In pt, this message translates to:
-  /// **'Criar ou entrar'**
+  /// **'CRIAR OU ENTRAR'**
   String get comm_squad_sheet_title;
 
   /// No description provided for @comm_squad_code.
@@ -10040,7 +10040,7 @@ abstract class AppLocalizations {
   /// No description provided for @comm_photo_gallery.
   ///
   /// In pt, this message translates to:
-  /// **'Escolher da galeria'**
+  /// **'Galeria'**
   String get comm_photo_gallery;
 
   /// No description provided for @comm_photo_camera.
@@ -10052,7 +10052,7 @@ abstract class AppLocalizations {
   /// No description provided for @comm_pick_workout.
   ///
   /// In pt, this message translates to:
-  /// **'Escolher treino'**
+  /// **'Selecionar treino'**
   String get comm_pick_workout;
 
   /// No description provided for @comm_pick_workout_empty.
@@ -11860,6 +11860,48 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Você ainda não publicou posts privados.'**
   String get priv_empty;
+
+  /// No description provided for @comm_pick_workout_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} treinos mais recentes'**
+  String comm_pick_workout_sub(int n);
+
+  /// No description provided for @comm_photo_sheet_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar uma foto à publicação'**
+  String get comm_photo_sheet_sub;
+
+  /// No description provided for @comm_photo_gallery_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolher uma foto existente'**
+  String get comm_photo_gallery_sub;
+
+  /// No description provided for @comm_photo_camera_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir a câmera'**
+  String get comm_photo_camera_sub;
+
+  /// No description provided for @comm_add_photo_record.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar foto ao registro'**
+  String get comm_add_photo_record;
+
+  /// No description provided for @comm_squad_sheet_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolha como você quer participar de um Squad.'**
+  String get comm_squad_sheet_sub;
+
+  /// No description provided for @comm_squad_cancel.
+  ///
+  /// In pt, this message translates to:
+  /// **'CANCELAR'**
+  String get comm_squad_cancel;
 }
 
 class _AppLocalizationsDelegate
