@@ -77,8 +77,10 @@ class BldrToast extends StatelessWidget {
           _icon(),
           const SizedBox(width: BldrToastV2.iconGap),
           Flexible(
+            // Até 2 linhas: em telas estreitas/texto grande a mensagem não
+            // perde a informação principal (ex.: nome da refeição).
             child: Text(request.message,
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: BldrToastTextV2.compact),
           ),
@@ -231,6 +233,7 @@ class BldrToast extends StatelessWidget {
                           ColoredBox(color: BldrToastColorsV2.progressTrack)),
                   FractionallySizedBox(
                     widthFactor: request.progress!.clamp(0.0, 1.0),
+                    heightFactor: 1,
                     child: const DecoratedBox(
                         decoration: BoxDecoration(
                             gradient: BldrToastColorsV2.progressGradient)),

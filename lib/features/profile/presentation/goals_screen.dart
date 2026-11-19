@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
@@ -131,15 +132,11 @@ class _GoalsScreenState extends State<GoalsScreen> {
     if (!mounted) return;
     setState(() => _saving = false);
 
+    // T3: targets.updated / save_failed via Toast v2.
     result.fold(
-      onFailure: (f) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(f.message),
-        backgroundColor: Colors.redAccent,
-      )),
-      onSuccess: (_) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(AppLocalizations.of(context)!.goals_saved),
-        backgroundColor: Colors.green,
-      )),
+      onFailure: (f) => context.toast.error(f.message),
+      onSuccess: (_) => context.toast
+          .success(AppLocalizations.of(context).nutri2_toast_targets_updated),
     );
   }
 

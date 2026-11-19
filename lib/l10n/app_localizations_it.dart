@@ -6802,4 +6802,60 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get nutri2_water_remove_title => 'Rimuovi acqua';
+
+  @override
+  String nutri2_toast_added(String meal) {
+    return 'Alimento aggiunto a $meal';
+  }
+
+  @override
+  String get nutri2_toast_updated => 'Alimento aggiornato';
+
+  @override
+  String get nutri2_toast_removed => 'Alimento rimosso';
+
+  @override
+  String get nutri2_toast_remove_error => 'Impossibile rimuovere l\'alimento';
+
+  @override
+  String get nutri2_toast_save_error => 'Impossibile salvare. Riprova.';
+
+  @override
+  String nutri2_toast_water_added(String ml) {
+    return '+$ml ml di acqua';
+  }
+
+  @override
+  String nutri2_toast_water_removed(String ml) {
+    return '−$ml ml di acqua';
+  }
+
+  @override
+  String get nutri2_toast_water_error => 'Impossibile registrare l\'acqua';
+
+  @override
+  String get nutri2_toast_goal_title => 'Obiettivo giornaliero raggiunto!';
+
+  @override
+  String get nutri2_toast_water_goal => 'Obiettivo di idratazione raggiunto!';
+
+  @override
+  String get nutri2_toast_water_goal_desc =>
+      'Hai raggiunto il tuo obiettivo di idratazione.';
+
+  @override
+  String get nutri2_toast_water_goal_label => 'Idratazione giornaliera';
+
+  @override
+  String get nutri2_toast_protein_goal => 'Obiettivo di proteine raggiunto!';
+
+  @override
+  String get nutri2_toast_protein_goal_desc =>
+      'Hai raggiunto il tuo obiettivo giornaliero di proteine.';
+
+  @override
+  String get nutri2_toast_protein_goal_label => 'Proteine giornaliere';
+
+  @override
+  String get nutri2_toast_targets_updated => 'Obiettivi aggiornati';
 }

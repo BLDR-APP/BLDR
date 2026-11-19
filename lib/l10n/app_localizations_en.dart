@@ -6781,4 +6781,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nutri2_water_remove_title => 'Remove water';
+
+  @override
+  String nutri2_toast_added(String meal) {
+    return 'Food added to $meal';
+  }
+
+  @override
+  String get nutri2_toast_updated => 'Food updated';
+
+  @override
+  String get nutri2_toast_removed => 'Food removed';
+
+  @override
+  String get nutri2_toast_remove_error => 'Could not remove the food';
+
+  @override
+  String get nutri2_toast_save_error => 'Could not save. Try again.';
+
+  @override
+  String nutri2_toast_water_added(String ml) {
+    return '+$ml ml of water';
+  }
+
+  @override
+  String nutri2_toast_water_removed(String ml) {
+    return '−$ml ml of water';
+  }
+
+  @override
+  String get nutri2_toast_water_error => 'Could not log water';
+
+  @override
+  String get nutri2_toast_goal_title => 'Daily goal reached!';
+
+  @override
+  String get nutri2_toast_water_goal => 'Hydration goal reached!';
+
+  @override
+  String get nutri2_toast_water_goal_desc => 'You reached your hydration goal.';
+
+  @override
+  String get nutri2_toast_water_goal_label => 'Daily hydration';
+
+  @override
+  String get nutri2_toast_protein_goal => 'Protein goal reached!';
+
+  @override
+  String get nutri2_toast_protein_goal_desc =>
+      'You reached your daily protein goal.';
+
+  @override
+  String get nutri2_toast_protein_goal_label => 'Daily protein';
+
+  @override
+  String get nutri2_toast_targets_updated => 'Goals updated';
 }

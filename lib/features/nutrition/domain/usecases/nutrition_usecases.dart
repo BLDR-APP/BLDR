@@ -163,6 +163,21 @@ class GetDailySummary {
       _diary.dailySummary(date, userId: userId);
 }
 
+/// Desfaz uma remoção: grava de novo o mesmo registro (com o horário
+/// original), sem XP — não é um novo registro de refeição.
+class RestoreMealEntry {
+  final NutritionDiaryRepository _diary;
+  const RestoreMealEntry(this._diary);
+
+  Future<Result<void>> call(MealEntry entry) => _diary.addEntry(entry);
+}
+
+/// Meta cruzada agora (antes abaixo, depois em/acima) — dispara o toast de
+/// meta uma vez por cruzamento.
+bool nutritionGoalCrossed(
+        {required num before, required num after, required num goal}) =>
+    goal > 0 && before < goal && after >= goal;
+
 class DeleteMealEntry {
   final NutritionDiaryRepository _diary;
   const DeleteMealEntry(this._diary);

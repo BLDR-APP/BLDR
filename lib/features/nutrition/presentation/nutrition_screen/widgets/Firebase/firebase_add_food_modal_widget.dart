@@ -6,6 +6,8 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import 'package:bldr_fitness/core/app_export.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
+import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_hub_sections.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/food_item.dart';
@@ -987,7 +989,9 @@ class _AddFoodModalWidgetState extends State<FirebaseAddFoodModalWidget> with Si
                 BldrPrimaryButton(
                   label: isEditingFlow ? AppLocalizations.of(context).nutrition_update_quantity : AppLocalizations.of(context).nutrition_add_food_btn,
                   onPressed: () async {
-                    final scaffoldMessenger = ScaffoldMessenger.of(context);
+                    // Capturados antes dos awaits (o modal fecha no fim).
+                    final toaster = context.toast;
+                    final l10n = AppLocalizations.of(context);
                     final onFoodAddedCallback = widget.onFoodAdded;
                     final mealType = widget.mealType;
                     final selectedDate = widget.selectedDate;
@@ -1039,7 +1043,15 @@ class _AddFoodModalWidgetState extends State<FirebaseAddFoodModalWidget> with Si
                       }
 
                       unawaited(WidgetDataService.updateAll());
-                      scaffoldMessenger.showSnackBar(SnackBar(content: Text(isEditingFlow ? AppLocalizations.of(context).nutrition_item_updated : AppLocalizations.of(context).nutrition_food_added), backgroundColor: AppTheme.successGreen, behavior: SnackBarBehavior.floating));
+                      // T3: meal.added / atualização viram toast v2.
+                      if (isEditingFlow) {
+                        toaster.success(l10n.nutri2_toast_updated);
+                      } else {
+                        final slot = NutritionMealSlot.all.firstWhere(
+                            (s) => s.dbKey == _getDatabaseMealType(widget.mealType),
+                            orElse: () => NutritionMealSlot.all[1]);
+                        toaster.success(l10n.nutri2_toast_added(slot.label(l10n)));
+                      }
                       if (Navigator.canPop(modalBuilderContext)) Navigator.pop(modalBuilderContext);
                       if (isEditingFlow && Navigator.canPop(context)) Navigator.pop(context);
                       onFoodAddedCallback();
@@ -1047,10 +1059,8 @@ class _AddFoodModalWidgetState extends State<FirebaseAddFoodModalWidget> with Si
                     } catch (e) {
                       debugPrint('Falha ao adicionar/atualizar: $e');
                       if (mounted) {
-                        scaffoldMessenger.showSnackBar(SnackBar(
-                          content: Text(AppLocalizations.of(context).nutrition_fail(e.toString().replaceFirst('Exception: ', ''))),
-                          backgroundColor: AppTheme.errorRed, behavior: SnackBarBehavior.floating,
-                        ));
+                        // T3: save_failed.
+                        toaster.error(l10n.nutri2_toast_save_error);
                       }
                       if(Navigator.canPop(modalBuilderContext)) Navigator.pop(modalBuilderContext);
                     }

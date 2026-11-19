@@ -71,6 +71,7 @@ class BldrToaster {
         progressValue: progressValue,
         progress: progress,
         dedupeKey: dedupeKey,
+        startCompact: title != null,
       ));
 
   void dismiss({String? dedupeKey}) =>

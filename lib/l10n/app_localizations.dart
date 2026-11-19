@@ -12214,6 +12214,102 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Remover água'**
   String get nutri2_water_remove_title;
+
+  /// No description provided for @nutri2_toast_added.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alimento adicionado ao {meal}'**
+  String nutri2_toast_added(String meal);
+
+  /// No description provided for @nutri2_toast_updated.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alimento atualizado'**
+  String get nutri2_toast_updated;
+
+  /// No description provided for @nutri2_toast_removed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alimento removido'**
+  String get nutri2_toast_removed;
+
+  /// No description provided for @nutri2_toast_remove_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível remover o alimento'**
+  String get nutri2_toast_remove_error;
+
+  /// No description provided for @nutri2_toast_save_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível salvar. Tente novamente.'**
+  String get nutri2_toast_save_error;
+
+  /// No description provided for @nutri2_toast_water_added.
+  ///
+  /// In pt, this message translates to:
+  /// **'+{ml} ml de água'**
+  String nutri2_toast_water_added(String ml);
+
+  /// No description provided for @nutri2_toast_water_removed.
+  ///
+  /// In pt, this message translates to:
+  /// **'−{ml} ml de água'**
+  String nutri2_toast_water_removed(String ml);
+
+  /// No description provided for @nutri2_toast_water_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível registrar a água'**
+  String get nutri2_toast_water_error;
+
+  /// No description provided for @nutri2_toast_goal_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Meta diária atingida!'**
+  String get nutri2_toast_goal_title;
+
+  /// No description provided for @nutri2_toast_water_goal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Meta de hidratação atingida!'**
+  String get nutri2_toast_water_goal;
+
+  /// No description provided for @nutri2_toast_water_goal_desc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você alcançou seu objetivo de hidratação.'**
+  String get nutri2_toast_water_goal_desc;
+
+  /// No description provided for @nutri2_toast_water_goal_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hidratação diária'**
+  String get nutri2_toast_water_goal_label;
+
+  /// No description provided for @nutri2_toast_protein_goal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Meta de proteína atingida!'**
+  String get nutri2_toast_protein_goal;
+
+  /// No description provided for @nutri2_toast_protein_goal_desc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você alcançou sua meta diária de proteína.'**
+  String get nutri2_toast_protein_goal_desc;
+
+  /// No description provided for @nutri2_toast_protein_goal_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'Proteína diária'**
+  String get nutri2_toast_protein_goal_label;
+
+  /// No description provided for @nutri2_toast_targets_updated.
+  ///
+  /// In pt, this message translates to:
+  /// **'Metas atualizadas'**
+  String get nutri2_toast_targets_updated;
 }
 
 class _AppLocalizationsDelegate

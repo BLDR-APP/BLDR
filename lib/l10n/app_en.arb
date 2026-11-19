@@ -2931,5 +2931,21 @@
   "nutri2_water_cta": "ADD WATER",
   "nutri2_water_less": "Decrease",
   "nutri2_water_more": "Increase",
-  "nutri2_water_remove_title": "Remove water"
+  "nutri2_water_remove_title": "Remove water",
+  "nutri2_toast_added": "Food added to {meal}",
+  "nutri2_toast_updated": "Food updated",
+  "nutri2_toast_removed": "Food removed",
+  "nutri2_toast_remove_error": "Could not remove the food",
+  "nutri2_toast_save_error": "Could not save. Try again.",
+  "nutri2_toast_water_added": "+{ml} ml of water",
+  "nutri2_toast_water_removed": "−{ml} ml of water",
+  "nutri2_toast_water_error": "Could not log water",
+  "nutri2_toast_goal_title": "Daily goal reached!",
+  "nutri2_toast_water_goal": "Hydration goal reached!",
+  "nutri2_toast_water_goal_desc": "You reached your hydration goal.",
+  "nutri2_toast_water_goal_label": "Daily hydration",
+  "nutri2_toast_protein_goal": "Protein goal reached!",
+  "nutri2_toast_protein_goal_desc": "You reached your daily protein goal.",
+  "nutri2_toast_protein_goal_label": "Daily protein",
+  "nutri2_toast_targets_updated": "Goals updated"
 }

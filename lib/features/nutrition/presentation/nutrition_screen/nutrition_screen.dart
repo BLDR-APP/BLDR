@@ -1,9 +1,11 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import 'package:bldr_fitness/core/app_export.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
 import 'package:bldr_fitness/features/achievements/presentation/achievements/achievement_provider.dart';
 import 'package:bldr_fitness/features/auth/domain/usecases/auth_usecases.dart';
@@ -143,7 +145,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
           builder: (_) => FoodCategoriesModal(
             mealType: slot.legacyName,
             onFoodAdded: () async {
+              final proteinBefore = _summary?.totals.protein ?? 0;
               await _loadData(silent: true);
+              _checkProteinGoal(proteinBefore);
               await _maybeTriggerNotificationPopup();
               if (!mounted) return;
               context
@@ -190,11 +194,18 @@ class _NutritionScreenState extends State<NutritionScreen> {
     if (ok != true || entry.id == null || !mounted) return;
     final result = await getIt<DeleteMealEntry>()(entry.id!);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(result.isSuccess
-            ? l.nutrition_food_removed
-            : l.nutrition_remove_error)));
-    if (result.isSuccess) await _loadData(silent: true);
+    if (result.isSuccess) {
+      // T3: meal.removed com Desfazer (regrava o mesmo registro, sem XP).
+      context.toast.undo(l.nutri2_toast_removed, onUndo: () async {
+        final r = await getIt<RestoreMealEntry>()(entry);
+        if (!mounted) return;
+        if (r.isFailure) context.toast.error(l.nutri2_toast_save_error);
+        await _loadData(silent: true);
+      });
+      await _loadData(silent: true);
+    } else {
+      context.toast.error(l.nutri2_toast_remove_error);
+    }
   }
 
   /// Sheet de água (102:311): adiciona via LogWater ou remove via
@@ -203,15 +214,65 @@ class _NutritionScreenState extends State<NutritionScreen> {
     final r = await _overlay(() => NutritionWaterSheet.show(context,
         intakeMl: _waterMl, goalMl: _goals.waterMl));
     if (r == null || !mounted) return;
+    final l = AppLocalizations.of(context);
+    final before = _waterMl;
     if (r.addMl != null) {
-      await getIt<LogWater>()(r.addMl!);
+      final res = await getIt<LogWater>()(r.addMl!);
+      if (!mounted) return;
+      if (res.isFailure) {
+        context.toast.error(l.nutri2_toast_water_error);
+        return;
+      }
+      context.toast.success(l.nutri2_toast_water_added('${r.addMl}'));
     } else if (r.remove) {
       final amount = await _overlay(
           () => NutritionWaterSheet.showRemove(context, intakeMl: _waterMl));
-      if (amount == null) return;
-      await getIt<RemoveWater>()(amount);
+      if (amount == null || !mounted) return;
+      final res = await getIt<RemoveWater>()(amount);
+      if (!mounted) return;
+      if (res.isFailure) {
+        context.toast.error(l.hydration_remove_error);
+        return;
+      }
+      context.toast.success(l.nutri2_toast_water_removed('$amount'));
     }
     await _loadData(silent: true);
+    if (!mounted) return;
+    // T3: hydration.goal_reached (uma vez por cruzamento da meta).
+    if (nutritionGoalCrossed(
+        before: before, after: _waterMl, goal: _goals.waterMl)) {
+      final loc = l.localeName;
+      context.toast.goal(
+        l.nutri2_toast_water_goal,
+        title: l.nutri2_toast_goal_title,
+        description: l.nutri2_toast_water_goal_desc,
+        progressLabel: l.nutri2_toast_water_goal_label,
+        progressValue:
+            '${NumberFormat.decimalPattern(loc).format(_waterMl)} / ${NumberFormat.decimalPattern(loc).format(_goals.waterMl)} ml',
+        progress: 1,
+        dedupeKey: 'nutrition.hydration_goal',
+      );
+    }
+  }
+
+  /// T3: protein.goal_reached depois de adicionar alimento (só hoje).
+  void _checkProteinGoal(double before) {
+    if (!_isToday || !mounted) return;
+    final after = _summary?.totals.protein ?? 0;
+    if (!nutritionGoalCrossed(
+        before: before, after: after, goal: _goals.protein)) {
+      return;
+    }
+    final l = AppLocalizations.of(context);
+    context.toast.goal(
+      l.nutri2_toast_protein_goal,
+      title: l.nutri2_toast_goal_title,
+      description: l.nutri2_toast_protein_goal_desc,
+      progressLabel: l.nutri2_toast_protein_goal_label,
+      progressValue: '${after.round()} / ${_goals.protein} g',
+      progress: 1,
+      dedupeKey: 'nutrition.protein_goal',
+    );
   }
 
   Future<void> _pickDate() async {
