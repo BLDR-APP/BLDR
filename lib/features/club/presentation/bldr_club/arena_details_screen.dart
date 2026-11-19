@@ -1,13 +1,121 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
+import 'package:share_plus/share_plus.dart';
+
 import 'package:bldr_fitness/core/di/injection.dart';
+import 'package:bldr_fitness/design_system/bldr_community_v2_components.dart';
+import 'package:bldr_fitness/design_system/bldr_components.dart';
+import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
 import 'package:bldr_fitness/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:bldr_fitness/features/club/domain/repositories/arena_repository.dart';
-import 'package:flutter/services.dart';
+import 'package:bldr_fitness/features/club/presentation/bldr_club/arena_history_sheet.dart';
+import 'package:bldr_fitness/features/club/presentation/bldr_club/create_checkin_sheet.dart';
+import 'package:bldr_fitness/features/club/presentation/bldr_club/squad_chat_screen.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/squad_settings_screen.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/tribunal_screen.dart';
-import 'package:bldr_fitness/features/club/presentation/bldr_club/create_checkin_sheet.dart';
-import 'package:bldr_fitness/features/club/presentation/bldr_club/arena_history_sheet.dart'; // <--- IMPORT DO FEED ADICIONADO
+import 'package:bldr_fitness/features/community/presentation/hub_v2/community_post_card_v2.dart';
+import 'package:bldr_fitness/features/community/presentation/hub_v2/community_v2_format.dart';
+import 'package:bldr_fitness/l10n/app_localizations.dart';
+import 'package:bldr_fitness/theme/bldr_tokens.dart';
 
+/// Nome do modo em texto corrido ("Hustle").
+String squadModeLabel(AppLocalizations l10n, String? mode) => switch (mode) {
+      'survivor' => l10n.comm_mode_survivor,
+      'roadrunner' => l10n.comm_mode_roadrunner,
+      'hustle' => l10n.comm_mode_hustle,
+      _ => l10n.comm_mode_alpha,
+    };
+
+/// Compartilhar Squad (Figma 117:897).
+Future<void> showSquadShareSheet(
+  BuildContext context, {
+  required Map<String, dynamic> arena,
+  required String meta,
+  int? rank,
+}) {
+  final l10n = AppLocalizations.of(context);
+  final title = arena['title']?.toString() ?? 'Squad';
+  final code = arena['share_code']?.toString() ?? arena['id'].toString();
+  final link = 'bldr://invite/$code';
+  void copy(BuildContext ctx, String value) {
+    Clipboard.setData(ClipboardData(text: value));
+    Navigator.pop(ctx);
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(l10n.sq_copied)));
+  }
+
+  return BldrV2Sheet.show<void>(
+    context,
+    title: l10n.sq_share_label,
+    child: Builder(
+      builder: (ctx) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(l10n.sq_share_sub(title),
+              textAlign: TextAlign.center, style: BldrCommunityTextV2.sheetSub),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(15),
+            decoration: BoxDecoration(
+              color: BldrCommunityColorsV2.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                  color: BldrCommunityColorsV2.modeBorder, width: 0.8),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: BldrCommunityTextV2.name),
+                      const SizedBox(height: 3),
+                      Text(meta,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: BldrCommunityTextV2.rowSub),
+                    ],
+                  ),
+                ),
+                if (rank != null)
+                  Text('#$rank', style: BldrCommunityTextV2.sqRankPos),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          BldrCommunitySheetRow(
+            icon: TablerIcons.share_3,
+            title: l10n.sq_share_invite,
+            subtitle: l10n.sq_share_invite_sub,
+            onTap: () {
+              Navigator.pop(ctx);
+              SharePlus.instance.share(
+                  ShareParams(text: l10n.sq_invite_text(title, link, code)));
+            },
+          ),
+          BldrCommunitySheetRow(
+            icon: TablerIcons.link,
+            title: l10n.sq_share_link,
+            subtitle: l10n.sq_share_link_sub,
+            onTap: () => copy(ctx, link),
+          ),
+          BldrCommunitySheetRow(
+            icon: TablerIcons.hash,
+            title: l10n.sq_share_code,
+            subtitle: code,
+            onTap: () => copy(ctx, code),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// Detalhe do Squad (Figma 86:878, 87:827, 87:884).
 class ArenaDetailsScreen extends StatefulWidget {
   final String arenaId;
 
@@ -18,892 +126,656 @@ class ArenaDetailsScreen extends StatefulWidget {
 }
 
 class _ArenaDetailsScreenState extends State<ArenaDetailsScreen> {
-  bool _isLoading = true;
-  Map<String, dynamic>? _arenaData;
+  final _repo = getIt<ArenaRepository>();
+
+  bool _loading = true;
+  int _tab = 0;
+  Map<String, dynamic>? _arena;
   List<Map<String, dynamic>> _participants = [];
-  String? _myUserId;
+  List<Map<String, dynamic>> _posts = [];
+  String? _todayStatus;
 
-  // Retorna dias restantes até o fim da arena.
-  // Retorna -1 se is_active == false (encerrada manualmente).
-  // Retorna null se end_date não estiver disponível.
-  int? get _daysRemaining {
-    if (_arenaData?['is_active'] == false) return -1;
-    final endDateStr = _arenaData?['end_date'] as String?;
-    if (endDateStr == null) return null;
-    final endDate = DateTime.parse(endDateStr).toLocal();
-    return endDate.difference(DateTime.now()).inDays;
-  }
-
-  // Controle de Status do Dia
-  bool _hasPostedToday = false;
-  String _todayStatus = 'pending'; // pending, approved, rejected
+  String? get _myId => getIt<GetCurrentUser>()()?.id;
+  String get _mode => _arena?['game_mode']?.toString() ?? 'alpha';
+  bool get _survivor => _mode == 'survivor';
 
   @override
   void initState() {
     super.initState();
-    _myUserId = getIt<GetCurrentUser>()()?.id;
-    _loadData();
+    _load();
   }
 
-  Future<void> _loadData() async {
-    setState(() => _isLoading = true);
-    try {
-      // 1. Dados da Arena
-      final arenaResult =
-          await getIt<ArenaRepository>().arenaById(widget.arenaId);
-      final arena = arenaResult.valueOrNull;
-      if (arena == null) throw Exception(arenaResult.failureOrNull?.message);
-
-      // 2. Verifica se eu postei HOJE
-      await _checkTodayStatus();
-
-      // Define a ordem baseada no modo
-      final String orderBy = (arena['game_mode'] == 'survivor') ? 'lives_count' : 'current_score';
-
-      // 3. Participantes (com nome/avatar já combinados)
-      final combinedResult = await getIt<ArenaRepository>()
-          .participantsCombined(widget.arenaId, orderBy: orderBy);
-      final List<Map<String, dynamic>> combined =
-          combinedResult.valueOrNull ?? [];
-
-      if (combined.isEmpty) {
-        if (mounted) setState(() { _arenaData = arena; _isLoading = false; });
-        return;
-      }
-
-      // Survivor: ordena por vidas DESC, desempate por check-in mais recente
-      if (arena['game_mode'] == 'survivor') {
-        combined.sort((a, b) {
-          final livesA = (a['lives_count'] as num?)?.toInt() ?? 0;
-          final livesB = (b['lives_count'] as num?)?.toInt() ?? 0;
-          if (livesB != livesA) return livesB.compareTo(livesA);
-          final dateA = a['updated_at'] as String? ?? '';
-          final dateB = b['updated_at'] as String? ?? '';
-          return dateB.compareTo(dateA);
-        });
-      }
-
-      if (mounted) {
-        setState(() {
-          _arenaData = arena;
-          _participants = combined;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      print('Erro Arena Details: $e');
-      if (mounted) setState(() => _isLoading = false);
+  Future<void> _load() async {
+    final arena = (await _repo.arenaById(widget.arenaId)).valueOrNull;
+    if (arena == null) {
+      if (mounted) setState(() => _loading = false);
+      return;
     }
-  }
-
-  Future<void> _checkTodayStatus() async {
-    final result =
-        await getIt<ArenaRepository>().todayCheckinStatus(widget.arenaId);
-    final status = result.valueOrNull;
-    if (mounted) {
-      setState(() {
-        if (status != null) {
-          _hasPostedToday = true;
-          _todayStatus = status;
-        } else {
-          _hasPostedToday = false;
-        }
+    final survivor = arena['game_mode'] == 'survivor';
+    final results = await Future.wait([
+      _repo.participantsCombined(widget.arenaId,
+          orderBy: survivor ? 'lives_count' : 'current_score'),
+      _repo.tribunalFeed(widget.arenaId),
+    ]);
+    final status = await _repo.todayCheckinStatus(widget.arenaId);
+    if (!mounted) return;
+    final participants = [...?results[0].valueOrNull];
+    if (survivor) {
+      // Vidas primeiro; no empate, o check-in mais recente.
+      participants.sort((a, b) {
+        final lives = ((b['lives_count'] as num?)?.toInt() ?? 0)
+            .compareTo((a['lives_count'] as num?)?.toInt() ?? 0);
+        if (lives != 0) return lives;
+        return (b['updated_at']?.toString() ?? '')
+            .compareTo(a['updated_at']?.toString() ?? '');
       });
     }
-  }
-
-  // --- AÇÃO DE CHECK-IN ---
-  void _handleMissionAction() {
-    final validationType = _arenaData?['validation_type'] ?? 'photo';
-    final int? xpLimit = _arenaData?['xp_limit_per_day'];
-    final String gameMode = _arenaData?['game_mode'] ?? 'alpha';
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => CreateCheckinSheet(
-        arenaId: widget.arenaId,
-        validationType: validationType,
-        xpLimitPerDay: xpLimit,
-        gameMode: gameMode,
-      ),
-    ).then((posted) {
-      if (posted == true) {
-        _loadData();
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Atividade registrada no Feed! 🚀"),
-              backgroundColor: Color(0xFFD4AF37),
-            )
-        );
-      }
+    setState(() {
+      _arena = arena;
+      _participants = participants;
+      _posts = results[1].valueOrNull ?? [];
+      _todayStatus = status.valueOrNull;
+      _loading = false;
     });
   }
 
-  // --- DIRETRIZES DO HAVOK (Regras por modo) ---
-  void _showXPRules(BuildContext context) {
-    final String mode = _arenaData?['game_mode'] ?? 'alpha';
-    final Color themeColor = _getModeColor(mode);
-    showModalBottomSheet(
+  void _checkIn() {
+    final l10n = AppLocalizations.of(context);
+    showModalBottomSheet<bool>(
       context: context,
-      backgroundColor: const Color(0xFF151515),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => CreateCheckinSheet(
+        arenaId: widget.arenaId,
+        validationType: _arena?['validation_type']?.toString() ?? 'photo',
+        xpLimitPerDay: (_arena?['xp_limit_per_day'] as num?)?.toInt(),
+        gameMode: _mode,
+      ),
+    ).then((posted) {
+      if (posted != true || !mounted) return;
+      _load();
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.sq_checkin_done)));
+    });
+  }
+
+  Future<void> _open(Widget screen) async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+    if (mounted) _load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final arena = _arena;
+    if (_loading || arena == null) {
+      return BldrBackground(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: SafeArea(
+            child: Column(
               children: [
-                Icon(Icons.smart_toy, color: themeColor),
-                const SizedBox(width: 8),
-                const Text("DIRETRIZES DO HAVOK", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: BldrCommunityBackButton(
+                      onTap: () => Navigator.maybePop(context)),
+                ),
+                Expanded(
+                  child: Center(
+                    child: _loading
+                        ? const CircularProgressIndicator(
+                            color: BldrCommunityColorsV2.gold, strokeWidth: 2)
+                        : Text(l10n.sq_load_error,
+                            style: BldrCommunityTextV2.sheetSub),
+                  ),
+                ),
               ],
             ),
-            const SizedBox(height: 16),
-            ..._buildModeRules(mode),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(backgroundColor: themeColor),
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text("ENTENDIDO", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+          ),
+        ),
+      );
+    }
+
+    final now = DateTime.now();
+    final summary = CommunityV2Format.squad(
+      arena: arena,
+      participants: _participants,
+      posts: _posts,
+      myUserId: _myId,
+      now: now,
+    );
+    final title = arena['title']?.toString() ?? 'Squad';
+    final meta = [
+      squadModeLabel(l10n, _mode),
+      l10n.sq_members_count(_participants.length),
+      if (summary.week case final w?) l10n.comm_squad_week(w),
+    ].join(' · ');
+    final daysLeft = CommunityV2Format.squadDaysLeft(arena, now);
+    final closed = daysLeft != null && daysLeft < 0;
+
+    return BldrBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Column(
+            children: [
+              SizedBox(
+                height: 64,
+                child: Row(
+                  children: [
+                    BldrCommunityBackButton(
+                        onTap: () => Navigator.maybePop(context)),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: BldrCommunityTextV2.sqTitle),
+                          Text(meta,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: BldrCommunityTextV2.squadMeta),
+                        ],
+                      ),
+                    ),
+                    _HeaderIcon(
+                      icon: TablerIcons.share_3,
+                      label: l10n.sq_share_label,
+                      onTap: () => showSquadShareSheet(context,
+                          arena: arena, meta: meta, rank: summary.myRank),
+                    ),
+                    _HeaderIcon(
+                      icon: TablerIcons.dots,
+                      label: l10n.sq_settings_label,
+                      onTap: () => _open(SquadSettingsScreen(arenaData: arena)),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: RefreshIndicator(
+                  color: BldrCommunityColorsV2.gold,
+                  backgroundColor: BldrCommunityColorsV2.surface,
+                  onRefresh: _load,
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(
+                        BldrCommunityV2.pageX, 4, BldrCommunityV2.pageX, 16),
+                    children: [
+                      if (_tab != 1) ...[
+                        _avatars(),
+                        const SizedBox(height: 14),
+                      ],
+                      _performance(l10n, summary),
+                      const SizedBox(height: 14),
+                      _tabs(l10n),
+                      const SizedBox(height: 20),
+                      ...switch (_tab) {
+                        0 => _overview(l10n, arena, daysLeft),
+                        1 => _feed(l10n),
+                        _ => _ranking(l10n, summary),
+                      },
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    BldrCommunityV2.pageX, 8, BldrCommunityV2.pageX, 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _BottomButton(
+                        label: l10n.sq_chat,
+                        icon: TablerIcons.message_circle,
+                        onTap: () => _open(SquadChatScreen(
+                          arenaId: widget.arenaId,
+                          title: title,
+                          members: _participants.length,
+                        )),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _BottomButton(
+                        label:
+                            closed ? l10n.sq_checkin_closed : l10n.sq_checkin,
+                        primary: true,
+                        onTap: closed ? null : _checkIn,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _avatars() {
+    final shown = _participants.take(5).toList();
+    return SizedBox(
+      height: 32,
+      child: Stack(
+        children: [
+          for (var i = 0; i < shown.length; i++)
+            Positioned(
+              left: i * 30.0,
+              child: BldrCommunityAvatar(
+                name: shown[i]['name']?.toString() ?? '?',
+                imageUrl: shown[i]['avatar']?.toString(),
+                size: 32,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _performance(AppLocalizations l10n, SquadHubSummary summary) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(17),
+        border: Border.all(color: BldrCommunityColorsV2.goldBrand, width: 0.7),
+      ),
+      child: BldrCommunityMetricRow(items: [
+        (
+          value: summary.myRank == null ? '—' : '#${summary.myRank}',
+          label: l10n.comm_squad_ranking,
+        ),
+        (
+          value: '${summary.trainedToday}/${_participants.length}',
+          label: l10n.sq_label_today,
+        ),
+      ]),
+    );
+  }
+
+  Widget _tabs(AppLocalizations l10n) {
+    final labels = [
+      l10n.sq_tab_overview,
+      l10n.sq_tab_feed,
+      l10n.sq_tab_ranking
+    ];
+    return Row(
+      children: [
+        for (var i = 0; i < labels.length; i++)
+          Expanded(
+            child: Semantics(
+              button: true,
+              selected: _tab == i,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => setState(() => _tab = i),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: 40,
+                      child: Center(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(labels[i],
+                              maxLines: 1,
+                              style: _tab == i
+                                  ? BldrCommunityTextV2.cta
+                                  : BldrCommunityTextV2.sqTab),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      height: 1.5,
+                      color: _tab == i
+                          ? BldrCommunityColorsV2.gold
+                          : Colors.transparent,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  List<Widget> _overview(
+      AppLocalizations l10n, Map<String, dynamic> arena, int? daysLeft) {
+    final goal = arena['daily_goal']?.toString().trim();
+    final stake = arena['stake']?.toString().trim();
+    final description = arena['description']?.toString().trim();
+    final status = switch (_todayStatus) {
+      null => l10n.sq_goal_sub,
+      'approved' => l10n.sq_status_approved,
+      'rejected' => l10n.sq_status_rejected,
+      _ => l10n.sq_status_pending,
+    };
+    final time = switch (daysLeft) {
+      null => null,
+      < 0 => l10n.sq_finished,
+      0 => l10n.sq_last_day,
+      1 => l10n.sq_day_left,
+      final n => l10n.sq_days_left(n),
+    };
+    final activity = CommunityV2Format.squadActivity(_posts).take(3).toList();
+    final isPhoto = arena['validation_type'] == 'photo';
+    return [
+      if (time != null) ...[
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
+          decoration: BoxDecoration(
+            color: BldrCommunityColorsV2.timeBg,
+            borderRadius: BorderRadius.circular(17),
+            border:
+                Border.all(color: BldrCommunityColorsV2.goldBrand, width: 0.7),
+          ),
+          child: Row(
+            children: [
+              const Icon(TablerIcons.bolt,
+                  size: 14, color: BldrCommunityColorsV2.gold),
+              const SizedBox(width: 8),
+              Expanded(child: Text(time, style: BldrCommunityTextV2.sqTime)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+      ],
+      Text(l10n.sq_goal_section, style: BldrCommunityTextV2.section),
+      const SizedBox(height: 8),
+      _Panel(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(goal == null || goal.isEmpty ? l10n.sq_goal_default : goal,
+                style: BldrCommunityTextV2.sqGoal),
+            const SizedBox(height: 6),
+            Text(status, style: BldrCommunityTextV2.discoverSub),
+          ],
+        ),
+      ),
+      if (stake != null && stake.isNotEmpty) ...[
+        const SizedBox(height: 20),
+        Text(l10n.sq_stake_section, style: BldrCommunityTextV2.section),
+        const SizedBox(height: 8),
+        _Panel(child: Text(stake, style: BldrCommunityTextV2.body)),
+      ],
+      if (description != null && description.isNotEmpty) ...[
+        const SizedBox(height: 20),
+        Text(l10n.sq_about_section, style: BldrCommunityTextV2.section),
+        const SizedBox(height: 8),
+        _Panel(child: Text(description, style: BldrCommunityTextV2.body)),
+      ],
+      const SizedBox(height: 12),
+      if (isPhoto)
+        BldrCommunitySheetRow(
+          icon: TablerIcons.gavel,
+          title: l10n.sq_tribunal,
+          subtitle: l10n.sq_tribunal_sub,
+          onTap: () => _open(TribunalScreen(arenaId: widget.arenaId)),
+        ),
+      BldrCommunitySheetRow(
+        icon: TablerIcons.history,
+        title: l10n.sq_history,
+        subtitle: l10n.sq_history_sub,
+        onTap: () => showModalBottomSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) =>
+              ArenaHistorySheet(arenaId: widget.arenaId, gameMode: _mode),
+        ),
+      ),
+      const SizedBox(height: 22),
+      Text(l10n.sq_activity_section, style: BldrCommunityTextV2.section),
+      const SizedBox(height: 12),
+      if (activity.isEmpty)
+        Text(l10n.sq_activity_empty, style: BldrCommunityTextV2.sheetSub),
+      for (final post in activity)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(_postAuthor(post),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: BldrCommunityTextV2.activityName),
+              const SizedBox(height: 2),
+              Text('${l10n.sq_activity_checkin} · ${_postAgo(l10n, post)}',
+                  style: BldrCommunityTextV2.activityMeta),
+            ],
+          ),
+        ),
+    ];
+  }
+
+  String _postAuthor(Map<String, dynamic> post) =>
+      (post['user_profiles'] as Map?)?['full_name']?.toString() ?? 'Atleta';
+
+  String _postAgo(AppLocalizations l10n, Map<String, dynamic> post) {
+    final created = DateTime.tryParse(post['created_at']?.toString() ?? '');
+    return created == null
+        ? ''
+        : communityAgo(l10n, created.toLocal(), DateTime.now());
+  }
+
+  List<Widget> _feed(AppLocalizations l10n) {
+    final posts = CommunityV2Format.squadActivity(_posts);
+    return [
+      Text(l10n.sq_feed_section, style: BldrCommunityTextV2.section),
+      const SizedBox(height: 12),
+      if (posts.isEmpty)
+        Text(l10n.sq_activity_empty, style: BldrCommunityTextV2.sheetSub),
+      for (final post in posts) ...[
+        Row(
+          children: [
+            BldrCommunityAvatar(
+              name: _postAuthor(post),
+              imageUrl:
+                  (post['user_profiles'] as Map?)?['avatar_url']?.toString(),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(_postAuthor(post),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: BldrCommunityTextV2.activityName),
+                  Text(_postAgo(l10n, post),
+                      style: BldrCommunityTextV2.activityMeta),
+                ],
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  List<Widget> _buildModeRules(String mode) {
-    switch (mode) {
-      case 'alpha':
-        return [
-          const Text("Como a IA calcula sua pontuação:", style: TextStyle(color: Colors.white70, fontSize: 14)),
-          const SizedBox(height: 16),
-          _buildRuleRow("Check-in Básico",              "+10 XP", Icons.check_circle),
-          _buildRuleRow("Por Minuto de Treino",         "+1 XP",  Icons.timer),
-          _buildRuleRow("Por Km (Corrida/Bike)",        "+10 XP", Icons.map),
-          _buildRuleRow("Atividade diferente no dia",   "+15 XP", Icons.swap_horiz),
-        ];
-      case 'survivor':
-        return [
-          const Text("Sobreviva. É simples assim.", style: TextStyle(color: Colors.white70, fontSize: 14)),
-          const SizedBox(height: 16),
-          _buildRuleRow("Vidas iniciais",               "2 VIDAS",               Icons.favorite),
-          _buildRuleRow("Check-in diário",              "Mantém você vivo",      Icons.check_circle),
-          _buildRuleRow("Foto não aprovada",             "−1 VIDA",               Icons.gavel),
-          _buildRuleRow("0 vidas",                      "ELIMINADO",             Icons.dangerous),
-          _buildRuleRow("Desempate",                    "Check-in mais recente", Icons.access_time),
-        ];
-      case 'roadrunner':
-        return [
-          const Text("Quanto mais você corre, mais pontua.", style: TextStyle(color: Colors.white70, fontSize: 14)),
-          const SizedBox(height: 16),
-          _buildRuleRow("Cada check-in",  "Registra seus km",        Icons.directions_run),
-          _buildRuleRow("Validação",      "Sistema de honra",        Icons.handshake),
-          _buildRuleRow("Ranking",        "Maior km acumulado",      Icons.emoji_events),
-          _buildRuleRow("Sem votação",    "Não há votação de fotos", Icons.no_photography),
-        ];
-      case 'hustle':
-        return [
-          const Text("Consistência é o único segredo.", style: TextStyle(color: Colors.white70, fontSize: 14)),
-          const SizedBox(height: 16),
-          _buildRuleRow("Cada dia treinado",           "+1 PONTO",           Icons.bolt),
-          _buildRuleRow("Vários treinos no mesmo dia", "Ainda 1 ponto",      Icons.info_outline),
-          _buildRuleRow("Validação",                   "Sistema de honra",   Icons.handshake),
-          _buildRuleRow("Ranking",                     "Maior nº de dias",   Icons.emoji_events),
-        ];
-      default:
-        return [_buildRuleRow("Check-in Básico", "+10 XP", Icons.check_circle)];
-    }
-  }
-
-  Widget _buildRuleRow(String title, String points, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: Colors.white54, size: 20),
-              const SizedBox(width: 12),
-              Text(title, style: const TextStyle(color: Colors.white)),
-            ],
-          ),
-          Text(points, style: const TextStyle(color: Color(0xFFD4AF37), fontWeight: FontWeight.bold)),
+        const SizedBox(height: 14),
+        Text(l10n.sq_feed_checkin, style: BldrCommunityTextV2.type),
+        if (post['caption']?.toString().trim().isNotEmpty == true) ...[
+          const SizedBox(height: 6),
+          Text(post['caption'].toString(),
+              style: BldrCommunityTextV2.activityBody),
         ],
-      ),
-    );
+        const SizedBox(height: 16),
+        const BldrCommunitySheetDivider(),
+        const SizedBox(height: 18),
+      ],
+    ];
   }
 
-  // --- COMPARTILHAMENTO ---
-  void _shareInvite() {
-    final String title = _arenaData?['title'] ?? 'Arena';
-    final String mode = _getModeTitle(_arenaData?['game_mode'] ?? 'survivor');
-    final String code = _arenaData?['share_code'] ?? widget.arenaId;
-    final String link = "bldr://invite/$code";
-
-    final String inviteText =
-        "CONVOCAÇÃO BLDR CLUB\n\n"
-        "Missão: $title\n"
-        "Modo: $mode\n\n"
-        "🔗Acesso Rápido:\n$link\n\n"
-        "Ou digite o código no app:\n"
-        "👉 $code \n\n"
-        "Não seja o último a entrar.";
-
-    Clipboard.setData(ClipboardData(text: inviteText));
-    ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Convite copiado! Mande no grupo. 🫡'),
-          backgroundColor: Color(0xFFD4AF37),
-          behavior: SnackBarBehavior.floating,
-        )
-    );
+  String _score(AppLocalizations l10n, Map<String, dynamic> p) {
+    final score = (p['current_score'] as num?)?.toDouble() ?? 0;
+    return switch (_mode) {
+      'survivor' => l10n.sq_lives((p['lives_count'] as num?)?.toInt() ?? 0),
+      'roadrunner' => l10n.sq_score_km(CommunityV2Format.decimal(
+          score, Localizations.localeOf(context).toString(),
+          digits: 1)),
+      'hustle' => l10n.sq_score_days(score.toInt()),
+      _ => l10n.sq_score_points(score.toInt()),
+    };
   }
 
-  // --- EDITAR MISSÃO ---
-  void _editMission() {
-    final TextEditingController missionController = TextEditingController(
-        text: _arenaData?['daily_mission'] ?? ''
-    );
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1A),
-        title: const Text("Definir Missão 🚩", style: TextStyle(color: Colors.white)),
-        content: TextField(
-          controller: missionController,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
-            hintText: "Ex: Correr 5km ou Treino Livre...",
-            hintStyle: TextStyle(color: Colors.grey),
-            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.grey)),
-            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFD4AF37))),
+  List<Widget> _ranking(AppLocalizations l10n, SquadHubSummary summary) {
+    bool alive(Map<String, dynamic> p) =>
+        !_survivor || ((p['lives_count'] as num?)?.toInt() ?? 0) > 0;
+    final active = _participants.where(alive).toList();
+    final out = _participants.where((p) => !alive(p)).toList();
+    Widget row(Map<String, dynamic> p, int? position) {
+      final me = p['user_id']?.toString() == _myId;
+      final name = p['name']?.toString() ?? 'Atleta';
+      return Container(
+        constraints: const BoxConstraints(minHeight: 55),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: BldrCommunityColorsV2.goalBg,
+          borderRadius: BorderRadius.circular(17),
+          border: Border.all(
+            color: me
+                ? BldrCommunityColorsV2.chatMineBorder
+                : BldrCommunityColorsV2.divider,
+            width: 0.7,
           ),
-          maxLines: 3,
         ),
-        actions: [
-          TextButton(
-            child: const Text("CANCELAR", style: TextStyle(color: Colors.grey)),
-            onPressed: () => Navigator.pop(ctx),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFD4AF37)),
-            child: const Text("SALVAR", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-            onPressed: () async {
-              Navigator.pop(ctx);
-              setState(() => _isLoading = true);
-              try {
-                final updateResult = await getIt<ArenaRepository>()
-                    .updateArena(widget.arenaId,
-                        {'daily_mission': missionController.text.trim()});
-                final updateFailure = updateResult.failureOrNull;
-                if (updateFailure != null) {
-                  throw Exception(updateFailure.message);
-                }
-
-                await _loadData();
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Missão atualizada!")));
-              } catch (e) {
-                print("Erro ao atualizar missão: $e");
-              } finally {
-                if (mounted) setState(() => _isLoading = false);
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  // --- HELPERS VISUAIS ---
-  String _getModeTitle(String mode) {
-    switch (mode) {
-      case 'survivor':   return 'MODO SURVIVOR';
-      case 'alpha':      return 'MODO ALFA';
-      case 'hustle':     return 'MODO HUSTLE';
-      case 'roadrunner': return 'MODO ROADRUNNER';
-      default:           return 'SQUAD';
-    }
-  }
-
-  Color _getModeColor(String mode) {
-    switch (mode) {
-      case 'survivor':   return Colors.redAccent;
-      case 'alpha':      return const Color(0xFFD4AF37);
-      case 'hustle':     return Colors.orangeAccent;
-      case 'roadrunner': return Colors.cyanAccent;
-      default:           return Colors.white;
-    }
-  }
-
-  IconData _getModeIcon(String mode) {
-    switch (mode) {
-      case 'survivor':   return Icons.local_fire_department;
-      case 'alpha':      return Icons.emoji_events;
-      case 'hustle':     return Icons.bolt;
-      case 'roadrunner': return Icons.directions_run;
-      default:           return Icons.shield;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(backgroundColor: Colors.black, body: Center(child: CircularProgressIndicator()));
-
-    final mode = _arenaData?['game_mode'] ?? 'survivor';
-    final validation = _arenaData?['validation_type'] ?? 'photo';
-    final themeColor = _getModeColor(mode);
-    final isSurvivor = mode == 'survivor';
-    final missionText = _arenaData?['daily_mission'] ?? '';
-
-    final active = _participants.where((p) {
-      if (isSurvivor) return (p['lives_count'] ?? 0) > 0;
-      return true;
-    }).toList();
-
-    final double maxScore = active.isEmpty ? 1.0 : active
-        .map((p) => (p['current_score'] as num?)?.toDouble() ?? 0.0)
-        .fold(0.0, (a, b) => a > b ? a : b)
-        .clamp(1.0, double.infinity);
-
-    final eliminated = _participants.where((p) {
-      if (isSurvivor) return (p['lives_count'] ?? 0) <= 0;
-      return false;
-    }).toList();
-
-    return Scaffold(
-      backgroundColor: Colors.black,
-
-      // --- BARRA DE AÇÃO INFERIOR ---
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Row(
           children: [
-            // 1. Botão de CHAT/TRIBUNAL
-            Expanded(
-              child: FloatingActionButton.extended(
-                heroTag: 'chat_btn',
-                backgroundColor: const Color(0xFF1A1A1A),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: const BorderSide(color: Colors.white12)
-                ),
-                elevation: 4,
-                icon: const Icon(Icons.forum, color: Colors.white),
-                label: const Text("CHAT", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => TribunalScreen(arenaId: widget.arenaId)),
-                  ).then((_) => _loadData());
-                },
-              ),
+            SizedBox(
+              width: 44,
+              child: Text(position == null ? '—' : '#$position',
+                  style: position != null && position <= 3
+                      ? BldrCommunityTextV2.sqRankPos
+                      : BldrCommunityTextV2.sqRankPosOff),
             ),
-
-            const SizedBox(width: 12),
-
-            // 2. Botão de CHECK-IN (desabilitado se arena encerrada)
             Expanded(
-              child: FloatingActionButton.extended(
-                heroTag: 'checkin_btn',
-                backgroundColor: (_daysRemaining != null && _daysRemaining! < 0)
-                    ? const Color(0xFF2A2A2A)
-                    : themeColor,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: 4,
-                icon: Icon(
-                  (_daysRemaining != null && _daysRemaining! < 0)
-                      ? Icons.lock_outline
-                      : Icons.add_a_photo,
-                  color: (_daysRemaining != null && _daysRemaining! < 0)
-                      ? Colors.white38
-                      : Colors.black,
-                ),
-                label: Text(
-                  (_daysRemaining != null && _daysRemaining! < 0)
-                      ? "ENCERRADO"
-                      : "CHECK-IN",
-                  style: TextStyle(
-                    color: (_daysRemaining != null && _daysRemaining! < 0)
-                        ? Colors.white38
-                        : Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                onPressed: (_daysRemaining != null && _daysRemaining! < 0)
-                    ? null
-                    : _handleMissionAction,
-              ),
+              child: Text(me ? '$name · ${l10n.sq_you}' : name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: BldrCommunityTextV2.sqRankName),
             ),
+            const SizedBox(width: 8),
+            Text(_score(l10n, p), style: BldrCommunityTextV2.sqRankPos),
           ],
         ),
-      ),
-
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: Text(_getModeTitle(mode), style: TextStyle(color: themeColor, fontWeight: FontWeight.bold, fontSize: 14, letterSpacing: 2)),
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
-        actions: [
-          IconButton(icon: const Icon(Icons.ios_share), onPressed: _shareInvite),
-          if (_arenaData != null)
-            IconButton(
-              icon: const Icon(Icons.settings_outlined),
-              onPressed: () async {
-                await Navigator.of(context).push(MaterialPageRoute(builder: (_) => SquadSettingsScreen(arenaData: _arenaData!)));
-                if (mounted) _loadData();
-              },
-            ),
-        ],
-      ),
-      body: RefreshIndicator(
-        color: const Color(0xFFD4AF37),
-        backgroundColor: const Color(0xFF1A1A1A),
-        onRefresh: _loadData,
-        child: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                children: [
-                  Icon(_getModeIcon(mode), size: 48, color: themeColor),
-                  const SizedBox(height: 16),
-                  Text(
-                    _arenaData?['title'] ?? 'Arena',
-                    style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _arenaData?['description'] ?? '',
-                    style: const TextStyle(color: Colors.white54, fontSize: 14),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // Banner de prazo (só aparece quando faltam ≤ 3 dias ou encerrada)
-          if (_daysRemaining != null && _daysRemaining! <= 3)
-            SliverToBoxAdapter(
-              child: _DeadlineBanner(daysRemaining: _daysRemaining!),
-            ),
-
-          // Missão
-          SliverToBoxAdapter(
-            child: _MissionBoard(
-              mission: missionText,
-              hasPosted: _hasPostedToday,
-              status: _todayStatus,
-              color: themeColor,
-              onEdit: _editMission,
-            ),
-          ),
-
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (isSurvivor) ...[
-                    _StatBadge(label: 'VIVOS', count: active.length, color: Colors.green),
-                    const SizedBox(width: 16),
-                    _StatBadge(label: 'BAIXAS', count: eliminated.length, color: Colors.red),
-                  ] else ...[
-                    _StatBadge(label: 'ATLETAS', count: active.length, color: themeColor),
-                  ]
-                ],
-              ),
-            ),
-          ),
-
-          if (active.isNotEmpty) ...[
-            // --- NOVO CABEÇALHO COM BOTÕES DE INFO E FEED ---
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                            isSurvivor ? "SOBREVIVENTES" : "RANKING",
-                            style: TextStyle(color: themeColor, fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.5)
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.info_outline, color: themeColor, size: 18),
-                          padding: const EdgeInsets.only(left: 8),
-                          constraints: const BoxConstraints(),
-                          onPressed: () => _showXPRules(context), // Abre regras
-                        )
-                      ],
-                    ),
-                    TextButton.icon(
-                      onPressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (ctx) => ArenaHistorySheet(arenaId: widget.arenaId, gameMode: mode), // Abre Feed
-                        );
-                      },
-                      icon: const Icon(Icons.history, color: Colors.white70, size: 16),
-                      label: const Text("Feed da Squad", style: TextStyle(color: Colors.white70, fontSize: 12)),
-                    )
-                  ],
-                ),
-              ),
-            ),
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                    (context, index) => _ParticipantTile(
-                  data: active[index],
-                  isMe: active[index]['user_id'] == _myUserId,
-                  mode: mode,
-                  rank: index + 1,
-                  maxScore: maxScore,
-                ),
-                childCount: active.length,
-              ),
-            ),
-          ],
-
-          if (eliminated.isNotEmpty) ...[
-            const SliverToBoxAdapter(
-                child: Padding(
-                    padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
-                    child: Text("CEMITÉRIO 💀", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1.5))
-                )
-            ),
-            SliverList(
-              delegate: SliverChildBuilderDelegate(
-                    (context, index) => _EliminatedTile(data: eliminated[index]),
-                childCount: eliminated.length,
-              ),
-            ),
-          ],
-
-          const SliverToBoxAdapter(child: SizedBox(height: 120)),
-        ],
-      ),
-      ),
-    );
-  }
-}
-
-class _DeadlineBanner extends StatelessWidget {
-  final int daysRemaining;
-  const _DeadlineBanner({required this.daysRemaining});
-
-  @override
-  Widget build(BuildContext context) {
-    final bool isExpired = daysRemaining < 0;
-    final bool isUrgent  = daysRemaining <= 1;
-
-    final Color color = isExpired
-        ? Colors.grey
-        : isUrgent
-            ? Colors.redAccent
-            : Colors.amber;
-
-    final IconData icon = isExpired
-        ? Icons.lock_outline
-        : isUrgent
-            ? Icons.warning_amber_rounded
-            : Icons.timer_outlined;
-
-    final String text = isExpired
-        ? 'Operação encerrada.'
-        : daysRemaining == 0
-            ? '🚨 Último dia! Encerra hoje.'
-            : daysRemaining == 1
-                ? '🚨 Encerra amanhã! Faça seu check-in.'
-                : '⚡ Operação encerra em $daysRemaining dias.';
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.4)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: color, size: 18),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              text,
-              style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MissionBoard extends StatelessWidget {
-  final String mission;
-  final bool hasPosted;
-  final String status;
-  final Color color;
-  final VoidCallback onEdit;
-
-  const _MissionBoard({
-    required this.mission,
-    required this.hasPosted,
-    required this.status,
-    required this.color,
-    required this.onEdit,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    IconData icon;
-    String statusText;
-    Color statusColor;
-
-    if (!hasPosted) {
-      icon = Icons.radio_button_unchecked;
-      statusText = "A FAZER";
-      statusColor = Colors.grey;
-    } else {
-      if (status == 'approved') {
-        icon = Icons.check_circle;
-        statusText = "CUMPRIDA";
-        statusColor = Colors.green;
-      } else if (status == 'rejected') {
-        icon = Icons.cancel;
-        statusText = "REJEITADA";
-        statusColor = Colors.red;
-      } else {
-        icon = Icons.hourglass_top;
-        statusText = "EM ANÁLISE";
-        statusColor = const Color(0xFFD4AF37);
-      }
+      );
     }
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFF151515),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-            color: hasPosted ? statusColor.withOpacity(0.5) : color.withOpacity(0.3)
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: (hasPosted ? statusColor : color).withOpacity(0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          )
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.flag, color: color, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                  "MISSÃO DO DIA",
-                  style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.5)
-              ),
-              IconButton(
-                icon: const Icon(Icons.edit, size: 16, color: Colors.grey),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                onPressed: onEdit,
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8)
-                ),
-                child: Row(
-                  children: [
-                    Icon(icon, size: 12, color: statusColor),
-                    const SizedBox(width: 4),
-                    Text(
-                        statusText,
-                        style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold)
-                    ),
-                  ],
-                ),
-              )
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            mission.isEmpty ? "Toque no lápis para definir..." : mission,
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: mission.isEmpty ? Colors.white24 : Colors.white
-            ),
-          ),
-
-          if (hasPosted && status == 'pending')
-            const Padding(
-              padding: EdgeInsets.only(top: 16.0),
-              child: Text(
-                  "Sua prova foi enviada para análise.",
-                  style: TextStyle(color: Colors.white38, fontSize: 12, fontStyle: FontStyle.italic)
-              ),
-            ),
-        ],
-      ),
-    );
+    return [
+      if (summary.week case final w?) ...[
+        Text(l10n.sq_week(w), style: BldrCommunityTextV2.section),
+        const SizedBox(height: 10),
+      ],
+      for (var i = 0; i < active.length; i++) row(active[i], i + 1),
+      if (out.isNotEmpty) ...[
+        const SizedBox(height: 10),
+        Text(l10n.sq_eliminated_section, style: BldrCommunityTextV2.section),
+        const SizedBox(height: 10),
+        for (final p in out) row(p, null),
+      ],
+    ];
   }
 }
 
-class _StatBadge extends StatelessWidget {
-  final String label; final int count; final Color color;
-  const _StatBadge({required this.label, required this.count, required this.color});
+class _Panel extends StatelessWidget {
+  final Widget child;
+  const _Panel({required this.child});
+
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(color: color.withOpacity(0.1), border: Border.all(color: color.withOpacity(0.3)), borderRadius: BorderRadius.circular(8)),
-      child: Column(children: [Text('$count', style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 18)), Text(label, style: TextStyle(color: color.withOpacity(0.7), fontSize: 10, letterSpacing: 1))]),
-    );
-  }
+  Widget build(BuildContext context) => Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(17),
+        decoration: BoxDecoration(
+          color: BldrCommunityColorsV2.goalBg,
+          borderRadius: BorderRadius.circular(17),
+          border: Border.all(color: BldrCommunityColorsV2.divider, width: 0.7),
+        ),
+        child: child,
+      );
 }
 
-class _ParticipantTile extends StatelessWidget {
-  final Map<String, dynamic> data;
-  final bool isMe;
-  final String mode;
-  final int rank;
-  final double maxScore;
+class _HeaderIcon extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
 
-  const _ParticipantTile({
-    required this.data,
-    required this.isMe,
-    required this.mode,
-    required this.rank,
-    required this.maxScore,
+  const _HeaderIcon(
+      {required this.icon, required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+        button: true,
+        label: label,
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: onTap,
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Icon(icon, size: 22, color: BldrCommunityColorsV2.icon),
+          ),
+        ),
+      );
+}
+
+class _BottomButton extends StatelessWidget {
+  final String label;
+  final IconData? icon;
+  final bool primary;
+  final VoidCallback? onTap;
+
+  const _BottomButton({
+    required this.label,
+    required this.onTap,
+    this.icon,
+    this.primary = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final int lives = data['lives_count'] ?? 0;
-    final String name = data['name'] ?? 'Atleta';
-    final String? avatar = data['avatar'];
-    final double score = (data['current_score'] as num?)?.toDouble() ?? 0.0;
-    final double ratio = (score / maxScore).clamp(0.0, 1.0);
-
-    final Color scoreColor = mode == 'roadrunner'
-        ? Colors.cyanAccent
-        : mode == 'hustle'
-            ? Colors.orangeAccent
-            : const Color(0xFFD4AF37);
-
-    final String scoreLabel = mode == 'roadrunner'
-        ? '${score.toStringAsFixed(1)} KM'
-        : mode == 'hustle'
-            ? '${score.toInt()} DIAS'
-            : '${score.toInt()} PTS';
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFF121212),
-        borderRadius: BorderRadius.circular(12),
-        border: isMe ? Border.all(color: Colors.green.withOpacity(0.4), width: 1.5) : null,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              if (mode != 'survivor')
-                Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: Text('#$rank',
-                      style: TextStyle(
-                          color: isMe ? Colors.green : Colors.white38,
-                          fontWeight: FontWeight.bold)),
-                ),
-              CircleAvatar(
-                radius: 20,
-                backgroundImage: avatar != null ? NetworkImage(avatar) : null,
-                backgroundColor: Colors.grey[800],
-                child: avatar == null
-                    ? Text(name[0], style: const TextStyle(color: Colors.white))
-                    : null,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  name + (isMe ? ' (Você)' : ''),
-                  style: TextStyle(
-                      color: isMe ? Colors.green : Colors.white,
-                      fontWeight: FontWeight.bold),
-                ),
-              ),
-              if (mode == 'survivor')
-                Row(
-                  children: List.generate(2, (index) {
-                    if (index < lives) {
-                      return const Icon(Icons.favorite, color: Colors.red, size: 18);
-                    } else {
-                      return const Icon(Icons.favorite_border, color: Colors.grey, size: 18);
-                    }
-                  }),
-                )
-              else
-                Text(scoreLabel,
-                    style: TextStyle(
-                        color: scoreColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12)),
-            ],
-          ),
-          if (mode != 'survivor') ...[
-            const SizedBox(height: 8),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(2),
-              child: LinearProgressIndicator(
-                value: ratio,
-                minHeight: 3,
-                backgroundColor: Colors.white10,
-                color: scoreColor,
+    return Semantics(
+      button: true,
+      enabled: onTap != null,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Opacity(
+          opacity: onTap == null ? 0.45 : 1,
+          child: Container(
+            height: 44,
+            decoration: BoxDecoration(
+              color: BldrCommunityColorsV2.fieldBg,
+              borderRadius: BorderRadius.circular(17),
+              border: Border.all(
+                color: primary
+                    ? BldrCommunityColorsV2.gold
+                    : BldrCommunityColorsV2.fieldBorder,
+                width: 0.7,
               ),
             ),
-          ],
-        ],
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 18, color: BldrCommunityColorsV2.text),
+                  const SizedBox(width: 8),
+                ],
+                Flexible(
+                  child: Text(label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: primary
+                          ? BldrCommunityTextV2.cta
+                          : BldrCommunityTextV2.sqModeOn),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
-  }
-}
-
-class _EliminatedTile extends StatelessWidget {
-  final Map<String, dynamic> data;
-  const _EliminatedTile({required this.data});
-  @override
-  Widget build(BuildContext context) {
-    final String name = data['name'] ?? 'Atleta'; final String? avatar = data['avatar'];
-    return Container(margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: const Color(0xFF0A0A0A), borderRadius: BorderRadius.circular(12)), child: Row(children: [ColorFiltered(colorFilter: const ColorFilter.mode(Colors.grey, BlendMode.saturation), child: CircleAvatar(radius: 20, backgroundImage: avatar != null ? NetworkImage(avatar) : null, backgroundColor: Colors.grey[900], child: avatar == null ? Text(name[0], style: const TextStyle(color: Colors.white38)) : null)), const SizedBox(width: 12), Expanded(child: Text(name, style: const TextStyle(color: Colors.grey, decoration: TextDecoration.lineThrough))), const Icon(Icons.dangerous, color: Colors.grey, size: 18)]));
   }
 }

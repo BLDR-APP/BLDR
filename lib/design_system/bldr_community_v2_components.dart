@@ -412,3 +412,95 @@ class BldrCommunityBackButton extends StatelessWidget {
     );
   }
 }
+
+/// Campo de formulário dos Squads (93:921–93:923).
+class BldrSquadField extends StatelessWidget {
+  final String label;
+  final String hint;
+  final TextEditingController controller;
+  final TextCapitalization capitalization;
+  final TextInputType? keyboardType;
+  final int maxLines;
+  final int? maxLength;
+
+  const BldrSquadField({
+    super.key,
+    required this.label,
+    required this.hint,
+    required this.controller,
+    this.capitalization = TextCapitalization.sentences,
+    this.keyboardType,
+    this.maxLines = 1,
+    this.maxLength,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    OutlineInputBorder border(Color color) => OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: color, width: 0.8),
+        );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: BldrCommunityTextV2.sqLabel),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          maxLength: maxLength,
+          keyboardType: keyboardType,
+          textCapitalization: capitalization,
+          cursorColor: BldrCommunityColorsV2.gold,
+          style: BldrCommunityTextV2.sqInput,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: BldrCommunityTextV2.sqHint,
+            counterText: '',
+            filled: true,
+            fillColor: BldrCommunityColorsV2.fieldBg,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+            enabledBorder: border(BldrCommunityColorsV2.fieldBorder),
+            focusedBorder: border(BldrCommunityColorsV2.gold),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Aviso da cota FREE de squads (D8/D11).
+class BldrSquadQuotaNote extends StatelessWidget {
+  final String text;
+  final bool blocked;
+
+  const BldrSquadQuotaNote(
+      {super.key, required this.text, required this.blocked});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: BldrCommunityColorsV2.goalBg,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+          color: blocked
+              ? BldrCommunityColorsV2.gold
+              : BldrCommunityColorsV2.modeBorder,
+          width: 0.8,
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(blocked ? TablerIcons.lock : TablerIcons.info_circle,
+              size: 16, color: BldrCommunityColorsV2.gold),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text, style: BldrCommunityTextV2.rowSub)),
+        ],
+      ),
+    );
+  }
+}

@@ -47,6 +47,38 @@ void main() {
     });
   });
 
+  group('detalhe do squad', () {
+    final now = DateTime(2026, 11, 18, 12);
+
+    test('dias restantes, encerrado e sem data', () {
+      final end = now.add(const Duration(days: 3, hours: 1));
+      expect(
+        CommunityV2Format.squadDaysLeft(
+            {'end_date': end.toUtc().toIso8601String()}, now),
+        3,
+      );
+      expect(CommunityV2Format.squadDaysLeft({'is_active': false}, now), -1);
+      expect(
+        CommunityV2Format.squadDaysLeft({
+          'end_date':
+              now.subtract(const Duration(hours: 1)).toUtc().toIso8601String()
+        }, now),
+        -1,
+      );
+      expect(CommunityV2Format.squadDaysLeft(const {}, now), isNull);
+    });
+
+    test('separa atividade do chat e ordena o chat do mais antigo', () {
+      const posts = [
+        {'id': 3, 'status': 'chat'},
+        {'id': 2, 'status': 'approved'},
+        {'id': 1, 'status': 'chat'},
+      ];
+      expect(CommunityV2Format.squadActivity(posts).single['id'], 2);
+      expect(CommunityV2Format.squadChat(posts).map((p) => p['id']), [1, 3]);
+    });
+  });
+
   group('CommunityV2Format.squad', () {
     final now = DateTime(2026, 11, 17, 20);
     String iso(DateTime d) => d.toUtc().toIso8601String();

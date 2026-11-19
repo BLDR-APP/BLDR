@@ -419,12 +419,7 @@ class _CreateOrJoinCta extends StatelessWidget {
     if (!context.mounted || choice == null) return;
     if (choice == 'code') {
       // Sheet atual com o aviso de cota FREE (D8/D11).
-      await showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.transparent,
-        builder: (_) => const JoinSquadSheet(),
-      );
+      await JoinSquadSheet.show(context);
     } else {
       await Navigator.push(context,
           MaterialPageRoute(builder: (_) => const CreateArenaScreen()));

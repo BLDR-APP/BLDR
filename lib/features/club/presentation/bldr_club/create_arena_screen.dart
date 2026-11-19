@@ -4,7 +4,11 @@ import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/features/club/domain/repositories/arena_repository.dart';
 import 'package:bldr_fitness/features/subscription/domain/usecases/resolve_club_access.dart';
 import 'package:bldr_fitness/features/subscription/presentation/paywall/club_paywall_sheet.dart';
+import 'package:bldr_fitness/design_system/bldr_community_v2_components.dart';
+import 'package:bldr_fitness/design_system/bldr_components.dart';
+import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/arena_details_screen.dart';
+import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 import 'dart:math';
 
@@ -18,6 +22,7 @@ class CreateArenaScreen extends StatefulWidget {
 class _CreateArenaScreenState extends State<CreateArenaScreen> {
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
+  final _stakeController = TextEditingController();
 
   bool _isLoading = false;
   bool _isCheckingQuota = true;
@@ -30,13 +35,34 @@ class _CreateArenaScreenState extends State<CreateArenaScreen> {
   // Configurações Padrão
   String _selectedMode = 'hustle';
   int _durationDays = 7;
-  String _selectedValidation = 'photo';
+  String _selectedValidation = 'manual';
 
   @override
   void initState() {
     super.initState();
     _loadQuota();
   }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descController.dispose();
+    _stakeController.dispose();
+    super.dispose();
+  }
+
+  /// Roadrunner e Hustle usam só check-in de honra (ranking objetivo).
+  bool get _honorOnly =>
+      _selectedMode == 'roadrunner' || _selectedMode == 'hustle';
+
+  void _selectMode(String mode) => setState(() {
+        _selectedMode = mode;
+        _selectedValidation = mode == 'roadrunner' || mode == 'hustle'
+            ? 'manual'
+            : _selectedValidation == 'manual'
+                ? 'photo'
+                : _selectedValidation;
+      });
 
   Future<void> _loadQuota() async {
     try {
@@ -82,12 +108,15 @@ class _CreateArenaScreenState extends State<CreateArenaScreen> {
   String _generateSquadCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     final rnd = Random();
-    String part1 = String.fromCharCodes(Iterable.generate(3, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))));
-    String part2 = String.fromCharCodes(Iterable.generate(3, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))));
+    String part1 = String.fromCharCodes(Iterable.generate(
+        3, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))));
+    String part2 = String.fromCharCodes(Iterable.generate(
+        3, (_) => chars.codeUnitAt(rnd.nextInt(chars.length))));
     return "$part1-$part2";
   }
 
   Future<void> _createArena() async {
+    final l10n = AppLocalizations.of(context);
     if (_limitReached) {
       await ClubPaywallSheet.show(context);
       return;
@@ -95,12 +124,8 @@ class _CreateArenaScreenState extends State<CreateArenaScreen> {
 
     final title = _titleController.text.trim();
     if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Dê um nome para o seu Squad!'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(l10n.sq_name_required)));
       return;
     }
 
@@ -132,12 +157,13 @@ class _CreateArenaScreenState extends State<CreateArenaScreen> {
           // Update local quota state so the UI reflects the new count.
           if (mounted) {
             setState(() {
-              _createdThisMonth = (response['used'] as num?)?.toInt() ?? _createdThisMonth;
+              _createdThisMonth =
+                  (response['used'] as num?)?.toInt() ?? _createdThisMonth;
             });
           }
           await ClubPaywallSheet.show(context);
         } else {
-          throw Exception('Não foi possível criar o Squad: $reason');
+          throw Exception(reason);
         }
         return;
       }
@@ -150,6 +176,13 @@ class _CreateArenaScreenState extends State<CreateArenaScreen> {
         final used = (response['used'] as num?)?.toInt();
         if (used != null) setState(() => _createdThisMonth = used);
 
+        // A aposta é gravada depois: o RPC de cota não recebe este campo.
+        final stake = _stakeController.text.trim();
+        if (stake.isNotEmpty) {
+          await getIt<ArenaRepository>().updateArena(arenaId, {'stake': stake});
+          if (!mounted) return;
+        }
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -157,13 +190,13 @@ class _CreateArenaScreenState extends State<CreateArenaScreen> {
           ),
         );
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Squad criado! Convoque a tropa. 🔥')),
+          SnackBar(content: Text(l10n.sq_created)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro: $e'), backgroundColor: Colors.red),
+          SnackBar(content: Text(l10n.sq_create_error)),
         );
       }
     } finally {
@@ -171,555 +204,268 @@ class _CreateArenaScreenState extends State<CreateArenaScreen> {
     }
   }
 
-  // Descrição do Modo de Jogo
-  String _getModeDescription() {
-    switch (_selectedMode) {
-      case 'survivor': return "⚠️ Hardcore: Quem ficar 2 dias sem treinar é eliminado automaticamente.";
-      case 'alpha': return "🐺 O Líder da Matilha: Ganha quem somar mais XP total (todos os treinos contam).";
-      case 'roadrunner': return "🏃 Cardio Puro: Vence quem acumular a maior distância em corridas.";
-      case 'hustle': return "🔥 Consistência: Não importa o treino, importa ir. Ganha quem treinar mais dias.";
-      default: return "";
-    }
-  }
+  String _modeInfo(AppLocalizations l10n) => switch (_selectedMode) {
+        'survivor' => l10n.sq_mode_survivor_info,
+        'alpha' => l10n.sq_mode_alpha_info,
+        'roadrunner' => l10n.sq_mode_roadrunner_info,
+        _ => l10n.sq_mode_hustle_info,
+      };
 
-  // Descrição do Protocolo de Validação
-  String _getValidationDescription() {
-    switch (_selectedValidation) {
-      case 'photo': return "📸 PROVA VISUAL: Foto obrigatória. Sujeito a votação dos membros.";
-      case 'manual': return "🤝 SISTEMA DE HONRA: Check-in manual. Foto opcional apenas para registro.";
-      default: return "";
-    }
-  }
+  String _modeName(AppLocalizations l10n) => switch (_selectedMode) {
+        'survivor' => l10n.club_game_mode_survivor,
+        'alpha' => l10n.club_game_mode_alfa,
+        'roadrunner' => l10n.club_game_mode_roadrunner,
+        _ => l10n.club_game_mode_hustle,
+      };
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: BldrColors.bgBase,
-      appBar: AppBar(
-        backgroundColor: BldrColors.bgBase,
-        title: const Text(
-          "NOVO SQUAD",
-          style: TextStyle(
-            color: BldrColors.goldBright,
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-            letterSpacing: 1.5,
+    final l10n = AppLocalizations.of(context);
+    Widget mode(String id, String title, String sub) => Expanded(
+          child: _OptionCard(
+            title: title,
+            subtitle: sub,
+            selected: _selectedMode == id,
+            onTap: () => _selectMode(id),
           ),
-        ),
-        leading: const BackButton(color: BldrColors.textPrimary),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "Configure a Arena",
-              style: BldrText.screenTitle.copyWith(color: BldrColors.textPrimary),
-            ),
-            const SizedBox(height: 8),
-            Text("Escolha as regras de combate.", style: BldrText.body),
-
-            // Free quota indicator (hidden for Club users and while loading)
-            if (!_isCheckingQuota && !_isClub) ...[
-              const SizedBox(height: 12),
-              _QuotaIndicator(
-                used: _createdThisMonth,
-                limit: _freeCreateLimit,
-                limitReached: _limitReached,
-              ),
-            ],
-
-            const SizedBox(height: 32),
-
-            // NOME
-            const _Label("NOME DO SQUAD"),
-            TextField(
-              controller: _titleController,
-              style: const TextStyle(color: BldrColors.textPrimary),
-              decoration: _inputDeco("Ex: Desafio de Carnaval"),
-            ),
-
-            const SizedBox(height: 24),
-
-            // DESCRIÇÃO
-            const _Label("PRÊMIO / PUNIÇÃO (OPCIONAL)"),
-            TextField(
-              controller: _descController,
-              style: const TextStyle(color: BldrColors.textPrimary),
-              decoration: _inputDeco("Ex: O último paga o açaí."),
-            ),
-
-            const SizedBox(height: 24),
-
-            // MODO DE JOGO (GRID 2x2)
-            const _Label("MODO DE JOGO"),
-            Column(
-              children: [
-                Row(
+        );
+    return BldrBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Column(
+            children: [
+              SizedBox(
+                height: 56,
+                child: Row(
                   children: [
-                    Expanded(child: _ModeCard(
-                      title: 'SURVIVOR',
-                      subtitle: '(ÚLTIMO DE PÉ)',
-                      icon: Icons.dangerous,
-                      isSelected: _selectedMode == 'survivor',
-                      onTap: () => setState(() {
-                        _selectedMode = 'survivor';
-                        if (_selectedValidation == 'manual') _selectedValidation = 'photo';
-                      }),
-                    )),
-                    const SizedBox(width: 12),
-                    Expanded(child: _ModeCard(
-                      title: 'ALFA (XP)',
-                      subtitle: '(XP ACUMULADO)',
-                      icon: Icons.emoji_events,
-                      isSelected: _selectedMode == 'alpha',
-                      onTap: () => setState(() {
-                        _selectedMode = 'alpha';
-                        if (_selectedValidation == 'manual') _selectedValidation = 'photo';
-                      }),
-                    )),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(child: _ModeCard(
-                      title: 'ROADRUNNER',
-                      subtitle: '(MAIS KMs)',
-                      icon: Icons.directions_run,
-                      isSelected: _selectedMode == 'roadrunner',
-                      onTap: () => setState(() {
-                        _selectedMode = 'roadrunner';
-                        _selectedValidation = 'manual';
-                      }),
-                    )),
-                    const SizedBox(width: 12),
-                    Expanded(child: _ModeCard(
-                      title: 'HUSTLE',
-                      subtitle: '(DIAS DE TREINO)',
-                      icon: Icons.bolt,
-                      isSelected: _selectedMode == 'hustle',
-                      onTap: () => setState(() {
-                        _selectedMode = 'hustle';
-                        _selectedValidation = 'manual';
-                      }),
-                    )),
-                  ],
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 12),
-
-            // Descrição Dinâmica do MODO
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: BldrColors.goldTint,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: BldrColors.goldBorder),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.info_outline, color: BldrColors.goldBright, size: 16),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _getModeDescription(),
-                      style: const TextStyle(
-                        color: BldrColors.goldBright,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 32),
-
-            // --- PROTOCOLO DE VALIDAÇÃO ---
-            const _Label("PROTOCOLO DE VALIDAÇÃO"),
-            if (_selectedMode == 'roadrunner' || _selectedMode == 'hustle')
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: BldrColors.goldTint,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: BldrColors.goldBorder),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.lock_outline, color: BldrColors.goldBright, size: 16),
-                    SizedBox(width: 8),
+                    BldrCommunityBackButton(
+                        onTap: () => Navigator.maybePop(context)),
                     Expanded(
-                      child: Text(
-                        "Este modo usa apenas CHECK-IN de honra. O ranking é objetivo (km / dias) — sem votação de fotos.",
-                        style: TextStyle(
-                          color: BldrColors.goldBright,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: Text(l10n.sq_new_title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: BldrCommunityTextV2.sqTitle),
                     ),
                   ],
                 ),
-              )
-            else ...[
-              const Padding(
-                padding: EdgeInsets.only(bottom: 12.0),
-                child: Text(
-                  "Como os agentes provam que treinaram?",
-                  style: TextStyle(color: BldrColors.textSecondary, fontSize: 12),
-                ),
               ),
-              Row(
-                children: [
-                  Expanded(
-                    child: _ValidationCard(
-                      title: 'VISUAL',
-                      subtitle: 'FOTO OBRIGATÓRIA',
-                      icon: Icons.camera_alt_outlined,
-                      isSelected: _selectedValidation == 'photo',
-                      onTap: () => setState(() => _selectedValidation = 'photo'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _ValidationCard(
-                      title: 'HONRA',
-                      subtitle: 'CHECK-IN MANUAL',
-                      icon: Icons.handshake_outlined,
-                      isSelected: _selectedValidation == 'manual',
-                      onTap: () => setState(() => _selectedValidation = 'manual'),
-                    ),
-                  ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Text(
-                  _getValidationDescription(),
-                  style: const TextStyle(
-                    color: BldrColors.goldBright,
-                    fontSize: 11,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-            ],
-
-            const SizedBox(height: 32),
-
-            // --- DURAÇÃO ---
-            const _Label("DURAÇÃO"),
-            Row(
-              children: [7, 15, 30].map((days) => _DurationChip(
-                days: days,
-                isSelected: _durationDays == days,
-                onTap: () => setState(() => _durationDays = days),
-              )).toList(),
-            ),
-
-            const SizedBox(height: 40),
-
-            // BOTÃO CRIAR
-            if (_limitReached) ...[
-              // Limit reached: explain and offer upgrade
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: BldrColors.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: BldrColors.goldBorder),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(
+                      BldrCommunityV2.pageX, 8, BldrCommunityV2.pageX, 32),
                   children: [
-                    const Text(
-                      "Você já criou $_freeCreateLimit Squads este mês.",
-                      style: TextStyle(
-                        color: BldrColors.textPrimary,
-                        fontWeight: FontWeight.bold,
+                    Text(l10n.sq_new_heading,
+                        style: BldrCommunityTextV2.sqHeading),
+                    const SizedBox(height: 4),
+                    Text(l10n.sq_new_sub, style: BldrCommunityTextV2.sheetSub),
+                    const SizedBox(height: 24),
+                    BldrSquadField(
+                      label: l10n.sq_field_name,
+                      hint: l10n.sq_field_name_hint,
+                      controller: _titleController,
+                      maxLength: 60,
+                    ),
+                    const SizedBox(height: 20),
+                    BldrSquadField(
+                      label: l10n.sq_field_stake,
+                      hint: l10n.sq_field_stake_hint,
+                      controller: _stakeController,
+                      maxLength: 120,
+                    ),
+                    const SizedBox(height: 20),
+                    BldrSquadField(
+                      label: l10n.sq_field_desc,
+                      hint: l10n.sq_field_desc_hint,
+                      controller: _descController,
+                      maxLength: 200,
+                    ),
+                    const SizedBox(height: 24),
+                    Text(l10n.sq_field_mode,
+                        style: BldrCommunityTextV2.sqLabel),
+                    const SizedBox(height: 8),
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          mode('survivor', l10n.club_game_mode_survivor,
+                              l10n.sq_mode_survivor_sub),
+                          const SizedBox(width: 8),
+                          mode('alpha', l10n.club_game_mode_alfa,
+                              l10n.sq_mode_alpha_sub),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      "A cota gratuita é de 2 criações por mês. Assine o BLDR Club para criar sem limites.",
-                      style: TextStyle(color: BldrColors.textSecondary, fontSize: 12),
+                    const SizedBox(height: 12),
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          mode('roadrunner', l10n.club_game_mode_roadrunner,
+                              l10n.sq_mode_roadrunner_sub),
+                          const SizedBox(width: 8),
+                          mode('hustle', l10n.club_game_mode_hustle,
+                              l10n.sq_mode_hustle_sub),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: () => ClubPaywallSheet.show(context),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: BldrColors.goldSolid,
-                          foregroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        child: const Text(
-                          "ASSINAR BLDR CLUB",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: BldrCommunityColorsV2.goalBg,
+                        borderRadius: BorderRadius.circular(15),
+                        border: Border.all(
+                            color: BldrCommunityColorsV2.modeBorder,
+                            width: 0.8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(_modeName(l10n),
+                              style: BldrCommunityTextV2.type),
+                          const SizedBox(height: 4),
+                          Text(_modeInfo(l10n),
+                              style: BldrCommunityTextV2.body),
+                        ],
+                      ),
+                    ),
+                    if (!_honorOnly) ...[
+                      const SizedBox(height: 24),
+                      Text(l10n.sq_field_validation,
+                          style: BldrCommunityTextV2.sqLabel),
+                      const SizedBox(height: 8),
+                      IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: _OptionCard(
+                                title: l10n.sq_validation_photo,
+                                subtitle: l10n.sq_validation_photo_sub,
+                                selected: _selectedValidation == 'photo',
+                                onTap: () => setState(
+                                    () => _selectedValidation = 'photo'),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _OptionCard(
+                                title: l10n.sq_validation_honor,
+                                subtitle: l10n.sq_validation_honor_sub,
+                                selected: _selectedValidation == 'manual',
+                                onTap: () => setState(
+                                    () => _selectedValidation = 'manual'),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                    ],
+                    const SizedBox(height: 24),
+                    Text(l10n.sq_field_duration,
+                        style: BldrCommunityTextV2.sqLabel),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        for (final days in const [7, 15, 30]) ...[
+                          if (days != 7) const SizedBox(width: 8),
+                          Expanded(
+                            child: _DurationChip(
+                              label: l10n.sq_duration_days(days),
+                              selected: _durationDays == days,
+                              onTap: () => setState(() => _durationDays = days),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    if (!_isCheckingQuota && !_isClub) ...[
+                      const SizedBox(height: 20),
+                      BldrSquadQuotaNote(
+                        text: _limitReached
+                            ? l10n.sq_quota_create_full(_freeCreateLimit)
+                            : l10n.sq_quota_create(
+                                _freeCreateLimit - _createdThisMonth,
+                                _freeCreateLimit),
+                        blocked: _limitReached,
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    BldrV2SheetButton(
+                      label: _limitReached
+                          ? l10n.sq_subscribe
+                          : l10n.sq_create_cta,
+                      onTap:
+                          _isLoading || _isCheckingQuota ? null : _createArena,
                     ),
                   ],
                 ),
               ),
-            ] else ...[
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _createArena,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: BldrColors.goldSolid,
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(color: Colors.black, strokeWidth: 2.5),
-                        )
-                      : const Text(
-                          "CRIAR SQUAD",
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                ),
-              ),
             ],
-            const SizedBox(height: 40),
-          ],
+          ),
         ),
       ),
     );
   }
-
-  InputDecoration _inputDeco(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(color: BldrColors.textMuted),
-      filled: true,
-      fillColor: BldrColors.surfaceInset,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: BldrColors.goldBright),
-      ),
-    );
-  }
 }
 
-// ── Quota indicator ───────────────────────────────────────────────────────────
-class _QuotaIndicator extends StatelessWidget {
-  final int used;
-  final int limit;
-  final bool limitReached;
-
-  const _QuotaIndicator({
-    required this.used,
-    required this.limit,
-    required this.limitReached,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final color = limitReached ? Colors.redAccent : BldrColors.textSecondary;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: limitReached
-            ? Colors.redAccent.withOpacity(0.08)
-            : BldrColors.surface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: limitReached
-              ? Colors.redAccent.withOpacity(0.3)
-              : BldrColors.border,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            limitReached ? Icons.lock_outline : Icons.info_outline,
-            color: color,
-            size: 14,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              limitReached
-                  ? "Você já criou $limit Squads este mês. Assine o Club para criar sem limites."
-                  : "$used de $limit Squads criados este mês",
-              style: TextStyle(color: color, fontSize: 12),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Labels & Cards ────────────────────────────────────────────────────────────
-class _Label extends StatelessWidget {
-  final String text;
-  const _Label(this.text);
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: Text(
-      text,
-      style: const TextStyle(
-        color: BldrColors.textSecondary,
-        fontSize: 12,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 1,
-      ),
-    ),
-  );
-}
-
-class _ModeCard extends StatelessWidget {
+/// Cartão de modo/validação (93:928, 93:937).
+class _OptionCard extends StatelessWidget {
   final String title;
   final String subtitle;
-  final IconData icon;
-  final bool isSelected;
+  final bool selected;
   final VoidCallback onTap;
 
-  const _ModeCard({
+  const _OptionCard({
     required this.title,
     required this.subtitle,
-    required this.icon,
-    required this.isSelected,
+    required this.selected,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 110,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? BldrColors.goldTint : BldrColors.surface,
-          border: Border.all(
-            color: isSelected ? BldrColors.goldBright : BldrColors.border,
-            width: 1.5,
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 72),
+          padding: const EdgeInsets.all(13),
+          decoration: BoxDecoration(
+            color: selected
+                ? BldrCommunityColorsV2.modeOnBg
+                : BldrCommunityColorsV2.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: selected
+                  ? BldrCommunityColorsV2.gold
+                  : BldrCommunityColorsV2.modeBorder,
+              width: 0.8,
+            ),
           ),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? BldrColors.goldBright : BldrColors.textSecondary,
-              size: 28,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: TextStyle(
-                color: isSelected ? BldrColors.textPrimary : BldrColors.textSecondary,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle.toUpperCase(),
-              style: TextStyle(
-                color: isSelected
-                    ? BldrColors.goldBright.withOpacity(0.7)
-                    : BldrColors.textMuted,
-                fontSize: 9,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ValidationCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _ValidationCard({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 80,
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? BldrColors.goldTint : BldrColors.surface,
-          border: Border.all(
-            color: isSelected ? BldrColors.goldBright : BldrColors.border,
-            width: isSelected ? 1.5 : 1,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: selected
+                      ? BldrCommunityTextV2.sqModeOn
+                      : BldrCommunityTextV2.sqModeOff),
+              const SizedBox(height: 4),
+              Text(subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: selected
+                      ? BldrCommunityTextV2.sqModeSubOn
+                      : BldrCommunityTextV2.rowSub),
+            ],
           ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? BldrColors.goldBright : BldrColors.textSecondary,
-              size: 20,
-            ),
-            const SizedBox(height: 4),
-            Flexible(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    color: isSelected ? BldrColors.textPrimary : BldrColors.textSecondary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 11,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 2),
-            Flexible(
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  subtitle,
-                  style: const TextStyle(color: BldrColors.textMuted, fontSize: 9),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -727,42 +473,40 @@ class _ValidationCard extends StatelessWidget {
 }
 
 class _DurationChip extends StatelessWidget {
-  final int days;
-  final bool isSelected;
+  final String label;
+  final bool selected;
   final VoidCallback onTap;
 
-  const _DurationChip({
-    required this.days,
-    required this.isSelected,
-    required this.onTap,
-  });
+  const _DurationChip(
+      {required this.label, required this.selected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return Semantics(
+      button: true,
+      selected: selected,
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          constraints: const BoxConstraints(minHeight: 44),
           alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected ? BldrColors.goldSolid : BldrColors.surface,
-            border: isSelected
-                ? null
-                : Border.all(color: BldrColors.border),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              "$days DIAS",
-              style: TextStyle(
-                color: isSelected ? Colors.black : BldrColors.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
+            color: selected ? null : BldrCommunityColorsV2.surface,
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(
+              color: selected
+                  ? BldrCommunityColorsV2.goldBrand
+                  : BldrCommunityColorsV2.modeBorder,
+              width: 0.8,
             ),
           ),
+          child: Text(label,
+              maxLines: 1,
+              style: selected
+                  ? BldrCommunityTextV2.cta
+                  : BldrCommunityTextV2.sqModeOn),
         ),
       ),
     );

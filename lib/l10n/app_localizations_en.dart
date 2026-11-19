@@ -5717,4 +5717,484 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get comm_section_best_prs => 'BEST PRS';
+
+  @override
+  String get sq_new_title => 'New Squad';
+
+  @override
+  String get sq_new_heading => 'Create your Squad';
+
+  @override
+  String get sq_new_sub => 'Define how you\'ll compete.';
+
+  @override
+  String get sq_field_name => 'SQUAD NAME';
+
+  @override
+  String get sq_field_name_hint => 'E.g. Elite Crew';
+
+  @override
+  String get sq_field_stake => 'SQUAD STAKE · OPTIONAL';
+
+  @override
+  String get sq_field_stake_hint => 'E.g. Last place buys the smoothies.';
+
+  @override
+  String get sq_field_desc => 'DESCRIPTION · OPTIONAL';
+
+  @override
+  String get sq_field_desc_hint => 'Tell the Squad\'s goal.';
+
+  @override
+  String get sq_field_mode => 'MODE';
+
+  @override
+  String get sq_field_validation => 'VALIDATION';
+
+  @override
+  String get sq_field_duration => 'DURATION';
+
+  @override
+  String sq_duration_days(int n) {
+    return '$n DAYS';
+  }
+
+  @override
+  String get sq_mode_survivor_sub => 'Last one standing';
+
+  @override
+  String get sq_mode_alpha_sub => 'Accumulated XP';
+
+  @override
+  String get sq_mode_roadrunner_sub => 'Longest distance';
+
+  @override
+  String get sq_mode_hustle_sub => 'Days trained';
+
+  @override
+  String get sq_mode_survivor_info =>
+      'Run out of lives and you\'re out. Photo validation.';
+
+  @override
+  String get sq_mode_alpha_info => 'Most XP in the period wins.';
+
+  @override
+  String get sq_mode_roadrunner_info =>
+      'Most kilometers wins. Check-in validation.';
+
+  @override
+  String get sq_mode_hustle_info =>
+      'Most days trained wins. Check-in validation.';
+
+  @override
+  String get sq_validation_photo => 'PHOTO';
+
+  @override
+  String get sq_validation_photo_sub => 'Required photo and voting';
+
+  @override
+  String get sq_validation_honor => 'HONOR';
+
+  @override
+  String get sq_validation_honor_sub => 'Manual check-in';
+
+  @override
+  String get sq_create_cta => 'CREATE SQUAD';
+
+  @override
+  String get sq_name_required => 'Give your Squad a name.';
+
+  @override
+  String get sq_created => 'Squad created. Invite your crew.';
+
+  @override
+  String get sq_create_error => 'Couldn\'t create the Squad.';
+
+  @override
+  String sq_quota_create(int left, int limit) {
+    return 'You have $left of $limit creations left this month.';
+  }
+
+  @override
+  String sq_quota_create_full(int limit) {
+    return 'You\'ve used your $limit free creations this month. Join BLDR Club for unlimited Squads.';
+  }
+
+  @override
+  String sq_quota_join(int left, int limit) {
+    return 'You have $left of $limit joins left this month.';
+  }
+
+  @override
+  String sq_quota_join_full(int limit) {
+    return 'You\'ve used your $limit free joins this month. Join BLDR Club to continue.';
+  }
+
+  @override
+  String get sq_subscribe => 'JOIN BLDR CLUB';
+
+  @override
+  String get sq_join_title => 'Join with code';
+
+  @override
+  String get sq_join_sub => 'Enter the invite code sent by the Squad admin.';
+
+  @override
+  String get sq_join_label => 'INVITE CODE';
+
+  @override
+  String get sq_join_hint => 'E.g. BLD-8K2';
+
+  @override
+  String get sq_join_cta => 'JOIN SQUAD';
+
+  @override
+  String get sq_join_not_found => 'No Squad found with this code.';
+
+  @override
+  String get sq_join_already => 'You\'re already in this Squad.';
+
+  @override
+  String sq_join_welcome(String name) {
+    return 'Welcome to Squad $name.';
+  }
+
+  @override
+  String get sq_join_error => 'Couldn\'t join the Squad.';
+
+  @override
+  String get sq_tab_overview => 'OVERVIEW';
+
+  @override
+  String get sq_tab_feed => 'FEED';
+
+  @override
+  String get sq_tab_ranking => 'RANKING';
+
+  @override
+  String get sq_label_today => 'TODAY';
+
+  @override
+  String sq_days_left(int n) {
+    return '$n days left';
+  }
+
+  @override
+  String get sq_day_left => 'Ends tomorrow';
+
+  @override
+  String get sq_last_day => 'Last day';
+
+  @override
+  String get sq_finished => 'Squad ended';
+
+  @override
+  String get sq_goal_section => 'TODAY\'S GOAL';
+
+  @override
+  String get sq_goal_default => 'Train today';
+
+  @override
+  String get sq_goal_sub => 'Your check-in keeps the Squad\'s streak.';
+
+  @override
+  String get sq_status_pending => 'Check-in under review';
+
+  @override
+  String get sq_status_approved => 'Check-in approved';
+
+  @override
+  String get sq_status_rejected => 'Check-in rejected';
+
+  @override
+  String get sq_stake_section => 'STAKE';
+
+  @override
+  String get sq_about_section => 'ABOUT';
+
+  @override
+  String get sq_activity_section => 'SQUAD ACTIVITY';
+
+  @override
+  String get sq_activity_empty => 'No activity yet.';
+
+  @override
+  String get sq_activity_checkin => 'checked in';
+
+  @override
+  String get sq_tribunal => 'Tribunal';
+
+  @override
+  String get sq_tribunal_sub => 'Photo proofs and member voting';
+
+  @override
+  String get sq_history => 'Squad history';
+
+  @override
+  String get sq_history_sub => 'Recorded check-ins and points';
+
+  @override
+  String get sq_feed_section => 'RECENT ACTIVITY';
+
+  @override
+  String get sq_feed_checkin => 'CHECK-IN';
+
+  @override
+  String sq_week(int week) {
+    return 'WEEK $week';
+  }
+
+  @override
+  String get sq_you => 'You';
+
+  @override
+  String sq_score_days(int n) {
+    return '$n days';
+  }
+
+  @override
+  String sq_score_points(int n) {
+    return '$n pts';
+  }
+
+  @override
+  String sq_score_km(String value) {
+    return '$value km';
+  }
+
+  @override
+  String sq_lives(int n) {
+    return '$n lives';
+  }
+
+  @override
+  String get sq_eliminated_section => 'ELIMINATED';
+
+  @override
+  String get sq_chat => 'CHAT';
+
+  @override
+  String get sq_checkin => 'CHECK-IN';
+
+  @override
+  String get sq_checkin_closed => 'ENDED';
+
+  @override
+  String get sq_checkin_done => 'Activity logged to the Squad.';
+
+  @override
+  String get sq_load_error => 'Couldn\'t load this Squad.';
+
+  @override
+  String get sq_settings_label => 'Squad settings';
+
+  @override
+  String get sq_share_label => 'Share Squad';
+
+  @override
+  String sq_share_sub(String name) {
+    return 'Invite people to $name';
+  }
+
+  @override
+  String get sq_share_invite => 'Share invite';
+
+  @override
+  String get sq_share_invite_sub => 'Send with your favorite app.';
+
+  @override
+  String get sq_share_link => 'Copy link';
+
+  @override
+  String get sq_share_link_sub => 'Direct link to the Squad.';
+
+  @override
+  String get sq_share_code => 'Copy code';
+
+  @override
+  String get sq_copied => 'Copied.';
+
+  @override
+  String sq_invite_text(String name, String link, String code) {
+    return 'Join Squad $name on BLDR.\n\nLink: $link\nCode: $code';
+  }
+
+  @override
+  String get sq_chat_title => 'Squad chat';
+
+  @override
+  String get sq_chat_info => 'Messages visible only to Squad members.';
+
+  @override
+  String get sq_chat_hint => 'Message the Squad...';
+
+  @override
+  String get sq_chat_empty => 'No messages yet.';
+
+  @override
+  String get sq_chat_send => 'Send message';
+
+  @override
+  String get sq_chat_error => 'Couldn\'t send the message.';
+
+  @override
+  String get sq_section_general => 'GENERAL';
+
+  @override
+  String get sq_section_rules => 'RULES';
+
+  @override
+  String get sq_section_danger => 'DANGER ZONE';
+
+  @override
+  String get sq_info => 'Squad information';
+
+  @override
+  String get sq_info_sub => 'Name, stake and details.';
+
+  @override
+  String get sq_info_sheet_sub => 'Edit the group\'s main details.';
+
+  @override
+  String get sq_members => 'Members';
+
+  @override
+  String sq_members_count(int n) {
+    return '$n members';
+  }
+
+  @override
+  String get sq_members_sub => 'Manage who is in the Squad.';
+
+  @override
+  String get sq_role_admin => 'Admin';
+
+  @override
+  String get sq_role_member => 'Member';
+
+  @override
+  String get sq_role_eliminated => 'Eliminated';
+
+  @override
+  String get sq_invite_members => 'INVITE MEMBERS';
+
+  @override
+  String get sq_kick => 'Remove from Squad';
+
+  @override
+  String sq_kick_sub(String name) {
+    return '$name will leave the Squad.';
+  }
+
+  @override
+  String sq_kick_msg(String name) {
+    return '$name loses access to this Squad\'s feed, chat and ranking.';
+  }
+
+  @override
+  String get sq_kick_confirm => 'Remove';
+
+  @override
+  String get sq_goal => 'Daily goal';
+
+  @override
+  String get sq_goal_none => 'No custom goal.';
+
+  @override
+  String get sq_goal_sheet_sub => 'Set an optional goal for the group.';
+
+  @override
+  String get sq_goal_label => 'DESCRIPTION';
+
+  @override
+  String get sq_goal_hint => 'E.g. complete at least one workout.';
+
+  @override
+  String get sq_goal_help =>
+      'The goal shows in the Overview and can be edited anytime.';
+
+  @override
+  String get sq_goal_save => 'SAVE GOAL';
+
+  @override
+  String get sq_rules => 'Scoring rules';
+
+  @override
+  String get sq_rules_sheet_sub => 'See how the Squad ranking works.';
+
+  @override
+  String get sq_rules_label => 'CURRENT MODE';
+
+  @override
+  String get sq_rules_note =>
+      'The Squad mode can\'t be changed after creation.';
+
+  @override
+  String get sq_rules_ok => 'GOT IT';
+
+  @override
+  String get sq_rules_alpha =>
+      'Check-in +10 XP · per minute +1 XP · per km +10 XP · different activity that day +15 XP.';
+
+  @override
+  String get sq_rules_survivor =>
+      'Everyone starts with 2 lives. A rejected photo costs 1 life; at 0 lives you\'re eliminated.';
+
+  @override
+  String get sq_rules_roadrunner =>
+      'Ranking by accumulated kilometers. Each check-in logs your km on the honor system.';
+
+  @override
+  String get sq_rules_hustle =>
+      'Ranking by days trained. Several workouts in a day count as 1 point.';
+
+  @override
+  String get sq_xp_limit => 'DAILY XP CAP';
+
+  @override
+  String get sq_xp_limit_hint => '0 = no limit';
+
+  @override
+  String get sq_save => 'SAVE CHANGES';
+
+  @override
+  String get sq_saved => 'Changes saved.';
+
+  @override
+  String get sq_save_error => 'Couldn\'t save.';
+
+  @override
+  String get sq_leave => 'Leave Squad';
+
+  @override
+  String get sq_leave_sub => 'You\'ll stop participating.';
+
+  @override
+  String get sq_leave_body =>
+      'If you leave, you lose access to this Squad\'s feed, chat and ranking.';
+
+  @override
+  String get sq_leave_note => 'You can only rejoin with an invite or code.';
+
+  @override
+  String get sq_leave_cta => 'LEAVE SQUAD';
+
+  @override
+  String get sq_end => 'End Squad';
+
+  @override
+  String get sq_end_sub => 'Delete the Squad permanently.';
+
+  @override
+  String get sq_end_body =>
+      'Ending the Squad removes members, history, ranking and messages.';
+
+  @override
+  String get sq_end_note => 'This action is permanent and can\'t be undone.';
+
+  @override
+  String get sq_end_cta => 'END SQUAD';
+
+  @override
+  String get sq_ended => 'Squad ended.';
 }

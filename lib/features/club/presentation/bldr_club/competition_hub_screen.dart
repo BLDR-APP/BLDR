@@ -45,19 +45,27 @@ class _CompetitionHubScreenState extends State<CompetitionHubScreen> {
 
   IconData _getModeIcon(String mode) {
     switch (mode) {
-      case 'survivor':   return Icons.dangerous;
-      case 'hustle':     return Icons.bolt;
-      case 'roadrunner': return Icons.directions_run;
-      default:           return Icons.emoji_events; // alfa
+      case 'survivor':
+        return Icons.dangerous;
+      case 'hustle':
+        return Icons.bolt;
+      case 'roadrunner':
+        return Icons.directions_run;
+      default:
+        return Icons.emoji_events; // alfa
     }
   }
 
   String _getModeLabel(String mode) {
     switch (mode) {
-      case 'survivor':   return AppLocalizations.of(context).club_game_mode_survivor;
-      case 'hustle':     return AppLocalizations.of(context).club_game_mode_hustle;
-      case 'roadrunner': return AppLocalizations.of(context).club_game_mode_roadrunner;
-      default:           return AppLocalizations.of(context).club_game_mode_alfa;
+      case 'survivor':
+        return AppLocalizations.of(context).club_game_mode_survivor;
+      case 'hustle':
+        return AppLocalizations.of(context).club_game_mode_hustle;
+      case 'roadrunner':
+        return AppLocalizations.of(context).club_game_mode_roadrunner;
+      default:
+        return AppLocalizations.of(context).club_game_mode_alfa;
     }
   }
 
@@ -69,7 +77,11 @@ class _CompetitionHubScreenState extends State<CompetitionHubScreen> {
         backgroundColor: Colors.black,
         title: Text(
           AppLocalizations.of(context).club_competition_hub_title,
-          style: const TextStyle(color: gold, fontSize: 14, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+          style: const TextStyle(
+              color: gold,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.5),
         ),
         centerTitle: true,
         leading: const BackButton(color: Colors.white),
@@ -91,7 +103,10 @@ class _CompetitionHubScreenState extends State<CompetitionHubScreen> {
                     borderColor: gold,
                     gradientColor: gold.withOpacity(0.12),
                     onTap: () async {
-                      await Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateArenaScreen()));
+                      await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const CreateArenaScreen()));
                       _fetchMySquads();
                     },
                   ),
@@ -106,12 +121,7 @@ class _CompetitionHubScreenState extends State<CompetitionHubScreen> {
                     borderColor: gold.withOpacity(0.4),
                     gradientColor: Colors.white.withOpacity(0.03),
                     onTap: () async {
-                      await showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        backgroundColor: Colors.transparent,
-                        builder: (context) => const JoinSquadSheet(),
-                      );
+                      await JoinSquadSheet.show(context);
                       _fetchMySquads();
                     },
                   ),
@@ -124,13 +134,18 @@ class _CompetitionHubScreenState extends State<CompetitionHubScreen> {
             // CQ4: seção descritiva dos modos com ícones
             Text(
               AppLocalizations.of(context).club_game_modes_header,
-              style: const TextStyle(color: Colors.white54, fontSize: 12, letterSpacing: 1.5, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  color: Colors.white54,
+                  fontSize: 12,
+                  letterSpacing: 1.5,
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             _ModeInfoCard(
               icon: Icons.dangerous,
               name: AppLocalizations.of(context).club_game_mode_survivor,
-              description: AppLocalizations.of(context).club_survivor_description,
+              description:
+                  AppLocalizations.of(context).club_survivor_description,
             ),
             _ModeInfoCard(
               icon: Icons.emoji_events,
@@ -140,7 +155,8 @@ class _CompetitionHubScreenState extends State<CompetitionHubScreen> {
             _ModeInfoCard(
               icon: Icons.directions_run,
               name: AppLocalizations.of(context).club_game_mode_roadrunner,
-              description: AppLocalizations.of(context).club_roadrunner_description,
+              description:
+                  AppLocalizations.of(context).club_roadrunner_description,
             ),
             _ModeInfoCard(
               icon: Icons.bolt,
@@ -153,7 +169,11 @@ class _CompetitionHubScreenState extends State<CompetitionHubScreen> {
             // CQ3: ranking interno — lista de squads (oculta se vazia com estado adequado)
             Text(
               AppLocalizations.of(context).club_my_active_squads,
-              style: const TextStyle(color: Colors.white54, fontSize: 12, letterSpacing: 1.5, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  color: Colors.white54,
+                  fontSize: 12,
+                  letterSpacing: 1.5,
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
 
@@ -175,9 +195,12 @@ class _CompetitionHubScreenState extends State<CompetitionHubScreen> {
                     modeIcon: _getModeIcon(mode),
                     modeLabel: _getModeLabel(mode),
                     onTap: () {
-                      Navigator.push(context, MaterialPageRoute(
-                        builder: (_) => ArenaDetailsScreen(arenaId: squad['id']),
-                      ));
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                ArenaDetailsScreen(arenaId: squad['id']),
+                          ));
                     },
                   );
                 },
@@ -203,7 +226,8 @@ class _CompetitionHubScreenState extends State<CompetitionHubScreen> {
         children: [
           const Icon(Icons.inbox, color: Colors.white24, size: 40),
           const SizedBox(height: 12),
-          Text(AppLocalizations.of(context).club_no_active_operation, style: const TextStyle(color: Colors.white54)),
+          Text(AppLocalizations.of(context).club_no_active_operation,
+              style: const TextStyle(color: Colors.white54)),
         ],
       ),
     );
@@ -287,7 +311,8 @@ class _ActionCard extends StatelessWidget {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       subtitle,
-                      style: const TextStyle(color: Colors.white54, fontSize: 11),
+                      style:
+                          const TextStyle(color: Colors.white54, fontSize: 11),
                     ),
                   ),
                 ],
@@ -337,7 +362,8 @@ class _ModeInfoCard extends StatelessWidget {
                         letterSpacing: 0.5)),
                 const SizedBox(height: 2),
                 Text(description,
-                    style: const TextStyle(color: Colors.white54, fontSize: 11, height: 1.4)),
+                    style: const TextStyle(
+                        color: Colors.white54, fontSize: 11, height: 1.4)),
               ],
             ),
           ),
@@ -370,7 +396,12 @@ class _SquadListCard extends StatelessWidget {
           color: const Color(0xFF101010),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.white10),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.5),
+                blurRadius: 10,
+                offset: const Offset(0, 4))
+          ],
         ),
         child: Row(
           children: [
@@ -389,7 +420,9 @@ class _SquadListCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(data['title'] ?? 'Sem Nome',
                       style: const TextStyle(
-                          color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold)),
                 ],
               ),
             ),

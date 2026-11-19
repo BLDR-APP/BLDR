@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+
+import 'package:bldr_fitness/design_system/bldr_community_v2_components.dart';
+import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
+import 'package:bldr_fitness/theme/bldr_tokens.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/features/club/domain/repositories/arena_repository.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/arena_details_screen.dart';
@@ -6,8 +10,15 @@ import 'package:bldr_fitness/features/subscription/domain/usecases/resolve_club_
 import 'package:bldr_fitness/features/subscription/presentation/paywall/club_paywall_sheet.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 
+/// Entrar com código (Figma 107:917). Conteúdo do [BldrV2Sheet].
 class JoinSquadSheet extends StatefulWidget {
   const JoinSquadSheet({super.key});
+
+  static Future<void> show(BuildContext context) => BldrV2Sheet.show<void>(
+        context,
+        title: AppLocalizations.of(context).sq_join_title,
+        child: const JoinSquadSheet(),
+      );
 
   @override
   State<JoinSquadSheet> createState() => _JoinSquadSheetState();
@@ -16,7 +27,6 @@ class JoinSquadSheet extends StatefulWidget {
 class _JoinSquadSheetState extends State<JoinSquadSheet> {
   final _codeController = TextEditingController();
   bool _isLoading = false;
-  static const gold = Color(0xFFD4AF37);
 
   // Quota state (client-side best-effort; server enforcement pending migration 00028)
   static const _freeJoinLimit = 5;
@@ -48,11 +58,12 @@ class _JoinSquadSheetState extends State<JoinSquadSheet> {
           return !dt.isBefore(monthStart);
         }).length;
       }
-      if (mounted) setState(() {
-        _isClub = isClub;
-        _joinedThisMonth = joined;
-        _quotaLoaded = true;
-      });
+      if (mounted)
+        setState(() {
+          _isClub = isClub;
+          _joinedThisMonth = joined;
+          _quotaLoaded = true;
+        });
     } catch (_) {
       if (mounted) setState(() => _quotaLoaded = true);
     }
@@ -61,6 +72,7 @@ class _JoinSquadSheetState extends State<JoinSquadSheet> {
   bool get _limitReached => !_isClub && _joinedThisMonth >= _freeJoinLimit;
 
   Future<void> _joinSquad() async {
+    final l10n = AppLocalizations.of(context);
     if (_limitReached) {
       await ClubPaywallSheet.show(context);
       return;
@@ -84,7 +96,7 @@ class _JoinSquadSheetState extends State<JoinSquadSheet> {
       final arena = findResult.valueOrNull;
 
       if (arena == null) {
-        throw "Nenhum Squad encontrado com este código.";
+        throw l10n.sq_join_not_found;
       }
 
       final String realArenaId = arena['id'];
@@ -98,10 +110,12 @@ class _JoinSquadSheetState extends State<JoinSquadSheet> {
       if (existing) {
         if (mounted) {
           Navigator.pop(context);
-          Navigator.push(context,
-              MaterialPageRoute(builder: (_) => ArenaDetailsScreen(arenaId: realArenaId)));
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (_) => ArenaDetailsScreen(arenaId: realArenaId)));
           ScaffoldMessenger.of(context)
-              .showSnackBar(const SnackBar(content: Text("Você já é membro deste Squad!")));
+              .showSnackBar(SnackBar(content: Text(l10n.sq_join_already)));
         }
         return;
       }
@@ -124,7 +138,8 @@ class _JoinSquadSheetState extends State<JoinSquadSheet> {
             // Update local quota state and show paywall.
             if (mounted) {
               setState(() {
-                _joinedThisMonth = (response['used'] as num?)?.toInt() ?? _joinedThisMonth;
+                _joinedThisMonth =
+                    (response['used'] as num?)?.toInt() ?? _joinedThisMonth;
               });
             }
             await ClubPaywallSheet.show(context);
@@ -132,42 +147,46 @@ class _JoinSquadSheetState extends State<JoinSquadSheet> {
           case 'already_member':
             if (mounted) {
               Navigator.pop(context);
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => ArenaDetailsScreen(arenaId: realArenaId)));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) =>
+                          ArenaDetailsScreen(arenaId: realArenaId)));
               ScaffoldMessenger.of(context)
-                  .showSnackBar(const SnackBar(content: Text("Você já é membro deste Squad!")));
+                  .showSnackBar(SnackBar(content: Text(l10n.sq_join_already)));
             }
             break;
           case 'invalid_share_code':
-            throw "Código de convite inválido.";
+            throw l10n.sq_join_not_found;
           case 'arena_not_found':
-            throw "Nenhum Squad encontrado com este código.";
+            throw l10n.sq_join_not_found;
           default:
-            throw "Não foi possível entrar no Squad: $reason";
+            throw l10n.sq_join_error;
         }
         return;
       }
 
-      final arenaTitle = (response['arena_title'] as String?) ?? arena['title']?.toString() ?? 'Squad';
+      final arenaTitle = (response['arena_title'] as String?) ??
+          arena['title']?.toString() ??
+          'Squad';
       // Update local quota display from server response.
       final used = (response['used'] as num?)?.toInt();
       if (mounted && used != null) setState(() => _joinedThisMonth = used);
 
       if (mounted) {
         Navigator.pop(context);
-        Navigator.push(context,
-            MaterialPageRoute(builder: (_) => ArenaDetailsScreen(arenaId: realArenaId)));
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text("Bem-vindo ao Squad $arenaTitle! 👊"),
-          backgroundColor: const Color(0xFFD4AF37),
-        ));
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => ArenaDetailsScreen(arenaId: realArenaId)));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.sq_join_welcome(arenaTitle))));
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(e.toString().replaceAll('Exception:', '')),
-              backgroundColor: Colors.red),
+              content: Text(e.toString().replaceAll('Exception:', '').trim())),
         );
       }
     } finally {
@@ -177,96 +196,35 @@ class _JoinSquadSheetState extends State<JoinSquadSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
-      decoration: const BoxDecoration(
-        color: Color(0xFF121212),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border(top: BorderSide(color: Colors.white12)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text("Entrar em Operação", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          const Text("Cole o código de convite (Ex: K9X-2M1).", style: TextStyle(color: Colors.white54, fontSize: 14)),
+    final l10n = AppLocalizations.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(l10n.sq_join_sub,
+            textAlign: TextAlign.center, style: BldrCommunityTextV2.sheetSub),
+        const SizedBox(height: 18),
+        BldrSquadField(
+          label: l10n.sq_join_label,
+          hint: l10n.sq_join_hint,
+          controller: _codeController,
+          capitalization: TextCapitalization.characters,
+        ),
+        if (_quotaLoaded && !_isClub) ...[
           const SizedBox(height: 12),
-          // Quota indicator (only for Free users, after loading)
-          if (_quotaLoaded && !_isClub) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: _limitReached
-                    ? Colors.redAccent.withOpacity(0.08)
-                    : Colors.white.withOpacity(0.04),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: _limitReached
-                      ? Colors.redAccent.withOpacity(0.3)
-                      : Colors.white12,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    _limitReached ? Icons.lock_outline : Icons.info_outline,
-                    color: _limitReached ? Colors.redAccent : Colors.white38,
-                    size: 14,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      _limitReached
-                          ? "Limite de $_freeJoinLimit participações este mês atingido. Assine o BLDR Club para continuar."
-                          : "Você tem ${_freeJoinLimit - _joinedThisMonth} de $_freeJoinLimit participações restantes este mês",
-                      style: TextStyle(
-                        color: _limitReached ? Colors.redAccent : Colors.white54,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-          ] else
-            const SizedBox(height: 12),
-
-          TextField(
-            controller: _codeController,
-            style: const TextStyle(color: Colors.white, letterSpacing: 1),
-            // Força teclado maiúsculo para facilitar
-            textCapitalization: TextCapitalization.characters,
-            decoration: InputDecoration(
-              labelText: "CÓDIGO DE ACESSO",
-              labelStyle: const TextStyle(color: gold, fontSize: 12),
-              filled: true,
-              fillColor: Colors.black,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Colors.white12)),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: gold)),
-              prefixIcon: const Icon(Icons.vpn_key, color: Colors.white24),
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: gold,
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: _isLoading ? null : _joinSquad,
-              child: _isLoading
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
-                  : const Text("JUNTAR-SE AGORA", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
-            ),
+          BldrSquadQuotaNote(
+            text: _limitReached
+                ? l10n.sq_quota_join_full(_freeJoinLimit)
+                : l10n.sq_quota_join(
+                    _freeJoinLimit - _joinedThisMonth, _freeJoinLimit),
+            blocked: _limitReached,
           ),
         ],
-      ),
+        const SizedBox(height: 18),
+        BldrV2SheetButton(
+          label: _limitReached ? l10n.sq_subscribe : l10n.sq_join_cta,
+          onTap: _isLoading ? null : _joinSquad,
+        ),
+      ],
     );
   }
 }

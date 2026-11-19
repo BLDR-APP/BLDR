@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
+import 'package:share_plus/share_plus.dart';
+
 import 'package:bldr_fitness/core/di/injection.dart';
+import 'package:bldr_fitness/design_system/bldr_community_v2_components.dart';
+import 'package:bldr_fitness/design_system/bldr_components.dart';
+import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
 import 'package:bldr_fitness/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:bldr_fitness/features/club/domain/repositories/arena_repository.dart';
+import 'package:bldr_fitness/features/club/presentation/bldr_club/arena_details_screen.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
+import 'package:bldr_fitness/theme/bldr_tokens.dart';
 
+/// Configurações do Squad (Figma 86:919 e sheets 98:1291–98:1653).
+/// Visibilidade pública fica oculta até o lote 2.
 class SquadSettingsScreen extends StatefulWidget {
   final Map<String, dynamic> arenaData;
 
@@ -15,503 +24,568 @@ class SquadSettingsScreen extends StatefulWidget {
 }
 
 class _SquadSettingsScreenState extends State<SquadSettingsScreen> {
-  static const gold = Color(0xFFD4AF37);
-  final String? _currentUserId = getIt<GetCurrentUser>()()?.id;
+  final _repo = getIt<ArenaRepository>();
+  late final Map<String, dynamic> _arena = Map.of(widget.arenaData);
+  int? _memberCount;
 
-  // Estado local
-  late String _title;
-  late String _desc;
-  late String _mission;
-  late int _xpLimit;
-  late bool _tribunalActive;
-  late bool _isPrivate; // <--- NOVA VARIÁVEL
+  String get _id => _arena['id'].toString();
+  String? get _myId => getIt<GetCurrentUser>()()?.id;
+  bool get _isCreator => _arena['creator_id']?.toString() == _myId;
+  String get _mode => _arena['game_mode']?.toString() ?? 'alpha';
 
   @override
   void initState() {
     super.initState();
-    _title = widget.arenaData['title'];
-    _desc = widget.arenaData['description'] ?? '';
-    _mission = widget.arenaData['daily_mission'] ?? '';
-    _xpLimit = widget.arenaData['xp_limit_per_day'] ?? 0;
-    _tribunalActive = widget.arenaData['tribunal_active'] ?? false;
-    _isPrivate = widget.arenaData['is_private'] ?? true; // <--- INICIALIZAÇÃO
+    _loadMembers();
   }
 
-  // --- HELPERS VISUAIS ---
-  InputDecoration _darkInputDeco(String label) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: Colors.grey),
-      filled: true,
-      fillColor: const Color(0xFF121212),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.white10),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: gold),
-      ),
-    );
-  }
-
-  Future<void> _updateArenaField(Map<String, dynamic> updates) async {
-    try {
-      final result = await getIt<ArenaRepository>()
-          .updateArena(widget.arenaData['id'].toString(), updates);
-      final failure = result.failureOrNull;
-      if (failure != null) throw Exception(failure.message);
-
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Configurações salvas! ✅")));
-    } catch (e) {
-      print(e);
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Erro ao salvar."), backgroundColor: Colors.red));
+  Future<void> _loadMembers() async {
+    final members = (await _repo.membersCombined(_id)).valueOrNull;
+    if (mounted && members != null) {
+      setState(() => _memberCount = members.length);
     }
   }
 
-  // --- 0. TOGGLE PRIVACIDADE (NOVO) ---
-  Future<void> _togglePrivacy() async {
-    final newVal = !_isPrivate;
+  void _snack(String text) =>
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
 
-    // Atualiza visualmente na hora (otimista)
-    setState(() => _isPrivate = newVal);
-
-    // Salva no banco
-    await _updateArenaField({'is_private': newVal});
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).clearSnackBars(); // Limpa anteriores para não empilhar
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(newVal ? "Squad agora é PRIVADO 🔒" : "Squad agora é PÚBLICO 🌍"),
-        backgroundColor: newVal ? Colors.redAccent : Colors.green,
-        duration: const Duration(seconds: 2),
-      ));
+  Future<void> _save(Map<String, dynamic> updates) async {
+    final l10n = AppLocalizations.of(context);
+    final result = await _repo.updateArena(_id, updates);
+    if (!mounted) return;
+    if (result.isFailure) {
+      _snack(l10n.sq_save_error);
+      return;
     }
+    setState(() => _arena.addAll(updates));
+    _snack(l10n.sq_saved);
   }
 
-  // --- 1. EDITAR DADOS (GERAL) ---
-  Future<void> _editDetails() async {
-    final titleCtrl = TextEditingController(text: _title);
-    final descCtrl = TextEditingController(text: _desc);
+  String? _clean(String value) {
+    final text = value.trim();
+    return text.isEmpty ? null : text;
+  }
 
-    final changed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1A),
-        title: const Text("Editar Operação", style: TextStyle(color: gold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
+  Future<void> _editInfo() async {
+    final l10n = AppLocalizations.of(context);
+    final name = TextEditingController(text: _arena['title']?.toString());
+    final stake = TextEditingController(text: _arena['stake']?.toString());
+    final desc = TextEditingController(text: _arena['description']?.toString());
+    final saved = await BldrV2Sheet.show<bool>(
+      context,
+      title: l10n.sq_info,
+      child: Builder(
+        builder: (ctx) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(controller: titleCtrl, style: const TextStyle(color: Colors.white), decoration: _darkInputDeco("Nome do Squad")),
+            Text(l10n.sq_info_sheet_sub,
+                textAlign: TextAlign.center,
+                style: BldrCommunityTextV2.sheetSub),
             const SizedBox(height: 16),
-            TextField(controller: descCtrl, style: const TextStyle(color: Colors.white), decoration: _darkInputDeco("Missão (Descrição)")),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("CANCELAR", style: TextStyle(color: Colors.white54))),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: gold, foregroundColor: Colors.black),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("SALVAR"),
-          ),
-        ],
-      ),
-    );
-
-    if (changed == true) {
-      setState(() {
-        _title = titleCtrl.text.trim();
-        _desc = descCtrl.text.trim();
-      });
-      await _updateArenaField({'title': _title, 'description': _desc});
-    }
-  }
-
-  // --- 2. EDITAR MISSÃO DIÁRIA ---
-  Future<void> _editMission() async {
-    final missionCtrl = TextEditingController(text: _mission);
-
-    final changed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1A),
-        title: const Text("Missão Diária", style: TextStyle(color: gold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text("Defina um objetivo extra para hoje (ex: 'Fazer 100 flexões').", style: TextStyle(color: Colors.white54, fontSize: 12)),
+            BldrSquadField(
+              label: l10n.sq_field_name,
+              hint: l10n.sq_field_name_hint,
+              controller: name,
+              maxLength: 60,
+            ),
             const SizedBox(height: 16),
-            TextField(
-              controller: missionCtrl,
-              style: const TextStyle(color: Colors.white),
-              maxLines: 2,
-              decoration: _darkInputDeco("Desafio do Dia"),
+            BldrSquadField(
+              label: l10n.sq_field_stake,
+              hint: l10n.sq_field_stake_hint,
+              controller: stake,
+              maxLength: 120,
+            ),
+            const SizedBox(height: 16),
+            BldrSquadField(
+              label: l10n.sq_field_desc,
+              hint: l10n.sq_field_desc_hint,
+              controller: desc,
+              maxLength: 200,
+            ),
+            const SizedBox(height: 20),
+            BldrV2SheetButton(
+              label: l10n.sq_save,
+              onTap: () => Navigator.pop(ctx, true),
             ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("CANCELAR", style: TextStyle(color: Colors.white54))),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: gold, foregroundColor: Colors.black),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("DEFINIR"),
-          ),
-        ],
       ),
     );
-
-    if (changed == true) {
-      setState(() => _mission = missionCtrl.text.trim());
-      await _updateArenaField({'daily_mission': _mission});
+    if (saved != true || !mounted) return;
+    final title = name.text.trim();
+    if (title.isEmpty) {
+      _snack(l10n.sq_name_required);
+      return;
     }
+    await _save({
+      'title': title,
+      'stake': _clean(stake.text),
+      'description': desc.text.trim(),
+    });
   }
 
-  // --- 3. EDITAR LIMITES XP ---
-  Future<void> _editLimits() async {
-    final limitCtrl = TextEditingController(text: _xpLimit > 0 ? _xpLimit.toString() : '');
-
-    final changed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1A),
-        title: const Text("Limites de Pontuação", style: TextStyle(color: gold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
+  Future<void> _editGoal() async {
+    final l10n = AppLocalizations.of(context);
+    final goal = TextEditingController(text: _arena['daily_goal']?.toString());
+    final saved = await BldrV2Sheet.show<bool>(
+      context,
+      title: l10n.sq_goal,
+      child: Builder(
+        builder: (ctx) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text("Limite máximo de XP que um usuário pode ganhar por dia para evitar fraudes.", style: TextStyle(color: Colors.white54, fontSize: 12)),
+            Text(l10n.sq_goal_sheet_sub,
+                textAlign: TextAlign.center,
+                style: BldrCommunityTextV2.sheetSub),
             const SizedBox(height: 16),
-            TextField(
-              controller: limitCtrl,
-              style: const TextStyle(color: Colors.white),
-              keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: _darkInputDeco("Máx XP por Dia (0 = Sem limite)"),
+            BldrSquadField(
+              label: l10n.sq_goal_label,
+              hint: l10n.sq_goal_hint,
+              controller: goal,
+              maxLength: 120,
+            ),
+            const SizedBox(height: 12),
+            Text(l10n.sq_goal_help, style: BldrCommunityTextV2.rowSub),
+            const SizedBox(height: 20),
+            BldrV2SheetButton(
+              label: l10n.sq_goal_save,
+              onTap: () => Navigator.pop(ctx, true),
             ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("CANCELAR", style: TextStyle(color: Colors.white54))),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: gold, foregroundColor: Colors.black),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text("SALVAR"),
-          ),
-        ],
       ),
     );
-
-    if (changed == true) {
-      final val = int.tryParse(limitCtrl.text) ?? 0;
-      setState(() => _xpLimit = val);
-      await _updateArenaField({'xp_limit_per_day': val});
+    if (saved == true && mounted) {
+      await _save({'daily_goal': _clean(goal.text)});
     }
   }
 
-  // --- 4. TOGGLE TRIBUNAL ---
-  Future<void> _toggleTribunal() async {
-    final changed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1A),
-        title: const Text("O Tribunal", style: TextStyle(color: gold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
+  Future<void> _showRules() async {
+    final l10n = AppLocalizations.of(context);
+    final canEditLimit = _isCreator && _mode == 'alpha';
+    final current = (_arena['xp_limit_per_day'] as num?)?.toInt() ?? 0;
+    final limit = TextEditingController(text: current > 0 ? '$current' : '');
+    final body = switch (_mode) {
+      'survivor' => l10n.sq_rules_survivor,
+      'roadrunner' => l10n.sq_rules_roadrunner,
+      'hustle' => l10n.sq_rules_hustle,
+      _ => l10n.sq_rules_alpha,
+    };
+    final saved = await BldrV2Sheet.show<bool>(
+      context,
+      title: l10n.sq_rules,
+      child: Builder(
+        builder: (ctx) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Icon(_tribunalActive ? Icons.gavel : Icons.gavel_outlined, size: 40, color: _tribunalActive ? gold : Colors.grey),
+            Text(l10n.sq_rules_sheet_sub,
+                textAlign: TextAlign.center,
+                style: BldrCommunityTextV2.sheetSub),
             const SizedBox(height: 16),
-            Text(
-              _tribunalActive
-                  ? "O Tribunal está ATIVO. As fotos precisam ser validadas pelos membros."
-                  : "O Tribunal está DESATIVADO. Treinos contam automaticamente.",
-              style: const TextStyle(color: Colors.white70),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("VOLTAR", style: TextStyle(color: Colors.white54))),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: _tribunalActive ? Colors.redAccent : Colors.green,
-                foregroundColor: Colors.white
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(_tribunalActive ? "DESATIVAR" : "ATIVAR"),
-          ),
-        ],
-      ),
-    );
-
-    if (changed == true) {
-      setState(() => _tribunalActive = !_tribunalActive);
-      await _updateArenaField({'tribunal_active': _tribunalActive});
-    }
-  }
-
-  // --- LISTA DE AGENTES ---
-  void _showMembers() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF101010),
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (ctx) => _MembersSheet(
-        arenaId: widget.arenaData['id'],
-        isCreator: widget.arenaData['creator_id'] == _currentUserId,
-        currentUserId: _currentUserId!,
-      ),
-    );
-  }
-
-  // --- ZONA DE PERIGO ---
-  Future<void> _leaveSquad() async {
-    final confirm = await _showConfirmDialog("Abandonar Missão?", "Vai perder o progresso. Tem certeza?", isDanger: false);
-    if (confirm && mounted) {
-      await getIt<ArenaRepository>()
-          .leaveArena(widget.arenaData['id'].toString());
-      if(mounted) { Navigator.pop(context); Navigator.pop(context); }
-    }
-  }
-
-  Future<void> _deleteSquad() async {
-    final confirm = await _showConfirmDialog(
-        "ENCERRAR OPERAÇÃO?",
-        "Isso apaga TUDO: mensagens, histórico e o squad. Irreversível.",
-        isDanger: true
-    );
-
-    if (confirm && mounted) {
-      try {
-        // Chama a função nuclear no banco (RPC)
-        final delResult = await getIt<ArenaRepository>()
-            .deleteArenaTotally(widget.arenaData['id'].toString());
-        final delFailure = delResult.failureOrNull;
-        if (delFailure != null) throw Exception(delFailure.message);
-
-        if (mounted) {
-          // Volta direto para a tela inicial (Home) para não dar erro
-          Navigator.of(context).popUntil((route) => route.isFirst);
-
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("Operação encerrada. Squad excluído."),
-                backgroundColor: Colors.redAccent,
-              )
-          );
-        }
-      } catch (e) {
-        print('Erro ao excluir: $e');
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Erro ao excluir: $e"), backgroundColor: Colors.red)
-          );
-        }
-      }
-    }
-  }
-
-  Future<bool> _showConfirmDialog(String title, String msg, {required bool isDanger}) async {
-    return await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: isDanger ? const Color(0xFF1A0000) : const Color(0xFF1A1A1A),
-        title: Text(title, style: TextStyle(color: isDanger ? Colors.red : Colors.white)),
-        content: Text(msg, style: const TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("CANCELAR", style: TextStyle(color: Colors.grey))),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(isDanger ? "DESTRUIR" : "CONFIRMAR", style: TextStyle(color: isDanger ? Colors.red : gold))),
-        ],
-      ),
-    ) ?? false;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final bool isCreator = widget.arenaData['creator_id'] == _currentUserId;
-
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: const Text("CENTRO DE COMANDO", style: TextStyle(color: gold, fontSize: 14, letterSpacing: 1.5, fontWeight: FontWeight.bold)),
-        leading: const BackButton(color: Colors.white),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const _SectionTitle("GERAL"),
-          _SettingTile(
-            icon: Icons.edit_note,
-            title: "Dados da Operação",
-            subtitle: "Editar nome e missão.",
-            onTap: isCreator ? _editDetails : () {},
-            color: isCreator ? Colors.white : Colors.grey,
-          ),
-
-          // --- NOVO BOTÃO DE PRIVACIDADE ---
-          _SettingTile(
-            icon: _isPrivate ? Icons.lock : Icons.public,
-            title: "Visibilidade",
-            subtitle: _isPrivate ? "Privado (Só convite)" : "Público (Visível na busca)",
-            onTap: isCreator ? _togglePrivacy : () {},
-            color: _isPrivate ? Colors.redAccent : Colors.green,
-          ),
-          // ---------------------------------
-
-          _SettingTile(
-            icon: Icons.groups,
-            title: "Agentes",
-            subtitle: "Gerenciar pelotão.",
-            onTap: _showMembers,
-          ),
-
-          const SizedBox(height: 24),
-          const _SectionTitle("REGRAS DO JOGO"),
-          /*
-          _SettingTile(
-            icon: Icons.gavel,
-            title: "O Tribunal",
-            subtitle: _tribunalActive ? "Ativo (Votação necessária)." : "Inativo (Aprovação auto).",
-            isNew: true,
-            color: _tribunalActive ? gold : Colors.white,
-            onTap: isCreator ? _toggleTribunal : () {},
-          ),
-          */
-          _SettingTile(
-            icon: Icons.flag,
-            title: "Missão Diária",
-            subtitle: _mission.isNotEmpty ? "Ativa: $_mission" : "Nenhuma missão ativa.",
-            onTap: isCreator ? _editMission : () {},
-          ),
-          _SettingTile(
-            icon: Icons.scale,
-            title: "Limites de Pontuação",
-            subtitle: _xpLimit > 0 ? "Teto: $_xpLimit XP/dia" : "Sem limites.",
-            onTap: isCreator ? _editLimits : () {},
-          ),
-
-          const SizedBox(height: 24),
-          const _SectionTitle("ZONA DE PERIGO"),
-          _SettingTile(
-            icon: Icons.logout,
-            title: "Abandonar Squad",
-            subtitle: "Sair da competição.",
-            color: Colors.redAccent,
-            onTap: _leaveSquad,
-          ),
-          if (isCreator)
-            _SettingTile(
-              icon: Icons.delete_forever,
-              title: "Encerrar Operação",
-              subtitle: "Excluir squad permanentemente.",
-              color: Colors.red,
-              onTap: _deleteSquad,
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-// --- SHEET DE MEMBROS ---
-class _MembersSheet extends StatelessWidget {
-  final String arenaId;
-  final bool isCreator;
-  final String currentUserId;
-
-  const _MembersSheet({required this.arenaId, required this.isCreator, required this.currentUserId});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.7,
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text("Agentes Ativos", style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-              IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close, color: Colors.white54))
+            Text(l10n.sq_rules_label, style: BldrCommunityTextV2.sqLabel),
+            const SizedBox(height: 6),
+            Text(squadModeLabel(l10n, _mode).toUpperCase(),
+                style: BldrCommunityTextV2.cta),
+            const SizedBox(height: 14),
+            Text(body, style: BldrCommunityTextV2.body),
+            if (canEditLimit) ...[
+              const SizedBox(height: 16),
+              BldrSquadField(
+                label: l10n.sq_xp_limit,
+                hint: l10n.sq_xp_limit_hint,
+                controller: limit,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+              ),
             ],
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: FutureBuilder(
-              future: _fetchMembers(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator(color: Color(0xFFD4AF37)));
-                final members = snapshot.data as List<Map<String, dynamic>>;
+            const SizedBox(height: 12),
+            Text(l10n.sq_rules_note, style: BldrCommunityTextV2.rowSub),
+            const SizedBox(height: 20),
+            BldrV2SheetButton(
+              label: canEditLimit ? l10n.sq_save : l10n.sq_rules_ok,
+              onTap: () => Navigator.pop(ctx, canEditLimit),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (saved == true && mounted) {
+      final digits = limit.text.replaceAll(RegExp(r'\D'), '');
+      await _save({'xp_limit_per_day': int.tryParse(digits) ?? 0});
+    }
+  }
 
-                return ListView.separated(
-                  itemCount: members.length,
-                  separatorBuilder: (_, __) => const Divider(color: Colors.white10),
-                  itemBuilder: (ctx, i) {
-                    final m = members[i];
-                    final bool isMe = m['user_id'] == currentUserId;
-
-                    return ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.grey[800],
-                        backgroundImage: m['avatar'] != null ? NetworkImage(m['avatar']) : null,
-                        child: m['avatar'] == null ? const Icon(Icons.person, color: Colors.white) : null,
-                      ),
-                      title: Text(m['name'] + (isMe ? " (Você)" : ""), style: const TextStyle(color: Colors.white)),
-                      subtitle: Text(m['status'] == 'eliminated' ? 'Eliminado 💀' : 'Ativo 🟢',
-                          style: TextStyle(color: m['status'] == 'eliminated' ? Colors.red : Colors.green, fontSize: 12)),
-                      trailing: (isCreator && !isMe)
-                          ? IconButton(
-                        icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent),
-                        onPressed: () => _kickMember(context, m['user_id'], m['name']),
-                      )
-                          : null,
-                    );
-                  },
-                );
+  Future<void> _showMembers() async {
+    final l10n = AppLocalizations.of(context);
+    final members = (await _repo.membersCombined(_id)).valueOrNull ?? const [];
+    if (!mounted) return;
+    final code = _arena['share_code']?.toString() ?? _id;
+    final title = _arena['title']?.toString() ?? 'Squad';
+    await BldrV2Sheet.show<void>(
+      context,
+      title: l10n.sq_members,
+      child: Builder(
+        builder: (ctx) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(l10n.sq_members_sub,
+                textAlign: TextAlign.center,
+                style: BldrCommunityTextV2.sheetSub),
+            const SizedBox(height: 12),
+            for (final m in members)
+              _MemberRow(
+                name: m['name']?.toString() ?? 'Atleta',
+                avatar: m['avatar']?.toString(),
+                role:
+                    m['user_id']?.toString() == _arena['creator_id']?.toString()
+                        ? l10n.sq_role_admin
+                        : m['status'] == 'eliminated'
+                            ? l10n.sq_role_eliminated
+                            : l10n.sq_role_member,
+                onMore: _isCreator && m['user_id']?.toString() != _myId
+                    ? () {
+                        Navigator.pop(ctx);
+                        _kick(m['user_id'].toString(),
+                            m['name']?.toString() ?? 'Atleta');
+                      }
+                    : null,
+              ),
+            const SizedBox(height: 16),
+            BldrV2SheetButton(
+              label: l10n.sq_invite_members,
+              onTap: () {
+                Navigator.pop(ctx);
+                SharePlus.instance.share(ShareParams(
+                  text: l10n.sq_invite_text(title, 'bldr://invite/$code', code),
+                ));
               },
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Future<List<Map<String, dynamic>>> _fetchMembers() async {
-    final result = await getIt<ArenaRepository>().membersCombined(arenaId);
-    return result.valueOrNull ?? [];
+  Future<void> _kick(String userId, String name) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await BldrV2ConfirmDialog.show(
+      context,
+      title: l10n.sq_kick,
+      message: l10n.sq_kick_msg(name),
+      confirmLabel: l10n.sq_kick_confirm,
+      cancelLabel: l10n.comm_cancel,
+      destructive: true,
+    );
+    if (!confirmed) return;
+    final result = await _repo.kickMember(_id, userId);
+    if (!mounted) return;
+    if (result.isFailure) {
+      _snack(l10n.sq_save_error);
+      return;
+    }
+    _snack(l10n.sq_kick_sub(name));
+    _loadMembers();
   }
 
-  Future<void> _kickMember(BuildContext context, String userId, String name) async {
-    await getIt<ArenaRepository>().kickMember(arenaId, userId);
+  Future<bool> _dangerSheet({
+    required String title,
+    required String subtitle,
+    required String body,
+    required String note,
+    required String cta,
+  }) async {
+    final confirmed = await BldrV2Sheet.show<bool>(
+      context,
+      title: title,
+      child: Builder(
+        builder: (ctx) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(subtitle,
+                textAlign: TextAlign.center,
+                style: BldrCommunityTextV2.sheetSub),
+            const SizedBox(height: 20),
+            Text(body, style: BldrCommunityTextV2.body),
+            const SizedBox(height: 14),
+            Text(note, style: BldrCommunityTextV2.sqDanger),
+            const SizedBox(height: 24),
+            Semantics(
+              button: true,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => Navigator.pop(ctx, true),
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 46),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: BldrCommunityColorsV2.dangerBg,
+                    borderRadius: BorderRadius.circular(17),
+                    border: Border.all(
+                        color: BldrCommunityColorsV2.danger, width: 0.8),
+                  ),
+                  child: Text(cta, style: BldrCommunityTextV2.sqDangerCta),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    return confirmed ?? false;
+  }
+
+  Future<void> _leave() async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await _dangerSheet(
+      title: l10n.sq_leave,
+      subtitle: l10n.sq_leave_sub,
+      body: l10n.sq_leave_body,
+      note: l10n.sq_leave_note,
+      cta: l10n.sq_leave_cta,
+    );
+    if (!confirmed || !mounted) return;
+    final result = await _repo.leaveArena(_id);
+    if (!mounted) return;
+    if (result.isFailure) {
+      _snack(l10n.sq_save_error);
+      return;
+    }
     Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("$name removido da operação.")));
+    Navigator.pop(context);
   }
-}
 
-// --- WIDGETS AUXILIARES ---
-class _SectionTitle extends StatelessWidget {
-  final String title;
-  const _SectionTitle(this.title);
-  @override
-  Widget build(BuildContext context) => Padding(padding: const EdgeInsets.only(bottom: 12, left: 4), child: Text(title, style: const TextStyle(color: Colors.white54, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.5)));
-}
+  Future<void> _end() async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await _dangerSheet(
+      title: l10n.sq_end,
+      subtitle: l10n.sq_end_sub,
+      body: l10n.sq_end_body,
+      note: l10n.sq_end_note,
+      cta: l10n.sq_end_cta,
+    );
+    if (!confirmed || !mounted) return;
+    final result = await _repo.deleteArenaTotally(_id);
+    if (!mounted) return;
+    if (result.isFailure) {
+      _snack(l10n.sq_save_error);
+      return;
+    }
+    final messenger = ScaffoldMessenger.of(context);
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    messenger.showSnackBar(SnackBar(content: Text(l10n.sq_ended)));
+  }
 
-class _SettingTile extends StatelessWidget {
-  final IconData icon; final String title; final String subtitle; final VoidCallback onTap; final Color color; final bool isNew;
-  const _SettingTile({required this.icon, required this.title, required this.subtitle, required this.onTap, this.color = Colors.white, this.isNew = false});
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(color: const Color(0xFF121212), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.white10)),
-      child: ListTile(
+    final l10n = AppLocalizations.of(context);
+    final goal = _arena['daily_goal']?.toString().trim();
+    final modeSub = switch (_mode) {
+      'survivor' => l10n.sq_mode_survivor_sub,
+      'roadrunner' => l10n.sq_mode_roadrunner_sub,
+      'hustle' => l10n.sq_mode_hustle_sub,
+      _ => l10n.sq_mode_alpha_sub,
+    };
+    return BldrBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Column(
+            children: [
+              SizedBox(
+                height: 56,
+                child: Row(
+                  children: [
+                    BldrCommunityBackButton(
+                        onTap: () => Navigator.maybePop(context)),
+                    Expanded(
+                      child: Text(l10n.sq_settings_label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: BldrCommunityTextV2.sqTitle),
+                    ),
+                    const SizedBox(width: 16),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(
+                      BldrCommunityV2.pageX, 16, BldrCommunityV2.pageX, 32),
+                  children: [
+                    Text(l10n.sq_section_general,
+                        style: BldrCommunityTextV2.sqLabel),
+                    const SizedBox(height: 6),
+                    if (_isCreator)
+                      _SettingRow(
+                        title: l10n.sq_info,
+                        subtitle: l10n.sq_info_sub,
+                        onTap: _editInfo,
+                      ),
+                    _SettingRow(
+                      title: l10n.sq_members,
+                      subtitle: _memberCount == null
+                          ? l10n.sq_members_sub
+                          : l10n.sq_members_count(_memberCount!),
+                      onTap: _showMembers,
+                    ),
+                    const SizedBox(height: 28),
+                    Text(l10n.sq_section_rules,
+                        style: BldrCommunityTextV2.sqLabel),
+                    const SizedBox(height: 6),
+                    if (_isCreator)
+                      _SettingRow(
+                        title: l10n.sq_goal,
+                        subtitle: goal == null || goal.isEmpty
+                            ? l10n.sq_goal_none
+                            : goal,
+                        onTap: _editGoal,
+                      ),
+                    _SettingRow(
+                      title: l10n.sq_rules,
+                      subtitle: '${squadModeLabel(l10n, _mode)} · $modeSub',
+                      onTap: _showRules,
+                    ),
+                    const SizedBox(height: 28),
+                    Text(l10n.sq_section_danger,
+                        style: BldrCommunityTextV2.sqDangerLabel),
+                    const SizedBox(height: 6),
+                    _SettingRow(
+                      title: l10n.sq_leave,
+                      subtitle: l10n.sq_leave_sub,
+                      danger: true,
+                      onTap: _leave,
+                    ),
+                    if (_isCreator)
+                      _SettingRow(
+                        title: l10n.sq_end,
+                        subtitle: l10n.sq_end_sub,
+                        danger: true,
+                        onTap: _end,
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingRow extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final bool danger;
+  final VoidCallback onTap;
+
+  const _SettingRow({
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.danger = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: onTap,
-        leading: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle), child: Icon(icon, color: color, size: 20)),
-        title: Row(children: [Text(title, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 14)), if (isNew) ...[const SizedBox(width: 8), Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: const Color(0xFFD4AF37), borderRadius: BorderRadius.circular(4)), child: const Text("NOVO", style: TextStyle(color: Colors.black, fontSize: 8, fontWeight: FontWeight.bold)))]]),
-        subtitle: Text(subtitle, style: const TextStyle(color: Colors.white38, fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis),
-        trailing: const Icon(Icons.chevron_right, color: Colors.white24, size: 18),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 62),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: const BoxDecoration(
+            border: Border(
+                bottom: BorderSide(color: BldrCommunityColorsV2.fieldBorder)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: danger
+                            ? BldrCommunityTextV2.sqDanger
+                            : BldrCommunityTextV2.exercise),
+                    const SizedBox(height: 3),
+                    Text(subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: BldrCommunityTextV2.rowSub),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Icon(TablerIcons.chevron_right,
+                  size: 18,
+                  color: danger
+                      ? BldrCommunityColorsV2.dangerBright
+                      : BldrCommunityColorsV2.muted),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MemberRow extends StatelessWidget {
+  final String name;
+  final String? avatar;
+  final String role;
+  final VoidCallback? onMore;
+
+  const _MemberRow({
+    required this.name,
+    required this.avatar,
+    required this.role,
+    required this.onMore,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          BldrCommunityAvatar(name: name, imageUrl: avatar),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: BldrCommunityTextV2.exercise),
+                Text(role, style: BldrCommunityTextV2.rowSub),
+              ],
+            ),
+          ),
+          if (onMore != null)
+            Semantics(
+              button: true,
+              label: l10n.sq_kick,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onMore,
+                child: SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Center(
+                    child: Text('•••', style: BldrCommunityTextV2.more),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

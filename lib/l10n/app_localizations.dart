@@ -10294,6 +10294,876 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'MELHORES PRS'**
   String get comm_section_best_prs;
+
+  /// No description provided for @sq_new_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Novo Squad'**
+  String get sq_new_title;
+
+  /// No description provided for @sq_new_heading.
+  ///
+  /// In pt, this message translates to:
+  /// **'Crie seu Squad'**
+  String get sq_new_heading;
+
+  /// No description provided for @sq_new_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Defina como vocês vão competir.'**
+  String get sq_new_sub;
+
+  /// No description provided for @sq_field_name.
+  ///
+  /// In pt, this message translates to:
+  /// **'NOME DO SQUAD'**
+  String get sq_field_name;
+
+  /// No description provided for @sq_field_name_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ex: Tropa Élite'**
+  String get sq_field_name_hint;
+
+  /// No description provided for @sq_field_stake.
+  ///
+  /// In pt, this message translates to:
+  /// **'APOSTA DO SQUAD · OPCIONAL'**
+  String get sq_field_stake;
+
+  /// No description provided for @sq_field_stake_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ex: Último colocado paga o açaí.'**
+  String get sq_field_stake_hint;
+
+  /// No description provided for @sq_field_desc.
+  ///
+  /// In pt, this message translates to:
+  /// **'DESCRIÇÃO · OPCIONAL'**
+  String get sq_field_desc;
+
+  /// No description provided for @sq_field_desc_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Conte o objetivo do Squad.'**
+  String get sq_field_desc_hint;
+
+  /// No description provided for @sq_field_mode.
+  ///
+  /// In pt, this message translates to:
+  /// **'MODO'**
+  String get sq_field_mode;
+
+  /// No description provided for @sq_field_validation.
+  ///
+  /// In pt, this message translates to:
+  /// **'VALIDAÇÃO'**
+  String get sq_field_validation;
+
+  /// No description provided for @sq_field_duration.
+  ///
+  /// In pt, this message translates to:
+  /// **'DURAÇÃO'**
+  String get sq_field_duration;
+
+  /// No description provided for @sq_duration_days.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} DIAS'**
+  String sq_duration_days(int n);
+
+  /// No description provided for @sq_mode_survivor_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Último de pé'**
+  String get sq_mode_survivor_sub;
+
+  /// No description provided for @sq_mode_alpha_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'XP acumulado'**
+  String get sq_mode_alpha_sub;
+
+  /// No description provided for @sq_mode_roadrunner_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Maior distância'**
+  String get sq_mode_roadrunner_sub;
+
+  /// No description provided for @sq_mode_hustle_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dias treinados'**
+  String get sq_mode_hustle_sub;
+
+  /// No description provided for @sq_mode_survivor_info.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quem ficar sem vidas é eliminado. Validação por foto.'**
+  String get sq_mode_survivor_info;
+
+  /// No description provided for @sq_mode_alpha_info.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ganha quem somar mais XP no período.'**
+  String get sq_mode_alpha_info;
+
+  /// No description provided for @sq_mode_roadrunner_info.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ganha quem acumular mais quilômetros. Validação por check-in.'**
+  String get sq_mode_roadrunner_info;
+
+  /// No description provided for @sq_mode_hustle_info.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ganha quem treinar mais dias. Validação por check-in.'**
+  String get sq_mode_hustle_info;
+
+  /// No description provided for @sq_validation_photo.
+  ///
+  /// In pt, this message translates to:
+  /// **'FOTO'**
+  String get sq_validation_photo;
+
+  /// No description provided for @sq_validation_photo_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Foto obrigatória e votação'**
+  String get sq_validation_photo_sub;
+
+  /// No description provided for @sq_validation_honor.
+  ///
+  /// In pt, this message translates to:
+  /// **'HONRA'**
+  String get sq_validation_honor;
+
+  /// No description provided for @sq_validation_honor_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Check-in manual'**
+  String get sq_validation_honor_sub;
+
+  /// No description provided for @sq_create_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'CRIAR SQUAD'**
+  String get sq_create_cta;
+
+  /// No description provided for @sq_name_required.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dê um nome para o seu Squad.'**
+  String get sq_name_required;
+
+  /// No description provided for @sq_created.
+  ///
+  /// In pt, this message translates to:
+  /// **'Squad criado. Convide a sua equipe.'**
+  String get sq_created;
+
+  /// No description provided for @sq_create_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível criar o Squad.'**
+  String get sq_create_error;
+
+  /// No description provided for @sq_quota_create.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você tem {left} de {limit} criações restantes este mês.'**
+  String sq_quota_create(int left, int limit);
+
+  /// No description provided for @sq_quota_create_full.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você já usou as {limit} criações gratuitas deste mês. Assine o BLDR Club para criar sem limites.'**
+  String sq_quota_create_full(int limit);
+
+  /// No description provided for @sq_quota_join.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você tem {left} de {limit} participações restantes este mês.'**
+  String sq_quota_join(int left, int limit);
+
+  /// No description provided for @sq_quota_join_full.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você já usou as {limit} participações gratuitas deste mês. Assine o BLDR Club para continuar.'**
+  String sq_quota_join_full(int limit);
+
+  /// No description provided for @sq_subscribe.
+  ///
+  /// In pt, this message translates to:
+  /// **'ASSINAR BLDR CLUB'**
+  String get sq_subscribe;
+
+  /// No description provided for @sq_join_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Entrar com código'**
+  String get sq_join_title;
+
+  /// No description provided for @sq_join_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Digite o código de convite enviado pelo administrador do Squad.'**
+  String get sq_join_sub;
+
+  /// No description provided for @sq_join_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'CÓDIGO DE CONVITE'**
+  String get sq_join_label;
+
+  /// No description provided for @sq_join_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ex: BLD-8K2'**
+  String get sq_join_hint;
+
+  /// No description provided for @sq_join_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'ENTRAR NO SQUAD'**
+  String get sq_join_cta;
+
+  /// No description provided for @sq_join_not_found.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum Squad encontrado com este código.'**
+  String get sq_join_not_found;
+
+  /// No description provided for @sq_join_already.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você já é membro deste Squad.'**
+  String get sq_join_already;
+
+  /// No description provided for @sq_join_welcome.
+  ///
+  /// In pt, this message translates to:
+  /// **'Bem-vindo ao Squad {name}.'**
+  String sq_join_welcome(String name);
+
+  /// No description provided for @sq_join_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível entrar no Squad.'**
+  String get sq_join_error;
+
+  /// No description provided for @sq_tab_overview.
+  ///
+  /// In pt, this message translates to:
+  /// **'VISÃO GERAL'**
+  String get sq_tab_overview;
+
+  /// No description provided for @sq_tab_feed.
+  ///
+  /// In pt, this message translates to:
+  /// **'FEED'**
+  String get sq_tab_feed;
+
+  /// No description provided for @sq_tab_ranking.
+  ///
+  /// In pt, this message translates to:
+  /// **'RANKING'**
+  String get sq_tab_ranking;
+
+  /// No description provided for @sq_label_today.
+  ///
+  /// In pt, this message translates to:
+  /// **'HOJE'**
+  String get sq_label_today;
+
+  /// No description provided for @sq_days_left.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} dias restantes'**
+  String sq_days_left(int n);
+
+  /// No description provided for @sq_day_left.
+  ///
+  /// In pt, this message translates to:
+  /// **'Encerra amanhã'**
+  String get sq_day_left;
+
+  /// No description provided for @sq_last_day.
+  ///
+  /// In pt, this message translates to:
+  /// **'Último dia'**
+  String get sq_last_day;
+
+  /// No description provided for @sq_finished.
+  ///
+  /// In pt, this message translates to:
+  /// **'Squad encerrado'**
+  String get sq_finished;
+
+  /// No description provided for @sq_goal_section.
+  ///
+  /// In pt, this message translates to:
+  /// **'META DE HOJE'**
+  String get sq_goal_section;
+
+  /// No description provided for @sq_goal_default.
+  ///
+  /// In pt, this message translates to:
+  /// **'Treine hoje'**
+  String get sq_goal_default;
+
+  /// No description provided for @sq_goal_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seu check-in mantém a sequência do Squad.'**
+  String get sq_goal_sub;
+
+  /// No description provided for @sq_status_pending.
+  ///
+  /// In pt, this message translates to:
+  /// **'Check-in em análise'**
+  String get sq_status_pending;
+
+  /// No description provided for @sq_status_approved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Check-in aprovado'**
+  String get sq_status_approved;
+
+  /// No description provided for @sq_status_rejected.
+  ///
+  /// In pt, this message translates to:
+  /// **'Check-in rejeitado'**
+  String get sq_status_rejected;
+
+  /// No description provided for @sq_stake_section.
+  ///
+  /// In pt, this message translates to:
+  /// **'APOSTA'**
+  String get sq_stake_section;
+
+  /// No description provided for @sq_about_section.
+  ///
+  /// In pt, this message translates to:
+  /// **'SOBRE'**
+  String get sq_about_section;
+
+  /// No description provided for @sq_activity_section.
+  ///
+  /// In pt, this message translates to:
+  /// **'ATIVIDADE DO SQUAD'**
+  String get sq_activity_section;
+
+  /// No description provided for @sq_activity_empty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma atividade ainda.'**
+  String get sq_activity_empty;
+
+  /// No description provided for @sq_activity_checkin.
+  ///
+  /// In pt, this message translates to:
+  /// **'fez check-in'**
+  String get sq_activity_checkin;
+
+  /// No description provided for @sq_tribunal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tribunal'**
+  String get sq_tribunal;
+
+  /// No description provided for @sq_tribunal_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Provas por foto e votação dos membros'**
+  String get sq_tribunal_sub;
+
+  /// No description provided for @sq_history.
+  ///
+  /// In pt, this message translates to:
+  /// **'Histórico do Squad'**
+  String get sq_history;
+
+  /// No description provided for @sq_history_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Check-ins e pontos registrados'**
+  String get sq_history_sub;
+
+  /// No description provided for @sq_feed_section.
+  ///
+  /// In pt, this message translates to:
+  /// **'ATIVIDADE RECENTE'**
+  String get sq_feed_section;
+
+  /// No description provided for @sq_feed_checkin.
+  ///
+  /// In pt, this message translates to:
+  /// **'CHECK-IN'**
+  String get sq_feed_checkin;
+
+  /// No description provided for @sq_week.
+  ///
+  /// In pt, this message translates to:
+  /// **'SEMANA {week}'**
+  String sq_week(int week);
+
+  /// No description provided for @sq_you.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você'**
+  String get sq_you;
+
+  /// No description provided for @sq_score_days.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} dias'**
+  String sq_score_days(int n);
+
+  /// No description provided for @sq_score_points.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} pts'**
+  String sq_score_points(int n);
+
+  /// No description provided for @sq_score_km.
+  ///
+  /// In pt, this message translates to:
+  /// **'{value} km'**
+  String sq_score_km(String value);
+
+  /// No description provided for @sq_lives.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} vidas'**
+  String sq_lives(int n);
+
+  /// No description provided for @sq_eliminated_section.
+  ///
+  /// In pt, this message translates to:
+  /// **'ELIMINADOS'**
+  String get sq_eliminated_section;
+
+  /// No description provided for @sq_chat.
+  ///
+  /// In pt, this message translates to:
+  /// **'CHAT'**
+  String get sq_chat;
+
+  /// No description provided for @sq_checkin.
+  ///
+  /// In pt, this message translates to:
+  /// **'CHECK-IN'**
+  String get sq_checkin;
+
+  /// No description provided for @sq_checkin_closed.
+  ///
+  /// In pt, this message translates to:
+  /// **'ENCERRADO'**
+  String get sq_checkin_closed;
+
+  /// No description provided for @sq_checkin_done.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atividade registrada no Squad.'**
+  String get sq_checkin_done;
+
+  /// No description provided for @sq_load_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível carregar este Squad.'**
+  String get sq_load_error;
+
+  /// No description provided for @sq_settings_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'Configurações do Squad'**
+  String get sq_settings_label;
+
+  /// No description provided for @sq_share_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'Compartilhar Squad'**
+  String get sq_share_label;
+
+  /// No description provided for @sq_share_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Convide pessoas para {name}'**
+  String sq_share_sub(String name);
+
+  /// No description provided for @sq_share_invite.
+  ///
+  /// In pt, this message translates to:
+  /// **'Compartilhar convite'**
+  String get sq_share_invite;
+
+  /// No description provided for @sq_share_invite_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Envie pelo seu app preferido.'**
+  String get sq_share_invite_sub;
+
+  /// No description provided for @sq_share_link.
+  ///
+  /// In pt, this message translates to:
+  /// **'Copiar link'**
+  String get sq_share_link;
+
+  /// No description provided for @sq_share_link_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Link direto para o Squad.'**
+  String get sq_share_link_sub;
+
+  /// No description provided for @sq_share_code.
+  ///
+  /// In pt, this message translates to:
+  /// **'Copiar código'**
+  String get sq_share_code;
+
+  /// No description provided for @sq_copied.
+  ///
+  /// In pt, this message translates to:
+  /// **'Copiado.'**
+  String get sq_copied;
+
+  /// No description provided for @sq_invite_text.
+  ///
+  /// In pt, this message translates to:
+  /// **'Entre no Squad {name} no BLDR.\n\nLink: {link}\nCódigo: {code}'**
+  String sq_invite_text(String name, String link, String code);
+
+  /// No description provided for @sq_chat_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Chat do Squad'**
+  String get sq_chat_title;
+
+  /// No description provided for @sq_chat_info.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mensagens visíveis apenas para membros do Squad.'**
+  String get sq_chat_info;
+
+  /// No description provided for @sq_chat_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mensagem para o Squad...'**
+  String get sq_chat_hint;
+
+  /// No description provided for @sq_chat_empty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem mensagens ainda.'**
+  String get sq_chat_empty;
+
+  /// No description provided for @sq_chat_send.
+  ///
+  /// In pt, this message translates to:
+  /// **'Enviar mensagem'**
+  String get sq_chat_send;
+
+  /// No description provided for @sq_chat_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível enviar a mensagem.'**
+  String get sq_chat_error;
+
+  /// No description provided for @sq_section_general.
+  ///
+  /// In pt, this message translates to:
+  /// **'GERAL'**
+  String get sq_section_general;
+
+  /// No description provided for @sq_section_rules.
+  ///
+  /// In pt, this message translates to:
+  /// **'REGRAS'**
+  String get sq_section_rules;
+
+  /// No description provided for @sq_section_danger.
+  ///
+  /// In pt, this message translates to:
+  /// **'ZONA DE PERIGO'**
+  String get sq_section_danger;
+
+  /// No description provided for @sq_info.
+  ///
+  /// In pt, this message translates to:
+  /// **'Informações do Squad'**
+  String get sq_info;
+
+  /// No description provided for @sq_info_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome, aposta e detalhes.'**
+  String get sq_info_sub;
+
+  /// No description provided for @sq_info_sheet_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Edite os dados principais do grupo.'**
+  String get sq_info_sheet_sub;
+
+  /// No description provided for @sq_members.
+  ///
+  /// In pt, this message translates to:
+  /// **'Membros'**
+  String get sq_members;
+
+  /// No description provided for @sq_members_count.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} membros'**
+  String sq_members_count(int n);
+
+  /// No description provided for @sq_members_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Gerencie quem participa do Squad.'**
+  String get sq_members_sub;
+
+  /// No description provided for @sq_role_admin.
+  ///
+  /// In pt, this message translates to:
+  /// **'Administrador'**
+  String get sq_role_admin;
+
+  /// No description provided for @sq_role_member.
+  ///
+  /// In pt, this message translates to:
+  /// **'Membro'**
+  String get sq_role_member;
+
+  /// No description provided for @sq_role_eliminated.
+  ///
+  /// In pt, this message translates to:
+  /// **'Eliminado'**
+  String get sq_role_eliminated;
+
+  /// No description provided for @sq_invite_members.
+  ///
+  /// In pt, this message translates to:
+  /// **'CONVIDAR MEMBROS'**
+  String get sq_invite_members;
+
+  /// No description provided for @sq_kick.
+  ///
+  /// In pt, this message translates to:
+  /// **'Remover do Squad'**
+  String get sq_kick;
+
+  /// No description provided for @sq_kick_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} deixa de participar.'**
+  String sq_kick_sub(String name);
+
+  /// No description provided for @sq_kick_msg.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} perde o acesso ao feed, ao chat e ao ranking deste Squad.'**
+  String sq_kick_msg(String name);
+
+  /// No description provided for @sq_kick_confirm.
+  ///
+  /// In pt, this message translates to:
+  /// **'Remover'**
+  String get sq_kick_confirm;
+
+  /// No description provided for @sq_goal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Meta diária'**
+  String get sq_goal;
+
+  /// No description provided for @sq_goal_none.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma meta personalizada.'**
+  String get sq_goal_none;
+
+  /// No description provided for @sq_goal_sheet_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Defina uma meta opcional para o grupo.'**
+  String get sq_goal_sheet_sub;
+
+  /// No description provided for @sq_goal_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'DESCRIÇÃO'**
+  String get sq_goal_label;
+
+  /// No description provided for @sq_goal_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ex: completar pelo menos um treino.'**
+  String get sq_goal_hint;
+
+  /// No description provided for @sq_goal_help.
+  ///
+  /// In pt, this message translates to:
+  /// **'A meta aparece na Visão Geral e pode ser editada a qualquer momento.'**
+  String get sq_goal_help;
+
+  /// No description provided for @sq_goal_save.
+  ///
+  /// In pt, this message translates to:
+  /// **'SALVAR META'**
+  String get sq_goal_save;
+
+  /// No description provided for @sq_rules.
+  ///
+  /// In pt, this message translates to:
+  /// **'Regras de pontuação'**
+  String get sq_rules;
+
+  /// No description provided for @sq_rules_sheet_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Veja como o ranking do Squad funciona.'**
+  String get sq_rules_sheet_sub;
+
+  /// No description provided for @sq_rules_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'MODO ATUAL'**
+  String get sq_rules_label;
+
+  /// No description provided for @sq_rules_note.
+  ///
+  /// In pt, this message translates to:
+  /// **'O modo do Squad não pode ser alterado após a criação.'**
+  String get sq_rules_note;
+
+  /// No description provided for @sq_rules_ok.
+  ///
+  /// In pt, this message translates to:
+  /// **'ENTENDI'**
+  String get sq_rules_ok;
+
+  /// No description provided for @sq_rules_alpha.
+  ///
+  /// In pt, this message translates to:
+  /// **'Check-in +10 XP · por minuto +1 XP · por km +10 XP · atividade diferente no dia +15 XP.'**
+  String get sq_rules_alpha;
+
+  /// No description provided for @sq_rules_survivor.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cada membro começa com 2 vidas. Foto não aprovada tira 1 vida; com 0 vidas, o membro é eliminado.'**
+  String get sq_rules_survivor;
+
+  /// No description provided for @sq_rules_roadrunner.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ranking por quilômetros acumulados. Cada check-in registra seus km, no sistema de honra.'**
+  String get sq_rules_roadrunner;
+
+  /// No description provided for @sq_rules_hustle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ranking por dias treinados. Vários treinos no mesmo dia contam 1 ponto.'**
+  String get sq_rules_hustle;
+
+  /// No description provided for @sq_xp_limit.
+  ///
+  /// In pt, this message translates to:
+  /// **'TETO DE XP POR DIA'**
+  String get sq_xp_limit;
+
+  /// No description provided for @sq_xp_limit_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'0 = sem limite'**
+  String get sq_xp_limit_hint;
+
+  /// No description provided for @sq_save.
+  ///
+  /// In pt, this message translates to:
+  /// **'SALVAR ALTERAÇÕES'**
+  String get sq_save;
+
+  /// No description provided for @sq_saved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alterações salvas.'**
+  String get sq_saved;
+
+  /// No description provided for @sq_save_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível salvar.'**
+  String get sq_save_error;
+
+  /// No description provided for @sq_leave.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sair do Squad'**
+  String get sq_leave;
+
+  /// No description provided for @sq_leave_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você deixará de participar.'**
+  String get sq_leave_sub;
+
+  /// No description provided for @sq_leave_body.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ao sair, você perde acesso ao feed, chat e ranking deste Squad.'**
+  String get sq_leave_body;
+
+  /// No description provided for @sq_leave_note.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você poderá entrar novamente somente com convite ou código.'**
+  String get sq_leave_note;
+
+  /// No description provided for @sq_leave_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'SAIR DO SQUAD'**
+  String get sq_leave_cta;
+
+  /// No description provided for @sq_end.
+  ///
+  /// In pt, this message translates to:
+  /// **'Encerrar Squad'**
+  String get sq_end;
+
+  /// No description provided for @sq_end_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir o Squad permanentemente.'**
+  String get sq_end_sub;
+
+  /// No description provided for @sq_end_body.
+  ///
+  /// In pt, this message translates to:
+  /// **'Encerrar o Squad remove membros, histórico, ranking e mensagens.'**
+  String get sq_end_body;
+
+  /// No description provided for @sq_end_note.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta ação é permanente e não pode ser desfeita.'**
+  String get sq_end_note;
+
+  /// No description provided for @sq_end_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'ENCERRAR SQUAD'**
+  String get sq_end_cta;
+
+  /// No description provided for @sq_ended.
+  ///
+  /// In pt, this message translates to:
+  /// **'Squad encerrado.'**
+  String get sq_ended;
 }
 
 class _AppLocalizationsDelegate

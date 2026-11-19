@@ -1215,6 +1215,16 @@ abstract final class BldrCommunityColorsV2 {
   static const moreBorder = Color(0xFF333333);
   static const danger = Color(0xFFD94D4D);
   static const badge = Color(0xFFE53935);
+  // Squads (86:842, 86:878, 96:830)
+  static const fieldBg = Color(0xFF060606);
+  static const fieldBorder = Color(0xFF252525);
+  static const modeBorder = Color(0xFF2A2517);
+  static const modeOnBg = Color(0xFF0E0D06);
+  static const timeBg = Color(0xFF120F05);
+  static const goalBg = Color(0xFF0A0A0A);
+  static const chatMineBorder = Color(0xFF4D400F);
+  static const dangerBright = Color(0xFFF24545);
+  static const dangerBg = Color(0xFF1F0909);
   // Detalhe do post e perfil
   static const contentBg = Color(0xFF0B0B0B);
   static const inputBg = Color(0xFF090908);
@@ -1294,6 +1304,29 @@ abstract final class BldrCommunityTextV2 {
   static final prValue = _s(BldrTextV2.s28, _b, _c); // 26
   static final prDelta = _s(BldrTextV2.s11, _sb, _g); // 10
   static final historyDate = _s(BldrTextV2.s11, _m, _mu); // 10
+  // Squads
+  static final sqHeading = _s(BldrTextV2.s20, _b, _c); // 22
+  static final sqTitle = _s(BldrTextV2.s17, _b, _c); // 18
+  static final sqLabel = _s(BldrTextV2.s11, _b, _mu); // 8
+  static final sqInput = _s(BldrTextV2.s12, _r, _c); // 10
+  static final sqHint = _s(BldrTextV2.s12, _r, _mu); // 10
+  static final sqModeOff = _s(BldrTextV2.s11, _b, _mu); // 10
+  static final sqModeOn = _s(BldrTextV2.s11, _b, _c); // 10
+  static final sqModeSubOn = _s(BldrTextV2.s11, _r, _g); // 8
+  static final sqTab = _s(BldrTextV2.s11, _b, _sm); // 9
+  static final sqMetric = _s(BldrTextV2.s20, _b, _g); // 19
+  static final sqTime = _s(BldrTextV2.s11, _b, _g); // 10
+  static final sqGoal = _s(BldrTextV2.s15, _b, _c); // 14
+  static final sqRankPos = _s(BldrTextV2.s11, _b, _g); // 11
+  static final sqRankPosOff = _s(BldrTextV2.s11, _b, _sm); // 11
+  static final sqRankName = _s(BldrTextV2.s11, _b, _c); // 10
+  static final sqDanger = _s(BldrTextV2.s11, _sb, BldrCommunityColorsV2.dangerBright); // 11
+  static final sqDangerLabel =
+      _s(BldrTextV2.s11, _b, BldrCommunityColorsV2.dangerBright); // 8
+  static final sqDangerCta = _s(BldrTextV2.s11, _b, BldrCommunityColorsV2.danger); // 8
+  static final sqBubble = _s(BldrTextV2.s12, _r, _c); // 10
+  static final sqBubbleTime = _s(BldrTextV2.s11, _r, _mu); // 7
+  static final sqBubbleTimeMine = _s(BldrTextV2.s11, _r, _g); // 7
   // Detalhe do post (52:802) e perfil social (56:855)
   static final backIcon = _s(BldrTextV2.s28, _r, _c); // 26
   static final detailTitle = _s(BldrTextV2.s20, _b, _c); // 20

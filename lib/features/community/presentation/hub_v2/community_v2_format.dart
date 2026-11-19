@@ -124,6 +124,25 @@ abstract final class CommunityV2Format {
           .map((p) => '${p[0].toUpperCase()}${p.substring(1)}')
           .join(' ');
 
+  /// Dias até o fim do squad; -1 quando encerrado, null sem data de fim.
+  static int? squadDaysLeft(Map<String, dynamic> arena, DateTime now) {
+    if (arena['is_active'] == false) return -1;
+    final end = DateTime.tryParse(arena['end_date']?.toString() ?? '');
+    if (end == null) return null;
+    final diff = end.toLocal().difference(now);
+    return diff.isNegative ? -1 : diff.inDays;
+  }
+
+  /// Check-ins e provas, sem as mensagens do chat, do mais novo ao mais antigo.
+  static List<Map<String, dynamic>> squadActivity(
+          List<Map<String, dynamic>> posts) =>
+      posts.where((p) => p['status'] != 'chat').toList();
+
+  /// Mensagens do chat, da mais antiga à mais nova.
+  static List<Map<String, dynamic>> squadChat(
+          List<Map<String, dynamic>> posts) =>
+      posts.where((p) => p['status'] == 'chat').toList().reversed.toList();
+
   /// Resumo do squad. [participants] já vem ordenado pelo critério do modo
   /// (mesma ordem da tela da arena); [posts] é o `tribunalFeed`.
   static SquadHubSummary squad({
