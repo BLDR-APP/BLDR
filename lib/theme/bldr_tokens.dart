@@ -908,6 +908,7 @@ abstract final class BldrSheetV2Colors {
   static const indicator = Color(0xA6D4AF37); // .65
   static const text = Color(0xFFF5F5F5);
   static const unit = Color(0xFF787878);
+  static const close = Color(0xFFA3A3A3);
 }
 
 abstract final class BldrSheetV2Text {
@@ -1602,6 +1603,9 @@ abstract final class BldrNutritionColorsV2 {
   static const stepButtonBg = Color(0xFF090909);
   static const chipBg = Color(0xFF0E0E0E);
   static const chipActiveBg = Color(0xFF000000);
+  // Copiar refeição (102:313/314/315)
+  static const rowBg = Color(0xFF1B1B1B);
+  static const copyMuted = Color(0xFFA3A3A3);
 }
 
 abstract final class BldrNutritionTextV2 {
@@ -1659,6 +1663,18 @@ abstract final class BldrNutritionTextV2 {
   static final sheetValue = _s(BldrTextV2.s15, _b, _t); // 15
   static final cta = _s(BldrTextV2.s11, _b, BldrNutritionColorsV2.gold); // 11
   static final link = _s(BldrTextV2.s11, _m, _mu); // 8 (helper)
+  // Copiar refeição
+  static const _cm = BldrNutritionColorsV2.copyMuted;
+  static final copyDesc = _s(BldrTextV2.s12, _r, _cm); // 12
+  static final copyRoute = _s(BldrTextV2.s13, _r, _cm); // 13
+  static final copyLabel = _s(BldrTextV2.s11, _b, _g); // 11
+  static final copyDate = _s(BldrTextV2.s15, _r, _t); // 14
+  static final copyOption = _s(BldrTextV2.s12, _r, _t); // 12
+  static final copyOptionOn = _s(BldrTextV2.s12, _b, _g); // 12
+  static final copyFood = _s(BldrTextV2.s13, _b, _t); // 13
+  static final copyFoodMeta = _s(BldrTextV2.s11, _r, _cm); // 11
+  static final copyDone = _s(BldrTextV2.s17, _b, _t); // 16
+  static final close = _s(BldrTextV2.s24, _r, _cm); // 25 (×)
 }
 
 abstract final class BldrNutritionV2 {

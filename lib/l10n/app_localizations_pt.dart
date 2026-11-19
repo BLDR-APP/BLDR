@@ -6876,4 +6876,66 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get nutri2_toast_targets_updated => 'Metas atualizadas';
+
+  @override
+  String get nutri2_copy_eyebrow => 'NUTRIÇÃO  /  COPIAR REFEIÇÃO';
+
+  @override
+  String get nutri2_copy_menu => 'Copiar refeição';
+
+  @override
+  String get nutri2_copy_dest_title => 'Escolher destino';
+
+  @override
+  String nutri2_copy_desc(String meal, String kcal, int count) {
+    return 'Copiar $meal · $kcal kcal · $count alimentos';
+  }
+
+  @override
+  String get nutri2_copy_date_label => 'DATA DE DESTINO';
+
+  @override
+  String get nutri2_copy_meal_label => 'REFEIÇÃO DE DESTINO';
+
+  @override
+  String get nutri2_copy_continue => 'CONTINUAR';
+
+  @override
+  String get nutri2_copy_review_title => 'Revisar cópia';
+
+  @override
+  String get nutri2_copy_list_label => 'ALIMENTOS A COPIAR';
+
+  @override
+  String nutri2_copy_food_meta(String grams, String kcal) {
+    return '${grams}g · $kcal kcal';
+  }
+
+  @override
+  String get nutri2_copy_behavior =>
+      'Os alimentos serão adicionados à refeição, sem substituir os itens existentes.';
+
+  @override
+  String get nutri2_copy_confirm => 'CONFIRMAR CÓPIA';
+
+  @override
+  String get nutri2_copy_done_title => 'Refeição copiada';
+
+  @override
+  String nutri2_copy_done_text(int count, String meal) {
+    return '$count alimentos adicionados ao $meal';
+  }
+
+  @override
+  String get nutri2_copy_done_sub =>
+      'Quantidades originais preservadas. Valores nutricionais atualizados.';
+
+  @override
+  String get nutri2_copy_finish => 'CONCLUIR';
+
+  @override
+  String get nutri2_close => 'Fechar';
+
+  @override
+  String get nutri2_copy_error => 'Não foi possível copiar a refeição';
 }

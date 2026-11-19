@@ -172,6 +172,48 @@ class RestoreMealEntry {
   Future<Result<void>> call(MealEntry entry) => _diary.addEntry(entry);
 }
 
+/// Copia alimentos de uma refeição para outra data/refeição, sem
+/// substituir os itens existentes e mantendo as quantidades (macros já são
+/// os totais gravados). Sem XP: copiar não é um novo registro feito à mão.
+class CopyMeal {
+  final NutritionDiaryRepository _diary;
+  const CopyMeal(this._diary);
+
+  /// Retorna quantos alimentos foram copiados.
+  Future<Result<int>> call({
+    required List<MealEntry> entries,
+    required DateTime toDate,
+    required String toMealType,
+    DateTime? now,
+  }) async {
+    if (entries.isEmpty) {
+      return const Result.failure(
+          ValidationFailure('Nenhum alimento para copiar.'));
+    }
+    final day = DateTime(toDate.year, toDate.month, toDate.day);
+    final ts = now ?? DateTime.now();
+    var copied = 0;
+    for (final e in entries) {
+      final r = await _diary.addEntry(MealEntry(
+        userId: e.userId,
+        mealType: toMealType,
+        date: day,
+        timestamp: ts,
+        foodName: e.foodName,
+        foodItemId: e.foodItemId,
+        createdBy: e.createdBy,
+        quantityGrams: e.quantityGrams,
+        macros: e.macros,
+      ));
+      if (r.isFailure) {
+        return Result.failure(r.failureOrNull!);
+      }
+      copied++;
+    }
+    return Result.success(copied);
+  }
+}
+
 /// Meta cruzada agora (antes abaixo, depois em/acima) — dispara o toast de
 /// meta uma vez por cruzamento.
 bool nutritionGoalCrossed(

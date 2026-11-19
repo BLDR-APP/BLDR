@@ -6858,4 +6858,66 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get nutri2_toast_targets_updated => 'Obiettivi aggiornati';
+
+  @override
+  String get nutri2_copy_eyebrow => 'NUTRIZIONE  /  COPIA PASTO';
+
+  @override
+  String get nutri2_copy_menu => 'Copia pasto';
+
+  @override
+  String get nutri2_copy_dest_title => 'Scegli destinazione';
+
+  @override
+  String nutri2_copy_desc(String meal, String kcal, int count) {
+    return 'Copia $meal · $kcal kcal · $count alimenti';
+  }
+
+  @override
+  String get nutri2_copy_date_label => 'DATA DI DESTINAZIONE';
+
+  @override
+  String get nutri2_copy_meal_label => 'PASTO DI DESTINAZIONE';
+
+  @override
+  String get nutri2_copy_continue => 'CONTINUA';
+
+  @override
+  String get nutri2_copy_review_title => 'Rivedi copia';
+
+  @override
+  String get nutri2_copy_list_label => 'ALIMENTI DA COPIARE';
+
+  @override
+  String nutri2_copy_food_meta(String grams, String kcal) {
+    return '${grams}g · $kcal kcal';
+  }
+
+  @override
+  String get nutri2_copy_behavior =>
+      'Gli alimenti saranno aggiunti al pasto senza sostituire quelli esistenti.';
+
+  @override
+  String get nutri2_copy_confirm => 'CONFERMA COPIA';
+
+  @override
+  String get nutri2_copy_done_title => 'Pasto copiato';
+
+  @override
+  String nutri2_copy_done_text(int count, String meal) {
+    return '$count alimenti aggiunti a $meal';
+  }
+
+  @override
+  String get nutri2_copy_done_sub =>
+      'Quantità originali mantenute. Valori nutrizionali aggiornati.';
+
+  @override
+  String get nutri2_copy_finish => 'FINE';
+
+  @override
+  String get nutri2_close => 'Chiudi';
+
+  @override
+  String get nutri2_copy_error => 'Impossibile copiare il pasto';
 }

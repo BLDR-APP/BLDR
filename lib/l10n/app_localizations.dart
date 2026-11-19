@@ -12310,6 +12310,114 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Metas atualizadas'**
   String get nutri2_toast_targets_updated;
+
+  /// No description provided for @nutri2_copy_eyebrow.
+  ///
+  /// In pt, this message translates to:
+  /// **'NUTRIÇÃO  /  COPIAR REFEIÇÃO'**
+  String get nutri2_copy_eyebrow;
+
+  /// No description provided for @nutri2_copy_menu.
+  ///
+  /// In pt, this message translates to:
+  /// **'Copiar refeição'**
+  String get nutri2_copy_menu;
+
+  /// No description provided for @nutri2_copy_dest_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolher destino'**
+  String get nutri2_copy_dest_title;
+
+  /// No description provided for @nutri2_copy_desc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Copiar {meal} · {kcal} kcal · {count} alimentos'**
+  String nutri2_copy_desc(String meal, String kcal, int count);
+
+  /// No description provided for @nutri2_copy_date_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'DATA DE DESTINO'**
+  String get nutri2_copy_date_label;
+
+  /// No description provided for @nutri2_copy_meal_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'REFEIÇÃO DE DESTINO'**
+  String get nutri2_copy_meal_label;
+
+  /// No description provided for @nutri2_copy_continue.
+  ///
+  /// In pt, this message translates to:
+  /// **'CONTINUAR'**
+  String get nutri2_copy_continue;
+
+  /// No description provided for @nutri2_copy_review_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Revisar cópia'**
+  String get nutri2_copy_review_title;
+
+  /// No description provided for @nutri2_copy_list_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'ALIMENTOS A COPIAR'**
+  String get nutri2_copy_list_label;
+
+  /// No description provided for @nutri2_copy_food_meta.
+  ///
+  /// In pt, this message translates to:
+  /// **'{grams}g · {kcal} kcal'**
+  String nutri2_copy_food_meta(String grams, String kcal);
+
+  /// No description provided for @nutri2_copy_behavior.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os alimentos serão adicionados à refeição, sem substituir os itens existentes.'**
+  String get nutri2_copy_behavior;
+
+  /// No description provided for @nutri2_copy_confirm.
+  ///
+  /// In pt, this message translates to:
+  /// **'CONFIRMAR CÓPIA'**
+  String get nutri2_copy_confirm;
+
+  /// No description provided for @nutri2_copy_done_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Refeição copiada'**
+  String get nutri2_copy_done_title;
+
+  /// No description provided for @nutri2_copy_done_text.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} alimentos adicionados ao {meal}'**
+  String nutri2_copy_done_text(int count, String meal);
+
+  /// No description provided for @nutri2_copy_done_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quantidades originais preservadas. Valores nutricionais atualizados.'**
+  String get nutri2_copy_done_sub;
+
+  /// No description provided for @nutri2_copy_finish.
+  ///
+  /// In pt, this message translates to:
+  /// **'CONCLUIR'**
+  String get nutri2_copy_finish;
+
+  /// No description provided for @nutri2_close.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fechar'**
+  String get nutri2_close;
+
+  /// No description provided for @nutri2_copy_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível copiar a refeição'**
+  String get nutri2_copy_error;
 }
 
 class _AppLocalizationsDelegate

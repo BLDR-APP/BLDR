@@ -927,8 +927,15 @@ class BldrNutritionCta extends StatelessWidget {
   final String label;
   final VoidCallback? onTap;
   final Color? color;
+
+  /// Altura 44 e raio 16 (CTAs dos sheets de cópia, 102:313–315).
+  final bool compact;
   const BldrNutritionCta(
-      {super.key, required this.label, this.onTap, this.color});
+      {super.key,
+      required this.label,
+      this.onTap,
+      this.color,
+      this.compact = false});
 
   @override
   Widget build(BuildContext context) {
@@ -942,11 +949,11 @@ class BldrNutritionCta extends StatelessWidget {
         child: Opacity(
           opacity: onTap == null ? 0.4 : 1,
           child: Container(
-            constraints: const BoxConstraints(minHeight: 52),
+            constraints: BoxConstraints(minHeight: compact ? 44 : 52),
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(compact ? 16 : 20),
               border: Border.all(color: c),
             ),
             child: Text(label,

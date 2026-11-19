@@ -365,6 +365,10 @@ class NutritionMealsSection extends StatelessWidget {
   final VoidCallback onToggleEdit;
   final ValueChanged<MealEntry> onEditFood;
   final ValueChanged<MealEntry> onRemoveFood;
+
+  /// "⋯" da refeição expandida → Copiar refeição (N5). Só aparece em
+  /// refeições com alimentos.
+  final ValueChanged<NutritionMealSlot>? onCopy;
   const NutritionMealsSection({
     super.key,
     required this.isToday,
@@ -376,6 +380,7 @@ class NutritionMealsSection extends StatelessWidget {
     required this.onToggleEdit,
     required this.onEditFood,
     required this.onRemoveFood,
+    this.onCopy,
   });
 
   @override
@@ -482,6 +487,21 @@ class NutritionMealsSection extends StatelessWidget {
       addLabel: l.nutri2_add_food,
       onAdd: () => onAdd(slot),
       onCollapse: () => onToggle(slot),
+      menu: onCopy == null || items.isEmpty
+          ? null
+          : Semantics(
+              button: true,
+              label: l.nutri2_copy_menu,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => onCopy!(slot),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 4),
+                  child: Icon(TablerIcons.dots,
+                      size: 18, color: BldrNutritionColorsV2.goldBright),
+                ),
+              ),
+            ),
     );
   }
 
@@ -608,6 +628,7 @@ class NutritionHubView extends StatelessWidget {
   final ValueChanged<MealEntry> onEditFood;
   final ValueChanged<MealEntry> onRemoveFood;
   final VoidCallback onFab;
+  final ValueChanged<NutritionMealSlot>? onCopyMeal;
 
   const NutritionHubView({
     super.key,
@@ -632,6 +653,7 @@ class NutritionHubView extends StatelessWidget {
     required this.onEditFood,
     required this.onRemoveFood,
     required this.onFab,
+    this.onCopyMeal,
   });
 
   @override
@@ -674,6 +696,7 @@ class NutritionHubView extends StatelessWidget {
                   onToggleEdit: onToggleEdit,
                   onEditFood: onEditFood,
                   onRemoveFood: onRemoveFood,
+                  onCopy: onCopyMeal,
                 ),
               ],
             ),

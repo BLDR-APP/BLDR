@@ -18,6 +18,7 @@ abstract final class BldrV2Sheet {
     required Widget child,
     String? eyebrow,
     String? subtitle,
+    String? closeLabel,
   }) {
     return showModalBottomSheet<T>(
       context: context,
@@ -28,7 +29,11 @@ abstract final class BldrV2Sheet {
       builder: (ctx) => Padding(
         padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
         child: BldrV2SheetFrame(
-            title: title, eyebrow: eyebrow, subtitle: subtitle, child: child),
+            title: title,
+            eyebrow: eyebrow,
+            subtitle: subtitle,
+            closeLabel: closeLabel,
+            child: child),
       ),
     );
   }
@@ -41,12 +46,16 @@ class BldrV2SheetFrame extends StatelessWidget {
   final String? eyebrow;
   final String? subtitle;
 
+  /// Mostra "×" no cabeçalho à esquerda (rótulo de acessibilidade).
+  final String? closeLabel;
+
   const BldrV2SheetFrame(
       {super.key,
       required this.title,
       required this.child,
       this.eyebrow,
-      this.subtitle});
+      this.subtitle,
+      this.closeLabel});
 
   @override
   Widget build(BuildContext context) {
@@ -91,10 +100,31 @@ class BldrV2SheetFrame extends StatelessWidget {
                     children: [
                       Text(eyebrow!, style: BldrSheetV2Text.eyebrow),
                       const SizedBox(height: 4),
-                      Text(title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: BldrSheetV2Text.titleLeft),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(title,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: BldrSheetV2Text.titleLeft),
+                          ),
+                          if (closeLabel != null)
+                            Semantics(
+                              button: true,
+                              label: closeLabel,
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () => Navigator.maybePop(context),
+                                child: const Padding(
+                                  padding: EdgeInsets.fromLTRB(12, 0, 2, 8),
+                                  child: Icon(TablerIcons.x,
+                                      size: 20, color: BldrSheetV2Colors.close),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                       if (subtitle != null) ...[
                         const SizedBox(height: 4),
                         Text(subtitle!,

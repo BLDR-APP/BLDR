@@ -16,6 +16,7 @@ import 'package:bldr_fitness/features/nutrition/domain/usecases/nutrition_usecas
 import 'package:bldr_fitness/features/nutrition/presentation/mappers/legacy_ui_maps.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/Firebase/firebase_add_food_modal_widget.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/food_categories_modal.dart';
+import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_copy_meal_sheets.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_hub_sections.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_water_sheet.dart';
 import 'package:bldr_fitness/features/progress/domain/usecases/progress_usecases.dart';
@@ -255,6 +256,33 @@ class _NutritionScreenState extends State<NutritionScreen> {
     }
   }
 
+  /// N5: Copiar refeição (destino → revisão → grava → sucesso).
+  Future<void> _copyMeal(NutritionMealSlot slot) async {
+    final items = _entries.where((e) => e.mealType == slot.dbKey).toList();
+    if (items.isEmpty) return;
+    final dest = await _overlay(() => NutritionCopyMealSheets.destination(
+        context,
+        source: slot,
+        entries: items,
+        today: _today()));
+    if (dest == null || !mounted) return;
+    final ok = await _overlay(() => NutritionCopyMealSheets.review(context,
+        dest: dest, entries: items, today: _today()));
+    if (ok != true || !mounted) return;
+    final r = await getIt<CopyMeal>()(
+        entries: items, toDate: dest.date, toMealType: dest.slot.dbKey);
+    if (!mounted) return;
+    final count = r.valueOrNull;
+    if (count == null) {
+      context.toast.error(AppLocalizations.of(context).nutri2_copy_error);
+      return;
+    }
+    await _loadData(silent: true);
+    if (!mounted) return;
+    await _overlay(() => NutritionCopyMealSheets.success(context,
+        count: count, slot: dest.slot));
+  }
+
   /// T3: protein.goal_reached depois de adicionar alimento (só hoje).
   void _checkProteinGoal(double before) {
     if (!_isToday || !mounted) return;
@@ -358,6 +386,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
         onToggleEdit: () => setState(() => _editMode = !_editMode),
         onEditFood: _showEditFoodModal,
         onRemoveFood: _removeFood,
+        onCopyMeal: _copyMeal,
         onFab: () =>
             _showAddFoodModal(NutritionMealSlot.suggested(DateTime.now())),
       ),
