@@ -6468,4 +6468,63 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chal_publishing => 'PUBLISHING...';
+
+  @override
+  String get rank_title => 'Ranking';
+
+  @override
+  String get rank_subtitle => 'Compare your performance with the community.';
+
+  @override
+  String get rank_tab_global => 'GLOBAL';
+
+  @override
+  String get rank_period => 'PERIOD';
+
+  @override
+  String get rank_week => 'WEEK';
+
+  @override
+  String get rank_month => 'MONTH';
+
+  @override
+  String get rank_all => 'ALL TIME';
+
+  @override
+  String get rank_metric => 'METRIC';
+
+  @override
+  String get rank_volume => 'VOLUME';
+
+  @override
+  String get rank_consistency => 'CONSISTENCY';
+
+  @override
+  String get rank_progression => 'PROGRESSION';
+
+  @override
+  String get rank_mine => 'YOUR POSITION';
+
+  @override
+  String get rank_top3 => 'TOP 3';
+
+  @override
+  String get rank_list => 'STANDINGS';
+
+  @override
+  String get rank_you => 'You';
+
+  @override
+  String rank_workouts(String a) {
+    return '$a workouts';
+  }
+
+  @override
+  String get rank_lock => 'See the top 50 with Club';
+
+  @override
+  String get rank_empty => 'No data for this period.';
+
+  @override
+  String get rank_error => 'Couldn\'t load the ranking.';
 }

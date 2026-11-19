@@ -1299,6 +1299,52 @@ abstract final class BldrChallengeTextV2 {
   static final reviewNote = _s(BldrTextV2.s11, _sb, _c); // 9
 }
 
+/// Ranking (121:1041).
+abstract final class BldrRankingColorsV2 {
+  static const chipOnBg = Color(0xFF1A170B);
+  static const chipOnBorder = Color(0xBFD4AF37); // rgba(212,175,55,.75)
+  static const chipOffBorder = Color(0xFF2E2E2E);
+  static const mineBorder = Color(0x73D4AF37); // rgba(212,175,55,.45)
+  static const mineBg = Color(0xFF131106);
+  static const badgeOff = Color(0xFF2B2B2B);
+  static const badgeOnText = Color(0xFF080808);
+}
+
+abstract final class BldrRankingTextV2 {
+  static TextStyle _s(double step, FontWeight w, Color c) =>
+      BldrTextV2.scale(step, w, c);
+  static const _b = FontWeight.w700, _sb = FontWeight.w600, _r = FontWeight.w400;
+  static const _c = BldrCommunityColorsV2.text;
+  static const _mu = Color(0xFF757575);
+  static const _g = BldrCommunityColorsV2.goldBrand;
+
+  static final heading = _s(BldrTextV2.s24, _b, _c); // 24
+  static final subtitle = _s(BldrTextV2.s12, _r, _mu); // 12
+  static final tabOn = _s(BldrTextV2.s12, _sb, _g); // 12
+  static final label = _s(BldrTextV2.s11, _sb, _mu); // 9
+  static final chipOn = _s(BldrTextV2.s11, _sb, _g); // 10
+  static final chipOff = _s(BldrTextV2.s11, _r, _mu); // 10
+  static final mineLabel = _s(BldrTextV2.s11, _sb, _g); // 9
+  static final minePos = _s(BldrTextV2.s24, _b, _c); // 22
+  static final mineValue = _s(BldrTextV2.s15, _sb, _g); // 14
+  static final badge = _s(BldrTextV2.s11, _b, _c); // 9
+  static final badgeFirst =
+      _s(BldrTextV2.s11, _b, BldrRankingColorsV2.badgeOnText); // 9
+  static final initials = _s(BldrTextV2.s17, _sb, BldrCommunityColorsV2.gold); // 16
+  static final initialsSm = _s(BldrTextV2.s12, _sb, BldrCommunityColorsV2.gold); // 12
+  static final podiumName = _s(BldrTextV2.s11, _sb, _c); // 11
+  static final podiumNameFirst = _s(BldrTextV2.s12, _sb, _c); // 12
+  static final handle = _s(BldrTextV2.s11, _r, _mu); // 9
+  static final podiumValue = _s(BldrTextV2.s11, _b, _c); // 11
+  static final podiumValueFirst = _s(BldrTextV2.s13, _b, _g); // 13
+  static final rowPos = _s(BldrTextV2.s12, _b, _mu); // 12
+  static final rowPosMine = _s(BldrTextV2.s12, _b, _g); // 12
+  static final rowName = _s(BldrTextV2.s11, _sb, _c); // 11
+  static final rowValue = _s(BldrTextV2.s11, _sb, _c); // 11
+  static final rowValueMine = _s(BldrTextV2.s11, _sb, _g); // 11
+  static final lock = _s(BldrTextV2.s11, _sb, _c); // 11
+}
+
 abstract final class BldrCommunityTextV2 {
   static TextStyle _s(double step, FontWeight w, Color c) =>
       BldrTextV2.scale(step, w, c);

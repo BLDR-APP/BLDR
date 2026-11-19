@@ -3,6 +3,7 @@ class RankingEntry {
   final String userId;
   final String displayName;
   final String? avatarUrl;
+  final String? username;
   final double value;
   final bool isMe;
 
@@ -11,6 +12,7 @@ class RankingEntry {
     required this.userId,
     required this.displayName,
     this.avatarUrl,
+    this.username,
     required this.value,
     this.isMe = false,
   });
@@ -31,6 +33,9 @@ class RankingEntry {
       userId: userId,
       displayName: displayName,
       avatarUrl: row['avatar_url'] as String?,
+      username: (row['username'] as String?)?.trim().isNotEmpty == true
+          ? (row['username'] as String).trim()
+          : null,
       value: (row['total'] as num?)?.toDouble() ?? 0.0,
       isMe: currentUserId != null && userId == currentUserId,
     );

@@ -11638,6 +11638,120 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'PUBLICANDO...'**
   String get chal_publishing;
+
+  /// No description provided for @rank_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ranking'**
+  String get rank_title;
+
+  /// No description provided for @rank_subtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Compare sua performance com a comunidade.'**
+  String get rank_subtitle;
+
+  /// No description provided for @rank_tab_global.
+  ///
+  /// In pt, this message translates to:
+  /// **'GLOBAL'**
+  String get rank_tab_global;
+
+  /// No description provided for @rank_period.
+  ///
+  /// In pt, this message translates to:
+  /// **'PERÍODO'**
+  String get rank_period;
+
+  /// No description provided for @rank_week.
+  ///
+  /// In pt, this message translates to:
+  /// **'SEMANA'**
+  String get rank_week;
+
+  /// No description provided for @rank_month.
+  ///
+  /// In pt, this message translates to:
+  /// **'MÊS'**
+  String get rank_month;
+
+  /// No description provided for @rank_all.
+  ///
+  /// In pt, this message translates to:
+  /// **'GERAL'**
+  String get rank_all;
+
+  /// No description provided for @rank_metric.
+  ///
+  /// In pt, this message translates to:
+  /// **'MÉTRICA'**
+  String get rank_metric;
+
+  /// No description provided for @rank_volume.
+  ///
+  /// In pt, this message translates to:
+  /// **'VOLUME'**
+  String get rank_volume;
+
+  /// No description provided for @rank_consistency.
+  ///
+  /// In pt, this message translates to:
+  /// **'CONSISTÊNCIA'**
+  String get rank_consistency;
+
+  /// No description provided for @rank_progression.
+  ///
+  /// In pt, this message translates to:
+  /// **'PROGRESSÃO'**
+  String get rank_progression;
+
+  /// No description provided for @rank_mine.
+  ///
+  /// In pt, this message translates to:
+  /// **'SUA POSIÇÃO'**
+  String get rank_mine;
+
+  /// No description provided for @rank_top3.
+  ///
+  /// In pt, this message translates to:
+  /// **'TOP 3'**
+  String get rank_top3;
+
+  /// No description provided for @rank_list.
+  ///
+  /// In pt, this message translates to:
+  /// **'CLASSIFICAÇÃO'**
+  String get rank_list;
+
+  /// No description provided for @rank_you.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você'**
+  String get rank_you;
+
+  /// No description provided for @rank_workouts.
+  ///
+  /// In pt, this message translates to:
+  /// **'{a} treinos'**
+  String rank_workouts(String a);
+
+  /// No description provided for @rank_lock.
+  ///
+  /// In pt, this message translates to:
+  /// **'Veja o top 50 no Club'**
+  String get rank_lock;
+
+  /// No description provided for @rank_empty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum dado neste período.'**
+  String get rank_empty;
+
+  /// No description provided for @rank_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível carregar o ranking.'**
+  String get rank_error;
 }
 
 class _AppLocalizationsDelegate
