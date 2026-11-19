@@ -46,7 +46,6 @@ dependencies:
   live_activities: ^2.0.0
   connectivity_plus: ^7.0.0
   fl_chart: ^1.1.1
-  fluttertoast: ^8.2.4
   google_fonts: ^6.1.0
   supabase_flutter: ^2.5.6
   image_picker: ^1.2.0
