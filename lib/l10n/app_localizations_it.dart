@@ -5625,4 +5625,105 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get comm_publish_error => 'Impossibile pubblicare. Riprova.';
+
+  @override
+  String get comm_post_title => 'Post';
+
+  @override
+  String get comm_section_comments => 'COMMENTI';
+
+  @override
+  String get comm_comment_hint => 'Aggiungi un commento...';
+
+  @override
+  String get comm_comment_reply => 'Rispondi';
+
+  @override
+  String get comm_comment_send => 'Invia commento';
+
+  @override
+  String get comm_comment_edited => 'modificato';
+
+  @override
+  String get comm_comment_empty => 'Commenta per primo.';
+
+  @override
+  String get comm_comment_edit => 'Modifica commento';
+
+  @override
+  String get comm_comment_edit_sub => 'Modifica il testo del commento';
+
+  @override
+  String get comm_comment_delete => 'Elimina commento';
+
+  @override
+  String get comm_comment_delete_sub => 'Rimuove questo commento dal post';
+
+  @override
+  String get comm_comment_delete_msg =>
+      'Questo commento verrà rimosso dal post.';
+
+  @override
+  String get comm_comment_actions => 'Azioni del commento';
+
+  @override
+  String comm_reply_to(String handle) {
+    return 'Risposta a $handle';
+  }
+
+  @override
+  String get comm_reply_hint => 'Scrivi una risposta...';
+
+  @override
+  String get comm_reply_send => 'INVIA';
+
+  @override
+  String get comm_label_kg_volume => 'KG VOLUME';
+
+  @override
+  String get comm_label_prs => 'PR';
+
+  @override
+  String get comm_view_workout_cta => 'VEDI ALLENAMENTO';
+
+  @override
+  String comm_rank_status(int n) {
+    return '#$n CLASSIFICA';
+  }
+
+  @override
+  String comm_followers(int n) {
+    return '$n follower';
+  }
+
+  @override
+  String comm_following_count(int n) {
+    return '$n seguiti';
+  }
+
+  @override
+  String get comm_section_performance => 'PERFORMANCE';
+
+  @override
+  String get comm_label_workouts => 'ALLENAMENTI';
+
+  @override
+  String get comm_section_achievements => 'TRAGUARDI';
+
+  @override
+  String get comm_section_posts => 'POST';
+
+  @override
+  String get comm_profile_no_posts => 'Ancora nessun post.';
+
+  @override
+  String get comm_profile_error => 'Impossibile caricare questo profilo.';
+
+  @override
+  String get comm_profile_actions => 'Azioni del profilo';
+
+  @override
+  String comm_open_profile(String name) {
+    return 'Apri il profilo di $name';
+  }
 }

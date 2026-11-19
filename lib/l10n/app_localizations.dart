@@ -10102,6 +10102,186 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Não foi possível publicar. Tente novamente.'**
   String get comm_publish_error;
+
+  /// No description provided for @comm_post_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Publicação'**
+  String get comm_post_title;
+
+  /// No description provided for @comm_section_comments.
+  ///
+  /// In pt, this message translates to:
+  /// **'COMENTÁRIOS'**
+  String get comm_section_comments;
+
+  /// No description provided for @comm_comment_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar comentário...'**
+  String get comm_comment_hint;
+
+  /// No description provided for @comm_comment_reply.
+  ///
+  /// In pt, this message translates to:
+  /// **'Responder'**
+  String get comm_comment_reply;
+
+  /// No description provided for @comm_comment_send.
+  ///
+  /// In pt, this message translates to:
+  /// **'Enviar comentário'**
+  String get comm_comment_send;
+
+  /// No description provided for @comm_comment_edited.
+  ///
+  /// In pt, this message translates to:
+  /// **'editado'**
+  String get comm_comment_edited;
+
+  /// No description provided for @comm_comment_empty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seja o primeiro a comentar.'**
+  String get comm_comment_empty;
+
+  /// No description provided for @comm_comment_edit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar comentário'**
+  String get comm_comment_edit;
+
+  /// No description provided for @comm_comment_edit_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Altere o texto do seu comentário'**
+  String get comm_comment_edit_sub;
+
+  /// No description provided for @comm_comment_delete.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir comentário'**
+  String get comm_comment_delete;
+
+  /// No description provided for @comm_comment_delete_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Remove este comentário da publicação'**
+  String get comm_comment_delete_sub;
+
+  /// No description provided for @comm_comment_delete_msg.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este comentário será removido da publicação.'**
+  String get comm_comment_delete_msg;
+
+  /// No description provided for @comm_comment_actions.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ações do comentário'**
+  String get comm_comment_actions;
+
+  /// No description provided for @comm_reply_to.
+  ///
+  /// In pt, this message translates to:
+  /// **'Respondendo a {handle}'**
+  String comm_reply_to(String handle);
+
+  /// No description provided for @comm_reply_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escreva uma resposta...'**
+  String get comm_reply_hint;
+
+  /// No description provided for @comm_reply_send.
+  ///
+  /// In pt, this message translates to:
+  /// **'ENVIAR'**
+  String get comm_reply_send;
+
+  /// No description provided for @comm_label_kg_volume.
+  ///
+  /// In pt, this message translates to:
+  /// **'KG VOLUME'**
+  String get comm_label_kg_volume;
+
+  /// No description provided for @comm_label_prs.
+  ///
+  /// In pt, this message translates to:
+  /// **'PRS'**
+  String get comm_label_prs;
+
+  /// No description provided for @comm_view_workout_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'VER TREINO'**
+  String get comm_view_workout_cta;
+
+  /// No description provided for @comm_rank_status.
+  ///
+  /// In pt, this message translates to:
+  /// **'#{n} RANKING'**
+  String comm_rank_status(int n);
+
+  /// No description provided for @comm_followers.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} seguidores'**
+  String comm_followers(int n);
+
+  /// No description provided for @comm_following_count.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} seguindo'**
+  String comm_following_count(int n);
+
+  /// No description provided for @comm_section_performance.
+  ///
+  /// In pt, this message translates to:
+  /// **'PERFORMANCE'**
+  String get comm_section_performance;
+
+  /// No description provided for @comm_label_workouts.
+  ///
+  /// In pt, this message translates to:
+  /// **'TREINOS'**
+  String get comm_label_workouts;
+
+  /// No description provided for @comm_section_achievements.
+  ///
+  /// In pt, this message translates to:
+  /// **'CONQUISTAS'**
+  String get comm_section_achievements;
+
+  /// No description provided for @comm_section_posts.
+  ///
+  /// In pt, this message translates to:
+  /// **'PUBLICAÇÕES'**
+  String get comm_section_posts;
+
+  /// No description provided for @comm_profile_no_posts.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma publicação ainda.'**
+  String get comm_profile_no_posts;
+
+  /// No description provided for @comm_profile_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível carregar este perfil.'**
+  String get comm_profile_error;
+
+  /// No description provided for @comm_profile_actions.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ações do perfil'**
+  String get comm_profile_actions;
+
+  /// No description provided for @comm_open_profile.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir perfil de {name}'**
+  String comm_open_profile(String name);
 }
 
 class _AppLocalizationsDelegate

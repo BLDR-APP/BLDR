@@ -8,6 +8,7 @@ import 'package:bldr_fitness/features/community/domain/entities/community_post.d
 import 'package:bldr_fitness/features/community/domain/entities/community_comment.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_profile.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_post_payload.dart';
+import 'package:bldr_fitness/features/community/domain/entities/community_social_profile.dart';
 import 'package:bldr_fitness/features/community/domain/entities/pr_history.dart';
 import 'package:bldr_fitness/features/community/domain/entities/ranking_entry.dart';
 import 'package:bldr_fitness/features/community/domain/entities/recent_workout.dart';
@@ -26,6 +27,23 @@ class _FakeCommunityFeedRepository implements CommunityFeedRepository {
   String? lastRankingPeriod;
 
   Map<String, dynamic>? lastEditedPayload;
+
+  @override
+  Future<Result<CommunitySocialProfile>> fetchSocialProfile(
+          String userId) async =>
+      Result.success(CommunitySocialProfile(id: userId));
+
+  @override
+  Future<Result<CommunityFollowCounts>> fetchFollowCounts(
+          String userId) async =>
+      const Result.success(CommunityFollowCounts());
+
+  @override
+  Future<Result<List<CommunityPost>>> fetchUserPosts(
+    String userId, {
+    int limit = 20,
+  }) async =>
+      const Result.success([]);
 
   @override
   Future<Result<void>> editPost({

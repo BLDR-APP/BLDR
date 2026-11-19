@@ -7,6 +7,7 @@ import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_post.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_comment.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_profile.dart';
+import 'package:bldr_fitness/features/community/domain/entities/community_social_profile.dart';
 import 'package:bldr_fitness/features/community/domain/entities/pr_history.dart';
 import 'package:bldr_fitness/features/community/domain/entities/ranking_entry.dart';
 import 'package:bldr_fitness/features/community/domain/entities/recent_workout.dart';
@@ -279,6 +280,70 @@ class CommunityFeedRepositoryImpl implements CommunityFeedRepository {
       ));
     }
   }
+
+  @override
+  Future<Result<CommunitySocialProfile>> fetchSocialProfile(
+      String userId) async {
+    try {
+      final results = await Future.wait<dynamic>([
+        _client
+            .from('user_profiles')
+            .select('id, username, full_name, avatar_url, bio, city')
+            .eq('id', userId)
+            .single(),
+        _client.rpc('community_author_metadata', params: {
+          'p_user_ids': [userId],
+        }),
+        _client
+            .from('community_follows')
+            .select('followed_id')
+            .eq('follower_id', _uid)
+            .eq('followed_id', userId),
+      ]);
+      final row = Map<String, dynamic>.from(results[0] as Map);
+      final metadata = results[1] as List;
+      return Result.success(CommunitySocialProfile(
+        id: userId,
+        username: row['username'] as String?,
+        fullName: row['full_name'] as String?,
+        avatarUrl: row['avatar_url'] as String?,
+        bio: row['bio'] as String?,
+        city: row['city'] as String?,
+        isClubMember: metadata.isNotEmpty &&
+            (metadata.first as Map)['is_club_member'] == true,
+        isFollowing: (results[2] as List).isNotEmpty,
+      ));
+    } catch (e) {
+      return Result.failure(ServerFailure(
+        'Não foi possível carregar este perfil.',
+        cause: e,
+      ));
+    }
+  }
+
+  @override
+  Future<Result<CommunityFollowCounts>> fetchFollowCounts(String userId) async {
+    try {
+      final rows = await _client
+          .rpc('follow_counts', params: {'p_user': userId}) as List;
+      return Result.success(rows.isEmpty
+          ? const CommunityFollowCounts()
+          : CommunityFollowCounts.fromRow(
+              Map<String, dynamic>.from(rows.first as Map)));
+    } catch (e) {
+      return Result.failure(ServerFailure(
+        'Não foi possível carregar os seguidores.',
+        cause: e,
+      ));
+    }
+  }
+
+  @override
+  Future<Result<List<CommunityPost>>> fetchUserPosts(
+    String userId, {
+    int limit = 20,
+  }) =>
+      _fetchPublicFeed(limit: limit, authorIds: [userId]);
 
   @override
   Future<Result<void>> editPost({

@@ -1,29 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/core/errors/failure.dart';
-import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/design_system/bldr_community_v2_components.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
-import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
 import 'package:bldr_fitness/features/club/domain/repositories/arena_repository.dart';
 import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/create_collective_challenge_screen.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/notifications_screen.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_post.dart';
 import 'package:bldr_fitness/features/community/domain/repositories/community_feed_repository.dart';
-import 'package:bldr_fitness/features/community/presentation/community_comments_sheet.dart';
 import 'package:bldr_fitness/features/community/presentation/community_profile_search_screen.dart';
-import 'package:bldr_fitness/features/community/domain/usecases/edit_community_post.dart';
-import 'package:bldr_fitness/features/community/presentation/hub_v2/community_content_sheets_v2.dart';
 import 'package:bldr_fitness/features/community/presentation/hub_v2/community_create_post_sheet_v2.dart';
-import 'package:bldr_fitness/features/community/presentation/hub_v2/community_post_card_v2.dart';
+import 'package:bldr_fitness/features/community/presentation/hub_v2/community_post_tile_v2.dart';
 import 'package:bldr_fitness/features/community/presentation/hub_v2/community_squads_tab_v2.dart';
 import 'package:bldr_fitness/features/community/presentation/ranking_screen.dart';
-import 'package:bldr_fitness/features/community/presentation/workout_detail_sheet.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 
@@ -201,48 +194,7 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
     });
   }
 
-  // ── Reactions ──────────────────────────────────────────────────────────────
-
-  /// Uma reação por usuário: tocar no mesmo emoji remove; outro emoji troca.
-  CommunityPost _applyReaction(CommunityPost p, String emoji) {
-    final previous = p.myReactionEmoji;
-    final reactions = List<CommunityReaction>.from(p.reactions);
-    void bump(String e, int delta) {
-      final i = reactions.indexWhere((r) => r.emoji == e);
-      final count = (i == -1 ? 0 : reactions[i].count) + delta;
-      if (i != -1) reactions.removeAt(i);
-      if (count > 0) {
-        reactions.insert(i == -1 ? reactions.length : i,
-            CommunityReaction(emoji: e, count: count));
-      }
-    }
-
-    if (previous != null) bump(previous, -1);
-    if (previous == emoji) {
-      return p.copyWith(reactions: reactions, clearMyReaction: true);
-    }
-    bump(emoji, 1);
-    return p.copyWith(reactions: reactions, myReactionEmoji: emoji);
-  }
-
-  Future<void> _toggleReaction(CommunityPost post, String emoji) async {
-    setState(() {
-      for (final list in [_posts, _followingPosts]) {
-        final idx = list.indexWhere((p) => p.id == post.id);
-        if (idx != -1) list[idx] = _applyReaction(list[idx], emoji);
-      }
-    });
-    final result = await _repo.toggleReaction(feedId: post.id, emoji: emoji);
-    if (result.isFailure) {
-      _loadFeed(refresh: true);
-      _loadFollowingFeed();
-    }
-  }
-
-  void _openWorkoutDetail(CommunityPost post) {
-    if (post.payload['workout_id'] is! String) return;
-    WorkoutDetailSheet.show(context, post);
-  }
+  // ── Posts ──────────────────────────────────────────────────────────────────
 
   void _replacePost(CommunityPost post) {
     setState(() {
@@ -253,268 +205,24 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
     });
   }
 
-  Future<void> _editPost(CommunityPost post) async {
-    final l10n = AppLocalizations.of(context);
-    final text =
-        await CommunityEditPostSheetV2.show(context, post.caption ?? '');
-    if (!mounted || text == null) return;
-    final result = await getIt<EditCommunityPost>()(post, text);
-    if (!mounted) return;
-    result.fold(
-      onSuccess: (updated) {
-        _replacePost(updated);
-        _showActionResult(const Result.success(null),
-            success: l10n.comm_edited);
-      },
-      onFailure: (failure) =>
-          _showActionResult(Result.failure(failure), success: ''),
-    );
-  }
-
-  void _openComments(CommunityPost post) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: .62),
-      builder: (_) => CommunityCommentsSheet(feedId: post.id),
-    ).then((_) {
-      _loadFeed(refresh: true);
-      _loadFollowingFeed();
-    });
-  }
-
-  Future<void> _toggleFollow(CommunityPost post) async {
-    final result = post.isFollowing
-        ? await _repo.unfollowUser(post.userId)
-        : await _repo.followUser(post.userId);
-    if (!mounted) return;
-    if (result.isFailure) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.failureOrNull!.message)),
-      );
-      return;
-    }
+  void _removeWhere(bool Function(CommunityPost) test) {
     setState(() {
-      _posts = _posts
-          .map((item) => item.userId == post.userId
-              ? item.copyWith(isFollowing: !post.isFollowing)
-              : item)
-          .toList();
-      _followingPosts = post.isFollowing
-          ? _followingPosts.where((item) => item.userId != post.userId).toList()
-          : _followingPosts;
+      _posts.removeWhere(test);
+      _followingPosts.removeWhere(test);
     });
-    if (!post.isFollowing) await _loadFollowingFeed();
   }
 
-  // ── Ações do post (6:8 — D2) ───────────────────────────────────────────────
-
-  Future<void> _showPostActions(CommunityPost post) async {
-    final l10n = AppLocalizations.of(context);
-    final action = await BldrV2Sheet.show<String>(
-      context,
-      title: l10n.comm_actions_title,
-      child: Builder(
-        builder: (ctx) => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (post.username != null)
-              Text('@${post.username}',
-                  textAlign: TextAlign.center,
-                  style: BldrCommunityTextV2.sheetHandle),
-            const SizedBox(height: 8),
-            if (post.isOwnPost) ...[
-              BldrCommunitySheetRow(
-                icon: TablerIcons.pencil,
-                title: l10n.comm_action_edit,
-                subtitle: l10n.comm_action_edit_sub,
-                onTap: () => Navigator.pop(ctx, 'edit'),
-              ),
-              BldrCommunitySheetRow(
-                icon: TablerIcons.trash,
-                title: l10n.comm_action_delete,
-                subtitle: l10n.comm_action_delete_sub,
-                destructive: true,
-                onTap: () => Navigator.pop(ctx, 'delete'),
-              ),
-            ] else ...[
-              BldrCommunitySheetRow(
-                icon: TablerIcons.ban,
-                title: l10n.comm_action_block,
-                subtitle: l10n.comm_action_block_sub,
-                onTap: () => Navigator.pop(ctx, 'block'),
-              ),
-              BldrCommunitySheetRow(
-                icon: TablerIcons.flag,
-                title: l10n.comm_action_report,
-                subtitle: l10n.comm_action_report_sub,
-                destructive: true,
-                onTap: () => Navigator.pop(ctx, 'report'),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-    if (!mounted || action == null) return;
-    if (action == 'edit') await _editPost(post);
-    if (action == 'delete') await _confirmDelete(post);
-    if (action == 'block') await _confirmBlock(post);
-    if (action == 'report') await _reportPost(post);
-  }
-
-  Future<void> _confirmDelete(CommunityPost post) async {
-    final l10n = AppLocalizations.of(context);
-    final confirmed = await BldrV2ConfirmDialog.show(
-      context,
-      title: l10n.comm_delete_title,
-      message: l10n.comm_delete_msg,
-      confirmLabel: l10n.comm_delete_confirm,
-      cancelLabel: l10n.comm_cancel,
-      destructive: true,
-    );
-    if (!confirmed) return;
-    final result = await _repo.deletePost(post.id);
-    if (!mounted) return;
-    _showActionResult(result, success: l10n.comm_deleted);
-    if (result.isSuccess) {
-      setState(() {
-        _posts.removeWhere((item) => item.id == post.id);
-        _followingPosts.removeWhere((item) => item.id == post.id);
-      });
-    }
-  }
-
-  Future<void> _confirmBlock(CommunityPost post) async {
-    final l10n = AppLocalizations.of(context);
-    final confirmed = await BldrV2ConfirmDialog.show(
-      context,
-      title: l10n.comm_block_title(post.authorName),
-      message: l10n.comm_block_msg,
-      confirmLabel: l10n.comm_block_confirm,
-      cancelLabel: l10n.comm_cancel,
-      destructive: true,
-    );
-    if (!confirmed) return;
-    final result = await _repo.blockUser(post.userId);
-    if (!mounted) return;
-    _showActionResult(result, success: l10n.comm_blocked);
-    if (result.isSuccess) {
-      setState(() {
-        _posts.removeWhere((item) => item.userId == post.userId);
-        _followingPosts.removeWhere((item) => item.userId == post.userId);
-      });
-    }
-  }
-
-  Future<void> _reportPost(CommunityPost post) async {
-    final l10n = AppLocalizations.of(context);
-    final reasons = [
-      ('spam', l10n.comm_report_spam, l10n.comm_report_spam_sub),
-      (
-        'harassment',
-        l10n.comm_report_harassment,
-        l10n.comm_report_harassment_sub
-      ),
-      (
-        'inappropriate_content',
-        l10n.comm_report_inappropriate,
-        l10n.comm_report_inappropriate_sub
-      ),
-      ('false_information', l10n.comm_report_false, l10n.comm_report_false_sub),
-      ('other', l10n.comm_report_other, l10n.comm_report_other_sub),
-    ];
-    final reason = await BldrV2Sheet.show<String>(
-      context,
-      title: l10n.comm_report_title,
-      child: Builder(
-        builder: (ctx) => Column(
-          children: [
-            for (final r in reasons)
-              BldrCommunitySheetRow(
-                icon: TablerIcons.flag,
-                title: r.$2,
-                subtitle: r.$3,
-                onTap: () => Navigator.pop(ctx, r.$1),
-              ),
-          ],
-        ),
-      ),
-    );
-    if (!mounted || reason == null) return;
-    final result = await _repo.reportUser(
-      userId: post.userId,
-      feedId: post.id,
-      reason: reason,
-    );
-    if (!mounted) return;
-    _showActionResult(result, success: l10n.comm_reported);
-  }
-
-  void _showActionResult(Result<void> result, {required String success}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(result.failureOrNull?.message ?? success)),
-    );
-  }
-
-  /// Toque longo na reação: escolher entre os emojis existentes.
-  Future<void> _pickReaction(CommunityPost post) async {
-    final l10n = AppLocalizations.of(context);
-    final emoji = await BldrV2Sheet.show<String>(
-      context,
-      title: l10n.comm_react_title,
-      child: Builder(
-        builder: (ctx) => Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            for (final e in communityReactionEmojis)
-              Semantics(
-                button: true,
-                selected: post.myReactionEmoji == e,
-                child: GestureDetector(
-                  onTap: () => Navigator.pop(ctx, e),
-                  child: Container(
-                    width: 60,
-                    height: 60,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: post.myReactionEmoji == e
-                            ? BldrCommunityColorsV2.gold
-                            : BldrCommunityColorsV2.divider,
-                      ),
-                    ),
-                    child: Text(e, style: BldrCommunityTextV2.emoji),
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-    if (!mounted || emoji == null) return;
-    await _toggleReaction(post, emoji);
-  }
-
-  /// Compartilhar (6:90 adiado): abre direto o share nativo do sistema.
-  Future<void> _sharePost(CommunityPost post) async {
-    final l10n = AppLocalizations.of(context);
-    final detail = switch (post.eventType) {
-      CommunityEventType.workoutCompleted => post.workoutName,
-      CommunityEventType.prBeaten => post.exerciseName,
-      _ => post.caption,
-    };
-    final text = detail == null || detail.trim().isEmpty
-        ? l10n.comm_share_text_simple(post.authorName)
-        : l10n.comm_share_text(post.authorName, detail.trim());
-    final box = context.findRenderObject() as RenderBox?;
-    await SharePlus.instance.share(ShareParams(
-      text: text,
-      sharePositionOrigin:
-          box == null ? null : box.localToGlobal(Offset.zero) & box.size,
-    ));
+  void _followChanged(String userId, bool following) {
+    setState(() {
+      _posts = [
+        for (final p in _posts)
+          p.userId == userId ? p.copyWith(isFollowing: following) : p
+      ];
+      _followingPosts = following
+          ? _followingPosts
+          : _followingPosts.where((p) => p.userId != userId).toList();
+    });
+    if (following) _loadFollowingFeed();
   }
 
   void _openSearch() async {
@@ -527,20 +235,13 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
 
   // ── Build (4:2 / 4:57 / 4:108) ─────────────────────────────────────────────
 
-  CommunityPostCardV2 _card(CommunityPost post,
-          {Future<void> Function(CommunityPost)? onMore}) =>
-      CommunityPostCardV2(
+  Widget _card(CommunityPost post) => CommunityPostTileV2(
+        key: ValueKey(post.id),
         post: post,
-        now: DateTime.now(),
-        onReaction: _toggleReaction,
-        onLongReact: _pickReaction,
-        onOpenWorkout: _openWorkoutDetail,
-        onOpenActivity: (p) => CommunityActivitySheetV2.show(context, p),
-        onOpenEvolution: (p) => CommunityPrSheetV2.show(context, p),
-        onComments: _openComments,
-        onFollow: _toggleFollow,
-        onMore: onMore ?? _showPostActions,
-        onShare: _sharePost,
+        onUpdated: _replacePost,
+        onDeleted: (p) => _removeWhere((item) => item.id == p.id),
+        onAuthorBlocked: (id) => _removeWhere((item) => item.userId == id),
+        onFollowChanged: _followChanged,
       );
 
   @override
@@ -655,11 +356,7 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => _PrivatePostsScreen(
-                  repository: _repo,
-                  cardBuilder: _card,
-                  onMore: _showPostActions,
-                ),
+                builder: (_) => _PrivatePostsScreen(repository: _repo),
               ),
             ),
           ),
@@ -758,8 +455,7 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
   }
 }
 
-typedef _CardBuilder = Widget Function(CommunityPost post,
-    {Future<void> Function(CommunityPost)? onMore});
+typedef _CardBuilder = Widget Function(CommunityPost post);
 
 // ── Lista de posts (Explorar / Seguindo) ─────────────────────────────────────
 
@@ -906,14 +602,8 @@ class _FeedMessage extends StatelessWidget {
 
 class _PrivatePostsScreen extends StatefulWidget {
   final CommunityFeedRepository repository;
-  final _CardBuilder cardBuilder;
-  final Future<void> Function(CommunityPost) onMore;
 
-  const _PrivatePostsScreen({
-    required this.repository,
-    required this.cardBuilder,
-    required this.onMore,
-  });
+  const _PrivatePostsScreen({required this.repository});
 
   @override
   State<_PrivatePostsScreen> createState() => _PrivatePostsScreenState();
@@ -979,12 +669,16 @@ class _PrivatePostsScreenState extends State<_PrivatePostsScreen> {
                         child: ListView.builder(
                           padding: const EdgeInsets.only(top: 16),
                           itemCount: _posts.length,
-                          itemBuilder: (_, index) => widget.cardBuilder(
-                            _posts[index],
-                            onMore: (post) async {
-                              await widget.onMore(post);
-                              await _load();
-                            },
+                          itemBuilder: (_, index) => CommunityPostTileV2(
+                            key: ValueKey(_posts[index].id),
+                            post: _posts[index],
+                            onUpdated: (p) => setState(() => _posts = [
+                                  for (final item in _posts)
+                                    item.id == p.id ? p : item
+                                ]),
+                            onDeleted: (_) => _load(),
+                            onAuthorBlocked: (_) => _load(),
+                            onFollowChanged: (_, __) {},
                           ),
                         ),
                       ),

@@ -4,6 +4,7 @@ import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_post.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_comment.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_profile.dart';
+import 'package:bldr_fitness/features/community/domain/entities/community_social_profile.dart';
 import 'package:bldr_fitness/features/community/domain/entities/pr_history.dart';
 import 'package:bldr_fitness/features/community/domain/entities/ranking_entry.dart';
 import 'package:bldr_fitness/features/community/domain/entities/recent_workout.dart';
@@ -36,6 +37,16 @@ abstract class CommunityFeedRepository {
   Future<Result<void>> unfollowUser(String userId);
 
   Future<Result<void>> deletePost(String postId);
+
+  Future<Result<CommunitySocialProfile>> fetchSocialProfile(String userId);
+
+  Future<Result<CommunityFollowCounts>> fetchFollowCounts(String userId);
+
+  /// Publicações públicas de um perfil, das mais novas para as mais antigas.
+  Future<Result<List<CommunityPost>>> fetchUserPosts(
+    String userId, {
+    int limit = 20,
+  });
 
   /// Grava o payload com a legenda nova do próprio post.
   Future<Result<void>> editPost({

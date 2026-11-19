@@ -274,13 +274,23 @@ class _CommunityPrSheetV2State extends State<CommunityPrSheetV2> {
 /// Editar a legenda do próprio post. Devolve o texto ao salvar.
 class CommunityEditPostSheetV2 extends StatefulWidget {
   final String initial;
-  const CommunityEditPostSheetV2({super.key, required this.initial});
+  final int maxLength;
+  const CommunityEditPostSheetV2({
+    super.key,
+    required this.initial,
+    this.maxLength = 2000,
+  });
 
-  static Future<String?> show(BuildContext context, String initial) =>
+  static Future<String?> show(
+    BuildContext context,
+    String initial, {
+    String? title,
+    int maxLength = 2000,
+  }) =>
       BldrV2Sheet.show<String>(
         context,
-        title: AppLocalizations.of(context).comm_action_edit,
-        child: CommunityEditPostSheetV2(initial: initial),
+        title: title ?? AppLocalizations.of(context).comm_action_edit,
+        child: CommunityEditPostSheetV2(initial: initial, maxLength: maxLength),
       );
 
   @override
@@ -312,7 +322,7 @@ class _CommunityEditPostSheetV2State extends State<CommunityEditPostSheetV2> {
             autofocus: true,
             minLines: 3,
             maxLines: 6,
-            maxLength: 2000,
+            maxLength: widget.maxLength,
             cursorColor: BldrCommunityColorsV2.gold,
             style: BldrCommunityTextV2.exercise
                 .copyWith(fontWeight: FontWeight.w400),

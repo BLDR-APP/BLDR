@@ -5610,4 +5610,105 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get comm_publish_error => 'Couldn\'t publish. Try again.';
+
+  @override
+  String get comm_post_title => 'Post';
+
+  @override
+  String get comm_section_comments => 'COMMENTS';
+
+  @override
+  String get comm_comment_hint => 'Add a comment...';
+
+  @override
+  String get comm_comment_reply => 'Reply';
+
+  @override
+  String get comm_comment_send => 'Send comment';
+
+  @override
+  String get comm_comment_edited => 'edited';
+
+  @override
+  String get comm_comment_empty => 'Be the first to comment.';
+
+  @override
+  String get comm_comment_edit => 'Edit comment';
+
+  @override
+  String get comm_comment_edit_sub => 'Change your comment\'s text';
+
+  @override
+  String get comm_comment_delete => 'Delete comment';
+
+  @override
+  String get comm_comment_delete_sub => 'Removes this comment from the post';
+
+  @override
+  String get comm_comment_delete_msg =>
+      'This comment will be removed from the post.';
+
+  @override
+  String get comm_comment_actions => 'Comment actions';
+
+  @override
+  String comm_reply_to(String handle) {
+    return 'Replying to $handle';
+  }
+
+  @override
+  String get comm_reply_hint => 'Write a reply...';
+
+  @override
+  String get comm_reply_send => 'SEND';
+
+  @override
+  String get comm_label_kg_volume => 'KG VOLUME';
+
+  @override
+  String get comm_label_prs => 'PRS';
+
+  @override
+  String get comm_view_workout_cta => 'VIEW WORKOUT';
+
+  @override
+  String comm_rank_status(int n) {
+    return '#$n RANKING';
+  }
+
+  @override
+  String comm_followers(int n) {
+    return '$n followers';
+  }
+
+  @override
+  String comm_following_count(int n) {
+    return '$n following';
+  }
+
+  @override
+  String get comm_section_performance => 'PERFORMANCE';
+
+  @override
+  String get comm_label_workouts => 'WORKOUTS';
+
+  @override
+  String get comm_section_achievements => 'ACHIEVEMENTS';
+
+  @override
+  String get comm_section_posts => 'POSTS';
+
+  @override
+  String get comm_profile_no_posts => 'No posts yet.';
+
+  @override
+  String get comm_profile_error => 'Couldn\'t load this profile.';
+
+  @override
+  String get comm_profile_actions => 'Profile actions';
+
+  @override
+  String comm_open_profile(String name) {
+    return 'Open $name\'s profile';
+  }
 }

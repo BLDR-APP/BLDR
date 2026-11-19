@@ -1215,6 +1215,12 @@ abstract final class BldrCommunityColorsV2 {
   static const moreBorder = Color(0xFF333333);
   static const danger = Color(0xFFD94D4D);
   static const badge = Color(0xFFE53935);
+  // Detalhe do post e perfil
+  static const contentBg = Color(0xFF0B0B0B);
+  static const inputBg = Color(0xFF090908);
+  static const inputBorder = Color(0xFF242421);
+  static const sendBg = Color(0xFF17140B);
+  static const photoPlaceholder = Color(0xFF1C1811);
   // Criar publicação (50:892, 44:606, 32:354)
   static const composeMuted = Color(0xFF8F8F8F);
   static const composeBorder = Color(0xFF2E2E2E);
@@ -1288,6 +1294,22 @@ abstract final class BldrCommunityTextV2 {
   static final prValue = _s(BldrTextV2.s28, _b, _c); // 26
   static final prDelta = _s(BldrTextV2.s11, _sb, _g); // 10
   static final historyDate = _s(BldrTextV2.s11, _m, _mu); // 10
+  // Detalhe do post (52:802) e perfil social (56:855)
+  static final backIcon = _s(BldrTextV2.s28, _r, _c); // 26
+  static final detailTitle = _s(BldrTextV2.s20, _b, _c); // 20
+  static final detailAuthor = _s(BldrTextV2.s12, _sb, _c); // 12
+  static final contentTitle = _s(BldrTextV2.s17, _b, _c); // 18
+  static final contentMetric = _s(BldrTextV2.s17, _b, _c); // 16
+  static final commentName = _s(BldrTextV2.s11, _sb, _c); // 9
+  static final commentBody = _s(BldrTextV2.s11, _r, _c); // 9
+  static final commentAction = _s(BldrTextV2.s11, _sb, _mu); // 7
+  static final profileHandle = _s(BldrTextV2.s17, _b, _c); // 18
+  static final profileName = _s(BldrTextV2.s17, _b, _c); // 17
+  static final profileInitials = _s(BldrTextV2.s13, _b, _g); // 13
+  static final profileFollowers = _s(BldrTextV2.s11, _sb, _c); // 9
+  static final profileFollowing = _s(BldrTextV2.s11, _sb, _mu); // 9
+  static final perfValue = _s(BldrTextV2.s20, _b, _c); // 20
+  static final achievement = _s(BldrTextV2.s11, _sb, _c); // 7
   // Criar publicação
   static const _cm = BldrCommunityColorsV2.composeMuted;
   static final composeHint = _s(BldrTextV2.s15, _r, _cm); // 15

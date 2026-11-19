@@ -5644,4 +5644,105 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get comm_publish_error =>
       'Não foi possível publicar. Tente novamente.';
+
+  @override
+  String get comm_post_title => 'Publicação';
+
+  @override
+  String get comm_section_comments => 'COMENTÁRIOS';
+
+  @override
+  String get comm_comment_hint => 'Adicionar comentário...';
+
+  @override
+  String get comm_comment_reply => 'Responder';
+
+  @override
+  String get comm_comment_send => 'Enviar comentário';
+
+  @override
+  String get comm_comment_edited => 'editado';
+
+  @override
+  String get comm_comment_empty => 'Seja o primeiro a comentar.';
+
+  @override
+  String get comm_comment_edit => 'Editar comentário';
+
+  @override
+  String get comm_comment_edit_sub => 'Altere o texto do seu comentário';
+
+  @override
+  String get comm_comment_delete => 'Excluir comentário';
+
+  @override
+  String get comm_comment_delete_sub => 'Remove este comentário da publicação';
+
+  @override
+  String get comm_comment_delete_msg =>
+      'Este comentário será removido da publicação.';
+
+  @override
+  String get comm_comment_actions => 'Ações do comentário';
+
+  @override
+  String comm_reply_to(String handle) {
+    return 'Respondendo a $handle';
+  }
+
+  @override
+  String get comm_reply_hint => 'Escreva uma resposta...';
+
+  @override
+  String get comm_reply_send => 'ENVIAR';
+
+  @override
+  String get comm_label_kg_volume => 'KG VOLUME';
+
+  @override
+  String get comm_label_prs => 'PRS';
+
+  @override
+  String get comm_view_workout_cta => 'VER TREINO';
+
+  @override
+  String comm_rank_status(int n) {
+    return '#$n RANKING';
+  }
+
+  @override
+  String comm_followers(int n) {
+    return '$n seguidores';
+  }
+
+  @override
+  String comm_following_count(int n) {
+    return '$n seguindo';
+  }
+
+  @override
+  String get comm_section_performance => 'PERFORMANCE';
+
+  @override
+  String get comm_label_workouts => 'TREINOS';
+
+  @override
+  String get comm_section_achievements => 'CONQUISTAS';
+
+  @override
+  String get comm_section_posts => 'PUBLICAÇÕES';
+
+  @override
+  String get comm_profile_no_posts => 'Nenhuma publicação ainda.';
+
+  @override
+  String get comm_profile_error => 'Não foi possível carregar este perfil.';
+
+  @override
+  String get comm_profile_actions => 'Ações do perfil';
+
+  @override
+  String comm_open_profile(String name) {
+    return 'Abrir perfil de $name';
+  }
 }

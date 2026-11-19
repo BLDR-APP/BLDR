@@ -23,6 +23,7 @@ class BldrCommunityAvatar extends StatelessWidget {
   final String? imageUrl;
   final double size;
   final bool muted;
+  final TextStyle? initialsStyle;
 
   const BldrCommunityAvatar({
     super.key,
@@ -30,6 +31,7 @@ class BldrCommunityAvatar extends StatelessWidget {
     this.imageUrl,
     this.size = BldrCommunityV2.avatar,
     this.muted = false,
+    this.initialsStyle,
   });
 
   @override
@@ -39,9 +41,10 @@ class BldrCommunityAvatar extends StatelessWidget {
         bldrInitials(name),
         maxLines: 1,
         overflow: TextOverflow.clip,
-        style: muted
-            ? BldrCommunityTextV2.plusLabel
-            : BldrCommunityTextV2.initials,
+        style: initialsStyle ??
+            (muted
+                ? BldrCommunityTextV2.plusLabel
+                : BldrCommunityTextV2.initials),
       ),
     );
     final url = imageUrl;
@@ -382,6 +385,30 @@ class BldrCommunitySheetMetrics extends StatelessWidget {
                   ),
           ),
       ],
+    );
+  }
+}
+
+/// Voltar das telas da Comunidade (52:804).
+class BldrCommunityBackButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const BldrCommunityBackButton({super.key, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: MaterialLocalizations.of(context).backButtonTooltip,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: const SizedBox(
+          width: 54,
+          height: 44,
+          child: Icon(TablerIcons.chevron_left,
+              size: 24, color: BldrCommunityColorsV2.text),
+        ),
+      ),
     );
   }
 }

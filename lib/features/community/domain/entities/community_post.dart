@@ -55,6 +55,7 @@ class CommunityPost {
     bool clearMyReaction = false,
     bool? isFollowing,
     Map<String, dynamic>? payload,
+    int? commentCount,
   }) =>
       CommunityPost(
         id: id,
@@ -68,7 +69,7 @@ class CommunityPost {
         squadId: squadId,
         createdAt: createdAt,
         reactions: reactions ?? this.reactions,
-        commentCount: commentCount,
+        commentCount: commentCount ?? this.commentCount,
         myReactionEmoji:
             clearMyReaction ? null : myReactionEmoji ?? this.myReactionEmoji,
         isClubMember: isClubMember,

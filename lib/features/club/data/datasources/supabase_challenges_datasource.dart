@@ -338,7 +338,7 @@ class SupabaseChallengesDatasource {
     final results = await Future.wait([
       _client
           .from('user_profiles')
-          .select('id, full_name, avatar_url, email')
+          .select('id, full_name, avatar_url')
           .eq('id', userId)
           .single(),
       _client

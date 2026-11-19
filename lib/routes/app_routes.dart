@@ -29,7 +29,7 @@ import 'package:bldr_fitness/features/club/presentation/bldr_club/club_workout_s
 import 'package:bldr_fitness/features/club/presentation/bldr_club/esportes_screen.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/comunidade_screen.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/notifications_screen.dart';
-import 'package:bldr_fitness/features/club/presentation/bldr_club/public_profile_screen.dart';
+import 'package:bldr_fitness/features/community/presentation/hub_v2/community_social_profile_screen.dart';
 import 'package:bldr_fitness/features/club/presentation/bldr_club/collective_challenge_detail_screen.dart';
 
 // TEMPORÁRIO — vitrine do design system. Remover junto com
@@ -119,9 +119,8 @@ class AppRoutes {
       publicProfileScreen: (context) {
         final args =
             ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-        return PublicProfileScreen(
+        return CommunitySocialProfileScreen(
           userId: args['userId'] as String,
-          displayName: args['displayName'] as String?,
         );
       },
       collectiveChallengeDetail: (context) {

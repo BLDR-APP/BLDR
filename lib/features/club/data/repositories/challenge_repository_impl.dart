@@ -271,7 +271,6 @@ class ChallengeRepositoryImpl implements ChallengeRepository {
           userId: userId,
           fullName: (profile['full_name'] as String?) ?? '',
           avatarUrl: profile['avatar_url'] as String?,
-          email: profile['email'] as String?,
           xpTotal: (rank?['xp_total'] as num?)?.toInt() ?? 0,
           currentLevel: (rank?['current_level'] as num?)?.toInt() ?? 1,
           rankPosition: pos,

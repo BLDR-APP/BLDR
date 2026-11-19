@@ -38,6 +38,8 @@ class CommunityPostCardV2 extends StatelessWidget {
   final Future<void> Function(CommunityPost) onFollow;
   final Future<void> Function(CommunityPost) onMore;
   final void Function(CommunityPost) onShare;
+  final void Function(CommunityPost) onOpenDetail;
+  final void Function(CommunityPost)? onOpenProfile;
 
   const CommunityPostCardV2({
     super.key,
@@ -52,6 +54,8 @@ class CommunityPostCardV2 extends StatelessWidget {
     required this.onFollow,
     required this.onMore,
     required this.onShare,
+    required this.onOpenDetail,
+    this.onOpenProfile,
   });
 
   @override
@@ -68,11 +72,18 @@ class CommunityPostCardV2 extends StatelessWidget {
           _header(l10n),
           if (post.caption case final c? when c.trim().isNotEmpty) ...[
             const SizedBox(height: 12),
-            Text(c, style: BldrCommunityTextV2.body),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => onOpenDetail(post),
+              child: Text(c, style: BldrCommunityTextV2.body),
+            ),
           ],
           if (post.photoUrl case final url? when url.isNotEmpty) ...[
             const SizedBox(height: 8),
-            _photo(url),
+            GestureDetector(
+              onTap: () => onOpenDetail(post),
+              child: _photo(url),
+            ),
           ],
           if (body != null) ...[
             const SizedBox(height: 8),
@@ -95,34 +106,41 @@ class CommunityPostCardV2 extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        BldrCommunityAvatar(
-            name: post.authorName, imageUrl: post.userAvatarUrl),
+        GestureDetector(
+          onTap: onOpenProfile == null ? null : () => onOpenProfile!(post),
+          child: BldrCommunityAvatar(
+              name: post.authorName, imageUrl: post.userAvatarUrl),
+        ),
         const SizedBox(width: 12),
         Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Flexible(
-                    child: Text(post.authorName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: BldrCommunityTextV2.name),
-                  ),
-                  if (post.isClubMember) ...[
-                    const SizedBox(width: 4),
-                    const Icon(TablerIcons.rosette_discount_check,
-                        size: 14, color: BldrCommunityColorsV2.goldBrand),
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onOpenProfile == null ? null : () => onOpenProfile!(post),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(post.authorName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: BldrCommunityTextV2.name),
+                    ),
+                    if (post.isClubMember) ...[
+                      const SizedBox(width: 4),
+                      const Icon(TablerIcons.rosette_discount_check,
+                          size: 14, color: BldrCommunityColorsV2.goldBrand),
+                    ],
                   ],
-                ],
-              ),
-              const SizedBox(height: 2),
-              Text(meta,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: BldrCommunityTextV2.meta),
-            ],
+                ),
+                const SizedBox(height: 2),
+                Text(meta,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: BldrCommunityTextV2.meta),
+              ],
+            ),
           ),
         ),
         if (!post.isOwnPost) ...[
@@ -495,6 +513,53 @@ class CommunityPostCardV2 extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Conteúdo tipado do post, sem cabeçalho e ações (detalhe de PR e atividade).
+class CommunityPostBodyV2 extends StatelessWidget {
+  final CommunityPost post;
+  final void Function(CommunityPost) onOpenWorkout;
+  final void Function(CommunityPost) onOpenActivity;
+  final void Function(CommunityPost) onOpenEvolution;
+
+  const CommunityPostBodyV2({
+    super.key,
+    required this.post,
+    required this.onOpenWorkout,
+    required this.onOpenActivity,
+    required this.onOpenEvolution,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final card = CommunityPostCardV2(
+      post: post,
+      now: DateTime.now(),
+      onReaction: (_, __) async {},
+      onLongReact: (_) {},
+      onOpenWorkout: onOpenWorkout,
+      onOpenActivity: onOpenActivity,
+      onOpenEvolution: onOpenEvolution,
+      onComments: (_) {},
+      onFollow: (_) async {},
+      onMore: (_) async {},
+      onShare: (_) {},
+      onOpenDetail: (_) {},
+    );
+    final l10n = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context).toString();
+    final body = card._body(l10n, locale);
+    final photo = post.photoUrl;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (photo != null && photo.isNotEmpty) card._photo(photo),
+        if (photo != null && photo.isNotEmpty && body != null)
+          const SizedBox(height: 12),
+        if (body != null) body,
+      ],
     );
   }
 }

@@ -286,7 +286,6 @@ class PublicClubProfile {
   final String userId;
   final String fullName;
   final String? avatarUrl;
-  final String? email;
   final int xpTotal;
   final int currentLevel;
   final int rankPosition; // 0 = fora do top consultado
@@ -299,7 +298,6 @@ class PublicClubProfile {
     required this.userId,
     required this.fullName,
     this.avatarUrl,
-    this.email,
     this.xpTotal = 0,
     this.currentLevel = 1,
     this.rankPosition = 0,
