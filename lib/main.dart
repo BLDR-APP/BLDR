@@ -373,20 +373,17 @@ class MyApp extends StatelessWidget {
               return GestureDetector(
                 behavior: HitTestBehavior.translucent,
                 onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-                // Toast v2 acima das conquistas; a fila espera enquanto
-                // há conquista no topo (AchievementToast segue até a T4).
-                child: Consumer<AchievementProvider>(
-                  builder: (context, achievements, inner) => ToastHost(
+                // Toast v2 global; conquistas entram na mesma fila (T4).
+                child: ToastHost(
+                  controller: getIt<ToastController>(),
+                  child: ConnectivityToastListener(
+                    repository: getIt<ConnectivityRepository>(),
                     controller: getIt<ToastController>(),
-                    paused: achievements.hasPending,
-                    child: ConnectivityToastListener(
-                      repository: getIt<ConnectivityRepository>(),
+                    child: AchievementOverlay(
                       controller: getIt<ToastController>(),
-                      child: inner!,
+                      child: child ?? const SizedBox.shrink(),
                     ),
                   ),
-                  child: AchievementOverlay(
-                      child: child ?? const SizedBox.shrink()),
                 ),
               );
             },

@@ -74,6 +74,10 @@ class BldrToaster {
         startCompact: title != null,
       ));
 
+  /// Desafio / competição (65:9).
+  void challenge(String message, {String? dedupeKey}) => show(ToastRequest(
+      variant: ToastVariant.challenge, message: message, dedupeKey: dedupeKey));
+
   void dismiss({String? dedupeKey}) =>
       _controller.dismiss(dedupeKey: dedupeKey);
 }

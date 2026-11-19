@@ -3038,5 +3038,12 @@
   "nutri2_create_back": "INDIETRO",
   "nutri2_create_need_name": "Inserisci il nome dell'alimento",
   "nutri2_create_need_value": "Compila calorie o almeno un macro",
-  "nutri2_toast_food_created": "Alimento salvato nei preferiti"
+  "nutri2_toast_food_created": "Alimento salvato nei preferiti",
+  "toast_achievement_title": "Nuovo traguardo!",
+  "toast_achievement_details": "VEDI DETTAGLI",
+  "toast_challenge_joined": "Sei entrato nella sfida!",
+  "toast_challenge_join_error": "Impossibile entrare nella sfida",
+  "nutri2_toast_kcal_goal": "Obiettivo calorico raggiunto!",
+  "nutri2_toast_kcal_goal_desc": "Hai raggiunto il tuo obiettivo calorico giornaliero.",
+  "nutri2_toast_kcal_goal_label": "Calorie del giorno"
 }

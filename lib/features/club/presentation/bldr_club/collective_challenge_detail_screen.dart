@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
+import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:bldr_fitness/features/club/domain/entities/challenges.dart';
@@ -260,7 +262,8 @@ class _CollectiveChallengeDetailScreenState
 
   Future<void> _joinChallenge() async {
     if (_myUserId == null || _joiningLeaving) return;
-    final messenger = ScaffoldMessenger.of(context);
+    final toaster = context.toast;
+    final l10n = AppLocalizations.of(context);
     setState(() => _joiningLeaving = true);
     try {
       final result = await getIt<JoinCollectiveChallenge>()(widget.challengeId);
@@ -269,17 +272,10 @@ class _CollectiveChallengeDetailScreenState
 
       setState(() => _isJoined = true);
       await _fetchChallenge();
-      messenger.showSnackBar(const SnackBar(
-        content: Text('✅ Você entrou no desafio!'),
-        backgroundColor: _green,
-        behavior: SnackBarBehavior.floating,
-      ));
+      // T4: Challenge ao entrar no desafio (texto agora no .arb).
+      toaster.challenge(l10n.toast_challenge_joined);
     } catch (e) {
-      messenger.showSnackBar(SnackBar(
-        content: Text('Erro ao entrar: $e'),
-        backgroundColor: _red,
-        behavior: SnackBarBehavior.floating,
-      ));
+      toaster.error(l10n.toast_challenge_join_error);
     } finally {
       if (mounted) setState(() => _joiningLeaving = false);
     }

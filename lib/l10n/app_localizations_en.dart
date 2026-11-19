@@ -7133,4 +7133,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nutri2_toast_food_created => 'Food saved to favorites';
+
+  @override
+  String get toast_achievement_title => 'New achievement!';
+
+  @override
+  String get toast_achievement_details => 'VIEW DETAILS';
+
+  @override
+  String get toast_challenge_joined => 'You joined the challenge!';
+
+  @override
+  String get toast_challenge_join_error => 'Could not join the challenge';
+
+  @override
+  String get nutri2_toast_kcal_goal => 'Calorie goal reached!';
+
+  @override
+  String get nutri2_toast_kcal_goal_desc =>
+      'You reached your daily calorie goal.';
+
+  @override
+  String get nutri2_toast_kcal_goal_label => 'Daily calories';
 }

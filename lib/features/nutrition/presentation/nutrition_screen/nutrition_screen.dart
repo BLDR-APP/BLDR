@@ -199,12 +199,30 @@ class _NutritionScreenState extends State<NutritionScreen> {
     unawaited(getIt<CheckAndUnlockAchievements>()('nutrition'));
     unawaited(WidgetDataService.updateAll());
     final proteinBefore = _summary?.totals.protein ?? 0;
+    final kcalBefore = _summary?.totals.calories ?? 0;
     await _loadData(silent: true);
     if (!mounted) return;
     _checkProteinGoal(proteinBefore);
     final kcal = _summary?.totals.calories ?? 0;
     if (_goals.calories > 0 && kcal >= _goals.calories) {
       unawaited(getIt<TryIncrementOperation>()('calorie_goal', 1));
+    }
+    // T4: Goal da meta calórica (mesmo evento `calorie_goal`), só ao cruzar.
+    if (_isToday &&
+        nutritionGoalCrossed(
+            before: kcalBefore, after: kcal, goal: _goals.calories)) {
+      final l = AppLocalizations.of(context);
+      final fmt = NumberFormat.decimalPattern(l.localeName);
+      context.toast.goal(
+        l.nutri2_toast_kcal_goal,
+        title: l.nutri2_toast_goal_title,
+        description: l.nutri2_toast_kcal_goal_desc,
+        progressLabel: l.nutri2_toast_kcal_goal_label,
+        progressValue:
+            '${fmt.format(kcal.round())} / ${fmt.format(_goals.calories)} kcal',
+        progress: 1,
+        dedupeKey: 'nutrition.calorie_goal',
+      );
     }
     await _maybeTriggerNotificationPopup();
     if (!mounted) return;

@@ -3038,5 +3038,12 @@
   "nutri2_create_back": "BACK",
   "nutri2_create_need_name": "Enter the food name",
   "nutri2_create_need_value": "Fill calories or at least one macro",
-  "nutri2_toast_food_created": "Food saved to favorites"
+  "nutri2_toast_food_created": "Food saved to favorites",
+  "toast_achievement_title": "New achievement!",
+  "toast_achievement_details": "VIEW DETAILS",
+  "toast_challenge_joined": "You joined the challenge!",
+  "toast_challenge_join_error": "Could not join the challenge",
+  "nutri2_toast_kcal_goal": "Calorie goal reached!",
+  "nutri2_toast_kcal_goal_desc": "You reached your daily calorie goal.",
+  "nutri2_toast_kcal_goal_label": "Daily calories"
 }

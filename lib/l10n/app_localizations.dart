@@ -12856,6 +12856,48 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Alimento salvo nos favoritos'**
   String get nutri2_toast_food_created;
+
+  /// No description provided for @toast_achievement_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nova conquista!'**
+  String get toast_achievement_title;
+
+  /// No description provided for @toast_achievement_details.
+  ///
+  /// In pt, this message translates to:
+  /// **'VER DETALHES'**
+  String get toast_achievement_details;
+
+  /// No description provided for @toast_challenge_joined.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você entrou no desafio!'**
+  String get toast_challenge_joined;
+
+  /// No description provided for @toast_challenge_join_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível entrar no desafio'**
+  String get toast_challenge_join_error;
+
+  /// No description provided for @nutri2_toast_kcal_goal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Meta de calorias atingida!'**
+  String get nutri2_toast_kcal_goal;
+
+  /// No description provided for @nutri2_toast_kcal_goal_desc.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você alcançou sua meta diária de calorias.'**
+  String get nutri2_toast_kcal_goal_desc;
+
+  /// No description provided for @nutri2_toast_kcal_goal_label.
+  ///
+  /// In pt, this message translates to:
+  /// **'Calorias do dia'**
+  String get nutri2_toast_kcal_goal_label;
 }
 
 class _AppLocalizationsDelegate

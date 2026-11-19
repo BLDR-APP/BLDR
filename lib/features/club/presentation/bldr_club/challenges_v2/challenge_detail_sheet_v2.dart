@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_challenge_v2_components.dart';
 import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
@@ -41,9 +42,13 @@ class _ChallengeDetailSheetV2State extends State<ChallengeDetailSheetV2> {
     if (!mounted) return;
     setState(() => _joining = false);
     result.fold(
-      onSuccess: (_) => Navigator.pop(context, true),
-      onFailure: (failure) => ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(failure.message))),
+      onSuccess: (_) {
+        // T4: Challenge ao entrar no desafio.
+        context.toast
+            .challenge(AppLocalizations.of(context).toast_challenge_joined);
+        Navigator.pop(context, true);
+      },
+      onFailure: (failure) => context.toast.error(failure.message),
     );
   }
 

@@ -38,6 +38,9 @@ class ToastRequest {
   final String? secondaryLabel;
   final VoidCallback? onSecondary;
   final VoidCallback? onTap;
+
+  /// Chamado quando o toast sai da tela (tempo, swipe, ação ou dismiss).
+  final VoidCallback? onDismissed;
   final String? progressLabel;
   final String? progressValue;
 
@@ -63,6 +66,7 @@ class ToastRequest {
     this.secondaryLabel,
     this.onSecondary,
     this.onTap,
+    this.onDismissed,
     this.progressLabel,
     this.progressValue,
     this.progress,
@@ -115,10 +119,12 @@ class ToastController extends ChangeNotifier {
       _queue.removeWhere((r) => r.dedupeKey == dedupeKey);
       return;
     }
-    if (_current == null) return;
+    final gone = _current;
+    if (gone == null) return;
     _timer?.cancel();
     _current = null;
     notifyListeners();
+    gone.onDismissed?.call();
     _gapTimer?.cancel();
     _gapTimer = Timer(gap, _advance);
   }
