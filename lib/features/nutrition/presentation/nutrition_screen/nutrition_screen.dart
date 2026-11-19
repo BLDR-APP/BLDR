@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -13,9 +15,13 @@ import 'package:bldr_fitness/features/nutrition/domain/entities/daily_nutrition_
 import 'package:bldr_fitness/features/nutrition/domain/entities/meal_entry.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/nutrition_goals.dart';
 import 'package:bldr_fitness/features/nutrition/domain/usecases/nutrition_usecases.dart';
-import 'package:bldr_fitness/features/nutrition/presentation/mappers/legacy_ui_maps.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/Firebase/firebase_add_food_modal_widget.dart';
-import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/food_categories_modal.dart';
+import 'package:bldr_fitness/core/errors/result.dart';
+import 'package:bldr_fitness/features/achievements/domain/usecases/achievement_usecases.dart';
+import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
+import 'package:bldr_fitness/features/integrations/data/widget_data_service.dart';
+import 'package:bldr_fitness/features/nutrition/domain/entities/food_item.dart';
+import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_add_food_sheets.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_copy_meal_sheets.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_hub_sections.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_water_sheet.dart';
@@ -136,15 +142,83 @@ class _NutritionScreenState extends State<NutritionScreen> {
 
   // ── Ações ────────────────────────────────────────────────────────────────
 
-  void _showAddFoodModal(NutritionMealSlot slot) {
+  AddFoodCatalog get _catalog {
+    final uid = _userId;
+    Future<List<FoodItem>> unwrap(Future<Result<List<FoodItem>>> f) async =>
+        (await f).valueOrNull ?? const [];
+    return AddFoodCatalog(
+      search: (q) => unwrap(getIt<SearchFoods>()(q)),
+      byCategory: (c) => unwrap(getIt<GetCategoryFoods>()(c)),
+      recents: () async =>
+          uid == null ? const [] : unwrap(getIt<GetRecentFoods>()(uid)),
+      favorites: () async =>
+          uid == null ? const [] : unwrap(getIt<GetFavoriteFoods>()(uid)),
+    );
+  }
+
+  /// N2: Adicionar Alimentos (102:316) → porção (102:308) → LogMeal.
+  Future<void> _showAddFoodModal(NutritionMealSlot slot) async {
+    final pick = await _overlay(
+        () => NutritionAddFoodSheet.show(context, catalog: _catalog));
+    if (pick == null || !mounted) return;
+    if (pick.createManual) return _showManualCreate(slot);
+    final portion = await _overlay(
+        () => NutritionPortionSheet.add(context, food: pick.food!, slot: slot));
+    if (portion == null || !mounted) return;
+    final l = AppLocalizations.of(context);
+    final uid = _userId;
+    if (uid == null) {
+      context.toast.error(l.common_unauthenticated);
+      return;
+    }
+    final date = _selectedDate;
+    final r = await getIt<LogMeal>()(
+      userId: uid,
+      mealType: portion.slot.dbKey,
+      mealDate: date,
+      food: pick.food!,
+      quantityGrams: portion.grams,
+    );
+    if (!mounted) return;
+    if (r.isFailure) {
+      context.toast.error(l.nutri2_toast_save_error);
+      return;
+    }
+    // T3: meal.added.
+    context.toast.success(l.nutri2_toast_added(portion.slot.label(l)));
+    await _afterFoodLogged(uid, date);
+  }
+
+  /// Efeitos colaterais que o modal antigo já disparava após registrar.
+  Future<void> _afterFoodLogged(String uid, DateTime date) async {
+    unawaited(getIt<CheckAndUnlockAchievements>()('nutrition'));
+    unawaited(WidgetDataService.updateAll());
+    final proteinBefore = _summary?.totals.protein ?? 0;
+    await _loadData(silent: true);
+    if (!mounted) return;
+    _checkProteinGoal(proteinBefore);
+    final kcal = _summary?.totals.calories ?? 0;
+    if (_goals.calories > 0 && kcal >= _goals.calories) {
+      unawaited(getIt<TryIncrementOperation>()('calorie_goal', 1));
+    }
+    await _maybeTriggerNotificationPopup();
+    if (!mounted) return;
+    context.read<AchievementProvider>().checkAchievements('nutrition');
+  }
+
+  /// Cadastro manual: formulário atual (aba Manual) até a N4.
+  void _showManualCreate(NutritionMealSlot slot) {
     _overlay(() => showModalBottomSheet(
           context: context,
           backgroundColor: AppTheme.cardDark,
           isScrollControlled: true,
           shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-          builder: (_) => FoodCategoriesModal(
+          builder: (_) => FirebaseAddFoodModalWidget(
             mealType: slot.legacyName,
+            selectedDate: _selectedDate,
+            isClub: _isClubMember,
+            initialTab: 2,
             onFoodAdded: () async {
               final proteinBefore = _summary?.totals.protein ?? 0;
               await _loadData(silent: true);
@@ -155,43 +229,38 @@ class _NutritionScreenState extends State<NutritionScreen> {
                   .read<AchievementProvider>()
                   .checkAchievements('nutrition');
             },
-            selectedDate: _selectedDate,
-            isClub: _isClubMember,
           ),
         ));
   }
 
-  void _showEditFoodModal(MealEntry entry) {
+  /// N2: editar (102:301) → salvar (UpdateMealQuantity) ou remover (102:300).
+  Future<void> _showEditFoodModal(MealEntry entry) async {
     final slot = NutritionMealSlot.all.firstWhere(
         (s) => s.dbKey == entry.mealType,
         orElse: () => NutritionMealSlot.all[1]);
-    _overlay(() => showModalBottomSheet(
-          context: context,
-          backgroundColor: AppTheme.cardDark,
-          isScrollControlled: true,
-          shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-          builder: (_) => FirebaseAddFoodModalWidget(
-            mealType: slot.legacyName,
-            selectedDate: _selectedDate,
-            onFoodAdded: () => _loadData(silent: true),
-            isClub: _isClubMember,
-            itemToEdit: mealEntryToLegacyMap(entry),
-            isEditing: true,
-          ),
-        ));
+    final r = await _overlay(
+        () => NutritionPortionSheet.edit(context, entry: entry, slot: slot));
+    if (r == null || !mounted) return;
+    if (r.remove) return _removeFood(entry);
+    final l = AppLocalizations.of(context);
+    final res = await getIt<UpdateMealQuantity>()(
+        entry: entry, newQuantityGrams: r.grams);
+    if (!mounted) return;
+    if (res.isFailure) {
+      context.toast.error(l.nutri2_toast_save_error);
+      return;
+    }
+    context.toast.success(l.nutri2_toast_updated);
+    await _loadData(silent: true);
   }
 
   Future<void> _removeFood(MealEntry entry) async {
     final l = AppLocalizations.of(context);
-    final ok = await _overlay(() => BldrV2ConfirmDialog.show(
-          context,
-          title: l.nutri2_remove_food,
-          message: entry.foodName,
-          confirmLabel: l.nutri2_remove_food,
-          cancelLabel: l.common_cancel,
-          destructive: true,
-        ));
+    final slot = NutritionMealSlot.all.firstWhere(
+        (s) => s.dbKey == entry.mealType,
+        orElse: () => NutritionMealSlot.all[1]);
+    final ok = await _overlay(
+        () => NutritionRemoveFoodSheet.show(context, entry: entry, slot: slot));
     if (ok != true || entry.id == null || !mounted) return;
     final result = await getIt<DeleteMealEntry>()(entry.id!);
     if (!mounted) return;

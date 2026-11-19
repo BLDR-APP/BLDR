@@ -1606,6 +1606,19 @@ abstract final class BldrNutritionColorsV2 {
   // Copiar refeição (102:313/314/315)
   static const rowBg = Color(0xFF1B1B1B);
   static const copyMuted = Color(0xFFA3A3A3);
+  // Adicionar alimento / porção / remover (102:316/317/308/301/300)
+  static const searchBg = Color(0xEB0E0E0E); // rgba(14,14,14,.92)
+  static const placeholder = Color(0xFF8C8C8C);
+  static const tileBg = Color(0xE00B0B0B); // rgba(11,11,11,.88)
+  static const tileBorder = Color(0xFF292929);
+  static const catBorder = Color(0xFF303030);
+  static const foodRowBorder = Color(0xFF1C1C1C);
+  static const tabOff = Color(0xFF949494);
+  static const labelMuted = Color(0xFF757575);
+  static const summaryBg = Color(0xFF090909);
+  static const summaryBorder = Color(0xFF242424);
+  static const removeBg = Color(0xFF1C0606);
+  static const removeRed = Color(0xFFDB4740);
 }
 
 abstract final class BldrNutritionTextV2 {
@@ -1675,6 +1688,43 @@ abstract final class BldrNutritionTextV2 {
   static final copyFoodMeta = _s(BldrTextV2.s11, _r, _cm); // 11
   static final copyDone = _s(BldrTextV2.s17, _b, _t); // 16
   static final close = _s(BldrTextV2.s24, _r, _cm); // 25 (×)
+  // Adicionar alimento / porção / remover
+  static const _lm = BldrNutritionColorsV2.labelMuted;
+  static final searchHint =
+      _s(BldrTextV2.s11, _r, BldrNutritionColorsV2.placeholder); // 11
+  static final searchInput = _s(BldrTextV2.s13, _r, _t);
+  static final tileLabel = _s(BldrTextV2.s11, _b, _mu); // 8
+  static final soon = _s(BldrTextV2.s11, _b, _g); // badge
+  static final catChip = _s(BldrTextV2.s11, _b, _mu); // 8
+  static final catChipOn = _s(BldrTextV2.s11, _b, BldrNutritionColorsV2.gold);
+  static final viewAll = _s(BldrTextV2.s11, _b, _g); // 8
+  static final rowName = _s(BldrTextV2.s11, _sb, _t); // 10
+  static final rowMeta = _s(BldrTextV2.s11, _r, _mu); // 7.7
+  static final rowKcal = _s(BldrTextV2.s11, _sb, _t); // 9
+  static final rowAdd = _s(BldrTextV2.s15, _m, _g); // 14
+  static final tabOn = _s(BldrTextV2.s15, _m, _g); // 14
+  static final tabOff =
+      _s(BldrTextV2.s15, _m, BldrNutritionColorsV2.tabOff); // 14
+  static final fieldLabel = _s(BldrTextV2.s11, _b, _lm); // 8
+  static final qtyValue = _s(BldrTextV2.s17, _b, _t); // 18
+  static final qtyMinus = _s(BldrTextV2.s17, _m, _lm); // 18
+  static final qtyPlus = _s(BldrTextV2.s17, _m, BldrNutritionColorsV2.gold);
+  static final segment = _s(BldrTextV2.s11, _b, _lm); // 9–10
+  static final segmentOn = _s(BldrTextV2.s11, _b, BldrNutritionColorsV2.gold);
+  static final hint = _s(BldrTextV2.s11, _r, _lm); // 8
+  static final perGrams =
+      _s(BldrTextV2.s11, _m, BldrNutritionColorsV2.gold); // 8
+  static final sumKcal =
+      _s(BldrTextV2.s20, _b, BldrNutritionColorsV2.gold); // 21
+  static final sumUnit = _s(BldrTextV2.s11, _m, _lm); // 8
+  static final sumLabel = _s(BldrTextV2.s11, _b, _lm); // 7
+  static final sumValue = _s(BldrTextV2.s12, _b, _t); // 12
+  static final removeSubtitle = _s(BldrTextV2.s11, _m, _lm); // 7.8
+  static final removeWarning =
+      _s(BldrTextV2.s11, _r, BldrNutritionColorsV2.gold); // 8
+  static final removeCta =
+      _s(BldrTextV2.s11, _b, BldrNutritionColorsV2.removeRed); // 9.5
+  static final cancelCta = _s(BldrTextV2.s11, _b, _t); // 9
 }
 
 abstract final class BldrNutritionV2 {

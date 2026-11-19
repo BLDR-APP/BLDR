@@ -105,6 +105,10 @@ class FirebaseAddFoodModalWidget extends StatefulWidget {
   final VoidCallback onFoodAdded;
   final DateTime selectedDate;
   final bool isClub;
+
+  /// Aba inicial (0 recentes, 1 favoritos, 2 manual). O hub v2 abre direto
+  /// no cadastro manual pelo link "Cadastrar alimento".
+  final int initialTab;
   final Map<String, dynamic>? itemToEdit;
   final bool isEditing;
   final String? selectedCategory;
@@ -115,6 +119,7 @@ class FirebaseAddFoodModalWidget extends StatefulWidget {
     required this.onFoodAdded,
     required this.selectedDate,
     this.isClub = false,
+    this.initialTab = 0,
     this.itemToEdit,
     this.isEditing = false,
     this.selectedCategory,
@@ -153,7 +158,7 @@ class _AddFoodModalWidgetState extends State<FirebaseAddFoodModalWidget> with Si
   final _addedSugarFocus = FocusNode();
 
   // Navegação por chips (0=Recentes, 1=Favoritos, 2=Manual)
-  int _selectedTab = 0;
+  late int _selectedTab = widget.initialTab;
   final _searchController = TextEditingController();
   double _hypotheticalIqdScore = 60.0;
   double? _currentDayIqd; // null until day totals are loaded

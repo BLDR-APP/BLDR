@@ -6938,4 +6938,140 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get nutri2_copy_error => 'Não foi possível copiar a refeição';
+
+  @override
+  String get nutri2_add_title => 'Adicionar Alimentos';
+
+  @override
+  String get nutri2_search_hint => 'Buscar alimento';
+
+  @override
+  String get nutri2_search_list_hint => 'Buscar nesta lista';
+
+  @override
+  String get nutri2_sc_recent_fav => 'REC. E FAVORITOS';
+
+  @override
+  String get nutri2_sc_saved_meals => 'REFEIÇÕES SALVAS';
+
+  @override
+  String get nutri2_sc_barcode => 'CÓD. BARRAS';
+
+  @override
+  String get nutri2_sc_photo => 'FOTO / IA';
+
+  @override
+  String get nutri2_coming_soon => 'EM BREVE';
+
+  @override
+  String get nutri2_cat_all => 'TODOS';
+
+  @override
+  String get nutri2_recent => 'RECENTES';
+
+  @override
+  String get nutri2_view_all => 'VER TODOS';
+
+  @override
+  String get nutri2_results => 'RESULTADOS';
+
+  @override
+  String nutri2_food_meta(String grams, String p, String c, String f) {
+    return '$grams g  ·  P ${p}g  ·  C ${c}g  ·  G ${f}g';
+  }
+
+  @override
+  String get nutri2_empty_list => 'Nenhum alimento encontrado.';
+
+  @override
+  String get nutri2_create_food => 'Cadastrar alimento';
+
+  @override
+  String get nutri2_add_food_eyebrow => 'ADICIONAR ALIMENTO';
+
+  @override
+  String get nutri2_tab_recent => 'Recentes';
+
+  @override
+  String get nutri2_tab_favorites => 'Favoritos';
+
+  @override
+  String get nutri2_last_foods => 'ÚLTIMOS ALIMENTOS';
+
+  @override
+  String get nutri2_fav_foods => 'FAVORITOS';
+
+  @override
+  String get nutri2_qty => 'QUANTIDADE';
+
+  @override
+  String get nutri2_portion_type => 'TIPO DE PORÇÃO';
+
+  @override
+  String get nutri2_portion => 'PORÇÃO';
+
+  @override
+  String get nutri2_unit => 'UNIDADE';
+
+  @override
+  String get nutri2_measure => 'UNIDADE DE MEDIDA';
+
+  @override
+  String get nutri2_measure_hint => 'Base de cálculo do alimento';
+
+  @override
+  String get nutri2_unit_weight => 'PESO DE 1 UNIDADE (g)';
+
+  @override
+  String get nutri2_nutrition_info => 'INFORMAÇÃO NUTRICIONAL';
+
+  @override
+  String nutri2_per_grams(String grams) {
+    return 'por $grams g';
+  }
+
+  @override
+  String get nutri2_p_short => 'PROTEÍNA';
+
+  @override
+  String get nutri2_c_short => 'CARBO';
+
+  @override
+  String get nutri2_f_short => 'GORDURA';
+
+  @override
+  String get nutri2_add_in => 'ADICIONAR EM';
+
+  @override
+  String get nutri2_add_in_hint =>
+      'Pós-treino e outras refeições disponíveis ao deslizar';
+
+  @override
+  String get nutri2_add_cta => 'ADICIONAR ALIMENTO';
+
+  @override
+  String nutri2_edit_subtitle(String meal) {
+    return '$meal · alimento registrado';
+  }
+
+  @override
+  String get nutri2_save_changes => 'SALVAR ALTERAÇÕES';
+
+  @override
+  String get nutri2_remove_cta => 'REMOVER ALIMENTO';
+
+  @override
+  String get nutri2_remove_title => 'Remover alimento?';
+
+  @override
+  String nutri2_remove_subtitle(String food, String meal) {
+    return '$food será removido do $meal';
+  }
+
+  @override
+  String get nutri2_remove_warning =>
+      'Essa ação atualizará calorias, macros e IQD do dia.';
+
+  @override
+  String get nutri2_cancel => 'CANCELAR';
 }

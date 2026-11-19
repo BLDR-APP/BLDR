@@ -12418,6 +12418,258 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Não foi possível copiar a refeição'**
   String get nutri2_copy_error;
+
+  /// No description provided for @nutri2_add_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar Alimentos'**
+  String get nutri2_add_title;
+
+  /// No description provided for @nutri2_search_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Buscar alimento'**
+  String get nutri2_search_hint;
+
+  /// No description provided for @nutri2_search_list_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Buscar nesta lista'**
+  String get nutri2_search_list_hint;
+
+  /// No description provided for @nutri2_sc_recent_fav.
+  ///
+  /// In pt, this message translates to:
+  /// **'REC. E FAVORITOS'**
+  String get nutri2_sc_recent_fav;
+
+  /// No description provided for @nutri2_sc_saved_meals.
+  ///
+  /// In pt, this message translates to:
+  /// **'REFEIÇÕES SALVAS'**
+  String get nutri2_sc_saved_meals;
+
+  /// No description provided for @nutri2_sc_barcode.
+  ///
+  /// In pt, this message translates to:
+  /// **'CÓD. BARRAS'**
+  String get nutri2_sc_barcode;
+
+  /// No description provided for @nutri2_sc_photo.
+  ///
+  /// In pt, this message translates to:
+  /// **'FOTO / IA'**
+  String get nutri2_sc_photo;
+
+  /// No description provided for @nutri2_coming_soon.
+  ///
+  /// In pt, this message translates to:
+  /// **'EM BREVE'**
+  String get nutri2_coming_soon;
+
+  /// No description provided for @nutri2_cat_all.
+  ///
+  /// In pt, this message translates to:
+  /// **'TODOS'**
+  String get nutri2_cat_all;
+
+  /// No description provided for @nutri2_recent.
+  ///
+  /// In pt, this message translates to:
+  /// **'RECENTES'**
+  String get nutri2_recent;
+
+  /// No description provided for @nutri2_view_all.
+  ///
+  /// In pt, this message translates to:
+  /// **'VER TODOS'**
+  String get nutri2_view_all;
+
+  /// No description provided for @nutri2_results.
+  ///
+  /// In pt, this message translates to:
+  /// **'RESULTADOS'**
+  String get nutri2_results;
+
+  /// No description provided for @nutri2_food_meta.
+  ///
+  /// In pt, this message translates to:
+  /// **'{grams} g  ·  P {p}g  ·  C {c}g  ·  G {f}g'**
+  String nutri2_food_meta(String grams, String p, String c, String f);
+
+  /// No description provided for @nutri2_empty_list.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum alimento encontrado.'**
+  String get nutri2_empty_list;
+
+  /// No description provided for @nutri2_create_food.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cadastrar alimento'**
+  String get nutri2_create_food;
+
+  /// No description provided for @nutri2_add_food_eyebrow.
+  ///
+  /// In pt, this message translates to:
+  /// **'ADICIONAR ALIMENTO'**
+  String get nutri2_add_food_eyebrow;
+
+  /// No description provided for @nutri2_tab_recent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recentes'**
+  String get nutri2_tab_recent;
+
+  /// No description provided for @nutri2_tab_favorites.
+  ///
+  /// In pt, this message translates to:
+  /// **'Favoritos'**
+  String get nutri2_tab_favorites;
+
+  /// No description provided for @nutri2_last_foods.
+  ///
+  /// In pt, this message translates to:
+  /// **'ÚLTIMOS ALIMENTOS'**
+  String get nutri2_last_foods;
+
+  /// No description provided for @nutri2_fav_foods.
+  ///
+  /// In pt, this message translates to:
+  /// **'FAVORITOS'**
+  String get nutri2_fav_foods;
+
+  /// No description provided for @nutri2_qty.
+  ///
+  /// In pt, this message translates to:
+  /// **'QUANTIDADE'**
+  String get nutri2_qty;
+
+  /// No description provided for @nutri2_portion_type.
+  ///
+  /// In pt, this message translates to:
+  /// **'TIPO DE PORÇÃO'**
+  String get nutri2_portion_type;
+
+  /// No description provided for @nutri2_portion.
+  ///
+  /// In pt, this message translates to:
+  /// **'PORÇÃO'**
+  String get nutri2_portion;
+
+  /// No description provided for @nutri2_unit.
+  ///
+  /// In pt, this message translates to:
+  /// **'UNIDADE'**
+  String get nutri2_unit;
+
+  /// No description provided for @nutri2_measure.
+  ///
+  /// In pt, this message translates to:
+  /// **'UNIDADE DE MEDIDA'**
+  String get nutri2_measure;
+
+  /// No description provided for @nutri2_measure_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Base de cálculo do alimento'**
+  String get nutri2_measure_hint;
+
+  /// No description provided for @nutri2_unit_weight.
+  ///
+  /// In pt, this message translates to:
+  /// **'PESO DE 1 UNIDADE (g)'**
+  String get nutri2_unit_weight;
+
+  /// No description provided for @nutri2_nutrition_info.
+  ///
+  /// In pt, this message translates to:
+  /// **'INFORMAÇÃO NUTRICIONAL'**
+  String get nutri2_nutrition_info;
+
+  /// No description provided for @nutri2_per_grams.
+  ///
+  /// In pt, this message translates to:
+  /// **'por {grams} g'**
+  String nutri2_per_grams(String grams);
+
+  /// No description provided for @nutri2_p_short.
+  ///
+  /// In pt, this message translates to:
+  /// **'PROTEÍNA'**
+  String get nutri2_p_short;
+
+  /// No description provided for @nutri2_c_short.
+  ///
+  /// In pt, this message translates to:
+  /// **'CARBO'**
+  String get nutri2_c_short;
+
+  /// No description provided for @nutri2_f_short.
+  ///
+  /// In pt, this message translates to:
+  /// **'GORDURA'**
+  String get nutri2_f_short;
+
+  /// No description provided for @nutri2_add_in.
+  ///
+  /// In pt, this message translates to:
+  /// **'ADICIONAR EM'**
+  String get nutri2_add_in;
+
+  /// No description provided for @nutri2_add_in_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pós-treino e outras refeições disponíveis ao deslizar'**
+  String get nutri2_add_in_hint;
+
+  /// No description provided for @nutri2_add_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'ADICIONAR ALIMENTO'**
+  String get nutri2_add_cta;
+
+  /// No description provided for @nutri2_edit_subtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'{meal} · alimento registrado'**
+  String nutri2_edit_subtitle(String meal);
+
+  /// No description provided for @nutri2_save_changes.
+  ///
+  /// In pt, this message translates to:
+  /// **'SALVAR ALTERAÇÕES'**
+  String get nutri2_save_changes;
+
+  /// No description provided for @nutri2_remove_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'REMOVER ALIMENTO'**
+  String get nutri2_remove_cta;
+
+  /// No description provided for @nutri2_remove_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Remover alimento?'**
+  String get nutri2_remove_title;
+
+  /// No description provided for @nutri2_remove_subtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'{food} será removido do {meal}'**
+  String nutri2_remove_subtitle(String food, String meal);
+
+  /// No description provided for @nutri2_remove_warning.
+  ///
+  /// In pt, this message translates to:
+  /// **'Essa ação atualizará calorias, macros e IQD do dia.'**
+  String get nutri2_remove_warning;
+
+  /// No description provided for @nutri2_cancel.
+  ///
+  /// In pt, this message translates to:
+  /// **'CANCELAR'**
+  String get nutri2_cancel;
 }
 
 class _AppLocalizationsDelegate
