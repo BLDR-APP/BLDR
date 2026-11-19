@@ -1559,3 +1559,117 @@ abstract final class BldrToastV2 {
   static const Duration expandedDuration = Duration(milliseconds: 5000);
   static const Duration undoDuration = Duration(milliseconds: 5000);
 }
+
+// ── Nutrição v2 ────────────────────────────────────────────────────────────
+// Figma Nutrition Hub z6plKSVOCah3uDI1Abaxbe (102:312 hub, 14:2 refeição
+// expandida). Tamanhos do mockup em comentário; texto mínimo 11.
+
+abstract final class BldrNutritionColorsV2 {
+  static const gold = BldrColorsV2.gold;
+  static const goldBright = BldrColorsV2.goldBright;
+  static const text = Color(0xFFF5F5F5);
+  static const white = Color(0xFFFFFFFF);
+  static const muted = Color(0xFF787878);
+  static const mealsTitle = Color(0xFFB3B3B3);
+  static const deltaText = Color(0xFF949494);
+  static const positive = Color(0xFF13A000);
+  static const over = Color(0xFFFF0000); // macro acima da meta
+  // Anéis
+  static const kcalTrack = Color(0xFF292929);
+  static const macroTrack = Color(0xFF787878);
+  // Barras (IQD / hidratação)
+  static const barTrack = Color(0xFF262626);
+  static const iqdGradient = LinearGradient(
+      colors: [Color(0x57B8860B), Color(0xFFD4AF37)]); // 0.34 → ouro
+  static const waterGradient = LinearGradient(
+      colors: [Color(0x570B45B8), Color(0xFF2B00FF)]); // 0.34 → azul
+  // Refeição expandida
+  static const mealCardBg = Color(0xB8090909); // rgba(9,9,9,0.72)
+  static const macroCardBg = Color(0xFF0E0E0E);
+  static const macroCardBorder = Color(0xFF2B2B2B);
+  static const divider = Color(0xFF1F1F1F);
+  static const fabBg = Color(0xFF000000);
+}
+
+abstract final class BldrNutritionTextV2 {
+  static TextStyle _s(double step, FontWeight w, Color c) =>
+      BldrTextV2.scale(step, w, c);
+  static const _b = FontWeight.w700,
+      _sb = FontWeight.w600,
+      _m = FontWeight.w500,
+      _r = FontWeight.w400;
+  static const _t = BldrNutritionColorsV2.text;
+  static const _w = BldrNutritionColorsV2.white;
+  static const _mu = BldrNutritionColorsV2.muted;
+  static const _g = BldrNutritionColorsV2.goldBright;
+  // Header
+  static final eyebrow = _s(BldrTextV2.s11, _b, _g); // 11
+  static final title = _s(BldrTextV2.s28, _b, _t); // 27
+  static final date = _s(BldrTextV2.s11, _m, _mu); // 11
+  static final datePill = _s(BldrTextV2.s11, _b, _g); // 9
+  static final datePillChevron = _s(BldrTextV2.s17, _m, _g); // 16
+  // Anéis
+  static final kcalValue = _s(BldrTextV2.s20, _b, _w); // 20.5
+  static final kcalGoal = _s(BldrTextV2.s11, _r, _mu); // 8.2
+  static final macroValue = _s(BldrTextV2.s11, _m, _w); // 10.8
+  static final macroLabel = _s(BldrTextV2.s11, _r, _mu); // 10.2
+  static final macroGoal = _s(BldrTextV2.s11, _r, _w); // 7.2
+  // IQD
+  static final sectionLabel = _s(BldrTextV2.s11, _b, _mu); // 10–11
+  static final iqdBand = _s(BldrTextV2.s11, _b, _w); // 10
+  static final iqdScore = _s(BldrTextV2.s28, _b, _g); // 28
+  static final iqdDelta =
+      _s(BldrTextV2.s11, _m, BldrNutritionColorsV2.deltaText); // 9
+  static final barScale = _s(BldrTextV2.s11, _m, _mu); // 8
+  // Hidratação
+  static final waterValue = _s(BldrTextV2.s15, _b, _t); // 14
+  static final waterGoal = _s(BldrTextV2.s11, _r, _mu); // 9
+  // Refeições
+  static final mealsTitle =
+      _s(BldrTextV2.s11, _b, BldrNutritionColorsV2.mealsTitle); // 11
+  static final mealName = _s(BldrTextV2.s11, _b, _w); // 9
+  static final mealDetail = _s(BldrTextV2.s11, _r, _mu); // 9.2
+  static final mealKcal = _s(BldrTextV2.s11, _sb, _t); // 9
+  static final mealChevron = _s(BldrTextV2.s12, _m, _g); // 12
+  static final macroCardLabel = _s(BldrTextV2.s11, _b, _mu); // 7.1
+  static final macroCardValue = _s(BldrTextV2.s12, _sb, _t); // 12.2
+  static final foodName = _s(BldrTextV2.s11, _sb, _t); // 8.2
+  static final foodQty = _s(BldrTextV2.s11, _r, _mu); // 7.2
+  static final foodMacros = _s(BldrTextV2.s11, _m, _mu); // 7.1
+  static final addFood = _s(BldrTextV2.s11, _b, _g); // 8
+}
+
+abstract final class BldrNutritionV2 {
+  static const double pageX = 22;
+  static const double datePillW = 68;
+  static const double datePillH = 36;
+  static const double datePillRadius = 14;
+  static const double kcalRingW = 112;
+  static const double kcalRingH = 120;
+  static const double kcalTrackStroke = 10;
+  static const double kcalStroke = 5;
+  static const double macroRing = 44;
+  static const double macroTrackStroke = 1.58;
+  static const double macroStroke = 3.16;
+  static const double macroGap = 18;
+  static const double barTrackH = 7;
+  static const double barFillH = 5;
+  static const double barRadius = 4;
+  static const double barDot = 5;
+  static const double waterAddW = 47;
+  static const double waterAddH = 18;
+  static const double mealPillWidthFactor = 261 / 396;
+  static const double mealPillH = 31;
+  static const double mealRadius = 20;
+  static const double mealBorder = 0.5;
+  static const double mealExpandedBorder = 0.7;
+  static const double mealIcon = 15;
+  static const double mealGap = 10;
+  static const double macroCardH = 38;
+  static const double macroCardRadius = 12;
+  static const double fab = 64;
+  static const double fabRadius = 21.33;
+  static const double fabBorder = 0.76;
+  static const double fabIcon = 36.57;
+  static const Duration fabFade = Duration(milliseconds: 200);
+}
