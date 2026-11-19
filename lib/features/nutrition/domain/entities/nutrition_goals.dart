@@ -5,11 +5,15 @@ class NutritionGoals {
   final int carbs;
   final int fat;
 
+  /// Meta de água (ml), de `target_hydration_liters`; 2500 se ausente.
+  final int waterMl;
+
   const NutritionGoals({
     required this.calories,
     required this.protein,
     required this.carbs,
     required this.fat,
+    this.waterMl = 2500,
   });
 
   /// Usado apenas quando o usuário não completou o onboarding ainda.

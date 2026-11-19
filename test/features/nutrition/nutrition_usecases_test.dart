@@ -45,6 +45,20 @@ class FakeDiaryRepository implements NutritionDiaryRepository {
       Result.success(List.of(entries));
 
   @override
+  Future<Result<List<MealEntry>>> mealsForRange(DateTime start, DateTime end,
+      {String? userId}) async {
+    rangeCalls++;
+    final s = DateTime(start.year, start.month, start.day);
+    final e = DateTime(end.year, end.month, end.day);
+    return Result.success(entries.where((m) {
+      final d = DateTime(m.date.year, m.date.month, m.date.day);
+      return !d.isBefore(s) && !d.isAfter(e);
+    }).toList());
+  }
+
+  int rangeCalls = 0;
+
+  @override
   Future<Result<DailyNutritionSummary>> dailySummary(DateTime date,
           {String? userId}) async =>
       Result.success(DailyNutritionSummary.fromEntries(date, entries));

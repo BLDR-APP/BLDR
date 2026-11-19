@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Lê `onboarding_data` de `user_profiles` (fonte real das metas nutricionais).
@@ -13,7 +15,15 @@ class SupabaseNutritionGoalsDatasource {
         .eq('id', userId)
         .maybeSingle();
     final data = row?['onboarding_data'];
-    return data is Map ? Map<String, dynamic>.from(data) : null;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    // Alguns perfis antigos gravaram o JSON como texto.
+    if (data is String) {
+      try {
+        final decoded = jsonDecode(data);
+        if (decoded is Map) return Map<String, dynamic>.from(decoded);
+      } catch (_) {}
+    }
+    return null;
   }
 
   /// Retorna onboarding_data + target_weight_kg + peso atual (último registro).
@@ -25,7 +35,8 @@ class SupabaseNutritionGoalsDatasource {
         .maybeSingle();
 
     final obData = profileRow?['onboarding_data'];
-    final ob = obData is Map ? Map<String, dynamic>.from(obData) : <String, dynamic>{};
+    final ob =
+        obData is Map ? Map<String, dynamic>.from(obData) : <String, dynamic>{};
 
     double? currentWeight;
     try {
@@ -65,8 +76,10 @@ class SupabaseNutritionGoalsDatasource {
     merged['target_protein'] = goals['target_protein'];
     merged['target_carbs'] = goals['target_carbs'];
     merged['target_fat'] = goals['target_fat'];
-    if (goals.containsKey('goal_pace')) merged['goal_pace'] = goals['goal_pace'];
-    if (goals.containsKey('custom_calories')) merged['custom_calories'] = goals['custom_calories'];
+    if (goals.containsKey('goal_pace'))
+      merged['goal_pace'] = goals['goal_pace'];
+    if (goals.containsKey('custom_calories'))
+      merged['custom_calories'] = goals['custom_calories'];
 
     final Map<String, dynamic> update = {'onboarding_data': merged};
     if (goals.containsKey('target_weight_kg')) {

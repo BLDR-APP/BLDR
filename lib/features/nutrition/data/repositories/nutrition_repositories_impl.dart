@@ -76,8 +76,7 @@ class FoodCatalogRepositoryImpl implements FoodCatalogRepository {
       });
 
   @override
-  Future<Result<List<FoodItem>>> recentFoods(String userId,
-          {int limit = 15}) =>
+  Future<Result<List<FoodItem>>> recentFoods(String userId, {int limit = 15}) =>
       _guard(() async {
         final rows = await _firestore.recentMeals(userId);
 
@@ -148,11 +147,30 @@ class NutritionDiaryRepositoryImpl implements NutritionDiaryRepository {
       });
 
   @override
+  Future<Result<List<MealEntry>>> mealsForRange(DateTime start, DateTime end,
+          {String? userId}) =>
+      _guard(() async {
+        final uid = userId ?? _currentUserId();
+        if (uid == null) {
+          throw const AuthFailure('Usuário não autenticado.');
+        }
+        final keys = <String>[];
+        var d = DateTime(start.year, start.month, start.day);
+        final last = DateTime(end.year, end.month, end.day);
+        while (!d.isAfter(last)) {
+          keys.add(MealEntryModel.dateKey(d));
+          d = DateTime(d.year, d.month, d.day + 1);
+        }
+        final rows = await _firestore.mealsForDateKeys(uid, keys);
+        return rows.map((r) => MealEntryModel.fromMap(r)).toList();
+      });
+
+  @override
   Future<Result<DailyNutritionSummary>> dailySummary(DateTime date,
       {String? userId}) async {
     final meals = await mealsForDate(date, userId: userId);
-    return meals.map(
-        (entries) => DailyNutritionSummary.fromEntries(date, entries));
+    return meals
+        .map((entries) => DailyNutritionSummary.fromEntries(date, entries));
   }
 }
 
@@ -167,8 +185,7 @@ class NutritionXpRepositoryImpl implements NutritionXpRepository {
       _guard(() => _xp.addXp(userId, NutritionXpRepository.mealXp));
 
   @override
-  Future<Result<bool>> awardDailyBonusIfNeeded(
-          String userId, DateTime date) =>
+  Future<Result<bool>> awardDailyBonusIfNeeded(String userId, DateTime date) =>
       _guard(() async {
         if (await _firestore.dailyBonusExists(userId, date)) return false;
         await _xp.addXp(userId, NutritionXpRepository.dailyBonusXp,
@@ -187,7 +204,12 @@ class NutritionGoalsRepositoryImpl implements NutritionGoalsRepository {
   Future<Result<NutritionGoals>> getGoals(String userId) => _guard(() async {
         final onboardingData = await _datasource.getOnboardingData(userId);
         if (onboardingData == null) return NutritionGoals.defaults;
+        final liters = double.tryParse(
+            '${onboardingData['target_hydration_liters'] ?? ''}');
         return NutritionGoals(
+          waterMl: liters == null
+              ? NutritionGoals.defaults.waterMl
+              : (liters * 1000).round(),
           calories: (onboardingData['target_calories'] as num?)?.round() ??
               NutritionGoals.defaults.calories,
           protein: (onboardingData['target_protein'] as num?)?.round() ??
@@ -203,9 +225,12 @@ class NutritionGoalsRepositoryImpl implements NutritionGoalsRepository {
   Future<Result<UserGoals>> getFullGoals(String userId) => _guard(() async {
         final d = await _datasource.getFullGoals(userId);
         return UserGoals(
-          calories: (d['target_calories'] as num?)?.round() ?? UserGoals.defaults.calories,
-          protein: (d['target_protein'] as num?)?.round() ?? UserGoals.defaults.protein,
-          carbs: (d['target_carbs'] as num?)?.round() ?? UserGoals.defaults.carbs,
+          calories: (d['target_calories'] as num?)?.round() ??
+              UserGoals.defaults.calories,
+          protein: (d['target_protein'] as num?)?.round() ??
+              UserGoals.defaults.protein,
+          carbs:
+              (d['target_carbs'] as num?)?.round() ?? UserGoals.defaults.carbs,
           fat: (d['target_fat'] as num?)?.round() ?? UserGoals.defaults.fat,
           targetWeightKg: (d['target_weight_kg'] as num?)?.toDouble(),
           currentWeightKg: (d['current_weight_kg'] as num?)?.toDouble(),

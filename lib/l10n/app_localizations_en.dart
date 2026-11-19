@@ -6619,4 +6619,131 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get toast_back_online => 'Back online';
+
+  @override
+  String get nutri2_eyebrow => 'NUTRITION';
+
+  @override
+  String get nutri2_title => 'Your day';
+
+  @override
+  String nutri2_date_today(String date) {
+    return 'Today, $date';
+  }
+
+  @override
+  String nutri2_date_yesterday(String date) {
+    return 'Yesterday, $date';
+  }
+
+  @override
+  String get nutri2_pill_today => 'TODAY';
+
+  @override
+  String nutri2_kcal_goal(String goal) {
+    return 'of $goal kcal';
+  }
+
+  @override
+  String nutri2_macro_goal(String goal) {
+    return 'of ${goal}g';
+  }
+
+  @override
+  String get nutri2_protein => 'Protein';
+
+  @override
+  String get nutri2_carbs => 'Carbs';
+
+  @override
+  String get nutri2_fat => 'Fat';
+
+  @override
+  String get nutri2_iqd_title => 'DIET QUALITY INDEX • DQI';
+
+  @override
+  String get nutri2_iqd_very_good => 'VERY GOOD';
+
+  @override
+  String get nutri2_iqd_regular => 'FAIR';
+
+  @override
+  String get nutri2_iqd_poor => 'POOR';
+
+  @override
+  String nutri2_iqd_delta_up(int n) {
+    return '$n points above the weekly average';
+  }
+
+  @override
+  String nutri2_iqd_delta_down(int n) {
+    return '$n points below the weekly average';
+  }
+
+  @override
+  String get nutri2_iqd_delta_same => 'Same as the weekly average';
+
+  @override
+  String get nutri2_iqd_locked => 'DQI available in BLDR CLUB';
+
+  @override
+  String get nutri2_hydration => 'HYDRATION';
+
+  @override
+  String nutri2_water_goal(String liters) {
+    return 'of $liters L';
+  }
+
+  @override
+  String get nutri2_water_add => 'Add water';
+
+  @override
+  String get nutri2_meals_today => 'TODAY\'S MEALS';
+
+  @override
+  String get nutri2_meals_day => 'MEALS OF THE DAY';
+
+  @override
+  String get nutri2_edit_meals => 'Edit foods';
+
+  @override
+  String get nutri2_edit_done => 'Finish editing';
+
+  @override
+  String get nutri2_add_food => 'ADD FOOD';
+
+  @override
+  String get nutri2_add_food_a11y => 'Add food';
+
+  @override
+  String get nutri2_meal_empty => 'No food added';
+
+  @override
+  String get nutri2_macro_protein => 'PROTEIN';
+
+  @override
+  String get nutri2_macro_carbs => 'CARBS';
+
+  @override
+  String get nutri2_macro_fat => 'FAT';
+
+  @override
+  String nutri2_food_macros(String kcal, String p, String c, String f) {
+    return '$kcal kcal   P ${p}g   C ${c}g   F ${f}g';
+  }
+
+  @override
+  String get nutri2_edit_food => 'Edit food';
+
+  @override
+  String get nutri2_remove_food => 'Remove food';
+
+  @override
+  String get nutri2_date_sheet_title => 'Choose day';
+
+  @override
+  String get nutri2_today => 'Today';
+
+  @override
+  String get nutri2_yesterday => 'Yesterday';
 }

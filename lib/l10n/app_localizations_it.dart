@@ -6639,4 +6639,131 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get toast_back_online => 'Connessione ripristinata';
+
+  @override
+  String get nutri2_eyebrow => 'NUTRIZIONE';
+
+  @override
+  String get nutri2_title => 'La tua giornata';
+
+  @override
+  String nutri2_date_today(String date) {
+    return 'Oggi, $date';
+  }
+
+  @override
+  String nutri2_date_yesterday(String date) {
+    return 'Ieri, $date';
+  }
+
+  @override
+  String get nutri2_pill_today => 'OGGI';
+
+  @override
+  String nutri2_kcal_goal(String goal) {
+    return 'di $goal kcal';
+  }
+
+  @override
+  String nutri2_macro_goal(String goal) {
+    return 'di ${goal}g';
+  }
+
+  @override
+  String get nutri2_protein => 'Proteine';
+
+  @override
+  String get nutri2_carbs => 'Carboidrati';
+
+  @override
+  String get nutri2_fat => 'Grassi';
+
+  @override
+  String get nutri2_iqd_title => 'INDICE DI QUALITÀ DELLA DIETA • IQD';
+
+  @override
+  String get nutri2_iqd_very_good => 'MOLTO BUONO';
+
+  @override
+  String get nutri2_iqd_regular => 'DISCRETO';
+
+  @override
+  String get nutri2_iqd_poor => 'SCARSO';
+
+  @override
+  String nutri2_iqd_delta_up(int n) {
+    return '$n punti rispetto alla media settimanale';
+  }
+
+  @override
+  String nutri2_iqd_delta_down(int n) {
+    return '$n punti rispetto alla media settimanale';
+  }
+
+  @override
+  String get nutri2_iqd_delta_same => 'Uguale alla media settimanale';
+
+  @override
+  String get nutri2_iqd_locked => 'IQD disponibile nel BLDR CLUB';
+
+  @override
+  String get nutri2_hydration => 'IDRATAZIONE';
+
+  @override
+  String nutri2_water_goal(String liters) {
+    return 'di $liters L';
+  }
+
+  @override
+  String get nutri2_water_add => 'Aggiungi acqua';
+
+  @override
+  String get nutri2_meals_today => 'PASTI DI OGGI';
+
+  @override
+  String get nutri2_meals_day => 'PASTI DEL GIORNO';
+
+  @override
+  String get nutri2_edit_meals => 'Modifica alimenti';
+
+  @override
+  String get nutri2_edit_done => 'Termina modifica';
+
+  @override
+  String get nutri2_add_food => 'AGGIUNGI ALIMENTO';
+
+  @override
+  String get nutri2_add_food_a11y => 'Aggiungi alimento';
+
+  @override
+  String get nutri2_meal_empty => 'Nessun alimento aggiunto';
+
+  @override
+  String get nutri2_macro_protein => 'PROTEINE';
+
+  @override
+  String get nutri2_macro_carbs => 'CARBOIDRATI';
+
+  @override
+  String get nutri2_macro_fat => 'GRASSI';
+
+  @override
+  String nutri2_food_macros(String kcal, String p, String c, String f) {
+    return '$kcal kcal   P ${p}g   C ${c}g   G ${f}g';
+  }
+
+  @override
+  String get nutri2_edit_food => 'Modifica alimento';
+
+  @override
+  String get nutri2_remove_food => 'Rimuovi alimento';
+
+  @override
+  String get nutri2_date_sheet_title => 'Scegli giorno';
+
+  @override
+  String get nutri2_today => 'Oggi';
+
+  @override
+  String get nutri2_yesterday => 'Ieri';
 }

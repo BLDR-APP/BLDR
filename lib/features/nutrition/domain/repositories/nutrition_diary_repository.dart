@@ -16,6 +16,10 @@ abstract class NutritionDiaryRepository {
 
   Future<Result<List<MealEntry>>> mealsForDate(DateTime date, {String? userId});
 
+  /// Registros de [start] a [end] (dias inteiros, inclusive), numa consulta.
+  Future<Result<List<MealEntry>>> mealsForRange(DateTime start, DateTime end,
+      {String? userId});
+
   Future<Result<DailyNutritionSummary>> dailySummary(DateTime date,
       {String? userId});
 }

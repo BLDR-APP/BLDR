@@ -3,6 +3,7 @@ import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/daily_nutrition_summary.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/food_item.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/meal_entry.dart';
+import 'package:bldr_fitness/features/nutrition/domain/services/iqd_calculator.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/nutrition_goals.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/user_goals.dart';
 import 'package:bldr_fitness/features/nutrition/domain/repositories/food_catalog_repository.dart';
@@ -58,8 +59,7 @@ class GetNutritionGoals {
   final NutritionGoalsRepository _goals;
   const GetNutritionGoals(this._goals);
 
-  Future<Result<NutritionGoals>> call(String userId) =>
-      _goals.getGoals(userId);
+  Future<Result<NutritionGoals>> call(String userId) => _goals.getGoals(userId);
 }
 
 class GetUserGoals {
@@ -83,6 +83,76 @@ class GetMealsForDate {
 
   Future<Result<List<MealEntry>>> call(DateTime date, {String? userId}) =>
       _diary.mealsForDate(date, userId: userId);
+}
+
+class GetMealsForRange {
+  final NutritionDiaryRepository _diary;
+  const GetMealsForRange(this._diary);
+
+  Future<Result<List<MealEntry>>> call(DateTime start, DateTime end,
+          {String? userId}) =>
+      _diary.mealsForRange(start, end, userId: userId);
+}
+
+/// IQD do dia comparado com a média dos 7 dias anteriores que têm registro.
+class IqdWeeklyComparison {
+  final double score;
+  final IqdBand band;
+
+  /// Média dos dias anteriores com registro; `null` se não houver nenhum.
+  final double? weekAverage;
+  const IqdWeeklyComparison(
+      {required this.score, required this.band, this.weekAverage});
+
+  /// Diferença arredondada (dia − média); `null` sem dia anterior.
+  int? get delta => weekAverage == null ? null : (score - weekAverage!).round();
+}
+
+/// Uma consulta por intervalo (8 dias: os 7 anteriores + o dia), IQD por dia
+/// com [IqdCalculator] e média só dos dias anteriores que têm registro.
+class GetIqdWeeklyComparison {
+  final GetMealsForRange _range;
+  const GetIqdWeeklyComparison(this._range);
+
+  static String _key(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  static double scoreOf(List<MealEntry> entries) {
+    var fiber = 0.0, sodium = 0.0, sugar = 0.0;
+    for (final e in entries) {
+      fiber += e.macros.fiber;
+      sodium += e.macros.sodium;
+      sugar += e.macros.addedSugar;
+    }
+    return IqdCalculator.calculate(
+        fiberGrams: fiber, sodiumMg: sodium, addedSugarGrams: sugar);
+  }
+
+  Future<Result<IqdWeeklyComparison>> call(DateTime date,
+      {String? userId}) async {
+    final day = DateTime(date.year, date.month, date.day);
+    final start = DateTime(day.year, day.month, day.day - 7);
+    final result = await _range(start, day, userId: userId);
+    return result.map((entries) {
+      final byDay = <String, List<MealEntry>>{};
+      for (final e in entries) {
+        byDay.putIfAbsent(_key(e.date), () => []).add(e);
+      }
+      final score = scoreOf(byDay[_key(day)] ?? const []);
+      final previous = <double>[];
+      for (var i = 1; i <= 7; i++) {
+        final list = byDay[_key(DateTime(day.year, day.month, day.day - i))];
+        if (list != null && list.isNotEmpty) previous.add(scoreOf(list));
+      }
+      return IqdWeeklyComparison(
+        score: score,
+        band: IqdCalculator.bandOf(score),
+        weekAverage: previous.isEmpty
+            ? null
+            : previous.reduce((a, b) => a + b) / previous.length,
+      );
+    });
+  }
 }
 
 class GetDailySummary {

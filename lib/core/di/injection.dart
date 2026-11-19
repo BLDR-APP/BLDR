@@ -172,6 +172,10 @@ void setupInjection({Map<String, dynamic> config = const {}}) {
   getIt.registerFactory(() => GetRecentFoods(getIt<FoodCatalogRepository>()));
   getIt.registerFactory(
       () => GetMealsForDate(getIt<NutritionDiaryRepository>()));
+  getIt.registerLazySingleton<GetMealsForRange>(
+      () => GetMealsForRange(getIt<NutritionDiaryRepository>()));
+  getIt.registerLazySingleton<GetIqdWeeklyComparison>(
+      () => GetIqdWeeklyComparison(getIt<GetMealsForRange>()));
   getIt.registerFactory(
       () => GetDailySummary(getIt<NutritionDiaryRepository>()));
   getIt.registerFactory(

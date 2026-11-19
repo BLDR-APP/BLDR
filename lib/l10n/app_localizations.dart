@@ -11926,6 +11926,228 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Conexão restabelecida'**
   String get toast_back_online;
+
+  /// No description provided for @nutri2_eyebrow.
+  ///
+  /// In pt, this message translates to:
+  /// **'NUTRIÇÃO'**
+  String get nutri2_eyebrow;
+
+  /// No description provided for @nutri2_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Seu dia'**
+  String get nutri2_title;
+
+  /// No description provided for @nutri2_date_today.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hoje, {date}'**
+  String nutri2_date_today(String date);
+
+  /// No description provided for @nutri2_date_yesterday.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ontem, {date}'**
+  String nutri2_date_yesterday(String date);
+
+  /// No description provided for @nutri2_pill_today.
+  ///
+  /// In pt, this message translates to:
+  /// **'HOJE'**
+  String get nutri2_pill_today;
+
+  /// No description provided for @nutri2_kcal_goal.
+  ///
+  /// In pt, this message translates to:
+  /// **'de {goal} kcal'**
+  String nutri2_kcal_goal(String goal);
+
+  /// No description provided for @nutri2_macro_goal.
+  ///
+  /// In pt, this message translates to:
+  /// **'de {goal}g'**
+  String nutri2_macro_goal(String goal);
+
+  /// No description provided for @nutri2_protein.
+  ///
+  /// In pt, this message translates to:
+  /// **'Proteína'**
+  String get nutri2_protein;
+
+  /// No description provided for @nutri2_carbs.
+  ///
+  /// In pt, this message translates to:
+  /// **'Carboidratos'**
+  String get nutri2_carbs;
+
+  /// No description provided for @nutri2_fat.
+  ///
+  /// In pt, this message translates to:
+  /// **'Gorduras'**
+  String get nutri2_fat;
+
+  /// No description provided for @nutri2_iqd_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'ÍNDICE DE QUALIDADE DE DIETA • IQD'**
+  String get nutri2_iqd_title;
+
+  /// No description provided for @nutri2_iqd_very_good.
+  ///
+  /// In pt, this message translates to:
+  /// **'MUITO BOM'**
+  String get nutri2_iqd_very_good;
+
+  /// No description provided for @nutri2_iqd_regular.
+  ///
+  /// In pt, this message translates to:
+  /// **'REGULAR'**
+  String get nutri2_iqd_regular;
+
+  /// No description provided for @nutri2_iqd_poor.
+  ///
+  /// In pt, this message translates to:
+  /// **'RUIM'**
+  String get nutri2_iqd_poor;
+
+  /// No description provided for @nutri2_iqd_delta_up.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} pontos em relação à média da semana'**
+  String nutri2_iqd_delta_up(int n);
+
+  /// No description provided for @nutri2_iqd_delta_down.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} pontos em relação à média da semana'**
+  String nutri2_iqd_delta_down(int n);
+
+  /// No description provided for @nutri2_iqd_delta_same.
+  ///
+  /// In pt, this message translates to:
+  /// **'Igual à média da semana'**
+  String get nutri2_iqd_delta_same;
+
+  /// No description provided for @nutri2_iqd_locked.
+  ///
+  /// In pt, this message translates to:
+  /// **'IQD disponível no BLDR CLUB'**
+  String get nutri2_iqd_locked;
+
+  /// No description provided for @nutri2_hydration.
+  ///
+  /// In pt, this message translates to:
+  /// **'HIDRATAÇÃO'**
+  String get nutri2_hydration;
+
+  /// No description provided for @nutri2_water_goal.
+  ///
+  /// In pt, this message translates to:
+  /// **'de {liters} L'**
+  String nutri2_water_goal(String liters);
+
+  /// No description provided for @nutri2_water_add.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar água'**
+  String get nutri2_water_add;
+
+  /// No description provided for @nutri2_meals_today.
+  ///
+  /// In pt, this message translates to:
+  /// **'REFEIÇÕES DE HOJE'**
+  String get nutri2_meals_today;
+
+  /// No description provided for @nutri2_meals_day.
+  ///
+  /// In pt, this message translates to:
+  /// **'REFEIÇÕES DO DIA'**
+  String get nutri2_meals_day;
+
+  /// No description provided for @nutri2_edit_meals.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar alimentos'**
+  String get nutri2_edit_meals;
+
+  /// No description provided for @nutri2_edit_done.
+  ///
+  /// In pt, this message translates to:
+  /// **'Concluir edição'**
+  String get nutri2_edit_done;
+
+  /// No description provided for @nutri2_add_food.
+  ///
+  /// In pt, this message translates to:
+  /// **'ADICIONAR ALIMENTO'**
+  String get nutri2_add_food;
+
+  /// No description provided for @nutri2_add_food_a11y.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar alimento'**
+  String get nutri2_add_food_a11y;
+
+  /// No description provided for @nutri2_meal_empty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum alimento adicionado'**
+  String get nutri2_meal_empty;
+
+  /// No description provided for @nutri2_macro_protein.
+  ///
+  /// In pt, this message translates to:
+  /// **'PROTEÍNA'**
+  String get nutri2_macro_protein;
+
+  /// No description provided for @nutri2_macro_carbs.
+  ///
+  /// In pt, this message translates to:
+  /// **'CARBOIDRATOS'**
+  String get nutri2_macro_carbs;
+
+  /// No description provided for @nutri2_macro_fat.
+  ///
+  /// In pt, this message translates to:
+  /// **'GORDURAS'**
+  String get nutri2_macro_fat;
+
+  /// No description provided for @nutri2_food_macros.
+  ///
+  /// In pt, this message translates to:
+  /// **'{kcal} kcal   P {p}g   C {c}g   G {f}g'**
+  String nutri2_food_macros(String kcal, String p, String c, String f);
+
+  /// No description provided for @nutri2_edit_food.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar alimento'**
+  String get nutri2_edit_food;
+
+  /// No description provided for @nutri2_remove_food.
+  ///
+  /// In pt, this message translates to:
+  /// **'Remover alimento'**
+  String get nutri2_remove_food;
+
+  /// No description provided for @nutri2_date_sheet_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolher dia'**
+  String get nutri2_date_sheet_title;
+
+  /// No description provided for @nutri2_today.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hoje'**
+  String get nutri2_today;
+
+  /// No description provided for @nutri2_yesterday.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ontem'**
+  String get nutri2_yesterday;
 }
 
 class _AppLocalizationsDelegate

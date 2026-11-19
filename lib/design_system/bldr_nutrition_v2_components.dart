@@ -633,7 +633,8 @@ class BldrFoodRow extends StatelessWidget {
     final scale = MediaQuery.textScalerOf(context).scale(1);
     return LayoutBuilder(builder: (context, c) {
       // Abaixo de ~300 px (×textScaler) os macros descem para a 2ª linha.
-      final stacked = c.maxWidth < 300 * scale;
+      // Com as ações do modo de edição, sempre em duas linhas.
+      final stacked = actions != null || c.maxWidth < 300 * scale;
       final nameRow = Row(children: [
         Expanded(
           flex: 5,

@@ -89,6 +89,25 @@ class FirestoreNutritionDatasource {
     return _withIds(snapshot);
   }
 
+  /// Vários dias numa consulta: só filtros de igualdade (`user_id ==` e
+  /// `date in`), atendidos pelos índices simples — sem índice composto.
+  /// O `in` aceita até 30 valores; acima disso, divide em lotes.
+  Future<List<Map<String, dynamic>>> mealsForDateKeys(
+      String userId, List<String> dateKeys) async {
+    final out = <Map<String, dynamic>>[];
+    for (var i = 0; i < dateKeys.length; i += 30) {
+      final chunk = dateKeys.sublist(
+          i, i + 30 > dateKeys.length ? dateKeys.length : i + 30);
+      final snapshot = await _db
+          .collection('user_meals')
+          .where('user_id', isEqualTo: userId)
+          .where('date', whereIn: chunk)
+          .get();
+      out.addAll(_withIds(snapshot));
+    }
+    return out;
+  }
+
   // --- Trava do bônus diário ---
 
   Future<bool> dailyBonusExists(String userId, DateTime date) async {
