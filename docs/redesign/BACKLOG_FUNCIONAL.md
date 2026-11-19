@@ -790,3 +790,4 @@ Corridas já têm GPS. Mapa com rotas usa dado existente.
 | Configurações: abrir já rolada até a seção Integrações a partir do card "Conecte seu wearable" (hoje abre no topo, por decisão). | ⏳ |
 | Treino de hoje: mostrar/acessar os demais treinos pausados na Home (o card v2 mostra só o mais recente; os outros ficam na aba Treinos). | ⏳ |
 | XP semanal: `add_xp_to_user` passar a gravar também em `bldr_club.xp_events`, para viabilizar XP semanal (hoje só atualiza `club_ranking.xp_total`; a métrica "XP da semana" do hub de Treinos fica oculta até isso). | ⏳ |
+| Mockup e visual v2 do Tribunal, Histórico e sheet de check-in de squad. Esses fluxos não têm mockup no Figma e ficam no visual antigo, funcionando, até os frames serem criados. | Pendente (aguarda frames no Figma) |
