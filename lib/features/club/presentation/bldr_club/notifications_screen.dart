@@ -1,14 +1,23 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
+import 'package:intl/intl.dart';
+
 import 'package:bldr_fitness/core/di/injection.dart';
+import 'package:bldr_fitness/design_system/bldr_community_v2_components.dart';
+import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/features/auth/domain/usecases/auth_usecases.dart';
+import 'package:bldr_fitness/features/club/domain/entities/challenges.dart';
+import 'package:bldr_fitness/features/club/domain/entities/notification_category.dart';
 import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/main.dart' show appNavigatorKey;
 import 'package:bldr_fitness/services/push_notification_service.dart';
+import 'package:bldr_fitness/theme/bldr_tokens.dart';
 
+/// Central de notificações (Figma 121:1128): abas Todas/Social/Performance
+/// por `type`, grupos por dia e as mesmas ações inline da tela anterior.
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
 
@@ -17,10 +26,9 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  static const _gold = Color(0xFFD4AF37);
-
-  List<Map<String, dynamic>> _notifications = [];
-  bool _isLoading = true;
+  List<ClubNotification> _items = [];
+  bool _loading = true;
+  NotificationTab _tab = NotificationTab.all;
   Timer? _markReadTimer;
 
   String? get _myUserId => getIt<GetCurrentUser>()()?.id;
@@ -28,7 +36,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchNotifications();
+    _fetch();
     _markReadTimer = Timer(const Duration(seconds: 3), _markAllRead);
   }
 
@@ -38,486 +46,376 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     super.dispose();
   }
 
-  Future<void> _fetchNotifications() async {
+  Future<void> _fetch() async {
     if (_myUserId == null) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) setState(() => _loading = false);
       return;
     }
-    setState(() => _isLoading = true);
-    try {
-      final result = await getIt<GetClubNotifications>()(limit: 50);
-      final items = result.valueOrNull;
-      if (items == null) throw Exception(result.failureOrNull?.message);
-
-      if (mounted) {
-        setState(() {
-          _notifications = items
-              .map((n) => {
-                    'id': n.id,
-                    'title': n.title,
-                    'message': n.message,
-                    'type': n.type,
-                    'is_read': n.isRead,
-                    'created_at': n.createdAt?.toIso8601String(),
-                    'action_type': n.actionType,
-                    'action_data': n.actionData,
-                  })
-              .toList();
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      // Table may not exist yet — show empty state gracefully
-      debugPrint('[NOTIFICACOES] Erro: $e');
-      if (mounted) setState(() => _isLoading = false);
-    }
+    final result = await getIt<GetClubNotifications>()(limit: 50);
+    if (!mounted) return;
+    setState(() {
+      // Falha mostra o estado vazio, como antes.
+      _items = result.valueOrNull ?? const [];
+      _loading = false;
+    });
   }
+
+  ClubNotification _asRead(ClubNotification n) => ClubNotification(
+        id: n.id,
+        title: n.title,
+        message: n.message,
+        type: n.type,
+        isRead: true,
+        createdAt: n.createdAt,
+        actionType: n.actionType,
+        actionData: n.actionData,
+      );
 
   Future<void> _markAllRead() async {
     if (_myUserId == null) return;
-    try {
-      final result = await getIt<MarkAllNotificationsRead>()();
-      if (result.isFailure) return;
-
-      if (mounted) {
-        setState(() {
-          _notifications =
-              _notifications.map((n) => {...n, 'is_read': true}).toList();
-        });
-      }
-    } catch (_) {}
+    final result = await getIt<MarkAllNotificationsRead>()();
+    if (result.isFailure || !mounted) return;
+    setState(() => _items = _items.map(_asRead).toList());
   }
 
   Future<void> _markOneRead(String id) async {
-    try {
-      final result = await getIt<MarkNotificationRead>()(id);
-      if (result.isFailure) return;
-
-      if (mounted) {
-        setState(() {
-          _notifications = _notifications.map((n) {
-            if (n['id'].toString() == id) return {...n, 'is_read': true};
-            return n;
-          }).toList();
-        });
-      }
-    } catch (_) {}
+    final result = await getIt<MarkNotificationRead>()(id);
+    if (result.isFailure || !mounted) return;
+    setState(
+        () => _items = [for (final n in _items) n.id == id ? _asRead(n) : n]);
   }
 
-  String _timeAgo(String dateString) {
-    try {
-      final date = DateTime.parse(dateString).toLocal();
-      final diff = DateTime.now().difference(date);
-      if (diff.inMinutes < 1) return 'agora';
-      if (diff.inMinutes < 60) return '${diff.inMinutes}m atrás';
-      if (diff.inHours < 24) return '${diff.inHours}h atrás';
-      if (diff.inDays == 1) return 'ontem';
-      return '${diff.inDays}d atrás';
-    } catch (_) {
-      return '';
-    }
-  }
-
-  String _groupLabel(String dateString) {
-    try {
-      final date = DateTime.parse(dateString).toLocal();
-      final now = DateTime.now();
-      final diff = now.difference(date);
-      if (diff.inMinutes < 60) return 'Agora';
-      if (diff.inHours < 24) return 'Hoje';
-      if (diff.inDays == 1) return 'Ontem';
-      if (diff.inDays <= 7) return 'Esta semana';
-      return 'Mais antigo';
-    } catch (_) {
-      return 'Geral';
-    }
-  }
-
-  _NotifConfig _configFor(Map<String, dynamic> n) {
-    final type = n['type'] as String? ?? 'info';
-    final title = n['title'] as String? ?? '';
-    final t = title.toLowerCase();
-
-    if (type == 'ranking' || t.contains('ranking')) {
-      return _NotifConfig(
-        icon: Icons.trending_up,
-        iconColor: const Color(0xFF4CAF50),
-        bgColor: const Color(0xFF0A2614),
-        actions: [AppLocalizations.of(context).notifications_see_ranking],
-      );
-    }
-    if (type == 'challenge' || t.contains('desafio')) {
-      return _NotifConfig(
-        icon: Icons.emoji_events,
-        iconColor: const Color(0xFF4CAF50),
-        bgColor: const Color(0xFF0A2614),
-        actions: [AppLocalizations.of(context).notifications_see_challenge],
-      );
-    }
-    if (type == 'reaction' || t.contains('reagiu') || t.contains('moral')) {
-      return _NotifConfig(
-        icon: Icons.favorite,
-        iconColor: const Color(0xFF9C27B0),
-        bgColor: const Color(0xFF1A0A2A),
-      );
-    }
-    if (type == 'level_up' || t.contains('level up') || t.contains('nível')) {
-      return _NotifConfig(
-        icon: Icons.rocket_launch,
-        iconColor: _gold,
-        bgColor: const Color(0xFF1A1400),
-      );
-    }
-    if (type == 'success' || t.contains('vitória') || t.contains('venceu')) {
-      return _NotifConfig(
-        icon: Icons.emoji_events,
-        iconColor: _gold,
-        bgColor: const Color(0xFF1A1400),
-      );
-    }
-    if (type == 'streak' || t.contains('streak') || t.contains('sequência')) {
-      return _NotifConfig(
-        icon: Icons.local_fire_department,
-        iconColor: Colors.redAccent,
-        bgColor: const Color(0xFF2A0A0A),
-      );
-    }
-    if (type == 'wearable' || t.contains('treino detectado')) {
-      return const _NotifConfig(
-        icon: Icons.watch_outlined,
-        iconColor: Color(0xFF0093E7),
-        bgColor: Color(0xFF071D29),
-        actions: ['Confirmar treino'],
-      );
-    }
-    if (t.contains('bem-vindo') || t.contains('novo membro')) {
-      return _NotifConfig(
-        icon: Icons.group_add,
-        iconColor: const Color(0xFF4CAF50),
-        bgColor: const Color(0xFF0A2614),
-        actions: const ['👊 Dar boas-vindas'],
-      );
-    }
-    // Default / info
-    return _NotifConfig(
-      icon: Icons.notifications,
-      iconColor: Colors.white54,
-      bgColor: const Color(0xFF1A1A1A),
+  void _runAction(ClubNotification n) {
+    _markOneRead(n.id);
+    final raw = n.actionData;
+    NotificationRouter.navigate(
+      n.actionType ?? n.type,
+      raw == null ? <String, dynamic>{} : Map<String, dynamic>.from(raw),
+      navigatorKey: appNavigatorKey,
     );
   }
 
-  // Group notifications by time bucket
-  Map<String, List<Map<String, dynamic>>> _grouped() {
-    final Map<String, List<Map<String, dynamic>>> result = {};
-    for (final n in _notifications) {
-      final group = _groupLabel(n['created_at'] ?? '');
-      result.putIfAbsent(group, () => []).add(n);
-    }
-    const order = [
-      'Agora',
-      'Hoje',
-      'Ontem',
-      'Esta semana',
-      'Mais antigo',
-      'Geral'
-    ];
-    final sorted = Map.fromEntries(
-        order.where(result.containsKey).map((k) => MapEntry(k, result[k]!)));
-    return sorted;
+  String? _actionLabel(AppLocalizations l10n, NotificationKind kind) =>
+      switch (kind) {
+        NotificationKind.ranking => l10n.notifications_see_ranking,
+        NotificationKind.challenge => l10n.notifications_see_challenge,
+        NotificationKind.wearable => l10n.notif_confirm_workout,
+        NotificationKind.welcome => l10n.notif_welcome,
+        _ => null,
+      };
+
+  IconData _icon(NotificationKind kind) => switch (kind) {
+        NotificationKind.ranking => TablerIcons.trending_up,
+        NotificationKind.challenge => TablerIcons.target_arrow,
+        NotificationKind.reaction => TablerIcons.heart,
+        NotificationKind.comment => TablerIcons.message_circle,
+        NotificationKind.follow => TablerIcons.user_plus,
+        NotificationKind.welcome => TablerIcons.users_plus,
+        NotificationKind.levelUp => TablerIcons.rocket,
+        NotificationKind.success => TablerIcons.trophy,
+        NotificationKind.streak => TablerIcons.flame,
+        NotificationKind.wearable => TablerIcons.device_watch,
+        NotificationKind.info => TablerIcons.bell,
+      };
+
+  String _when(AppLocalizations l10n, DateTime created, DateTime now) {
+    final locale = l10n.localeName;
+    return switch (NotificationRules.group(created, now)) {
+      NotificationGroup.today => () {
+          final d = now.difference(created);
+          if (d.inMinutes < 1) return l10n.comm_time_now;
+          if (d.inHours < 1) return l10n.comm_time_min(d.inMinutes);
+          return l10n.comm_time_hour(d.inHours);
+        }(),
+      NotificationGroup.yesterday =>
+        l10n.notif_yesterday_at(DateFormat.Hm(locale).format(created)),
+      NotificationGroup.thisWeek => DateFormat.EEEE(locale).format(created),
+      NotificationGroup.older => DateFormat('d MMM', locale).format(created),
+    };
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          _buildBg(),
-          SafeArea(
-            child: Column(
-              children: [
-                _buildHeader(),
-                if (_isLoading)
-                  const Expanded(
-                      child: Center(
-                          child: CircularProgressIndicator(color: _gold)))
-                else if (_notifications.isEmpty)
-                  _buildEmptyState()
-                else
-                  Expanded(child: _buildList()),
-              ],
-            ),
+    final l10n = AppLocalizations.of(context);
+    return BldrBackground(
+      v2: true,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _header(l10n),
+              const SizedBox(height: 18),
+              _tabs(l10n),
+              Expanded(child: _body(l10n)),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildBg() {
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: Stack(
+  Widget _header(AppLocalizations l10n) => Padding(
+        padding: const EdgeInsets.fromLTRB(4, 8, BldrCommunityV2.pageX, 0),
+        child: Row(
           children: [
-            Positioned(
-              top: -120,
-              left: 0,
-              right: 0,
-              child: LayoutBuilder(builder: (context, _) {
-                final w = MediaQuery.of(context).size.width * 1.6;
-                final c = _gold.withOpacity(0.18);
-                return Center(
-                  child: Container(
-                    width: w,
-                    height: w,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(24),
-                      gradient: RadialGradient(
-                          colors: [c, c.withOpacity(0)], radius: 0.75),
+            BldrCommunityBackButton(onTap: () => Navigator.maybePop(context)),
+            // Título reduz junto com a ação em telas estreitas, sem cortar.
+            Expanded(
+              flex: 3,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(l10n.notifications_title,
+                    maxLines: 1, style: BldrRankingTextV2.heading),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Flexible(
+              flex: 2,
+              child: Semantics(
+                button: true,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: _markAllRead,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(l10n.notif_mark_all,
+                          maxLines: 1, style: BldrNotificationTextV2.markAll),
                     ),
                   ),
-                );
-              }),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildHeader() {
-    final unreadCount =
-        _notifications.where((n) => n['is_read'] != true).length;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
-          ),
-          Expanded(
-            child: Row(
-              children: [
-                Text(AppLocalizations.of(context).notifications_title,
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18)),
-                if (unreadCount > 0) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                    decoration: BoxDecoration(
-                        color: _gold, borderRadius: BorderRadius.circular(10)),
-                    child: Text('$unreadCount',
-                        style: const TextStyle(
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 11)),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          TextButton(
-            onPressed: _markAllRead,
-            child: Text(AppLocalizations.of(context).notifications_mark_read,
-                style: TextStyle(color: _gold, fontSize: 12)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Expanded(
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.notifications_none, color: Colors.white24, size: 48),
-            const SizedBox(height: 16),
-            Text(AppLocalizations.of(context).notifications_empty,
-                style: TextStyle(color: Colors.white54, fontSize: 16)),
-            const SizedBox(height: 8),
-            Text(AppLocalizations.of(context).notifications_up_to_date,
-                style: TextStyle(color: Colors.white24, fontSize: 12)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildList() {
-    final grouped = _grouped();
-
-    return RefreshIndicator(
-      onRefresh: _fetchNotifications,
-      color: _gold,
-      child: ListView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        children: [
-          for (final entry in grouped.entries) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Text(entry.key,
-                  style: TextStyle(
-                      color: Colors.grey[500],
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.2)),
-            ),
-            for (final n in entry.value) _buildNotifCard(n),
-          ],
-          const SizedBox(height: 32),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNotifCard(Map<String, dynamic> n) {
-    final id = n['id'].toString();
-    final isRead = n['is_read'] == true;
-    final title = n['title'] as String? ?? '';
-    final message = n['message'] as String? ?? '';
-    final createdAt = n['created_at'] as String? ?? '';
-    final config = _configFor(n);
-
-    return GestureDetector(
-      onTap: () => _markOneRead(id),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: isRead ? const Color(0xFF111111) : const Color(0xFF1A1A1A),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isRead
-                ? Colors.white.withOpacity(0.05)
-                : _gold.withOpacity(0.25),
-          ),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: config.bgColor,
-                borderRadius: BorderRadius.circular(10),
+                ),
               ),
-              child: Icon(config.icon, color: config.iconColor, size: 18),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(title,
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight:
-                                    isRead ? FontWeight.w500 : FontWeight.bold,
-                                fontSize: 13)),
-                      ),
-                      if (!isRead)
-                        Container(
-                          width: 7,
-                          height: 7,
-                          decoration: const BoxDecoration(
-                              color: _gold, shape: BoxShape.circle),
+          ],
+        ),
+      );
+
+  Widget _tabs(AppLocalizations l10n) {
+    final labels = {
+      NotificationTab.all: l10n.notif_tab_all,
+      NotificationTab.social: l10n.notif_tab_social,
+      NotificationTab.performance: l10n.notif_tab_perf,
+    };
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: BldrCommunityV2.pageX),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final e in labels.entries)
+                Semantics(
+                  button: true,
+                  selected: _tab == e.key,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => setState(() => _tab = e.key),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minWidth: 92),
+                      child: IntrinsicWidth(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 8, horizontal: 14),
+                              child: Text(e.value,
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  style: _tab == e.key
+                                      ? BldrNotificationTextV2.tabOn
+                                      : BldrNotificationTextV2.tabOff),
+                            ),
+                            Container(
+                              height: 2,
+                              color: _tab == e.key
+                                  ? BldrCommunityColorsV2.gold
+                                  : Colors.transparent,
+                            ),
+                          ],
                         ),
-                    ],
+                      ),
+                    ),
                   ),
-                  if (message.isNotEmpty) ...[
-                    const SizedBox(height: 3),
-                    Text(message,
-                        style: TextStyle(color: Colors.grey[400], fontSize: 12),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _body(AppLocalizations l10n) {
+    if (_loading) {
+      return const Center(
+        child: CircularProgressIndicator(
+            color: BldrCommunityColorsV2.gold, strokeWidth: 2),
+      );
+    }
+    final now = DateTime.now();
+    final visible = _items
+        .where((n) => NotificationRules.inTab(
+            NotificationRules.kind(n.type, n.title), _tab))
+        .toList();
+    final groups = <NotificationGroup, List<ClubNotification>>{};
+    for (final n in visible) {
+      final g = NotificationRules.group(n.createdAt?.toLocal() ?? now, now);
+      (groups[g] ??= []).add(n);
+    }
+    final labels = {
+      NotificationGroup.today: l10n.notif_today,
+      NotificationGroup.yesterday: l10n.notif_yesterday,
+      NotificationGroup.thisWeek: l10n.notif_week,
+      NotificationGroup.older: l10n.notif_older,
+    };
+    return RefreshIndicator(
+      color: BldrCommunityColorsV2.gold,
+      backgroundColor: BldrCommunityColorsV2.surface,
+      onRefresh: _fetch,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(
+            BldrCommunityV2.pageX, 12, BldrCommunityV2.pageX, 48),
+        children: [
+          if (visible.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 64),
+              child: Text(
+                _items.isEmpty
+                    ? '${l10n.notifications_empty}\n${l10n.notifications_up_to_date}'
+                    : l10n.notif_empty_tab,
+                textAlign: TextAlign.center,
+                style: BldrRankingTextV2.subtitle,
+              ),
+            ),
+          for (final g in NotificationGroup.values)
+            if (groups[g] case final list?) ...[
+              Padding(
+                padding: const EdgeInsets.only(top: 12, bottom: 2),
+                child: Text(labels[g]!, style: BldrNotificationTextV2.group),
+              ),
+              for (final n in list) _tile(l10n, n, now),
+            ],
+        ],
+      ),
+    );
+  }
+
+  Widget _tile(AppLocalizations l10n, ClubNotification n, DateTime now) {
+    final kind = NotificationRules.kind(n.type, n.title);
+    final action = _actionLabel(l10n, kind);
+    final message = n.message.trim();
+    final created = n.createdAt?.toLocal();
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => _markOneRead(n.id),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: const BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: BldrNotificationColorsV2.divider),
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: BldrCommunityColorsV2.avatarBg,
+                  border: Border.all(color: BldrCommunityColorsV2.gold),
+                ),
+                child: Icon(_icon(kind),
+                    size: 17, color: BldrCommunityColorsV2.gold),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(n.title,
                         maxLines: 2,
-                        overflow: TextOverflow.ellipsis),
-                  ],
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Text(_timeAgo(createdAt),
-                          style: const TextStyle(
-                              color: Colors.white24, fontSize: 10)),
-                      const Spacer(),
-                      ...config.actions.map((action) => Padding(
+                        overflow: TextOverflow.ellipsis,
+                        style: n.isRead
+                            ? BldrNotificationTextV2.title
+                            : BldrNotificationTextV2.titleUnread),
+                    if (message.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(message,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: BldrNotificationTextV2.meta),
+                    ],
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            created == null ? '' : _when(l10n, created, now),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: BldrNotificationTextV2.meta,
+                          ),
+                        ),
+                        if (action != null)
+                          Padding(
                             padding: const EdgeInsets.only(left: 8),
-                            child: GestureDetector(
-                              onTap: () {
-                                _markOneRead(id);
-                                final type =
-                                    (n['action_type'] ?? n['type']) as String?;
-                                final rawData = n['action_data'];
-                                final Map<String, dynamic> parsed =
-                                    rawData is String && rawData.isNotEmpty
-                                        ? (jsonDecode(rawData)
-                                            as Map<String, dynamic>)
-                                        : rawData is Map
-                                            ? Map<String, dynamic>.from(rawData)
-                                            : {};
-                                NotificationRouter.navigate(
-                                  type,
-                                  parsed,
-                                  navigatorKey: appNavigatorKey,
-                                );
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: action.startsWith('👊')
-                                      ? const Color(0xFF4CAF50)
-                                          .withOpacity(0.15)
-                                      : _gold.withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(
-                                    color: action.startsWith('👊')
-                                        ? const Color(0xFF4CAF50)
-                                            .withOpacity(0.4)
-                                        : _gold.withOpacity(0.4),
+                            child: Semantics(
+                              button: true,
+                              child: GestureDetector(
+                                behavior: HitTestBehavior.opaque,
+                                onTap: () => _runAction(n),
+                                child: Container(
+                                  constraints: const BoxConstraints(
+                                      minHeight: 28, minWidth: 88),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 5),
+                                  decoration: BoxDecoration(
+                                    color: BldrNotificationColorsV2.actionBg,
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(
+                                        color: BldrNotificationColorsV2
+                                            .actionBorder),
                                   ),
+                                  child: Text(action,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 1,
+                                      style: BldrNotificationTextV2.action),
                                 ),
-                                child: Text(action,
-                                    style: TextStyle(
-                                        color: action.startsWith('👊')
-                                            ? const Color(0xFF4CAF50)
-                                            : _gold,
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold)),
                               ),
                             ),
-                          )),
-                    ],
-                  ),
-                ],
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+              if (!n.isRead)
+                Padding(
+                  padding: const EdgeInsets.only(left: 8, top: 4),
+                  child: Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                        color: BldrCommunityColorsV2.gold,
+                        shape: BoxShape.circle),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
-}
-
-class _NotifConfig {
-  final IconData icon;
-  final Color iconColor;
-  final Color bgColor;
-  final List<String> actions;
-
-  const _NotifConfig({
-    required this.icon,
-    required this.iconColor,
-    required this.bgColor,
-    this.actions = const [],
-  });
 }

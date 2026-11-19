@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bldr_fitness/design_system/bldr_challenge_v2_components.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -356,7 +357,7 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
             onTap: () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => _PrivatePostsScreen(repository: _repo),
+                builder: (_) => CommunityPrivatePostsScreen(repository: _repo),
               ),
             ),
           ),
@@ -595,16 +596,16 @@ class _FeedMessage extends StatelessWidget {
 
 // ── Posts privados (tela atual; 121:827 fora do escopo — D12) ────────────────
 
-class _PrivatePostsScreen extends StatefulWidget {
+class CommunityPrivatePostsScreen extends StatefulWidget {
   final CommunityFeedRepository repository;
 
-  const _PrivatePostsScreen({required this.repository});
+  const CommunityPrivatePostsScreen({required this.repository});
 
   @override
-  State<_PrivatePostsScreen> createState() => _PrivatePostsScreenState();
+  State<CommunityPrivatePostsScreen> createState() => CommunityPrivatePostsScreenState();
 }
 
-class _PrivatePostsScreenState extends State<_PrivatePostsScreen> {
+class CommunityPrivatePostsScreenState extends State<CommunityPrivatePostsScreen> {
   List<CommunityPost> _posts = [];
   bool _loading = true;
   Failure? _error;
@@ -634,49 +635,118 @@ class _PrivatePostsScreenState extends State<_PrivatePostsScreen> {
     );
   }
 
+  void _replace(CommunityPost p) => setState(
+      () => _posts = [for (final item in _posts) item.id == p.id ? p : item]);
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final Widget body;
+    if (_loading) {
+      body = const Center(
+        child: CircularProgressIndicator(
+            color: BldrCommunityColorsV2.gold, strokeWidth: 2),
+      );
+    } else if (_error != null) {
+      body = Center(
+        child: Padding(
+          padding: const EdgeInsets.all(BldrCommunityV2.pageX),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(_error!.message,
+                  textAlign: TextAlign.center,
+                  style: BldrRankingTextV2.subtitle),
+              const SizedBox(height: 16),
+              BldrChallengeCta(label: l10n.chal_retry, onTap: _load),
+            ],
+          ),
+        ),
+      );
+    } else {
+      body = RefreshIndicator(
+        color: BldrCommunityColorsV2.gold,
+        backgroundColor: BldrCommunityColorsV2.surface,
+        onRefresh: _load,
+        child: ListView(
+          padding: const EdgeInsets.only(bottom: 48),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  BldrCommunityV2.pageX, 20, BldrCommunityV2.pageX, 4),
+              child:
+                  Text(l10n.priv_recent, style: BldrNotificationTextV2.group),
+            ),
+            if (_posts.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: BldrCommunityV2.pageX, vertical: 32),
+                child: Text(l10n.priv_empty,
+                    textAlign: TextAlign.center,
+                    style: BldrRankingTextV2.subtitle),
+              ),
+            for (final post in _posts)
+              CommunityPostTileV2(
+                key: ValueKey(post.id),
+                post: post,
+                onUpdated: _replace,
+                onDeleted: (_) => _load(),
+                onAuthorBlocked: (_) => _load(),
+                onFollowChanged: (_, __) {},
+              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                  BldrCommunityV2.pageX, 28, BldrCommunityV2.pageX, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.priv_about, style: BldrNotificationTextV2.group),
+                  const SizedBox(height: 8),
+                  Text(l10n.priv_about_body,
+                      style: BldrNotificationTextV2.subtitle),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    // Privado continua "Só eu" (D12): sem abas Recebidos/Enviados.
     return BldrBackground(
+      v2: true,
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          title: Text('Posts privados', style: BldrText.screenTitle),
-        ),
-        body: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : _error != null
-                ? Center(
-                    child: TextButton(
-                      onPressed: _load,
-                      child: Text('${_error!.message}\nTentar novamente'),
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding:
+                    const EdgeInsets.fromLTRB(4, 8, BldrCommunityV2.pageX, 0),
+                child: Row(
+                  children: [
+                    BldrCommunityBackButton(
+                        onTap: () => Navigator.maybePop(context)),
+                    Expanded(
+                      child: Text(l10n.priv_title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: BldrChallengeTextV2.heading),
                     ),
-                  )
-                : _posts.isEmpty
-                    ? Center(
-                        child: Text(
-                          'Você ainda não publicou posts privados.',
-                          style: BldrText.description,
-                        ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _load,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.only(top: 16),
-                          itemCount: _posts.length,
-                          itemBuilder: (_, index) => CommunityPostTileV2(
-                            key: ValueKey(_posts[index].id),
-                            post: _posts[index],
-                            onUpdated: (p) => setState(() => _posts = [
-                                  for (final item in _posts)
-                                    item.id == p.id ? p : item
-                                ]),
-                            onDeleted: (_) => _load(),
-                            onAuthorBlocked: (_) => _load(),
-                            onFollowChanged: (_, __) {},
-                          ),
-                        ),
-                      ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: BldrCommunityV2.pageX),
+                child: Text(l10n.priv_subtitle,
+                    style: BldrNotificationTextV2.subtitle),
+              ),
+              Expanded(child: body),
+            ],
+          ),
+        ),
       ),
     );
   }

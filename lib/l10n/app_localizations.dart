@@ -11752,6 +11752,114 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Não foi possível carregar o ranking.'**
   String get rank_error;
+
+  /// No description provided for @notif_mark_all.
+  ///
+  /// In pt, this message translates to:
+  /// **'Marcar como lidas'**
+  String get notif_mark_all;
+
+  /// No description provided for @notif_tab_all.
+  ///
+  /// In pt, this message translates to:
+  /// **'TODAS'**
+  String get notif_tab_all;
+
+  /// No description provided for @notif_tab_social.
+  ///
+  /// In pt, this message translates to:
+  /// **'SOCIAL'**
+  String get notif_tab_social;
+
+  /// No description provided for @notif_tab_perf.
+  ///
+  /// In pt, this message translates to:
+  /// **'PERFORMANCE'**
+  String get notif_tab_perf;
+
+  /// No description provided for @notif_today.
+  ///
+  /// In pt, this message translates to:
+  /// **'HOJE'**
+  String get notif_today;
+
+  /// No description provided for @notif_yesterday.
+  ///
+  /// In pt, this message translates to:
+  /// **'ONTEM'**
+  String get notif_yesterday;
+
+  /// No description provided for @notif_week.
+  ///
+  /// In pt, this message translates to:
+  /// **'ESTA SEMANA'**
+  String get notif_week;
+
+  /// No description provided for @notif_older.
+  ///
+  /// In pt, this message translates to:
+  /// **'ANTERIORES'**
+  String get notif_older;
+
+  /// No description provided for @notif_yesterday_at.
+  ///
+  /// In pt, this message translates to:
+  /// **'ontem, {a}'**
+  String notif_yesterday_at(String a);
+
+  /// No description provided for @notif_empty_tab.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nada por aqui nesta aba.'**
+  String get notif_empty_tab;
+
+  /// No description provided for @notif_confirm_workout.
+  ///
+  /// In pt, this message translates to:
+  /// **'Confirmar treino'**
+  String get notif_confirm_workout;
+
+  /// No description provided for @notif_welcome.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dar boas-vindas'**
+  String get notif_welcome;
+
+  /// No description provided for @priv_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Posts privados'**
+  String get priv_title;
+
+  /// No description provided for @priv_subtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Visíveis somente para você'**
+  String get priv_subtitle;
+
+  /// No description provided for @priv_recent.
+  ///
+  /// In pt, this message translates to:
+  /// **'RECENTES'**
+  String get priv_recent;
+
+  /// No description provided for @priv_about.
+  ///
+  /// In pt, this message translates to:
+  /// **'SOBRE POSTS PRIVADOS'**
+  String get priv_about;
+
+  /// No description provided for @priv_about_body.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolha \"Só eu\" ao criar um post para guardá-lo aqui, longe do feed.'**
+  String get priv_about_body;
+
+  /// No description provided for @priv_empty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você ainda não publicou posts privados.'**
+  String get priv_empty;
 }
 
 class _AppLocalizationsDelegate

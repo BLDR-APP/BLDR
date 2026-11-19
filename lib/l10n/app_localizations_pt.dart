@@ -6564,4 +6564,61 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get rank_error => 'Não foi possível carregar o ranking.';
+
+  @override
+  String get notif_mark_all => 'Marcar como lidas';
+
+  @override
+  String get notif_tab_all => 'TODAS';
+
+  @override
+  String get notif_tab_social => 'SOCIAL';
+
+  @override
+  String get notif_tab_perf => 'PERFORMANCE';
+
+  @override
+  String get notif_today => 'HOJE';
+
+  @override
+  String get notif_yesterday => 'ONTEM';
+
+  @override
+  String get notif_week => 'ESTA SEMANA';
+
+  @override
+  String get notif_older => 'ANTERIORES';
+
+  @override
+  String notif_yesterday_at(String a) {
+    return 'ontem, $a';
+  }
+
+  @override
+  String get notif_empty_tab => 'Nada por aqui nesta aba.';
+
+  @override
+  String get notif_confirm_workout => 'Confirmar treino';
+
+  @override
+  String get notif_welcome => 'Dar boas-vindas';
+
+  @override
+  String get priv_title => 'Posts privados';
+
+  @override
+  String get priv_subtitle => 'Visíveis somente para você';
+
+  @override
+  String get priv_recent => 'RECENTES';
+
+  @override
+  String get priv_about => 'SOBRE POSTS PRIVADOS';
+
+  @override
+  String get priv_about_body =>
+      'Escolha \"Só eu\" ao criar um post para guardá-lo aqui, longe do feed.';
+
+  @override
+  String get priv_empty => 'Você ainda não publicou posts privados.';
 }

@@ -6527,4 +6527,61 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get rank_error => 'Couldn\'t load the ranking.';
+
+  @override
+  String get notif_mark_all => 'Mark as read';
+
+  @override
+  String get notif_tab_all => 'ALL';
+
+  @override
+  String get notif_tab_social => 'SOCIAL';
+
+  @override
+  String get notif_tab_perf => 'PERFORMANCE';
+
+  @override
+  String get notif_today => 'TODAY';
+
+  @override
+  String get notif_yesterday => 'YESTERDAY';
+
+  @override
+  String get notif_week => 'THIS WEEK';
+
+  @override
+  String get notif_older => 'EARLIER';
+
+  @override
+  String notif_yesterday_at(String a) {
+    return 'yesterday, $a';
+  }
+
+  @override
+  String get notif_empty_tab => 'Nothing here in this tab.';
+
+  @override
+  String get notif_confirm_workout => 'Confirm workout';
+
+  @override
+  String get notif_welcome => 'Say welcome';
+
+  @override
+  String get priv_title => 'Private posts';
+
+  @override
+  String get priv_subtitle => 'Visible only to you';
+
+  @override
+  String get priv_recent => 'RECENT';
+
+  @override
+  String get priv_about => 'ABOUT PRIVATE POSTS';
+
+  @override
+  String get priv_about_body =>
+      'Choose \"Only me\" when creating a post to keep it here, away from the feed.';
+
+  @override
+  String get priv_empty => 'You haven\'t published private posts yet.';
 }

@@ -6546,4 +6546,61 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get rank_error => 'Impossibile caricare la classifica.';
+
+  @override
+  String get notif_mark_all => 'Segna come lette';
+
+  @override
+  String get notif_tab_all => 'TUTTE';
+
+  @override
+  String get notif_tab_social => 'SOCIAL';
+
+  @override
+  String get notif_tab_perf => 'PERFORMANCE';
+
+  @override
+  String get notif_today => 'OGGI';
+
+  @override
+  String get notif_yesterday => 'IERI';
+
+  @override
+  String get notif_week => 'QUESTA SETTIMANA';
+
+  @override
+  String get notif_older => 'PRECEDENTI';
+
+  @override
+  String notif_yesterday_at(String a) {
+    return 'ieri, $a';
+  }
+
+  @override
+  String get notif_empty_tab => 'Niente in questa scheda.';
+
+  @override
+  String get notif_confirm_workout => 'Conferma allenamento';
+
+  @override
+  String get notif_welcome => 'Dai il benvenuto';
+
+  @override
+  String get priv_title => 'Post privati';
+
+  @override
+  String get priv_subtitle => 'Visibili solo a te';
+
+  @override
+  String get priv_recent => 'RECENTI';
+
+  @override
+  String get priv_about => 'INFO SUI POST PRIVATI';
+
+  @override
+  String get priv_about_body =>
+      'Scegli \"Solo io\" quando crei un post per tenerlo qui, fuori dal feed.';
+
+  @override
+  String get priv_empty => 'Non hai ancora pubblicato post privati.';
 }

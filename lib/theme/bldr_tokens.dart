@@ -1345,6 +1345,32 @@ abstract final class BldrRankingTextV2 {
   static final lock = _s(BldrTextV2.s11, _sb, _c); // 11
 }
 
+/// Notificações (121:1128) e posts privados (121:827).
+abstract final class BldrNotificationColorsV2 {
+  static const divider = Color(0xFF212121);
+  static const actionBg = Color(0xFF120F06);
+  static const actionBorder = Color(0x8CE0B830); // rgba(224,184,48,.55)
+}
+
+abstract final class BldrNotificationTextV2 {
+  static TextStyle _s(double step, FontWeight w, Color c) =>
+      BldrTextV2.scale(step, w, c);
+  static const _sb = FontWeight.w600, _r = FontWeight.w400;
+  static const _c = BldrCommunityColorsV2.text;
+  static const _mu = Color(0xFF757575);
+  static const _g = BldrCommunityColorsV2.gold;
+
+  static final markAll = _s(BldrTextV2.s11, _sb, _g); // 10
+  static final tabOn = _s(BldrTextV2.s11, _sb, _g); // 11
+  static final tabOff = _s(BldrTextV2.s11, _r, _mu); // 11
+  static final group = _s(BldrTextV2.s11, _sb, _mu); // 9
+  static final titleUnread = _s(BldrTextV2.s11, _sb, _c); // 11
+  static final title = _s(BldrTextV2.s11, _r, _c); // 11
+  static final meta = _s(BldrTextV2.s11, _r, _mu); // 9
+  static final action = _s(BldrTextV2.s11, _sb, _g); // 9
+  static final subtitle = _s(BldrTextV2.s11, _r, BldrCommunityColorsV2.muted); // 9
+}
+
 abstract final class BldrCommunityTextV2 {
   static TextStyle _s(double step, FontWeight w, Color c) =>
       BldrTextV2.scale(step, w, c);
