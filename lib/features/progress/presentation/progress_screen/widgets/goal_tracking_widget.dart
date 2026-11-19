@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -365,13 +366,7 @@ class _GoalTrackingWidgetState extends State<GoalTrackingWidget> {
                 final target = double.tryParse(targetController.text.trim()) ?? 0;
 
                 if (title.isEmpty || target <= 0 || unit.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.goals_fill_required),
-                      backgroundColor: BldrColors.danger,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
+                  context.toast.warning(l10n.goals_fill_required);
                   return;
                 }
 
@@ -385,13 +380,7 @@ class _GoalTrackingWidgetState extends State<GoalTrackingWidget> {
                   deadline: selectedDeadline,
                 );
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.goals_create_success),
-                      backgroundColor: BldrColors.goldSolid,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
+                  context.toast.success(l10n.goals_create_success);
                 }
               },
               child: Text(l10n.goals_create_btn, style: BldrText.buttonSecondary),
@@ -644,13 +633,7 @@ class _GoalTrackingWidgetState extends State<GoalTrackingWidget> {
                 Navigator.pop(context);
                 await _updateProgress(goal, newValue);
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.goals_update_success),
-                      backgroundColor: BldrColors.goldSolid,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
+                  context.toast.success(l10n.goals_update_success);
                 }
               }
             },
@@ -696,13 +679,7 @@ class _GoalTrackingWidgetState extends State<GoalTrackingWidget> {
                     Navigator.pop(context);
                     await _pauseGoal(goal);
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(l10n.goals_paused),
-                          backgroundColor: BldrColors.surface,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
+                      context.toast.info(l10n.goals_paused);
                     }
                   },
                 ),
@@ -715,13 +692,7 @@ class _GoalTrackingWidgetState extends State<GoalTrackingWidget> {
                     Navigator.pop(context);
                     await _deleteGoal(goal);
                     if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(l10n.goals_deleted),
-                          backgroundColor: BldrColors.surface,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
+                      context.toast.success(l10n.goals_deleted);
                     }
                   },
                 ),

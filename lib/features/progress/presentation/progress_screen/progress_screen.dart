@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 
 import 'package:sizer/sizer.dart';
@@ -69,13 +70,7 @@ class _ProgressScreenState extends State<ProgressScreen>
       await Future.delayed(const Duration(milliseconds: 300));
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.progress_load_error),
-            backgroundColor: AppTheme.errorRed,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        context.toast.error(AppLocalizations.of(context)!.progress_load_error);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -329,14 +324,7 @@ class _ProgressScreenState extends State<ProgressScreen>
         onExport: (format) async {
           Navigator.pop(context); // Fecha o modal
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.progress_export_compiling),
-              backgroundColor: AppTheme.accentGold,
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 2),
-            ),
-          );
+          context.toast.info(l10n.progress_export_compiling);
 
           try {
             final client = Supabase.instance.client;
@@ -451,9 +439,7 @@ class _ProgressScreenState extends State<ProgressScreen>
 
             if (fullReportData.isEmpty) {
               if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.progress_no_data_period)),
-                );
+                context.toast.info(l10n.progress_no_data_period);
               }
               return;
             }
@@ -471,12 +457,7 @@ class _ProgressScreenState extends State<ProgressScreen>
           } catch (e) {
             debugPrint('Erro crítico na exportação: $e');
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(l10n.progress_export_error),
-                  backgroundColor: AppTheme.errorRed,
-                ),
-              );
+              context.toast.error(l10n.progress_export_error);
             }
           }
         },

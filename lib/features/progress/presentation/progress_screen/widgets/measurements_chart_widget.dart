@@ -1,4 +1,5 @@
 import 'package:fl_chart/fl_chart.dart';
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 
@@ -216,21 +217,9 @@ class _MeasurementsChartWidgetState extends State<MeasurementsChartWidget> {
                   Navigator.pop(context);
                   _loadMeasurements();
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.measurements_save_success),
-                      backgroundColor: BldrColors.goldSolid,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
+                  context.toast.success(l10n.measurements_save_success);
                 } catch (error) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.measurements_save_error),
-                      backgroundColor: BldrColors.danger,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
+                  context.toast.error(l10n.measurements_save_error);
                 }
               }
             },

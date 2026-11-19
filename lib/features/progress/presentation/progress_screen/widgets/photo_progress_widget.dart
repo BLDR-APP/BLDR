@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 
 import 'package:flutter/material.dart';
@@ -287,14 +288,7 @@ class _PhotoProgressWidgetState extends State<PhotoProgressWidget> {
   // Método Toast melhorado para suportar erro visual
   void _toast(String msg, {bool isError = false}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: isError ? BldrColors.danger : BldrColors.goldSolid,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    isError ? context.toast.error(msg) : context.toast.success(msg);
   }
 
   // --- VISUALIZAÇÃO E UTILS ---
