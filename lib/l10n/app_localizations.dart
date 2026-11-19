@@ -12670,6 +12670,192 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'CANCELAR'**
   String get nutri2_cancel;
+
+  /// No description provided for @nutri2_create_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cadastrar alimento'**
+  String get nutri2_create_title;
+
+  /// No description provided for @nutri2_create_basic.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dados básicos'**
+  String get nutri2_create_basic;
+
+  /// No description provided for @nutri2_step.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} DE 2'**
+  String nutri2_step(int n);
+
+  /// No description provided for @nutri2_create_name.
+  ///
+  /// In pt, this message translates to:
+  /// **'NOME DO ALIMENTO'**
+  String get nutri2_create_name;
+
+  /// No description provided for @nutri2_create_name_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ex: Iogurte natural integral'**
+  String get nutri2_create_name_hint;
+
+  /// No description provided for @nutri2_create_brand.
+  ///
+  /// In pt, this message translates to:
+  /// **'MARCA · OPCIONAL'**
+  String get nutri2_create_brand;
+
+  /// No description provided for @nutri2_create_brand_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ex: Nome da marca'**
+  String get nutri2_create_brand_hint;
+
+  /// No description provided for @nutri2_create_standard.
+  ///
+  /// In pt, this message translates to:
+  /// **'PADRÃO'**
+  String get nutri2_create_standard;
+
+  /// No description provided for @nutri2_create_per_unit.
+  ///
+  /// In pt, this message translates to:
+  /// **'POR UNIDADE'**
+  String get nutri2_create_per_unit;
+
+  /// No description provided for @nutri2_create_base.
+  ///
+  /// In pt, this message translates to:
+  /// **'BASE NUTRICIONAL'**
+  String get nutri2_create_base;
+
+  /// No description provided for @nutri2_create_base_value.
+  ///
+  /// In pt, this message translates to:
+  /// **'100 g   ·   FIXO'**
+  String get nutri2_create_base_value;
+
+  /// No description provided for @nutri2_create_type.
+  ///
+  /// In pt, this message translates to:
+  /// **'TIPO DE ALIMENTO'**
+  String get nutri2_create_type;
+
+  /// No description provided for @nutri2_create_solid.
+  ///
+  /// In pt, this message translates to:
+  /// **'SÓLIDO'**
+  String get nutri2_create_solid;
+
+  /// No description provided for @nutri2_create_liquid.
+  ///
+  /// In pt, this message translates to:
+  /// **'LÍQUIDO'**
+  String get nutri2_create_liquid;
+
+  /// No description provided for @nutri2_create_help.
+  ///
+  /// In pt, this message translates to:
+  /// **'Base padronizada pelo BLDR em 100 g ou 100 ml para manter os cálculos nutricionais consistentes.'**
+  String get nutri2_create_help;
+
+  /// No description provided for @nutri2_create_continue.
+  ///
+  /// In pt, this message translates to:
+  /// **'CONTINUAR'**
+  String get nutri2_create_continue;
+
+  /// No description provided for @nutri2_create_info_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Informação nutricional'**
+  String get nutri2_create_info_title;
+
+  /// No description provided for @nutri2_create_info_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} · base de 100 g'**
+  String nutri2_create_info_sub(String name);
+
+  /// No description provided for @nutri2_create_kcal.
+  ///
+  /// In pt, this message translates to:
+  /// **'CALORIAS'**
+  String get nutri2_create_kcal;
+
+  /// No description provided for @nutri2_create_protein.
+  ///
+  /// In pt, this message translates to:
+  /// **'PROTEÍNAS'**
+  String get nutri2_create_protein;
+
+  /// No description provided for @nutri2_create_carbs.
+  ///
+  /// In pt, this message translates to:
+  /// **'CARBOIDRATOS'**
+  String get nutri2_create_carbs;
+
+  /// No description provided for @nutri2_create_fat.
+  ///
+  /// In pt, this message translates to:
+  /// **'GORDURAS'**
+  String get nutri2_create_fat;
+
+  /// No description provided for @nutri2_create_fiber.
+  ///
+  /// In pt, this message translates to:
+  /// **'FIBRAS · OPCIONAL'**
+  String get nutri2_create_fiber;
+
+  /// No description provided for @nutri2_create_sodium.
+  ///
+  /// In pt, this message translates to:
+  /// **'SÓDIO · OPCIONAL'**
+  String get nutri2_create_sodium;
+
+  /// No description provided for @nutri2_create_sugar.
+  ///
+  /// In pt, this message translates to:
+  /// **'AÇÚCARES · OPCIONAL'**
+  String get nutri2_create_sugar;
+
+  /// No description provided for @nutri2_create_note.
+  ///
+  /// In pt, this message translates to:
+  /// **'Informe os valores referentes a 100 g. Para líquidos, use a base de 100 ml.'**
+  String get nutri2_create_note;
+
+  /// No description provided for @nutri2_create_save.
+  ///
+  /// In pt, this message translates to:
+  /// **'SALVAR E ADICIONAR'**
+  String get nutri2_create_save;
+
+  /// No description provided for @nutri2_create_back.
+  ///
+  /// In pt, this message translates to:
+  /// **'VOLTAR'**
+  String get nutri2_create_back;
+
+  /// No description provided for @nutri2_create_need_name.
+  ///
+  /// In pt, this message translates to:
+  /// **'Informe o nome do alimento'**
+  String get nutri2_create_need_name;
+
+  /// No description provided for @nutri2_create_need_value.
+  ///
+  /// In pt, this message translates to:
+  /// **'Preencha calorias ou pelo menos um macro'**
+  String get nutri2_create_need_value;
+
+  /// No description provided for @nutri2_toast_food_created.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alimento salvo nos favoritos'**
+  String get nutri2_toast_food_created;
 }
 
 class _AppLocalizationsDelegate

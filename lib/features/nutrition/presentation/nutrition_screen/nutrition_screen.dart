@@ -15,7 +15,6 @@ import 'package:bldr_fitness/features/nutrition/domain/entities/daily_nutrition_
 import 'package:bldr_fitness/features/nutrition/domain/entities/meal_entry.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/nutrition_goals.dart';
 import 'package:bldr_fitness/features/nutrition/domain/usecases/nutrition_usecases.dart';
-import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/Firebase/firebase_add_food_modal_widget.dart';
 import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/achievements/domain/usecases/achievement_usecases.dart';
 import 'package:bldr_fitness/features/club/domain/usecases/club_usecases.dart';
@@ -23,6 +22,7 @@ import 'package:bldr_fitness/features/integrations/data/widget_data_service.dart
 import 'package:bldr_fitness/features/nutrition/domain/entities/food_item.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_add_food_sheets.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_copy_meal_sheets.dart';
+import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_create_food_sheets.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_hub_sections.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_water_sheet.dart';
 import 'package:bldr_fitness/features/progress/domain/usecases/progress_usecases.dart';
@@ -162,8 +162,13 @@ class _NutritionScreenState extends State<NutritionScreen> {
         () => NutritionAddFoodSheet.show(context, catalog: _catalog));
     if (pick == null || !mounted) return;
     if (pick.createManual) return _showManualCreate(slot);
+    await _logFood(pick.food!, slot);
+  }
+
+  /// Porção (102:308) → LogMeal → toast e efeitos.
+  Future<void> _logFood(FoodItem food, NutritionMealSlot slot) async {
     final portion = await _overlay(
-        () => NutritionPortionSheet.add(context, food: pick.food!, slot: slot));
+        () => NutritionPortionSheet.add(context, food: food, slot: slot));
     if (portion == null || !mounted) return;
     final l = AppLocalizations.of(context);
     final uid = _userId;
@@ -176,7 +181,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
       userId: uid,
       mealType: portion.slot.dbKey,
       mealDate: date,
-      food: pick.food!,
+      food: food,
       quantityGrams: portion.grams,
     );
     if (!mounted) return;
@@ -206,31 +211,37 @@ class _NutritionScreenState extends State<NutritionScreen> {
     context.read<AchievementProvider>().checkAchievements('nutrition');
   }
 
-  /// Cadastro manual: formulário atual (aba Manual) até a N4.
-  void _showManualCreate(NutritionMealSlot slot) {
-    _overlay(() => showModalBottomSheet(
-          context: context,
-          backgroundColor: AppTheme.cardDark,
-          isScrollControlled: true,
-          shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-          builder: (_) => FirebaseAddFoodModalWidget(
-            mealType: slot.legacyName,
-            selectedDate: _selectedDate,
-            isClub: _isClubMember,
-            initialTab: 2,
-            onFoodAdded: () async {
-              final proteinBefore = _summary?.totals.protein ?? 0;
-              await _loadData(silent: true);
-              _checkProteinGoal(proteinBefore);
-              await _maybeTriggerNotificationPopup();
-              if (!mounted) return;
-              context
-                  .read<AchievementProvider>()
-                  .checkAchievements('nutrition');
-            },
-          ),
-        ));
+  /// N4: cadastro manual em 2 passos (102:296 → 102:167). Salva em
+  /// user_favorites (per 100 g) e segue para a porção.
+  Future<void> _showManualCreate(NutritionMealSlot slot) async {
+    var draft = const CreateFoodDraft();
+    while (mounted) {
+      final basic = await _overlay(
+          () => NutritionCreateFoodSheets.step1(context, draft: draft));
+      if (basic == null || !mounted) return;
+      draft = basic;
+      final r = await _overlay(
+          () => NutritionCreateFoodSheets.step2(context, draft: draft));
+      if (r == null || !mounted) return;
+      draft = r.draft;
+      if (r.food == null) continue; // ← VOLTAR
+      final l = AppLocalizations.of(context);
+      final uid = _userId;
+      if (uid == null) {
+        context.toast.error(l.common_unauthenticated);
+        return;
+      }
+      final saved = await getIt<SaveFavoriteFood>()(r.food!, uid);
+      if (!mounted) return;
+      final food = saved.valueOrNull;
+      if (food == null) {
+        context.toast.error(l.nutri2_toast_save_error);
+        return;
+      }
+      context.toast.success(l.nutri2_toast_food_created);
+      await _logFood(food, slot);
+      return;
+    }
   }
 
   /// N2: editar (102:301) → salvar (UpdateMealQuantity) ou remover (102:300).

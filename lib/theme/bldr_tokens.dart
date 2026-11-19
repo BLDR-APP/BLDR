@@ -1619,6 +1619,10 @@ abstract final class BldrNutritionColorsV2 {
   static const summaryBorder = Color(0xFF242424);
   static const removeBg = Color(0xFF1C0606);
   static const removeRed = Color(0xFFDB4740);
+  // Cadastrar alimento (102:296/167)
+  static const lockedBg = Color(0xFF060606);
+  static const lockedBorder = Color(0xFF2E291A);
+  static const lockedText = Color(0xFF999999);
 }
 
 abstract final class BldrNutritionTextV2 {
@@ -1725,6 +1729,12 @@ abstract final class BldrNutritionTextV2 {
   static final removeCta =
       _s(BldrTextV2.s11, _b, BldrNutritionColorsV2.removeRed); // 9.5
   static final cancelCta = _s(BldrTextV2.s11, _b, _t); // 9
+  // Cadastrar alimento
+  static final step = _s(BldrTextV2.s11, _b, BldrNutritionColorsV2.gold); // 8
+  static final inputHint = _s(BldrTextV2.s11, _r, _lm); // 9
+  static final inputValue = _s(BldrTextV2.s13, _r, _t); // 9
+  static final locked =
+      _s(BldrTextV2.s11, _b, BldrNutritionColorsV2.lockedText); // 9
 }
 
 abstract final class BldrNutritionV2 {

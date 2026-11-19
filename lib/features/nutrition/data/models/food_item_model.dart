@@ -31,6 +31,8 @@ class FoodItemModel {
   static Map<String, dynamic> toFavoriteMap(FoodItem item, String userId) => {
         'user_id': userId,
         'name': item.name,
+        // `brand` já é lido por fromMap (mesmo campo de `alimentos`).
+        if (item.brand != null && item.brand!.isNotEmpty) 'brand': item.brand,
         'calories_per_100g': item.caloriesPer100g,
         'protein_per_100g': item.proteinPer100g,
         'carbs_per_100g': item.carbsPer100g,

@@ -7074,4 +7074,104 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get nutri2_cancel => 'CANCELAR';
+
+  @override
+  String get nutri2_create_title => 'Cadastrar alimento';
+
+  @override
+  String get nutri2_create_basic => 'Dados básicos';
+
+  @override
+  String nutri2_step(int n) {
+    return '$n DE 2';
+  }
+
+  @override
+  String get nutri2_create_name => 'NOME DO ALIMENTO';
+
+  @override
+  String get nutri2_create_name_hint => 'Ex: Iogurte natural integral';
+
+  @override
+  String get nutri2_create_brand => 'MARCA · OPCIONAL';
+
+  @override
+  String get nutri2_create_brand_hint => 'Ex: Nome da marca';
+
+  @override
+  String get nutri2_create_standard => 'PADRÃO';
+
+  @override
+  String get nutri2_create_per_unit => 'POR UNIDADE';
+
+  @override
+  String get nutri2_create_base => 'BASE NUTRICIONAL';
+
+  @override
+  String get nutri2_create_base_value => '100 g   ·   FIXO';
+
+  @override
+  String get nutri2_create_type => 'TIPO DE ALIMENTO';
+
+  @override
+  String get nutri2_create_solid => 'SÓLIDO';
+
+  @override
+  String get nutri2_create_liquid => 'LÍQUIDO';
+
+  @override
+  String get nutri2_create_help =>
+      'Base padronizada pelo BLDR em 100 g ou 100 ml para manter os cálculos nutricionais consistentes.';
+
+  @override
+  String get nutri2_create_continue => 'CONTINUAR';
+
+  @override
+  String get nutri2_create_info_title => 'Informação nutricional';
+
+  @override
+  String nutri2_create_info_sub(String name) {
+    return '$name · base de 100 g';
+  }
+
+  @override
+  String get nutri2_create_kcal => 'CALORIAS';
+
+  @override
+  String get nutri2_create_protein => 'PROTEÍNAS';
+
+  @override
+  String get nutri2_create_carbs => 'CARBOIDRATOS';
+
+  @override
+  String get nutri2_create_fat => 'GORDURAS';
+
+  @override
+  String get nutri2_create_fiber => 'FIBRAS · OPCIONAL';
+
+  @override
+  String get nutri2_create_sodium => 'SÓDIO · OPCIONAL';
+
+  @override
+  String get nutri2_create_sugar => 'AÇÚCARES · OPCIONAL';
+
+  @override
+  String get nutri2_create_note =>
+      'Informe os valores referentes a 100 g. Para líquidos, use a base de 100 ml.';
+
+  @override
+  String get nutri2_create_save => 'SALVAR E ADICIONAR';
+
+  @override
+  String get nutri2_create_back => 'VOLTAR';
+
+  @override
+  String get nutri2_create_need_name => 'Informe o nome do alimento';
+
+  @override
+  String get nutri2_create_need_value =>
+      'Preencha calorias ou pelo menos um macro';
+
+  @override
+  String get nutri2_toast_food_created => 'Alimento salvo nos favoritos';
 }

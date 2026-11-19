@@ -7055,4 +7055,103 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get nutri2_cancel => 'ANNULLA';
+
+  @override
+  String get nutri2_create_title => 'Crea alimento';
+
+  @override
+  String get nutri2_create_basic => 'Dati di base';
+
+  @override
+  String nutri2_step(int n) {
+    return '$n DI 2';
+  }
+
+  @override
+  String get nutri2_create_name => 'NOME ALIMENTO';
+
+  @override
+  String get nutri2_create_name_hint => 'Es: Yogurt bianco intero';
+
+  @override
+  String get nutri2_create_brand => 'MARCA · FACOLTATIVO';
+
+  @override
+  String get nutri2_create_brand_hint => 'Es: Nome della marca';
+
+  @override
+  String get nutri2_create_standard => 'STANDARD';
+
+  @override
+  String get nutri2_create_per_unit => 'PER UNITÀ';
+
+  @override
+  String get nutri2_create_base => 'BASE NUTRIZIONALE';
+
+  @override
+  String get nutri2_create_base_value => '100 g   ·   FISSO';
+
+  @override
+  String get nutri2_create_type => 'TIPO DI ALIMENTO';
+
+  @override
+  String get nutri2_create_solid => 'SOLIDO';
+
+  @override
+  String get nutri2_create_liquid => 'LIQUIDO';
+
+  @override
+  String get nutri2_create_help =>
+      'Il BLDR usa 100 g o 100 ml per calcoli coerenti.';
+
+  @override
+  String get nutri2_create_continue => 'CONTINUA';
+
+  @override
+  String get nutri2_create_info_title => 'Valori nutrizionali';
+
+  @override
+  String nutri2_create_info_sub(String name) {
+    return '$name · base 100 g';
+  }
+
+  @override
+  String get nutri2_create_kcal => 'CALORIE';
+
+  @override
+  String get nutri2_create_protein => 'PROTEINE';
+
+  @override
+  String get nutri2_create_carbs => 'CARBOIDRATI';
+
+  @override
+  String get nutri2_create_fat => 'GRASSI';
+
+  @override
+  String get nutri2_create_fiber => 'FIBRE · FACOLTATIVO';
+
+  @override
+  String get nutri2_create_sodium => 'SODIO · FACOLTATIVO';
+
+  @override
+  String get nutri2_create_sugar => 'ZUCCHERI · FACOLTATIVO';
+
+  @override
+  String get nutri2_create_note =>
+      'Inserisci i valori per 100 g. Per i liquidi, 100 ml.';
+
+  @override
+  String get nutri2_create_save => 'SALVA E AGGIUNGI';
+
+  @override
+  String get nutri2_create_back => 'INDIETRO';
+
+  @override
+  String get nutri2_create_need_name => 'Inserisci il nome dell\'alimento';
+
+  @override
+  String get nutri2_create_need_value => 'Compila calorie o almeno un macro';
+
+  @override
+  String get nutri2_toast_food_created => 'Alimento salvato nei preferiti';
 }

@@ -7034,4 +7034,103 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nutri2_cancel => 'CANCEL';
+
+  @override
+  String get nutri2_create_title => 'Create food';
+
+  @override
+  String get nutri2_create_basic => 'Basic info';
+
+  @override
+  String nutri2_step(int n) {
+    return '$n OF 2';
+  }
+
+  @override
+  String get nutri2_create_name => 'FOOD NAME';
+
+  @override
+  String get nutri2_create_name_hint => 'E.g. Whole plain yogurt';
+
+  @override
+  String get nutri2_create_brand => 'BRAND · OPTIONAL';
+
+  @override
+  String get nutri2_create_brand_hint => 'E.g. Brand name';
+
+  @override
+  String get nutri2_create_standard => 'STANDARD';
+
+  @override
+  String get nutri2_create_per_unit => 'PER UNIT';
+
+  @override
+  String get nutri2_create_base => 'NUTRITION BASE';
+
+  @override
+  String get nutri2_create_base_value => '100 g   ·   FIXED';
+
+  @override
+  String get nutri2_create_type => 'FOOD TYPE';
+
+  @override
+  String get nutri2_create_solid => 'SOLID';
+
+  @override
+  String get nutri2_create_liquid => 'LIQUID';
+
+  @override
+  String get nutri2_create_help =>
+      'BLDR standardizes on 100 g or 100 ml to keep nutrition math consistent.';
+
+  @override
+  String get nutri2_create_continue => 'CONTINUE';
+
+  @override
+  String get nutri2_create_info_title => 'Nutrition facts';
+
+  @override
+  String nutri2_create_info_sub(String name) {
+    return '$name · per 100 g';
+  }
+
+  @override
+  String get nutri2_create_kcal => 'CALORIES';
+
+  @override
+  String get nutri2_create_protein => 'PROTEIN';
+
+  @override
+  String get nutri2_create_carbs => 'CARBS';
+
+  @override
+  String get nutri2_create_fat => 'FAT';
+
+  @override
+  String get nutri2_create_fiber => 'FIBER · OPTIONAL';
+
+  @override
+  String get nutri2_create_sodium => 'SODIUM · OPTIONAL';
+
+  @override
+  String get nutri2_create_sugar => 'SUGARS · OPTIONAL';
+
+  @override
+  String get nutri2_create_note =>
+      'Enter values per 100 g. For liquids, use 100 ml.';
+
+  @override
+  String get nutri2_create_save => 'SAVE AND ADD';
+
+  @override
+  String get nutri2_create_back => 'BACK';
+
+  @override
+  String get nutri2_create_need_name => 'Enter the food name';
+
+  @override
+  String get nutri2_create_need_value => 'Fill calories or at least one macro';
+
+  @override
+  String get nutri2_toast_food_created => 'Food saved to favorites';
 }
