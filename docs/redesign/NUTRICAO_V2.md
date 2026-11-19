@@ -185,3 +185,49 @@ adicionam ao diário reaproveitando `CopyMeal`.
 - B) Reusar `user_favorites` com `type: 'meal'` e `items` — evita coleção nova,
   mas exige que o leitor de favoritos ignore `type == 'meal'`
   (mudança em `favorites()`).
+
+## 8. Estado final (rodada de Nutrição v2)
+
+### Implementado
+| Área | Frames | Commit(s) |
+|---|---|---|
+| Hub (anéis, IQD semanal, hidratação, 6 refeições, refeição expandida, lápis de edição, FAB, seletor de data) | 102:312/309, 14:2, 102:297 | N1 `6868428` |
+| Adicionar, Recentes/Favoritos, Porção, Editar, Remover | 102:316/317/308/301/300 | N2 `668a422` |
+| Água (sheet, meta por repository) | 102:311 | N3 `6075bdf` |
+| Cadastro manual 2 passos, ml e por unidade | 102:296/166/167 | N4 `ea14ea2`, `4b0188d` |
+| Copiar refeição | 102:313/314/315 | N5 `57eeb69` |
+| Refeições salvas (criar, usar, excluir) | 102:318/319/320 | N7 `6ba72c6`, `6373991` |
+| País (Brasil, EUA, Canadá) | 119:58/261 | N8 `29c3413` |
+| Busca sem diferenciar maiúsculas/acentos | — | `68e6ef5` |
+| Toasts de Nutrição (adicionado, removido c/ Desfazer, erros, metas) | Toast 53:184 | T3 `1258976`, T4 `6483640` |
+
+### Em breve (visível e desabilitado, sem fluxo)
+- **Código de barras** e **Foto/IA** (atalhos do sheet de adicionar).
+- **Itália** no seletor de país (coleção ainda não populada).
+
+### Diferenças em relação aos mockups
+- Textos de 7–10 px subiram para o mínimo de 11; colunas dos anéis de macro com 70 px (62 no Figma).
+- Telas estreitas: cards de macro empilhados, macros dos alimentos em 2ª linha, chips em várias linhas, atalhos 2 × 2.
+- Ícone do HAVOK saiu do cabeçalho (acesso pela NavBar).
+- Carrossel de categorias usa as categorias reais de cada base (BR 16; EUA/Canadá 22 cada), não os nomes ilustrativos do Figma.
+- Porção: unidade de medida segue a base do alimento (g ou ml), sem conversão entre elas; campo de peso da unidade aparece no modo Unidade.
+- Linhas de alimento do catálogo mostram valores por 100 g/ml (a base não tem porção padrão).
+- Refeições salvas: destino por chips (não dropdown); excluir sem frame (estilo de "Remover alimento"); sem edição de nome.
+- Sucesso de adição por toast no topo (não a pílula inferior de 102:307).
+- Modo de edição do lápis sem frame (mínimo: editar/remover por alimento).
+
+### Dados (Firestore, sem coleção nova)
+- `user_favorites`: alimentos (com `brand`, `unit`, `unit_weight`, `unit_description` opcionais) e refeições salvas (`type: 'meal'`). Único leitor: datasource de Nutrição, que filtra `type: 'meal'` (`foodsOnly`).
+- `user_meals`: `unit: 'ml'` opcional para líquidos; ausente = g.
+- Preferências no aparelho: país do banco e marca diária do toast de meta calórica.
+
+### IQD e açúcar
+O IQD é calculado na hora, somando os registros do dia, mas usa o **snapshot** de cada registro (`added_sugar` gravado no momento em que o alimento foi lançado). A nova leitura de açúcar (`added_sugars` no BR, `sugars_per_100g` nos EUA/Canadá) só vale para registros novos: **os dias passados não mudam** (registros antigos do catálogo BR têm açúcar 0 gravado).
+
+### Dívidas conhecidas
+- EUA/Canadá usam **açúcar total** como se fosse adicionado (aproximação aprovada; penaliza mais).
+- Dois documentos do BR com chaves digitadas errado (`calories_per_1A00g`, `fat_per_1B00g`) — correção de dados no Firestore.
+- Catálogo em memória por sessão: alimento novo na base só aparece na busca após reabrir o app.
+- Textos fixos fora do `.arb` mantidos na T5 (lista em `TOAST_V2.md` §6).
+- `NutritionService` legado ainda registrado no DI (sem uso em telas); `mobile_scanner` sem uso até a N6.
+- Toasts de meta de hidratação e proteína seguem "uma vez por cruzamento" (só a calórica é diária persistida).
