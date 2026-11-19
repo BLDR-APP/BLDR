@@ -294,6 +294,14 @@ class _WhoopHeader extends StatelessWidget {
   }
 }
 
+/// Selo "DATA BY WHOOP" v2 para telas que exibem dados do WHOOP.
+class BldrWhoopAttribution extends StatelessWidget {
+  const BldrWhoopAttribution({super.key});
+
+  @override
+  Widget build(BuildContext context) => const _WhoopAttribution(v2: true);
+}
+
 // Atribuição obrigatória — "DATA BY WHOOP" conforme Attribution guidelines.
 // Logo deve ser branco ou preto; não usar colorBlendMode para mudar a cor.
 class _WhoopAttribution extends StatelessWidget {

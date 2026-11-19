@@ -4,6 +4,7 @@ import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_post.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_comment.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_profile.dart';
+import 'package:bldr_fitness/features/community/domain/entities/pr_history.dart';
 import 'package:bldr_fitness/features/community/domain/entities/ranking_entry.dart';
 import 'package:bldr_fitness/features/community/domain/entities/recent_workout.dart';
 import 'package:bldr_fitness/features/community/domain/entities/workout_exercise.dart';
@@ -35,6 +36,18 @@ abstract class CommunityFeedRepository {
   Future<Result<void>> unfollowUser(String userId);
 
   Future<Result<void>> deletePost(String postId);
+
+  /// Grava o payload com a legenda nova do próprio post.
+  Future<Result<void>> editPost({
+    required String postId,
+    required Map<String, dynamic> payload,
+  });
+
+  /// Melhor série por dia de um exercício (vazio se o perfil for privado).
+  Future<Result<List<PrHistoryEntry>>> fetchPrHistory({
+    required String userId,
+    required String exercise,
+  });
 
   Future<Result<void>> blockUser(String userId);
 

@@ -54,6 +54,7 @@ class CommunityPost {
     String? myReactionEmoji,
     bool clearMyReaction = false,
     bool? isFollowing,
+    Map<String, dynamic>? payload,
   }) =>
       CommunityPost(
         id: id,
@@ -62,7 +63,7 @@ class CommunityPost {
         userFullName: userFullName,
         userAvatarUrl: userAvatarUrl,
         eventType: eventType,
-        payload: payload,
+        payload: payload ?? this.payload,
         visibility: visibility,
         squadId: squadId,
         createdAt: createdAt,

@@ -7,6 +7,7 @@ import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_post.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_comment.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_profile.dart';
+import 'package:bldr_fitness/features/community/domain/entities/pr_history.dart';
 import 'package:bldr_fitness/features/community/domain/entities/ranking_entry.dart';
 import 'package:bldr_fitness/features/community/domain/entities/recent_workout.dart';
 import 'package:bldr_fitness/features/community/domain/entities/workout_exercise.dart';
@@ -274,6 +275,48 @@ class CommunityFeedRepositoryImpl implements CommunityFeedRepository {
     } catch (e) {
       return Result.failure(ServerFailure(
         'Não foi possível excluir este post.',
+        cause: e,
+      ));
+    }
+  }
+
+  @override
+  Future<Result<void>> editPost({
+    required String postId,
+    required Map<String, dynamic> payload,
+  }) async {
+    try {
+      await _client
+          .from('community_feed')
+          .update({'payload': payload})
+          .eq('id', postId)
+          .eq('user_id', _uid);
+      return const Result.success(null);
+    } catch (e) {
+      return Result.failure(ServerFailure(
+        'Não foi possível salvar a edição.',
+        cause: e,
+      ));
+    }
+  }
+
+  @override
+  Future<Result<List<PrHistoryEntry>>> fetchPrHistory({
+    required String userId,
+    required String exercise,
+  }) async {
+    try {
+      final rows = await _client.rpc('public_pr_history', params: {
+        'p_user': userId,
+        'p_exercise': exercise,
+      }) as List;
+      return Result.success(rows
+          .map((row) =>
+              PrHistoryEntry.fromRow(Map<String, dynamic>.from(row as Map)))
+          .toList());
+    } catch (e) {
+      return Result.failure(ServerFailure(
+        'Não foi possível carregar a evolução do PR.',
         cause: e,
       ));
     }

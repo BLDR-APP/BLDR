@@ -29,6 +29,15 @@ class CommunityPostPayload {
   int? get wearableDurationSeconds =>
       (wearable['duration_s'] as num?)?.toInt() ?? durationSeconds;
 
+  double? get wearableDistanceKm =>
+      (wearable['distance_km'] as num?)?.toDouble() ?? distanceKm;
+
+  int? get wearableMaxHeartRate =>
+      (wearable['max_heart_rate'] as num?)?.toInt();
+
+  DateTime? get wearableStartedAt =>
+      DateTime.tryParse(wearable['started_at']?.toString() ?? '')?.toLocal();
+
   double? get wearableStrain => (wearable['strain'] as num?)?.toDouble();
 
   int? get wearableAverageHeartRate =>

@@ -336,3 +336,52 @@ class BldrCommunitySheetRow extends StatelessWidget {
     );
   }
 }
+
+/// Divisória dos sheets de conteúdo (22:265).
+class BldrCommunitySheetDivider extends StatelessWidget {
+  const BldrCommunitySheetDivider({super.key});
+
+  @override
+  Widget build(BuildContext context) =>
+      Container(height: 1, color: BldrCommunityColorsV2.divider);
+}
+
+/// Linha de até 3 métricas alinhadas à esquerda (22:259–22:264).
+class BldrCommunitySheetMetrics extends StatelessWidget {
+  final List<(String, String)> items;
+
+  const BldrCommunitySheetMetrics({super.key, required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < 3; i++)
+          Expanded(
+            child: i >= items.length
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerLeft,
+                          child: Text(items[i].$1,
+                              maxLines: 1,
+                              style: BldrCommunityTextV2.sheetMetric),
+                        ),
+                        Text(items[i].$2,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: BldrCommunityTextV2.valueLabel),
+                      ],
+                    ),
+                  ),
+          ),
+      ],
+    );
+  }
+}

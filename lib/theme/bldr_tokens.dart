@@ -1269,6 +1269,15 @@ abstract final class BldrCommunityTextV2 {
       _s(BldrTextV2.s12, _sb, BldrCommunityColorsV2.danger); // 12
   static final rowSub = _s(BldrTextV2.s11, _r, _mu); // 9
   static final emoji = _s(BldrTextV2.s28, _r, _c);
+  // Sheets de conteúdo (22:254, 22:391, 22:525)
+  static final sheetSub = _s(BldrTextV2.s11, _r, _mu); // 9
+  static final sheetMetric = _s(BldrTextV2.s17, _b, _c); // 17
+  static final exercise = _s(BldrTextV2.s11, _sb, _c); // 11
+  static final detailLabel = _s(BldrTextV2.s11, _m, _c); // 10
+  static final detailValue = _s(BldrTextV2.s11, _sb, _c); // 10
+  static final prValue = _s(BldrTextV2.s28, _b, _c); // 26
+  static final prDelta = _s(BldrTextV2.s11, _sb, _g); // 10
+  static final historyDate = _s(BldrTextV2.s11, _m, _mu); // 10
 }
 
 abstract final class BldrCommunityV2 {

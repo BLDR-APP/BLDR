@@ -73,6 +73,37 @@ abstract final class CommunityV2Format {
     return '${perKm ~/ 60}:${(perKm % 60).toString().padLeft(2, '0')}';
   }
 
+  /// Resumo das séries: 4 séries de 8 com até 32 kg → "4 × 8 · 32 kg".
+  /// Usa as repetições mais frequentes e a maior carga.
+  static String exerciseMeta(
+      List<({double? weightKg, int? reps})> sets, String locale) {
+    if (sets.isEmpty) return '';
+    final counts = <int, int>{};
+    double? top;
+    for (final s in sets) {
+      if (s.reps case final r?) counts[r] = (counts[r] ?? 0) + 1;
+      if (s.weightKg case final w? when top == null || w > top) top = w;
+    }
+    int? reps;
+    counts.forEach((r, c) {
+      if (reps == null || c > counts[reps]!) reps = r;
+    });
+    final head = reps == null ? '${sets.length}' : '${sets.length} × $reps';
+    final best = top;
+    return best == null || best <= 0 ? head : "$head · ${kg(best, locale)}";
+  }
+
+  /// 150 → "150 kg"; 32.5 → "32,5 kg" (pt).
+  static String kg(double value, String locale) =>
+      '${decimal(value, locale, digits: value % 1 == 0 ? 0 : 1)} kg';
+
+  /// 18/08 → "18 ago".
+  static String shortDate(DateTime date, String locale) =>
+      DateFormat('dd MMM', locale)
+          .format(date)
+          .replaceAll('.', '')
+          .toLowerCase();
+
   /// Rótulo da fonte do wearable ("APPLE WATCH", "WHOOP", "GARMIN").
   static String? providerLabel(String? raw) {
     return switch (raw?.toLowerCase().trim()) {

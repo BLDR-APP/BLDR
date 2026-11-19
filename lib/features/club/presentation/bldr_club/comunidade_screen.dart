@@ -18,6 +18,8 @@ import 'package:bldr_fitness/features/community/domain/repositories/community_fe
 import 'package:bldr_fitness/features/community/presentation/community_comments_sheet.dart';
 import 'package:bldr_fitness/features/community/presentation/community_profile_search_screen.dart';
 import 'package:bldr_fitness/features/community/presentation/create_post_screen.dart';
+import 'package:bldr_fitness/features/community/domain/usecases/edit_community_post.dart';
+import 'package:bldr_fitness/features/community/presentation/hub_v2/community_content_sheets_v2.dart';
 import 'package:bldr_fitness/features/community/presentation/hub_v2/community_post_card_v2.dart';
 import 'package:bldr_fitness/features/community/presentation/hub_v2/community_squads_tab_v2.dart';
 import 'package:bldr_fitness/features/community/presentation/ranking_screen.dart';
@@ -238,17 +240,34 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
   }
 
   void _openWorkoutDetail(CommunityPost post) {
-    final workoutId = post.payload['workout_id'] as String?;
-    if (workoutId == null) return;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => WorkoutDetailSheet(
-        workoutId: workoutId,
-        source: post.payload['source'] as String? ?? 'free',
-        workoutName: post.workoutName,
-      ),
+    if (post.payload['workout_id'] is! String) return;
+    WorkoutDetailSheet.show(context, post);
+  }
+
+  void _replacePost(CommunityPost post) {
+    setState(() {
+      for (final list in [_posts, _followingPosts]) {
+        final idx = list.indexWhere((p) => p.id == post.id);
+        if (idx != -1) list[idx] = post;
+      }
+    });
+  }
+
+  Future<void> _editPost(CommunityPost post) async {
+    final l10n = AppLocalizations.of(context);
+    final text =
+        await CommunityEditPostSheetV2.show(context, post.caption ?? '');
+    if (!mounted || text == null) return;
+    final result = await getIt<EditCommunityPost>()(post, text);
+    if (!mounted) return;
+    result.fold(
+      onSuccess: (updated) {
+        _replacePost(updated);
+        _showActionResult(const Result.success(null),
+            success: l10n.comm_edited);
+      },
+      onFailure: (failure) =>
+          _showActionResult(Result.failure(failure), success: ''),
     );
   }
 
@@ -305,15 +324,21 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
                   textAlign: TextAlign.center,
                   style: BldrCommunityTextV2.sheetHandle),
             const SizedBox(height: 8),
-            if (post.isOwnPost)
+            if (post.isOwnPost) ...[
+              BldrCommunitySheetRow(
+                icon: TablerIcons.pencil,
+                title: l10n.comm_action_edit,
+                subtitle: l10n.comm_action_edit_sub,
+                onTap: () => Navigator.pop(ctx, 'edit'),
+              ),
               BldrCommunitySheetRow(
                 icon: TablerIcons.trash,
                 title: l10n.comm_action_delete,
                 subtitle: l10n.comm_action_delete_sub,
                 destructive: true,
                 onTap: () => Navigator.pop(ctx, 'delete'),
-              )
-            else ...[
+              ),
+            ] else ...[
               BldrCommunitySheetRow(
                 icon: TablerIcons.ban,
                 title: l10n.comm_action_block,
@@ -333,6 +358,7 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
       ),
     );
     if (!mounted || action == null) return;
+    if (action == 'edit') await _editPost(post);
     if (action == 'delete') await _confirmDelete(post);
     if (action == 'block') await _confirmBlock(post);
     if (action == 'report') await _reportPost(post);
@@ -509,6 +535,8 @@ class _ComunidadeScreenState extends State<ComunidadeScreen> {
         onReaction: _toggleReaction,
         onLongReact: _pickReaction,
         onOpenWorkout: _openWorkoutDetail,
+        onOpenActivity: (p) => CommunityActivitySheetV2.show(context, p),
+        onOpenEvolution: (p) => CommunityPrSheetV2.show(context, p),
         onComments: _openComments,
         onFollow: _toggleFollow,
         onMore: onMore ?? _showPostActions,

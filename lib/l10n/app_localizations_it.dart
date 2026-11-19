@@ -5398,4 +5398,120 @@ class AppLocalizationsIt extends AppLocalizations {
   String comm_share_text_simple(String name) {
     return 'Guarda il post di $name su BLDR.';
   }
+
+  @override
+  String get comm_view_activity => 'Vedi attività';
+
+  @override
+  String get comm_view_evolution => 'Vedi progressi';
+
+  @override
+  String get comm_action_edit => 'Modifica post';
+
+  @override
+  String get comm_action_edit_sub => 'Modifica il testo di questo post';
+
+  @override
+  String get comm_edit_hint => 'Scrivi la didascalia';
+
+  @override
+  String get comm_edit_save => 'SALVA';
+
+  @override
+  String get comm_edited => 'Post aggiornato.';
+
+  @override
+  String comm_workout_by(String handle) {
+    return 'Allenamento di $handle';
+  }
+
+  @override
+  String get comm_label_volume => 'VOLUME';
+
+  @override
+  String get comm_label_sets => 'SERIE';
+
+  @override
+  String get comm_section_exercises => 'ESERCIZI';
+
+  @override
+  String get comm_exercises_empty => 'Nessun esercizio trovato.';
+
+  @override
+  String get comm_copy_note =>
+      'Una copia modificabile verrà aggiunta a I miei allenamenti.';
+
+  @override
+  String get comm_copy_cta => 'AGGIUNGI AI MIEI ALLENAMENTI';
+
+  @override
+  String get comm_copying => 'AGGIUNTA…';
+
+  @override
+  String get comm_copy_done => 'Allenamento aggiunto a I miei allenamenti.';
+
+  @override
+  String get comm_copy_limit =>
+      'Hai raggiunto il limite di 3 copie questo mese. Passa al Club.';
+
+  @override
+  String comm_set_line(int n) {
+    return 'Serie $n';
+  }
+
+  @override
+  String comm_imported_by(String handle) {
+    return 'Importata da $handle';
+  }
+
+  @override
+  String get comm_label_pace => 'PASSO MEDIO';
+
+  @override
+  String get comm_label_calories => 'CALORIE';
+
+  @override
+  String get comm_label_hr_max => 'FC MAX';
+
+  @override
+  String get comm_section_details => 'DETTAGLI';
+
+  @override
+  String get comm_detail_source => 'Fonte';
+
+  @override
+  String get comm_detail_start => 'Inizio';
+
+  @override
+  String get comm_activity_note =>
+      'Dati condivisi dall\'utente dall\'attività importata.';
+
+  @override
+  String comm_pr_by(String handle) {
+    return 'Nuovo PR di $handle';
+  }
+
+  @override
+  String comm_pr_delta(String value) {
+    return '$value kg rispetto al PR precedente';
+  }
+
+  @override
+  String get comm_label_prev_pr => 'PR PRECEDENTE';
+
+  @override
+  String get comm_label_evolution => 'PROGRESSO';
+
+  @override
+  String get comm_section_recent => 'PROGRESSI RECENTI';
+
+  @override
+  String get comm_today => 'Oggi';
+
+  @override
+  String get comm_pr_note => 'PR registrato nello storico dell\'atleta.';
+
+  @override
+  String get comm_pr_private =>
+      'Lo storico di questo atleta non è disponibile.';
 }

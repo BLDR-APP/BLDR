@@ -6,6 +6,7 @@ import 'package:bldr_fitness/core/providers/locale_provider.dart';
 import 'package:bldr_fitness/core/time/device_timezone_service.dart';
 import 'package:bldr_fitness/features/community/data/repositories/community_feed_repository_impl.dart';
 import 'package:bldr_fitness/features/community/domain/repositories/community_feed_repository.dart';
+import 'package:bldr_fitness/features/community/domain/usecases/edit_community_post.dart';
 import 'package:bldr_fitness/features/profile/data/repositories/feedback_repository_impl.dart';
 import 'package:bldr_fitness/features/profile/domain/repositories/feedback_repository.dart';
 import 'package:bldr_fitness/features/profile/domain/usecases/feedback_usecases.dart';
@@ -591,6 +592,9 @@ void setupInjection({Map<String, dynamic> config = const {}}) {
       () => RunLiveActivityService());
 
   // --- Community ---
+  getIt.registerLazySingleton<EditCommunityPost>(
+    () => EditCommunityPost(getIt<CommunityFeedRepository>()),
+  );
   getIt.registerLazySingleton<CommunityFeedRepository>(
     () => CommunityFeedRepositoryImpl(
       SupabaseService.instance.client,

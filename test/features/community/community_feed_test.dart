@@ -8,6 +8,7 @@ import 'package:bldr_fitness/features/community/domain/entities/community_post.d
 import 'package:bldr_fitness/features/community/domain/entities/community_comment.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_profile.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_post_payload.dart';
+import 'package:bldr_fitness/features/community/domain/entities/pr_history.dart';
 import 'package:bldr_fitness/features/community/domain/entities/ranking_entry.dart';
 import 'package:bldr_fitness/features/community/domain/entities/recent_workout.dart';
 import 'package:bldr_fitness/features/community/domain/entities/workout_exercise.dart';
@@ -23,6 +24,24 @@ class _FakeCommunityFeedRepository implements CommunityFeedRepository {
   List<CommunityPost> followingFeedToReturn = [];
   String? lastRankingCategory;
   String? lastRankingPeriod;
+
+  Map<String, dynamic>? lastEditedPayload;
+
+  @override
+  Future<Result<void>> editPost({
+    required String postId,
+    required Map<String, dynamic> payload,
+  }) async {
+    lastEditedPayload = payload;
+    return const Result.success(null);
+  }
+
+  @override
+  Future<Result<List<PrHistoryEntry>>> fetchPrHistory({
+    required String userId,
+    required String exercise,
+  }) async =>
+      const Result.success([]);
 
   @override
   Future<Result<List<CommunityPost>>> fetchFeed({

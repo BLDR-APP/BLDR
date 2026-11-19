@@ -9682,6 +9682,210 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Confira a publicação de {name} no BLDR.'**
   String comm_share_text_simple(String name);
+
+  /// No description provided for @comm_view_activity.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ver atividade'**
+  String get comm_view_activity;
+
+  /// No description provided for @comm_view_evolution.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ver evolução'**
+  String get comm_view_evolution;
+
+  /// No description provided for @comm_action_edit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar publicação'**
+  String get comm_action_edit;
+
+  /// No description provided for @comm_action_edit_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'Altere o texto desta publicação'**
+  String get comm_action_edit_sub;
+
+  /// No description provided for @comm_edit_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escreva sua legenda'**
+  String get comm_edit_hint;
+
+  /// No description provided for @comm_edit_save.
+  ///
+  /// In pt, this message translates to:
+  /// **'SALVAR'**
+  String get comm_edit_save;
+
+  /// No description provided for @comm_edited.
+  ///
+  /// In pt, this message translates to:
+  /// **'Publicação atualizada.'**
+  String get comm_edited;
+
+  /// No description provided for @comm_workout_by.
+  ///
+  /// In pt, this message translates to:
+  /// **'Treino de {handle}'**
+  String comm_workout_by(String handle);
+
+  /// No description provided for @comm_label_volume.
+  ///
+  /// In pt, this message translates to:
+  /// **'VOLUME'**
+  String get comm_label_volume;
+
+  /// No description provided for @comm_label_sets.
+  ///
+  /// In pt, this message translates to:
+  /// **'SÉRIES'**
+  String get comm_label_sets;
+
+  /// No description provided for @comm_section_exercises.
+  ///
+  /// In pt, this message translates to:
+  /// **'EXERCÍCIOS'**
+  String get comm_section_exercises;
+
+  /// No description provided for @comm_exercises_empty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum exercício encontrado.'**
+  String get comm_exercises_empty;
+
+  /// No description provided for @comm_copy_note.
+  ///
+  /// In pt, this message translates to:
+  /// **'Uma cópia editável será adicionada à seção Meus Treinos.'**
+  String get comm_copy_note;
+
+  /// No description provided for @comm_copy_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'ADICIONAR AOS MEUS TREINOS'**
+  String get comm_copy_cta;
+
+  /// No description provided for @comm_copying.
+  ///
+  /// In pt, this message translates to:
+  /// **'ADICIONANDO…'**
+  String get comm_copying;
+
+  /// No description provided for @comm_copy_done.
+  ///
+  /// In pt, this message translates to:
+  /// **'Treino adicionado aos Meus Treinos.'**
+  String get comm_copy_done;
+
+  /// No description provided for @comm_copy_limit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você atingiu o limite de 3 cópias este mês. Faça upgrade para o Club.'**
+  String get comm_copy_limit;
+
+  /// No description provided for @comm_set_line.
+  ///
+  /// In pt, this message translates to:
+  /// **'Série {n}'**
+  String comm_set_line(int n);
+
+  /// No description provided for @comm_imported_by.
+  ///
+  /// In pt, this message translates to:
+  /// **'Importada por {handle}'**
+  String comm_imported_by(String handle);
+
+  /// No description provided for @comm_label_pace.
+  ///
+  /// In pt, this message translates to:
+  /// **'RITMO MÉDIO'**
+  String get comm_label_pace;
+
+  /// No description provided for @comm_label_calories.
+  ///
+  /// In pt, this message translates to:
+  /// **'CALORIAS'**
+  String get comm_label_calories;
+
+  /// No description provided for @comm_label_hr_max.
+  ///
+  /// In pt, this message translates to:
+  /// **'FC MÁXIMA'**
+  String get comm_label_hr_max;
+
+  /// No description provided for @comm_section_details.
+  ///
+  /// In pt, this message translates to:
+  /// **'DETALHES'**
+  String get comm_section_details;
+
+  /// No description provided for @comm_detail_source.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fonte'**
+  String get comm_detail_source;
+
+  /// No description provided for @comm_detail_start.
+  ///
+  /// In pt, this message translates to:
+  /// **'Início'**
+  String get comm_detail_start;
+
+  /// No description provided for @comm_activity_note.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dados compartilhados pelo usuário a partir da atividade importada.'**
+  String get comm_activity_note;
+
+  /// No description provided for @comm_pr_by.
+  ///
+  /// In pt, this message translates to:
+  /// **'Novo PR de {handle}'**
+  String comm_pr_by(String handle);
+
+  /// No description provided for @comm_pr_delta.
+  ///
+  /// In pt, this message translates to:
+  /// **'{value} kg vs. PR anterior'**
+  String comm_pr_delta(String value);
+
+  /// No description provided for @comm_label_prev_pr.
+  ///
+  /// In pt, this message translates to:
+  /// **'PR ANTERIOR'**
+  String get comm_label_prev_pr;
+
+  /// No description provided for @comm_label_evolution.
+  ///
+  /// In pt, this message translates to:
+  /// **'EVOLUÇÃO'**
+  String get comm_label_evolution;
+
+  /// No description provided for @comm_section_recent.
+  ///
+  /// In pt, this message translates to:
+  /// **'EVOLUÇÃO RECENTE'**
+  String get comm_section_recent;
+
+  /// No description provided for @comm_today.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hoje'**
+  String get comm_today;
+
+  /// No description provided for @comm_pr_note.
+  ///
+  /// In pt, this message translates to:
+  /// **'PR registrado no histórico de performance do atleta.'**
+  String get comm_pr_note;
+
+  /// No description provided for @comm_pr_private.
+  ///
+  /// In pt, this message translates to:
+  /// **'O histórico deste atleta não está disponível.'**
+  String get comm_pr_private;
 }
 
 class _AppLocalizationsDelegate

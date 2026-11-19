@@ -4,6 +4,7 @@ import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:bldr_fitness/design_system/bldr_community_v2_components.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_post.dart';
 import 'package:bldr_fitness/features/community/presentation/hub_v2/community_v2_format.dart';
+import 'package:bldr_fitness/features/integrations/presentation/widgets/bldr_whoop_card.dart';
 import 'package:bldr_fitness/l10n/app_localizations.dart';
 import 'package:bldr_fitness/theme/bldr_tokens.dart';
 
@@ -31,6 +32,8 @@ class CommunityPostCardV2 extends StatelessWidget {
   final Future<void> Function(CommunityPost, String) onReaction;
   final void Function(CommunityPost) onLongReact;
   final void Function(CommunityPost) onOpenWorkout;
+  final void Function(CommunityPost) onOpenActivity;
+  final void Function(CommunityPost) onOpenEvolution;
   final void Function(CommunityPost) onComments;
   final Future<void> Function(CommunityPost) onFollow;
   final Future<void> Function(CommunityPost) onMore;
@@ -43,6 +46,8 @@ class CommunityPostCardV2 extends StatelessWidget {
     required this.onReaction,
     required this.onLongReact,
     required this.onOpenWorkout,
+    required this.onOpenActivity,
+    required this.onOpenEvolution,
     required this.onComments,
     required this.onFollow,
     required this.onMore,
@@ -223,6 +228,8 @@ class CommunityPostCardV2 extends StatelessWidget {
     return _valued(
       type: l10n.comm_type_pr,
       title: post.exerciseName ?? l10n.comm_type_pr,
+      link: post.exerciseName == null ? null : l10n.comm_view_evolution,
+      onLink: () => onOpenEvolution(post),
       values: [
         if (post.prWeightKg case final w?) (kg(w), l10n.comm_label_load),
         if (post.prReps case final r?) ('$r', l10n.comm_label_reps),
@@ -237,6 +244,8 @@ class CommunityPostCardV2 extends StatelessWidget {
     return _valued(
       type: l10n.comm_type_activity,
       title: p.activityType ?? l10n.comm_activity_default,
+      link: l10n.comm_view_activity,
+      onLink: () => onOpenActivity(post),
       values: [
         if (p.distanceKm case final km?)
           (
@@ -257,13 +266,16 @@ class CommunityPostCardV2 extends StatelessWidget {
     final p = post.typedPayload;
     final name = p.wearableActivityType?.trim();
     final d = p.wearableDurationSeconds;
-    final km = p.distanceKm;
+    final km = p.wearableDistanceKm;
     return _valued(
       type: l10n.comm_type_imported,
       source: CommunityV2Format.providerLabel(p.wearableProvider),
       title: name == null || name.isEmpty
           ? l10n.comm_activity_default
           : CommunityV2Format.activityName(name),
+      link: l10n.comm_view_activity,
+      onLink: () => onOpenActivity(post),
+      whoop: p.wearableProvider?.toLowerCase().trim() == 'whoop',
       values: [
         if (km != null)
           (
@@ -318,6 +330,9 @@ class CommunityPostCardV2 extends StatelessWidget {
     required List<(String, String)> values,
     String? source,
     String? detail,
+    String? link,
+    VoidCallback? onLink,
+    bool whoop = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -369,9 +384,13 @@ class CommunityPostCardV2 extends StatelessWidget {
             ],
           ),
         ],
-        if (detail != null && detail.isNotEmpty) ...[
+        if ((detail != null && detail.isNotEmpty) || link != null) ...[
           const SizedBox(height: 6),
-          _metricLine(detail, null, null),
+          _metricLine(detail ?? '', link, onLink),
+        ],
+        if (whoop) ...[
+          const SizedBox(height: 6),
+          const BldrWhoopAttribution(),
         ],
       ],
     );

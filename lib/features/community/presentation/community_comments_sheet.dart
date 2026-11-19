@@ -34,43 +34,43 @@ class _CommentsState extends State<CommunityCommentsSheet> {
 
   void _subscribeComments() {
     _commentsChannel?.unsubscribe();
-    _commentsChannel = Supabase.instance.client
-        .channel('comments_${widget.feedId}')
-      ..onPostgresChanges(
-        event: PostgresChangeEvent.insert,
-        schema: 'public',
-        table: 'community_comments',
-        filter: PostgresChangeFilter(
-          type: PostgresChangeFilterType.eq,
-          column: 'feed_id',
-          value: widget.feedId,
-        ),
-        callback: (payload) {
-          if (!mounted) return;
-          final newId = payload.newRecord['id'] as String?;
-          if (newId == null) return;
-          // Dedup: skip if already present (optimistic insert)
-          final alreadyPresent = _comments.any((c) => c.id == newId) ||
-              _comments.any((c) => c.replies.any((r) => r.id == newId));
-          if (!alreadyPresent) _load();
-        },
-      )
-      ..onPostgresChanges(
-        event: PostgresChangeEvent.update,
-        schema: 'public',
-        table: 'community_comments',
-        filter: PostgresChangeFilter(
-          type: PostgresChangeFilterType.eq,
-          column: 'feed_id',
-          value: widget.feedId,
-        ),
-        callback: (payload) {
-          if (!mounted) return;
-          // Reload to pick up updated body with profile joins
-          _load();
-        },
-      )
-      ..subscribe();
+    _commentsChannel =
+        Supabase.instance.client.channel('comments_${widget.feedId}')
+          ..onPostgresChanges(
+            event: PostgresChangeEvent.insert,
+            schema: 'public',
+            table: 'community_comments',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'feed_id',
+              value: widget.feedId,
+            ),
+            callback: (payload) {
+              if (!mounted) return;
+              final newId = payload.newRecord['id'] as String?;
+              if (newId == null) return;
+              // Dedup: skip if already present (optimistic insert)
+              final alreadyPresent = _comments.any((c) => c.id == newId) ||
+                  _comments.any((c) => c.replies.any((r) => r.id == newId));
+              if (!alreadyPresent) _load();
+            },
+          )
+          ..onPostgresChanges(
+            event: PostgresChangeEvent.update,
+            schema: 'public',
+            table: 'community_comments',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'feed_id',
+              value: widget.feedId,
+            ),
+            callback: (payload) {
+              if (!mounted) return;
+              // Reload to pick up updated body with profile joins
+              _load();
+            },
+          )
+          ..subscribe();
   }
 
   @override
