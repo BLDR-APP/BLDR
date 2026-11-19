@@ -82,6 +82,7 @@ class SaveMealFromEntries {
             foodItemId: e.foodItemId,
             quantityGrams: e.quantityGrams,
             macros: e.macros,
+            unit: e.unit,
           ),
       ]),
       userId,
@@ -112,6 +113,7 @@ class AddSavedMealToDiary {
               foodItemId: i.foodItemId,
               quantityGrams: i.quantityGrams,
               macros: i.macros,
+              unit: i.unit,
             ),
         ],
         toDate: date,
@@ -278,6 +280,7 @@ class CopyMeal {
         createdBy: e.createdBy,
         quantityGrams: e.quantityGrams,
         macros: e.macros,
+        unit: e.unit,
       ));
       if (r.isFailure) {
         return Result.failure(r.failureOrNull!);
@@ -362,6 +365,7 @@ class LogMeal {
       createdBy: food.createdBy ?? createdBy,
       quantityGrams: quantityGrams,
       macros: food.macrosFor(quantityGrams).rounded(),
+      unit: food.unit,
     );
 
     final saved = await _diary.addEntry(entry);

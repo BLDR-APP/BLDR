@@ -13042,6 +13042,78 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'{count} alimentos adicionados ao {meal}'**
   String nutri2_toast_saved_added(int count, String meal);
+
+  /// No description provided for @nutri2_create_unit_weight.
+  ///
+  /// In pt, this message translates to:
+  /// **'PESO DE 1 UNIDADE'**
+  String get nutri2_create_unit_weight;
+
+  /// No description provided for @nutri2_create_unit_measure.
+  ///
+  /// In pt, this message translates to:
+  /// **'UNIDADE DE MEDIDA'**
+  String get nutri2_create_unit_measure;
+
+  /// No description provided for @nutri2_create_unit_help.
+  ///
+  /// In pt, this message translates to:
+  /// **'Informe o peso de 1 unidade. O BLDR usa esse valor para calcular automaticamente qualquer quantidade consumida.'**
+  String get nutri2_create_unit_help;
+
+  /// No description provided for @nutri2_create_unit_desc.
+  ///
+  /// In pt, this message translates to:
+  /// **'DESCRIÇÃO DA UNIDADE · OPCIONAL'**
+  String get nutri2_create_unit_desc;
+
+  /// No description provided for @nutri2_create_unit_desc_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ex: 1 ovo, 1 barra, 1 pote'**
+  String get nutri2_create_unit_desc_hint;
+
+  /// No description provided for @nutri2_create_need_unit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Informe o peso de 1 unidade'**
+  String get nutri2_create_need_unit;
+
+  /// No description provided for @nutri2_create_base_value_ml.
+  ///
+  /// In pt, this message translates to:
+  /// **'100 ml   ·   FIXO'**
+  String get nutri2_create_base_value_ml;
+
+  /// No description provided for @nutri2_create_info_sub_ml.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} · base de 100 ml'**
+  String nutri2_create_info_sub_ml(String name);
+
+  /// No description provided for @nutri2_per_ml.
+  ///
+  /// In pt, this message translates to:
+  /// **'por {ml} ml'**
+  String nutri2_per_ml(String ml);
+
+  /// No description provided for @nutri2_unit_weight_ml.
+  ///
+  /// In pt, this message translates to:
+  /// **'VOLUME DE 1 UNIDADE (ml)'**
+  String get nutri2_unit_weight_ml;
+
+  /// No description provided for @nutri2_food_meta_ml.
+  ///
+  /// In pt, this message translates to:
+  /// **'{ml} ml  ·  P {p}g  ·  C {c}g  ·  G {f}g'**
+  String nutri2_food_meta_ml(String ml, String p, String c, String f);
+
+  /// No description provided for @nutri2_qty_kcal.
+  ///
+  /// In pt, this message translates to:
+  /// **'{qty} · {kcal} kcal'**
+  String nutri2_qty_kcal(String qty, String kcal);
 }
 
 class _AppLocalizationsDelegate

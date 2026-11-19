@@ -12,6 +12,7 @@ class SavedMealModel {
               foodName: m['food_name'] as String? ?? '',
               foodItemId: m['food_item_id'] as String?,
               quantityGrams: r(m, 'quantity_grams'),
+              unit: m['unit'] == 'ml' ? 'ml' : 'g',
               macros: MacroNutrients(
                 calories: r(m, 'calories'),
                 protein: r(m, 'protein'),
@@ -39,6 +40,7 @@ class SavedMealModel {
               'food_name': i.foodName,
               'food_item_id': i.foodItemId,
               'quantity_grams': i.quantityGrams,
+              if (i.unit == 'ml') 'unit': 'ml',
               'calories': i.macros.calories,
               'protein': i.macros.protein,
               'carbs': i.macros.carbs,

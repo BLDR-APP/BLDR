@@ -7238,4 +7238,49 @@ class AppLocalizationsEn extends AppLocalizations {
   String nutri2_toast_saved_added(int count, String meal) {
     return '$count foods added to $meal';
   }
+
+  @override
+  String get nutri2_create_unit_weight => 'WEIGHT OF 1 UNIT';
+
+  @override
+  String get nutri2_create_unit_measure => 'MEASURE';
+
+  @override
+  String get nutri2_create_unit_help =>
+      'Enter the weight of 1 unit. BLDR uses it to calculate any amount eaten.';
+
+  @override
+  String get nutri2_create_unit_desc => 'UNIT DESCRIPTION · OPTIONAL';
+
+  @override
+  String get nutri2_create_unit_desc_hint => 'E.g. 1 egg, 1 bar, 1 cup';
+
+  @override
+  String get nutri2_create_need_unit => 'Enter the weight of 1 unit';
+
+  @override
+  String get nutri2_create_base_value_ml => '100 ml   ·   FIXED';
+
+  @override
+  String nutri2_create_info_sub_ml(String name) {
+    return '$name · per 100 ml';
+  }
+
+  @override
+  String nutri2_per_ml(String ml) {
+    return 'per $ml ml';
+  }
+
+  @override
+  String get nutri2_unit_weight_ml => 'VOLUME OF 1 UNIT (ml)';
+
+  @override
+  String nutri2_food_meta_ml(String ml, String p, String c, String f) {
+    return '$ml ml  ·  P ${p}g  ·  C ${c}g  ·  F ${f}g';
+  }
+
+  @override
+  String nutri2_qty_kcal(String qty, String kcal) {
+    return '$qty · $kcal kcal';
+  }
 }

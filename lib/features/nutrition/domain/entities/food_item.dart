@@ -16,6 +16,17 @@ class FoodItem {
   final double fiberPer100g;
   final double addedSugarPer100g;
 
+  /// Base em ml (líquido) em vez de g. Valores continuam "por 100".
+  final bool isLiquid;
+
+  /// Peso/volume de 1 unidade (g ou ml, conforme [isLiquid]), se cadastrado.
+  final double? unitWeight;
+
+  /// Ex.: "1 ovo", "1 pote".
+  final String? unitDescription;
+
+  String get unit => isLiquid ? 'ml' : 'g';
+
   const FoodItem({
     this.id,
     required this.name,
@@ -29,6 +40,9 @@ class FoodItem {
     this.sodiumPer100g = 0,
     this.fiberPer100g = 0,
     this.addedSugarPer100g = 0,
+    this.isLiquid = false,
+    this.unitWeight,
+    this.unitDescription,
   });
 
   /// Macros totais para uma quantidade consumida.

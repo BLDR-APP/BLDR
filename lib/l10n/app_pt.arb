@@ -3195,5 +3195,21 @@
   "nutri2_saved_confirm_cta": "CONFIRMAR ADIÇÃO",
   "nutri2_back": "Voltar",
   "nutri2_toast_saved_added": "{count} alimentos adicionados ao {meal}",
-  "@nutri2_toast_saved_added": {"placeholders": {"count": {"type": "int"}, "meal": {"type": "String"}}}
+  "@nutri2_toast_saved_added": {"placeholders": {"count": {"type": "int"}, "meal": {"type": "String"}}},
+  "nutri2_create_unit_weight": "PESO DE 1 UNIDADE",
+  "nutri2_create_unit_measure": "UNIDADE DE MEDIDA",
+  "nutri2_create_unit_help": "Informe o peso de 1 unidade. O BLDR usa esse valor para calcular automaticamente qualquer quantidade consumida.",
+  "nutri2_create_unit_desc": "DESCRIÇÃO DA UNIDADE · OPCIONAL",
+  "nutri2_create_unit_desc_hint": "Ex: 1 ovo, 1 barra, 1 pote",
+  "nutri2_create_need_unit": "Informe o peso de 1 unidade",
+  "nutri2_create_base_value_ml": "100 ml   ·   FIXO",
+  "nutri2_create_info_sub_ml": "{name} · base de 100 ml",
+  "@nutri2_create_info_sub_ml": {"placeholders": {"name": {"type": "String"}}},
+  "nutri2_per_ml": "por {ml} ml",
+  "@nutri2_per_ml": {"placeholders": {"ml": {"type": "String"}}},
+  "nutri2_unit_weight_ml": "VOLUME DE 1 UNIDADE (ml)",
+  "nutri2_food_meta_ml": "{ml} ml  ·  P {p}g  ·  C {c}g  ·  G {f}g",
+  "@nutri2_food_meta_ml": {"placeholders": {"ml": {"type": "String"}, "p": {"type": "String"}, "c": {"type": "String"}, "f": {"type": "String"}}},
+  "nutri2_qty_kcal": "{qty} · {kcal} kcal",
+  "@nutri2_qty_kcal": {"placeholders": {"qty": {"type": "String"}, "kcal": {"type": "String"}}}
 }

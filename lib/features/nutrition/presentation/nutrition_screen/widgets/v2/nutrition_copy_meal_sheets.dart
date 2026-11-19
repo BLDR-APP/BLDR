@@ -90,7 +90,8 @@ abstract final class NutritionCopyMealSheets {
                         style: BldrNutritionTextV2.copyFood),
                     const SizedBox(height: 4),
                     Text(
-                        l.nutri2_copy_food_meta('${e.quantityGrams.round()}',
+                        l.nutri2_qty_kcal(
+                            '${e.quantityGrams.round()}${e.isLiquid ? ' ml' : 'g'}',
                             _kcal(l, e.macros.calories)),
                         style: BldrNutritionTextV2.copyFoodMeta),
                   ],

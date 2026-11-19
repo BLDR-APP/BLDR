@@ -13,15 +13,46 @@ class CreateFoodDraft {
   final String name;
   final String brand;
   final Map<String, String> values; // chave do campo → texto digitado
-  const CreateFoodDraft(
-      {this.name = '', this.brand = '', this.values = const {}});
 
-  CreateFoodDraft copyWith(
-          {String? name, String? brand, Map<String, String>? values}) =>
+  /// Tipo de porção "Por unidade" (102:166) e base líquida (ml).
+  final bool byUnit;
+  final bool liquid;
+  final String unitWeight;
+  final String unitDescription;
+  const CreateFoodDraft({
+    this.name = '',
+    this.brand = '',
+    this.values = const {},
+    this.byUnit = false,
+    this.liquid = false,
+    this.unitWeight = '',
+    this.unitDescription = '',
+  });
+
+  CreateFoodDraft copyWith({
+    String? name,
+    String? brand,
+    Map<String, String>? values,
+    bool? byUnit,
+    bool? liquid,
+    String? unitWeight,
+    String? unitDescription,
+  }) =>
       CreateFoodDraft(
-          name: name ?? this.name,
-          brand: brand ?? this.brand,
-          values: values ?? this.values);
+        name: name ?? this.name,
+        brand: brand ?? this.brand,
+        values: values ?? this.values,
+        byUnit: byUnit ?? this.byUnit,
+        liquid: liquid ?? this.liquid,
+        unitWeight: unitWeight ?? this.unitWeight,
+        unitDescription: unitDescription ?? this.unitDescription,
+      );
+
+  /// Peso/volume de 1 unidade válido (> 0) ou null.
+  double? get unitWeightValue {
+    final v = _num(unitWeight);
+    return v != null && v > 0 ? v : null;
+  }
 
   static double? _num(String? t) {
     final s = (t ?? '').trim().replaceAll(',', '.');
@@ -45,6 +76,11 @@ class CreateFoodDraft {
       fiberPer100g: _num(values['fiber']) ?? 0,
       sodiumPer100g: _num(values['sodium']) ?? 0,
       addedSugarPer100g: _num(values['sugar']) ?? 0,
+      isLiquid: liquid,
+      unitWeight: byUnit ? unitWeightValue : null,
+      unitDescription: byUnit && unitDescription.trim().isNotEmpty
+          ? unitDescription.trim()
+          : null,
     );
   }
 }
@@ -118,32 +154,39 @@ class _Field extends StatelessWidget {
       );
 }
 
-Widget _pill(String label, bool on, {bool enabled = true}) => Semantics(
+Widget _pill(String label, bool on,
+        {bool enabled = true, VoidCallback? onTap}) =>
+    Semantics(
+      button: onTap != null,
       selected: on,
       enabled: enabled,
-      child: Opacity(
-        opacity: enabled || on ? 1 : 0.45,
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 38),
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: on
-                ? BldrNutritionColorsV2.chipActiveBg
-                : BldrNutritionColorsV2.summaryBg,
-            borderRadius: BorderRadius.circular(19),
-            border: Border.all(
-                color: on
-                    ? BldrNutritionColorsV2.gold
-                    : BldrNutritionColorsV2.summaryBorder,
-                width: on ? 1 : 0.8),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: enabled ? onTap : null,
+        child: Opacity(
+          opacity: enabled || on ? 1 : 0.45,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 38),
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              color: on
+                  ? BldrNutritionColorsV2.chipActiveBg
+                  : BldrNutritionColorsV2.summaryBg,
+              borderRadius: BorderRadius.circular(19),
+              border: Border.all(
+                  color: on
+                      ? BldrNutritionColorsV2.gold
+                      : BldrNutritionColorsV2.summaryBorder,
+                  width: on ? 1 : 0.8),
+            ),
+            child: Text(label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: on
+                    ? BldrNutritionTextV2.segmentOn
+                    : BldrNutritionTextV2.segment),
           ),
-          child: Text(label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: on
-                  ? BldrNutritionTextV2.segmentOn
-                  : BldrNutritionTextV2.segment),
         ),
       ),
     );
@@ -170,7 +213,9 @@ abstract final class NutritionCreateFoodSheets {
       context,
       eyebrow: l.nutri2_eyebrow,
       title: l.nutri2_create_info_title,
-      subtitle: l.nutri2_create_info_sub(draft.name.trim()),
+      subtitle: draft.liquid
+          ? l.nutri2_create_info_sub_ml(draft.name.trim())
+          : l.nutri2_create_info_sub(draft.name.trim()),
       closeLabel: l.nutri2_close,
       child: _Step2(draft: draft),
     );
@@ -198,14 +243,40 @@ class _Step1 extends StatefulWidget {
 class _Step1State extends State<_Step1> {
   late final _name = TextEditingController(text: widget.draft.name);
   late final _brand = TextEditingController(text: widget.draft.brand);
+  late final _unitWeight = TextEditingController(text: widget.draft.unitWeight);
+  late final _unitDesc =
+      TextEditingController(text: widget.draft.unitDescription);
+  late bool _byUnit = widget.draft.byUnit;
+  late bool _liquid = widget.draft.liquid;
   bool _missingName = false;
+  bool _missingUnit = false;
 
   @override
   void dispose() {
     _name.dispose();
     _brand.dispose();
+    _unitWeight.dispose();
+    _unitDesc.dispose();
     super.dispose();
   }
+
+  Widget _measure(AppLocalizations l, String label, String a, String b) =>
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(label, style: BldrNutritionTextV2.fieldLabel),
+          const SizedBox(height: 6),
+          Row(children: [
+            Expanded(
+                child: _pill(a, !_liquid,
+                    onTap: () => setState(() => _liquid = false))),
+            const SizedBox(width: 8),
+            Expanded(
+                child: _pill(b, _liquid,
+                    onTap: () => setState(() => _liquid = true))),
+          ]),
+        ],
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -231,79 +302,110 @@ class _Step1State extends State<_Step1> {
         const SizedBox(height: 16),
         Text(l.nutri2_portion_type, style: BldrNutritionTextV2.fieldLabel),
         const SizedBox(height: 6),
-        // "Por unidade" desabilitado até haver campo para o peso da unidade.
         Row(children: [
-          Expanded(child: _pill(l.nutri2_create_standard, true)),
+          Expanded(
+              child: _pill(l.nutri2_create_standard, !_byUnit,
+                  onTap: () => setState(() => _byUnit = false))),
           const SizedBox(width: 8),
           Expanded(
-              child: _pill(l.nutri2_create_per_unit, false, enabled: false)),
+              child: _pill(l.nutri2_create_per_unit, _byUnit,
+                  onTap: () => setState(() => _byUnit = true))),
         ]),
         const SizedBox(height: 16),
         LayoutBuilder(builder: (context, c) {
           final scale = MediaQuery.textScalerOf(context).scale(1);
-          final base = Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(l.nutri2_create_base, style: BldrNutritionTextV2.fieldLabel),
-              const SizedBox(height: 6),
-              Container(
-                constraints: const BoxConstraints(minHeight: 48),
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(
-                  color: BldrNutritionColorsV2.lockedBg,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                      color: BldrNutritionColorsV2.lockedBorder, width: 0.8),
-                ),
-                child: Row(children: [
-                  Expanded(
-                    child: Text(l.nutri2_create_base_value,
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        style: BldrNutritionTextV2.locked),
-                  ),
-                  const Icon(TablerIcons.lock,
-                      size: 14, color: BldrNutritionColorsV2.lockedText),
-                ]),
-              ),
-            ],
-          );
-          // Líquido (ml) desabilitado: a base guarda só gramas.
-          final type = Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(l.nutri2_create_type, style: BldrNutritionTextV2.fieldLabel),
-              const SizedBox(height: 6),
-              Row(children: [
-                Expanded(child: _pill(l.nutri2_create_solid, true)),
-                const SizedBox(width: 8),
-                Expanded(
-                    child:
-                        _pill(l.nutri2_create_liquid, false, enabled: false)),
-              ]),
-            ],
-          );
+          // Padrão (102:296): base fixa + sólido/líquido.
+          // Por unidade (102:166): peso de 1 unidade + g/ml.
+          final left = _byUnit
+              ? _Field(
+                  label: l.nutri2_create_unit_weight,
+                  controller: _unitWeight,
+                  numeric: true,
+                  suffix: _liquid ? 'ml' : 'g')
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(l.nutri2_create_base,
+                        style: BldrNutritionTextV2.fieldLabel),
+                    const SizedBox(height: 6),
+                    Container(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      padding: const EdgeInsets.symmetric(horizontal: 14),
+                      decoration: BoxDecoration(
+                        color: BldrNutritionColorsV2.lockedBg,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                            color: BldrNutritionColorsV2.lockedBorder,
+                            width: 0.8),
+                      ),
+                      child: Row(children: [
+                        Expanded(
+                          child: Text(
+                              _liquid
+                                  ? l.nutri2_create_base_value_ml
+                                  : l.nutri2_create_base_value,
+                              textAlign: TextAlign.center,
+                              maxLines: 1,
+                              style: BldrNutritionTextV2.locked),
+                        ),
+                        const Icon(TablerIcons.lock,
+                            size: 14, color: BldrNutritionColorsV2.lockedText),
+                      ]),
+                    ),
+                  ],
+                );
+          final right = _byUnit
+              ? _measure(l, l.nutri2_create_unit_measure, 'g', 'ml')
+              : _measure(l, l.nutri2_create_type, l.nutri2_create_solid,
+                  l.nutri2_create_liquid);
           if (c.maxWidth < 360 * scale) {
-            return Column(children: [base, const SizedBox(height: 14), type]);
+            return Column(children: [left, const SizedBox(height: 14), right]);
           }
           return Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Expanded(child: base),
+            Expanded(child: left),
             const SizedBox(width: 8),
-            Expanded(child: type),
+            Expanded(child: right),
           ]);
         }),
-        const SizedBox(height: 12),
-        Text(l.nutri2_create_help, style: BldrNutritionTextV2.hint),
+        if (_missingUnit) ...[
+          const SizedBox(height: 4),
+          Text(l.nutri2_create_need_unit, style: BldrNutritionTextV2.removeCta),
+        ],
+        if (_byUnit) ...[
+          const SizedBox(height: 12),
+          Text(l.nutri2_create_unit_help, style: BldrNutritionTextV2.hint),
+          const SizedBox(height: 14),
+          _Field(
+              label: l.nutri2_create_unit_desc,
+              hint: l.nutri2_create_unit_desc_hint,
+              controller: _unitDesc),
+        ],
+        if (!_byUnit) ...[
+          const SizedBox(height: 12),
+          Text(l.nutri2_create_help, style: BldrNutritionTextV2.hint),
+        ],
         const SizedBox(height: 40),
         BldrNutritionCta(
           label: l.nutri2_create_continue,
           onTap: () {
-            if (_name.text.trim().isEmpty) {
-              setState(() => _missingName = true);
+            final draft = widget.draft.copyWith(
+              name: _name.text,
+              brand: _brand.text,
+              byUnit: _byUnit,
+              liquid: _liquid,
+              unitWeight: _unitWeight.text,
+              unitDescription: _unitDesc.text,
+            );
+            final missingName = _name.text.trim().isEmpty;
+            final missingUnit = _byUnit && draft.unitWeightValue == null;
+            if (missingName || missingUnit) {
+              setState(() {
+                _missingName = missingName;
+                _missingUnit = missingUnit;
+              });
               return;
             }
-            Navigator.pop(context,
-                widget.draft.copyWith(name: _name.text, brand: _brand.text));
+            Navigator.pop(context, draft);
           },
         ),
       ],

@@ -7,11 +7,13 @@ class SavedMealItem {
   final String? foodItemId;
   final double quantityGrams;
   final MacroNutrients macros;
+  final String unit;
   const SavedMealItem({
     required this.foodName,
     required this.quantityGrams,
     required this.macros,
     this.foodItemId,
+    this.unit = 'g',
   });
 }
 

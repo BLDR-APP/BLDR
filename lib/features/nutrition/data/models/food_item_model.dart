@@ -25,6 +25,9 @@ class FoodItemModel {
       sodiumPer100g: read('sodium_per_100g', 'sodium'),
       fiberPer100g: read('fiber_per_100g', 'fiber'),
       addedSugarPer100g: read('added_sugar_per_100g', 'added_sugar'),
+      isLiquid: map['unit'] == 'ml',
+      unitWeight: (map['unit_weight'] as num?)?.toDouble(),
+      unitDescription: map['unit_description'] as String?,
     );
   }
 
@@ -40,5 +43,10 @@ class FoodItemModel {
         'sodium_per_100g': item.sodiumPer100g,
         'fiber_per_100g': item.fiberPer100g,
         'added_sugar_per_100g': item.addedSugarPer100g,
+        // Campos opcionais da N4 (só gravados quando existem).
+        if (item.isLiquid) 'unit': 'ml',
+        if (item.unitWeight != null) 'unit_weight': item.unitWeight,
+        if (item.unitDescription != null && item.unitDescription!.isNotEmpty)
+          'unit_description': item.unitDescription,
       };
 }

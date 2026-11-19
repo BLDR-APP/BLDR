@@ -113,4 +113,22 @@ void main() {
     });
     expect(r?.remove, isTrue);
   });
+
+  testWidgets('alimento com unidade cadastrada abre em Unidade (ml)', (t) async {
+    const milk = FoodItem(
+        name: 'Leite',
+        caloriesPer100g: 60,
+        isLiquid: true,
+        unitWeight: 200,
+        unitDescription: '1 copo');
+    final r = await _open(
+        t, (c) => NutritionPortionSheet.add(c, food: milk, slot: lunch),
+        (t) async {
+      expect(find.text('VOLUME DE 1 UNIDADE (ml)'), findsOneWidget);
+      expect(find.text('1 copo'), findsOneWidget);
+      expect(find.text('por 200 ml'), findsOneWidget);
+      await t.tap(find.text('ADICIONAR ALIMENTO'));
+    });
+    expect(r?.grams, 200);
+  });
 }

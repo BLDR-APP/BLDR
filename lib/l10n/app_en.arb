@@ -3069,5 +3069,17 @@
   "nutri2_saved_confirm_note": "The {count} foods will be added to the diary.",
   "nutri2_saved_confirm_cta": "CONFIRM",
   "nutri2_back": "Back",
-  "nutri2_toast_saved_added": "{count} foods added to {meal}"
+  "nutri2_toast_saved_added": "{count} foods added to {meal}",
+  "nutri2_create_unit_weight": "WEIGHT OF 1 UNIT",
+  "nutri2_create_unit_measure": "MEASURE",
+  "nutri2_create_unit_help": "Enter the weight of 1 unit. BLDR uses it to calculate any amount eaten.",
+  "nutri2_create_unit_desc": "UNIT DESCRIPTION · OPTIONAL",
+  "nutri2_create_unit_desc_hint": "E.g. 1 egg, 1 bar, 1 cup",
+  "nutri2_create_need_unit": "Enter the weight of 1 unit",
+  "nutri2_create_base_value_ml": "100 ml   ·   FIXED",
+  "nutri2_create_info_sub_ml": "{name} · per 100 ml",
+  "nutri2_per_ml": "per {ml} ml",
+  "nutri2_unit_weight_ml": "VOLUME OF 1 UNIT (ml)",
+  "nutri2_food_meta_ml": "{ml} ml  ·  P {p}g  ·  C {c}g  ·  F {f}g",
+  "nutri2_qty_kcal": "{qty} · {kcal} kcal"
 }

@@ -1,6 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bldr_fitness/features/nutrition/data/models/food_item_model.dart';
+import 'package:bldr_fitness/features/nutrition/data/models/meal_entry_model.dart';
+import 'package:bldr_fitness/features/nutrition/domain/entities/macro_nutrients.dart';
+import 'package:bldr_fitness/features/nutrition/domain/entities/meal_entry.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_create_food_sheets.dart';
 
 void main() {
@@ -44,5 +47,58 @@ void main() {
         const CreateFoodDraft(name: 'Y', values: {'kcal': '1'}).toFoodItem()!,
         'u');
     expect(noBrand.containsKey('brand'), isFalse);
+  });
+
+  test('líquido por unidade grava unit/unit_weight/unit_description', () {
+    const d = CreateFoodDraft(
+        name: 'Leite',
+        liquid: true,
+        byUnit: true,
+        unitWeight: '200',
+        unitDescription: '1 copo',
+        values: {'kcal': '60'});
+    final f = d.toFoodItem()!;
+    expect(f.isLiquid, isTrue);
+    expect(f.unit, 'ml');
+    expect(f.unitWeight, 200);
+    final map = FoodItemModel.toFavoriteMap(f, 'u');
+    expect(map['unit'], 'ml');
+    expect(map['unit_weight'], 200);
+    expect(map['unit_description'], '1 copo');
+    final back = FoodItemModel.fromMap(map);
+    expect(back.isLiquid, isTrue);
+    expect(back.unitWeight, 200);
+    expect(back.unitDescription, '1 copo');
+  });
+
+  test('padrão sólido não grava campos opcionais', () {
+    const d = CreateFoodDraft(name: 'Pão', values: {'kcal': '1'}, unitWeight: '50');
+    final map = FoodItemModel.toFavoriteMap(d.toFoodItem()!, 'u');
+    expect(map.containsKey('unit'), isFalse);
+    expect(map.containsKey('unit_weight'), isFalse);
+  });
+
+  test('peso de unidade inválido → null', () {
+    expect(const CreateFoodDraft(unitWeight: '0').unitWeightValue, isNull);
+    expect(const CreateFoodDraft(unitWeight: '55,5').unitWeightValue, 55.5);
+  });
+
+  test('diário guarda unit ml e lê de volta', () {
+    final e = MealEntry(
+        userId: 'u',
+        mealType: 'snack',
+        date: DateTime(2026, 9, 4),
+        foodName: 'Leite',
+        quantityGrams: 200,
+        macros: const MacroNutrients(calories: 120, protein: 6, carbs: 10, fat: 6),
+        unit: 'ml');
+    final map = MealEntryModel.toMap(e);
+    expect(map['unit'], 'ml');
+    expect(MealEntryModel.fromMap(map).isLiquid, isTrue);
+    expect(MealEntryModel.toMap(MealEntry(
+            userId: 'u', mealType: 'x', date: DateTime(2026), foodName: 'a',
+            quantityGrams: 1, macros: MacroNutrients.zero))
+        .containsKey('unit'), isFalse);
+    expect(e.copyWith(quantityGrams: 300).unit, 'ml');
   });
 }

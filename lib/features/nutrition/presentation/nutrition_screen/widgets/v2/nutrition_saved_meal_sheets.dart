@@ -112,8 +112,9 @@ abstract final class NutritionSavedMealSheets {
                         style: BldrNutritionTextV2.savedFood),
                     const SizedBox(height: 4),
                     Text(
-                        l.nutri2_copy_food_meta(
-                            _n(i.quantityGrams), _kcal(l, i.macros.calories)),
+                        l.nutri2_qty_kcal(
+                            '${_n(i.quantityGrams)}${i.unit == 'ml' ? ' ml' : 'g'}',
+                            _kcal(l, i.macros.calories)),
                         style: BldrNutritionTextV2.savedFoodMeta),
                   ],
                 ),

@@ -7279,4 +7279,49 @@ class AppLocalizationsPt extends AppLocalizations {
   String nutri2_toast_saved_added(int count, String meal) {
     return '$count alimentos adicionados ao $meal';
   }
+
+  @override
+  String get nutri2_create_unit_weight => 'PESO DE 1 UNIDADE';
+
+  @override
+  String get nutri2_create_unit_measure => 'UNIDADE DE MEDIDA';
+
+  @override
+  String get nutri2_create_unit_help =>
+      'Informe o peso de 1 unidade. O BLDR usa esse valor para calcular automaticamente qualquer quantidade consumida.';
+
+  @override
+  String get nutri2_create_unit_desc => 'DESCRIÇÃO DA UNIDADE · OPCIONAL';
+
+  @override
+  String get nutri2_create_unit_desc_hint => 'Ex: 1 ovo, 1 barra, 1 pote';
+
+  @override
+  String get nutri2_create_need_unit => 'Informe o peso de 1 unidade';
+
+  @override
+  String get nutri2_create_base_value_ml => '100 ml   ·   FIXO';
+
+  @override
+  String nutri2_create_info_sub_ml(String name) {
+    return '$name · base de 100 ml';
+  }
+
+  @override
+  String nutri2_per_ml(String ml) {
+    return 'por $ml ml';
+  }
+
+  @override
+  String get nutri2_unit_weight_ml => 'VOLUME DE 1 UNIDADE (ml)';
+
+  @override
+  String nutri2_food_meta_ml(String ml, String p, String c, String f) {
+    return '$ml ml  ·  P ${p}g  ·  C ${c}g  ·  G ${f}g';
+  }
+
+  @override
+  String nutri2_qty_kcal(String qty, String kcal) {
+    return '$qty · $kcal kcal';
+  }
 }

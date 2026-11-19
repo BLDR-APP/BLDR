@@ -3069,5 +3069,17 @@
   "nutri2_saved_confirm_note": "I {count} alimenti saranno aggiunti al diario.",
   "nutri2_saved_confirm_cta": "CONFERMA",
   "nutri2_back": "Indietro",
-  "nutri2_toast_saved_added": "{count} alimenti aggiunti a {meal}"
+  "nutri2_toast_saved_added": "{count} alimenti aggiunti a {meal}",
+  "nutri2_create_unit_weight": "PESO DI 1 UNITÀ",
+  "nutri2_create_unit_measure": "UNITÀ DI MISURA",
+  "nutri2_create_unit_help": "Inserisci il peso di 1 unità. Il BLDR lo usa per calcolare qualsiasi quantità.",
+  "nutri2_create_unit_desc": "DESCRIZIONE UNITÀ · FACOLTATIVO",
+  "nutri2_create_unit_desc_hint": "Es: 1 uovo, 1 barretta, 1 vasetto",
+  "nutri2_create_need_unit": "Inserisci il peso di 1 unità",
+  "nutri2_create_base_value_ml": "100 ml   ·   FISSO",
+  "nutri2_create_info_sub_ml": "{name} · base 100 ml",
+  "nutri2_per_ml": "per {ml} ml",
+  "nutri2_unit_weight_ml": "VOLUME DI 1 UNITÀ (ml)",
+  "nutri2_food_meta_ml": "{ml} ml  ·  P {p}g  ·  C {c}g  ·  G {f}g",
+  "nutri2_qty_kcal": "{qty} · {kcal} kcal"
 }

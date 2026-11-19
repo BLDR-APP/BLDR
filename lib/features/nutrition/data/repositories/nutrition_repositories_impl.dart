@@ -118,6 +118,7 @@ class FoodCatalogRepositoryImpl implements FoodCatalogRepository {
             sodiumPer100g: per100g.sodium,
             fiberPer100g: per100g.fiber,
             addedSugarPer100g: per100g.addedSugar,
+            isLiquid: entry.isLiquid,
           ));
           if (unique.length >= limit) break;
         }

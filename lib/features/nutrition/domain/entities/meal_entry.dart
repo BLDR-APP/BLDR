@@ -14,6 +14,11 @@ class MealEntry {
   final double quantityGrams;
   final MacroNutrients macros;
 
+  /// 'g' (padrão) ou 'ml' — unidade de [quantityGrams] para líquidos.
+  final String unit;
+
+  bool get isLiquid => unit == 'ml';
+
   const MealEntry({
     this.id,
     required this.userId,
@@ -25,6 +30,7 @@ class MealEntry {
     this.createdBy,
     required this.quantityGrams,
     required this.macros,
+    this.unit = 'g',
   });
 
   MealEntry copyWith({double? quantityGrams, MacroNutrients? macros}) =>
@@ -39,6 +45,7 @@ class MealEntry {
         createdBy: createdBy,
         quantityGrams: quantityGrams ?? this.quantityGrams,
         macros: macros ?? this.macros,
+        unit: unit,
       );
 
   /// Reconstrói os valores por 100g a partir dos totais gravados

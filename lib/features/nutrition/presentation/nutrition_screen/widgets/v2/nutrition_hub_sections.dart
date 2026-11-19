@@ -473,7 +473,8 @@ class NutritionMealsSection extends StatelessWidget {
         for (var i = 0; i < items.length; i++)
           BldrFoodRow(
             name: items[i].foodName,
-            quantity: '${items[i].quantityGrams.round()}g',
+            quantity:
+                '${items[i].quantityGrams.round()}${items[i].isLiquid ? ' ml' : 'g'}',
             macros: l.nutri2_food_macros(
               _fmtInt(items[i].macros.calories, loc),
               '${items[i].macros.protein.round()}',

@@ -122,8 +122,11 @@ class NutritionFoodPickRow extends StatelessWidget {
                       style: BldrNutritionTextV2.rowName),
                   const SizedBox(height: 4),
                   Text(
-                      l.nutri2_food_meta(
-                          '100', _n(m.protein), _n(m.carbs), _n(m.fat)),
+                      food.isLiquid
+                          ? l.nutri2_food_meta_ml(
+                              '100', _n(m.protein), _n(m.carbs), _n(m.fat))
+                          : l.nutri2_food_meta(
+                              '100', _n(m.protein), _n(m.carbs), _n(m.fat)),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: BldrNutritionTextV2.rowMeta),
@@ -674,6 +677,7 @@ abstract final class NutritionPortionSheet {
       sodiumPer100g: p.sodium,
       fiberPer100g: p.fiber,
       addedSugarPer100g: p.addedSugar,
+      isLiquid: entry.isLiquid,
     );
     return BldrV2Sheet.show<PortionResult>(
       context,
@@ -707,11 +711,14 @@ class _PortionBody extends StatefulWidget {
 }
 
 class _PortionBodyState extends State<_PortionBody> {
-  late double _qty = widget.initialGrams.roundToDouble();
-  bool _byUnit = false;
-  double _unitWeight = 50;
+  /// Alimento com peso de unidade cadastrado (N4) abre em "Unidade".
+  late final double? _savedUnit = widget.food.unitWeight;
+  late bool _byUnit = !widget.editing && _savedUnit != null;
+  late double _unitWeight = _savedUnit ?? 50;
+  late double _qty = _byUnit ? 1 : widget.initialGrams.roundToDouble();
   late NutritionMealSlot _slot = widget.slot;
-  final _unitCtrl = TextEditingController(text: '50');
+  late final _unitCtrl =
+      TextEditingController(text: NumberFormat('0.#').format(_unitWeight));
 
   double get _grams => _byUnit ? _qty * _unitWeight : _qty;
 
@@ -930,7 +937,14 @@ class _PortionBodyState extends State<_PortionBody> {
             ]),
           if (_byUnit) ...[
             const SizedBox(height: 14),
-            _label(l.nutri2_unit_weight),
+            _label(widget.food.isLiquid
+                ? l.nutri2_unit_weight_ml
+                : l.nutri2_unit_weight),
+            if (widget.food.unitDescription != null) ...[
+              Text(widget.food.unitDescription!,
+                  style: BldrNutritionTextV2.hint),
+              const SizedBox(height: 6),
+            ],
             Container(
               constraints: const BoxConstraints(minHeight: 44),
               padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -958,14 +972,16 @@ class _PortionBodyState extends State<_PortionBody> {
           const SizedBox(height: 18),
           _label(l.nutri2_measure),
           Row(children: [
+            // Base de cálculo do alimento: g (sólido) ou ml (líquido, N4).
             SizedBox(
                 width: 88,
-                child: _segment('g', true, null, height: 38, radius: 14)),
+                child: _segment('g', !widget.food.isLiquid, null,
+                    height: 38, radius: 14)),
             const SizedBox(width: 8),
-            // ml: a base de alimentos só tem gramas → em breve.
             SizedBox(
                 width: 88,
-                child: _segment('ml', false, null, height: 38, radius: 14)),
+                child: _segment('ml', widget.food.isLiquid, null,
+                    height: 38, radius: 14)),
             const SizedBox(width: 12),
             Expanded(
               child: Text(l.nutri2_measure_hint,
@@ -977,9 +993,13 @@ class _PortionBodyState extends State<_PortionBody> {
           const SizedBox(height: 18),
           Row(children: [
             Expanded(child: _label(l.nutri2_nutrition_info)),
+            const SizedBox(width: 8),
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: Text(l.nutri2_per_grams(gramsText),
+              child: Text(
+                  widget.food.isLiquid
+                      ? l.nutri2_per_ml(gramsText)
+                      : l.nutri2_per_grams(gramsText),
                   style: BldrNutritionTextV2.perGrams),
             ),
           ]),

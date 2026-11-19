@@ -30,6 +30,7 @@ class MealEntryModel {
         fiber: read('fiber'),
         addedSugar: read('added_sugar'),
       ),
+      unit: map['unit'] == 'ml' ? 'ml' : 'g',
     );
   }
 
@@ -49,6 +50,7 @@ class MealEntryModel {
         'fiber': entry.macros.fiber,
         'added_sugar': entry.macros.addedSugar,
         'created_by': entry.createdBy,
+        if (entry.isLiquid) 'unit': 'ml',
       };
 
   static Map<String, dynamic> toQuantityUpdate(MealEntry updated) => {
