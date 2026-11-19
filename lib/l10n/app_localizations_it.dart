@@ -7176,4 +7176,87 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get nutri2_toast_kcal_goal_label => 'Calorie del giorno';
+
+  @override
+  String get nutri2_meal_menu_title => 'Pasto';
+
+  @override
+  String get nutri2_save_meal_menu => 'Salva come pasto';
+
+  @override
+  String get nutri2_save_meal_title => 'Salva pasto';
+
+  @override
+  String get nutri2_save_meal_name => 'NOME DEL PASTO';
+
+  @override
+  String get nutri2_save_meal_hint => 'Es: Pranzo completo';
+
+  @override
+  String get nutri2_save_meal_cta => 'SALVA PASTO';
+
+  @override
+  String nutri2_save_meal_desc(int count, String kcal) {
+    return '$count alimenti · $kcal kcal';
+  }
+
+  @override
+  String get nutri2_toast_meal_saved => 'Pasto salvato';
+
+  @override
+  String get nutri2_saved_eyebrow => 'LA MIA NUTRIZIONE';
+
+  @override
+  String get nutri2_saved_title => 'Pasti salvati';
+
+  @override
+  String get nutri2_saved_search => 'Cerca pasto salvato';
+
+  @override
+  String get nutri2_saved_list => 'PASTI SALVATI';
+
+  @override
+  String get nutri2_saved_empty =>
+      'Nessun pasto salvato. Usa \"⋯\" su un pasto e \"Salva come pasto\".';
+
+  @override
+  String nutri2_saved_macros(String p, String c, String f) {
+    return 'P ${p}g  ·  C ${c}g  ·  G ${f}g';
+  }
+
+  @override
+  String get nutri2_saved_detail_eyebrow => 'PASTO SALVATO';
+
+  @override
+  String nutri2_saved_detail_sub(String desc, int count) {
+    return '$desc  ·  $count alimenti';
+  }
+
+  @override
+  String get nutri2_saved_items => 'ALIMENTI DEL PASTO';
+
+  @override
+  String get nutri2_saved_add => 'AGGIUNGI AL DIARIO';
+
+  @override
+  String get nutri2_saved_confirm_eyebrow => 'CONFERMA';
+
+  @override
+  String get nutri2_saved_confirm_title => 'Aggiungi pasto';
+
+  @override
+  String nutri2_saved_confirm_note(int count) {
+    return 'I $count alimenti saranno aggiunti al diario.';
+  }
+
+  @override
+  String get nutri2_saved_confirm_cta => 'CONFERMA';
+
+  @override
+  String get nutri2_back => 'Indietro';
+
+  @override
+  String nutri2_toast_saved_added(int count, String meal) {
+    return '$count alimenti aggiunti a $meal';
+  }
 }

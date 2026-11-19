@@ -7155,4 +7155,87 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get nutri2_toast_kcal_goal_label => 'Daily calories';
+
+  @override
+  String get nutri2_meal_menu_title => 'Meal';
+
+  @override
+  String get nutri2_save_meal_menu => 'Save as meal';
+
+  @override
+  String get nutri2_save_meal_title => 'Save meal';
+
+  @override
+  String get nutri2_save_meal_name => 'MEAL NAME';
+
+  @override
+  String get nutri2_save_meal_hint => 'E.g. Full lunch';
+
+  @override
+  String get nutri2_save_meal_cta => 'SAVE MEAL';
+
+  @override
+  String nutri2_save_meal_desc(int count, String kcal) {
+    return '$count foods · $kcal kcal';
+  }
+
+  @override
+  String get nutri2_toast_meal_saved => 'Meal saved';
+
+  @override
+  String get nutri2_saved_eyebrow => 'MY NUTRITION';
+
+  @override
+  String get nutri2_saved_title => 'Saved Meals';
+
+  @override
+  String get nutri2_saved_search => 'Search saved meal';
+
+  @override
+  String get nutri2_saved_list => 'SAVED MEALS';
+
+  @override
+  String get nutri2_saved_empty =>
+      'No saved meals yet. Use \"⋯\" on a meal and \"Save as meal\".';
+
+  @override
+  String nutri2_saved_macros(String p, String c, String f) {
+    return 'P ${p}g  ·  C ${c}g  ·  F ${f}g';
+  }
+
+  @override
+  String get nutri2_saved_detail_eyebrow => 'SAVED MEAL';
+
+  @override
+  String nutri2_saved_detail_sub(String desc, int count) {
+    return '$desc  ·  $count foods';
+  }
+
+  @override
+  String get nutri2_saved_items => 'MEAL FOODS';
+
+  @override
+  String get nutri2_saved_add => 'ADD TO DIARY';
+
+  @override
+  String get nutri2_saved_confirm_eyebrow => 'CONFIRM';
+
+  @override
+  String get nutri2_saved_confirm_title => 'Add meal';
+
+  @override
+  String nutri2_saved_confirm_note(int count) {
+    return 'The $count foods will be added to the diary.';
+  }
+
+  @override
+  String get nutri2_saved_confirm_cta => 'CONFIRM';
+
+  @override
+  String get nutri2_back => 'Back';
+
+  @override
+  String nutri2_toast_saved_added(int count, String meal) {
+    return '$count foods added to $meal';
+  }
 }

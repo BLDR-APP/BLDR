@@ -37,13 +37,28 @@ class FirestoreNutritionDatasource {
     return _withIds(snapshot);
   }
 
+  /// Alimentos favoritos. Ignora as refeições salvas (`type: 'meal'`),
+  /// que moram na mesma coleção (N7).
   Future<List<Map<String, dynamic>>> favorites(String userId) async {
     final snapshot = await _db
         .collection('user_favorites')
         .where('user_id', isEqualTo: userId)
         .orderBy('name')
         .get();
-    return _withIds(snapshot);
+    return _withIds(snapshot).where((d) => d['type'] != 'meal').toList();
+  }
+
+  /// Refeições salvas: só igualdades (`user_id`, `type`) — sem índice
+  /// composto. Ordenadas por nome no cliente.
+  Future<List<Map<String, dynamic>>> savedMeals(String userId) async {
+    final snapshot = await _db
+        .collection('user_favorites')
+        .where('user_id', isEqualTo: userId)
+        .where('type', isEqualTo: 'meal')
+        .get();
+    final rows = _withIds(snapshot);
+    rows.sort((a, b) => '${a['name']}'.compareTo('${b['name']}'));
+    return rows;
   }
 
   Future<Map<String, dynamic>> addFavorite(Map<String, dynamic> data) async {

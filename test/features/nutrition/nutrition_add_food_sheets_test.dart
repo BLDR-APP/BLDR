@@ -67,7 +67,7 @@ void main() {
   testWidgets('atalhos Em breve não fecham o sheet', (t) async {
     final r = await _open(t,
         (c) => NutritionAddFoodSheet.show(c, catalog: _catalog), (t) async {
-      expect(find.text('EM BREVE'), findsNWidgets(3));
+      expect(find.text('EM BREVE'), findsNWidgets(2));
       await t.tap(find.text('CÓD. BARRAS'));
       await t.pumpAndSettle();
       expect(find.text('Adicionar Alimentos'), findsOneWidget);

@@ -1623,6 +1623,9 @@ abstract final class BldrNutritionColorsV2 {
   static const lockedBg = Color(0xFF060606);
   static const lockedBorder = Color(0xFF2E291A);
   static const lockedText = Color(0xFF999999);
+  // Refeições salvas (102:318/319/320)
+  static const savedCard = Color(0xFF1F1F1F);
+  static const savedMuted = Color(0xFF9E9E9E);
 }
 
 abstract final class BldrNutritionTextV2 {
@@ -1735,6 +1738,16 @@ abstract final class BldrNutritionTextV2 {
   static final inputValue = _s(BldrTextV2.s13, _r, _t); // 9
   static final locked =
       _s(BldrTextV2.s11, _b, BldrNutritionColorsV2.lockedText); // 9
+  // Refeições salvas
+  static const _sm = BldrNutritionColorsV2.savedMuted;
+  static final savedSub = _s(BldrTextV2.s11, _m, _sm); // 11
+  static final savedKcal =
+      _s(BldrTextV2.s20, _m, BldrNutritionColorsV2.goldBright); // 21
+  static final savedMacros = _s(BldrTextV2.s12, _m, _w); // 12
+  static final savedLabel = _s(BldrTextV2.s11, _m, _sm); // 11
+  static final savedFood = _s(BldrTextV2.s12, _m, _w); // 12
+  static final savedFoodMeta = _s(BldrTextV2.s11, _m, _sm); // 10
+  static final savedBack = _s(BldrTextV2.s24, _m, _g); // 25 (‹)
 }
 
 abstract final class BldrNutritionV2 {

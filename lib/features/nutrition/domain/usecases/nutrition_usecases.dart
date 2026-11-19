@@ -3,6 +3,7 @@ import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/daily_nutrition_summary.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/food_item.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/meal_entry.dart';
+import 'package:bldr_fitness/features/nutrition/domain/entities/saved_meal.dart';
 import 'package:bldr_fitness/features/nutrition/domain/services/iqd_calculator.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/nutrition_goals.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/user_goals.dart';
@@ -43,6 +44,79 @@ class SaveFavoriteFood {
 
   Future<Result<FoodItem>> call(FoodItem item, String userId) =>
       _catalog.saveFavorite(item, userId);
+}
+
+class GetSavedMeals {
+  final FoodCatalogRepository _catalog;
+  const GetSavedMeals(this._catalog);
+
+  Future<Result<List<SavedMeal>>> call(String userId) =>
+      _catalog.savedMeals(userId);
+}
+
+/// "Salvar como refeição" (N7): guarda os alimentos de uma refeição do
+/// diário com um nome, mantendo as quantidades e os macros totais.
+class SaveMealFromEntries {
+  final FoodCatalogRepository _catalog;
+  const SaveMealFromEntries(this._catalog);
+
+  Future<Result<SavedMeal>> call({
+    required String name,
+    required List<MealEntry> entries,
+    required String userId,
+  }) {
+    final n = name.trim();
+    if (n.isEmpty) {
+      return Future.value(
+          const Result.failure(ValidationFailure('Dê um nome à refeição.')));
+    }
+    if (entries.isEmpty) {
+      return Future.value(const Result.failure(
+          ValidationFailure('Nenhum alimento para salvar.')));
+    }
+    return _catalog.saveMeal(
+      SavedMeal(name: n, items: [
+        for (final e in entries)
+          SavedMealItem(
+            foodName: e.foodName,
+            foodItemId: e.foodItemId,
+            quantityGrams: e.quantityGrams,
+            macros: e.macros,
+          ),
+      ]),
+      userId,
+    );
+  }
+}
+
+/// Adiciona uma refeição salva ao diário (102:320) reaproveitando
+/// [CopyMeal]: sem substituir itens e sem XP.
+class AddSavedMealToDiary {
+  final CopyMeal _copy;
+  const AddSavedMealToDiary(this._copy);
+
+  Future<Result<int>> call({
+    required SavedMeal meal,
+    required String userId,
+    required DateTime date,
+    required String mealType,
+  }) =>
+      _copy(
+        entries: [
+          for (final i in meal.items)
+            MealEntry(
+              userId: userId,
+              mealType: mealType,
+              date: date,
+              foodName: i.foodName,
+              foodItemId: i.foodItemId,
+              quantityGrams: i.quantityGrams,
+              macros: i.macros,
+            ),
+        ],
+        toDate: date,
+        toMealType: mealType,
+      );
 }
 
 class GetRecentFoods {

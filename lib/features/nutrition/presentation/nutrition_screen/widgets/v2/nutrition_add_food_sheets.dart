@@ -32,10 +32,20 @@ class AddFoodCatalog {
 class AddFoodPick {
   final FoodItem? food;
   final bool createManual;
-  const AddFoodPick.food(FoodItem this.food) : createManual = false;
+
+  /// Atalho "Refeições salvas" (N7).
+  final bool savedMeals;
+  const AddFoodPick.food(FoodItem this.food)
+      : createManual = false,
+        savedMeals = false;
   const AddFoodPick.manual()
       : food = null,
-        createManual = true;
+        createManual = true,
+        savedMeals = false;
+  const AddFoodPick.savedMeals()
+      : food = null,
+        createManual = false,
+        savedMeals = true;
 }
 
 /// Categorias reais da base `alimentos` (valor gravado + rótulo). O carrossel
@@ -371,7 +381,9 @@ class _AddFoodBodyState extends State<_AddFoodBody> {
           final tiles = [
             _tile(TablerIcons.history, l.nutri2_sc_recent_fav,
                 onTap: _openUnified),
-            _tile(TablerIcons.list_details, l.nutri2_sc_saved_meals),
+            _tile(TablerIcons.list_details, l.nutri2_sc_saved_meals,
+                onTap: () =>
+                    Navigator.pop(context, const AddFoodPick.savedMeals())),
             _tile(TablerIcons.barcode, l.nutri2_sc_barcode),
             _tile(TablerIcons.camera, l.nutri2_sc_photo),
           ];

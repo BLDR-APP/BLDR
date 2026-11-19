@@ -12898,6 +12898,150 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Calorias do dia'**
   String get nutri2_toast_kcal_goal_label;
+
+  /// No description provided for @nutri2_meal_menu_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Refeição'**
+  String get nutri2_meal_menu_title;
+
+  /// No description provided for @nutri2_save_meal_menu.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvar como refeição'**
+  String get nutri2_save_meal_menu;
+
+  /// No description provided for @nutri2_save_meal_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvar refeição'**
+  String get nutri2_save_meal_title;
+
+  /// No description provided for @nutri2_save_meal_name.
+  ///
+  /// In pt, this message translates to:
+  /// **'NOME DA REFEIÇÃO'**
+  String get nutri2_save_meal_name;
+
+  /// No description provided for @nutri2_save_meal_hint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ex: Almoço completo'**
+  String get nutri2_save_meal_hint;
+
+  /// No description provided for @nutri2_save_meal_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'SALVAR REFEIÇÃO'**
+  String get nutri2_save_meal_cta;
+
+  /// No description provided for @nutri2_save_meal_desc.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} alimentos · {kcal} kcal'**
+  String nutri2_save_meal_desc(int count, String kcal);
+
+  /// No description provided for @nutri2_toast_meal_saved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Refeição salva'**
+  String get nutri2_toast_meal_saved;
+
+  /// No description provided for @nutri2_saved_eyebrow.
+  ///
+  /// In pt, this message translates to:
+  /// **'MINHA NUTRIÇÃO'**
+  String get nutri2_saved_eyebrow;
+
+  /// No description provided for @nutri2_saved_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Refeições Salvas'**
+  String get nutri2_saved_title;
+
+  /// No description provided for @nutri2_saved_search.
+  ///
+  /// In pt, this message translates to:
+  /// **'Buscar refeição salva'**
+  String get nutri2_saved_search;
+
+  /// No description provided for @nutri2_saved_list.
+  ///
+  /// In pt, this message translates to:
+  /// **'REFEIÇÕES CADASTRADAS'**
+  String get nutri2_saved_list;
+
+  /// No description provided for @nutri2_saved_empty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma refeição salva. Use \"⋯\" numa refeição do dia e \"Salvar como refeição\".'**
+  String get nutri2_saved_empty;
+
+  /// No description provided for @nutri2_saved_macros.
+  ///
+  /// In pt, this message translates to:
+  /// **'P {p}g  ·  C {c}g  ·  G {f}g'**
+  String nutri2_saved_macros(String p, String c, String f);
+
+  /// No description provided for @nutri2_saved_detail_eyebrow.
+  ///
+  /// In pt, this message translates to:
+  /// **'REFEIÇÃO SALVA'**
+  String get nutri2_saved_detail_eyebrow;
+
+  /// No description provided for @nutri2_saved_detail_sub.
+  ///
+  /// In pt, this message translates to:
+  /// **'{desc}  ·  {count} alimentos'**
+  String nutri2_saved_detail_sub(String desc, int count);
+
+  /// No description provided for @nutri2_saved_items.
+  ///
+  /// In pt, this message translates to:
+  /// **'ALIMENTOS DA REFEIÇÃO'**
+  String get nutri2_saved_items;
+
+  /// No description provided for @nutri2_saved_add.
+  ///
+  /// In pt, this message translates to:
+  /// **'ADICIONAR AO DIÁRIO'**
+  String get nutri2_saved_add;
+
+  /// No description provided for @nutri2_saved_confirm_eyebrow.
+  ///
+  /// In pt, this message translates to:
+  /// **'CONFIRMAR ADIÇÃO'**
+  String get nutri2_saved_confirm_eyebrow;
+
+  /// No description provided for @nutri2_saved_confirm_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar refeição'**
+  String get nutri2_saved_confirm_title;
+
+  /// No description provided for @nutri2_saved_confirm_note.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os {count} alimentos serão adicionados ao diário.'**
+  String nutri2_saved_confirm_note(int count);
+
+  /// No description provided for @nutri2_saved_confirm_cta.
+  ///
+  /// In pt, this message translates to:
+  /// **'CONFIRMAR ADIÇÃO'**
+  String get nutri2_saved_confirm_cta;
+
+  /// No description provided for @nutri2_back.
+  ///
+  /// In pt, this message translates to:
+  /// **'Voltar'**
+  String get nutri2_back;
+
+  /// No description provided for @nutri2_toast_saved_added.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} alimentos adicionados ao {meal}'**
+  String nutri2_toast_saved_added(int count, String meal);
 }
 
 class _AppLocalizationsDelegate

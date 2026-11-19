@@ -23,6 +23,7 @@ import 'package:bldr_fitness/features/nutrition/domain/entities/food_item.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_add_food_sheets.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_copy_meal_sheets.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_create_food_sheets.dart';
+import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_saved_meal_sheets.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_hub_sections.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_water_sheet.dart';
 import 'package:bldr_fitness/features/progress/domain/usecases/progress_usecases.dart';
@@ -162,6 +163,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
         () => NutritionAddFoodSheet.show(context, catalog: _catalog));
     if (pick == null || !mounted) return;
     if (pick.createManual) return _showManualCreate(slot);
+    if (pick.savedMeals) return _addSavedMeal(slot);
     await _logFood(pick.food!, slot);
   }
 
@@ -354,6 +356,66 @@ class _NutritionScreenState extends State<NutritionScreen> {
     }
   }
 
+  /// "⋯" da refeição expandida: Copiar (N5) ou Salvar como refeição (N7).
+  Future<void> _mealMenu(NutritionMealSlot slot) async {
+    final action = await _overlay(() => NutritionSavedMealSheets.menu(context));
+    if (action == null || !mounted) return;
+    if (action == MealMenuAction.copy) return _copyMeal(slot);
+    final items = _entries.where((e) => e.mealType == slot.dbKey).toList();
+    if (items.isEmpty) return;
+    final l = AppLocalizations.of(context);
+    final kcal = items.fold<double>(0, (a, e) => a + e.macros.calories);
+    final name = await _overlay(() => NutritionSavedMealSheets.name(context,
+        initial: slot.label(l), count: items.length, kcal: kcal));
+    if (name == null || !mounted) return;
+    final uid = _userId;
+    if (uid == null) {
+      context.toast.error(l.common_unauthenticated);
+      return;
+    }
+    final r = await getIt<SaveMealFromEntries>()(
+        name: name, entries: items, userId: uid);
+    if (!mounted) return;
+    if (r.isFailure) {
+      context.toast
+          .error(r.failureOrNull?.message ?? l.nutri2_toast_save_error);
+      return;
+    }
+    context.toast.success(l.nutri2_toast_meal_saved);
+  }
+
+  /// N7: Refeições salvas → detalhe → confirmação → diário.
+  Future<void> _addSavedMeal(NutritionMealSlot slot) async {
+    final uid = _userId;
+    if (uid == null) return;
+    while (mounted) {
+      final meal = await _overlay(() => NutritionSavedMealSheets.list(context,
+          load: () async =>
+              (await getIt<GetSavedMeals>()(uid)).valueOrNull ?? const []));
+      if (meal == null || !mounted) return;
+      final go = await _overlay(
+          () => NutritionSavedMealSheets.detail(context, meal: meal));
+      if (go == null || !mounted) return;
+      if (!go) continue; // ‹ volta para a lista
+      final dest = await _overlay(() =>
+          NutritionSavedMealSheets.confirm(context, meal: meal, initial: slot));
+      if (dest == null || !mounted) return;
+      final l = AppLocalizations.of(context);
+      final date = _selectedDate;
+      final r = await getIt<AddSavedMealToDiary>()(
+          meal: meal, userId: uid, date: date, mealType: dest.dbKey);
+      if (!mounted) return;
+      final count = r.valueOrNull;
+      if (count == null) {
+        context.toast.error(l.nutri2_toast_save_error);
+        return;
+      }
+      context.toast.success(l.nutri2_toast_saved_added(count, dest.label(l)));
+      await _afterFoodLogged(uid, date);
+      return;
+    }
+  }
+
   /// N5: Copiar refeição (destino → revisão → grava → sucesso).
   Future<void> _copyMeal(NutritionMealSlot slot) async {
     final items = _entries.where((e) => e.mealType == slot.dbKey).toList();
@@ -484,7 +546,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
         onToggleEdit: () => setState(() => _editMode = !_editMode),
         onEditFood: _showEditFoodModal,
         onRemoveFood: _removeFood,
-        onCopyMeal: _copyMeal,
+        onCopyMeal: _mealMenu,
         onFab: () =>
             _showAddFoodModal(NutritionMealSlot.suggested(DateTime.now())),
       ),

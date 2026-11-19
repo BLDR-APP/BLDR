@@ -491,7 +491,7 @@ class NutritionMealsSection extends StatelessWidget {
           ? null
           : Semantics(
               button: true,
-              label: l.nutri2_copy_menu,
+              label: l.nutri2_meal_menu_title,
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () => onCopy!(slot),

@@ -1,5 +1,6 @@
 import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/food_item.dart';
+import 'package:bldr_fitness/features/nutrition/domain/entities/saved_meal.dart';
 
 /// Catálogo de alimentos (Firestore `alimentos` + favoritos/recentes do usuário).
 abstract class FoodCatalogRepository {
@@ -15,4 +16,9 @@ abstract class FoodCatalogRepository {
 
   /// Alimentos consumidos recentemente (deduplicados, por 100g reconstruído).
   Future<Result<List<FoodItem>>> recentFoods(String userId, {int limit = 15});
+
+  /// Refeições salvas do usuário (N7, `user_favorites` com `type: 'meal'`).
+  Future<Result<List<SavedMeal>>> savedMeals(String userId);
+
+  Future<Result<SavedMeal>> saveMeal(SavedMeal meal, String userId);
 }

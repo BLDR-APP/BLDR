@@ -20,6 +20,8 @@ import 'package:bldr_fitness/features/nutrition/data/datasources/supabase_nutrit
 import 'package:bldr_fitness/features/nutrition/data/datasources/supabase_xp_datasource.dart';
 import 'package:bldr_fitness/features/nutrition/data/models/food_item_model.dart';
 import 'package:bldr_fitness/features/nutrition/data/models/meal_entry_model.dart';
+import 'package:bldr_fitness/features/nutrition/data/models/saved_meal_model.dart';
+import 'package:bldr_fitness/features/nutrition/domain/entities/saved_meal.dart';
 
 /// Converte exceções de Firestore/Supabase/rede em [Failure].
 Future<Result<T>> _guard<T>(Future<T> Function() action) async {
@@ -73,6 +75,20 @@ class FoodCatalogRepositoryImpl implements FoodCatalogRepository {
         final saved = await _firestore
             .addFavorite(FoodItemModel.toFavoriteMap(item, userId));
         return FoodItemModel.fromMap({...saved, 'created_by': userId});
+      });
+
+  @override
+  Future<Result<List<SavedMeal>>> savedMeals(String userId) => _guard(() async {
+        final rows = await _firestore.savedMeals(userId);
+        return rows.map(SavedMealModel.fromMap).toList();
+      });
+
+  @override
+  Future<Result<SavedMeal>> saveMeal(SavedMeal meal, String userId) =>
+      _guard(() async {
+        final saved =
+            await _firestore.addFavorite(SavedMealModel.toMap(meal, userId));
+        return SavedMealModel.fromMap(saved);
       });
 
   @override

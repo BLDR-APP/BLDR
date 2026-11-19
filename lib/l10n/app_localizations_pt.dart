@@ -7196,4 +7196,87 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get nutri2_toast_kcal_goal_label => 'Calorias do dia';
+
+  @override
+  String get nutri2_meal_menu_title => 'Refeição';
+
+  @override
+  String get nutri2_save_meal_menu => 'Salvar como refeição';
+
+  @override
+  String get nutri2_save_meal_title => 'Salvar refeição';
+
+  @override
+  String get nutri2_save_meal_name => 'NOME DA REFEIÇÃO';
+
+  @override
+  String get nutri2_save_meal_hint => 'Ex: Almoço completo';
+
+  @override
+  String get nutri2_save_meal_cta => 'SALVAR REFEIÇÃO';
+
+  @override
+  String nutri2_save_meal_desc(int count, String kcal) {
+    return '$count alimentos · $kcal kcal';
+  }
+
+  @override
+  String get nutri2_toast_meal_saved => 'Refeição salva';
+
+  @override
+  String get nutri2_saved_eyebrow => 'MINHA NUTRIÇÃO';
+
+  @override
+  String get nutri2_saved_title => 'Refeições Salvas';
+
+  @override
+  String get nutri2_saved_search => 'Buscar refeição salva';
+
+  @override
+  String get nutri2_saved_list => 'REFEIÇÕES CADASTRADAS';
+
+  @override
+  String get nutri2_saved_empty =>
+      'Nenhuma refeição salva. Use \"⋯\" numa refeição do dia e \"Salvar como refeição\".';
+
+  @override
+  String nutri2_saved_macros(String p, String c, String f) {
+    return 'P ${p}g  ·  C ${c}g  ·  G ${f}g';
+  }
+
+  @override
+  String get nutri2_saved_detail_eyebrow => 'REFEIÇÃO SALVA';
+
+  @override
+  String nutri2_saved_detail_sub(String desc, int count) {
+    return '$desc  ·  $count alimentos';
+  }
+
+  @override
+  String get nutri2_saved_items => 'ALIMENTOS DA REFEIÇÃO';
+
+  @override
+  String get nutri2_saved_add => 'ADICIONAR AO DIÁRIO';
+
+  @override
+  String get nutri2_saved_confirm_eyebrow => 'CONFIRMAR ADIÇÃO';
+
+  @override
+  String get nutri2_saved_confirm_title => 'Adicionar refeição';
+
+  @override
+  String nutri2_saved_confirm_note(int count) {
+    return 'Os $count alimentos serão adicionados ao diário.';
+  }
+
+  @override
+  String get nutri2_saved_confirm_cta => 'CONFIRMAR ADIÇÃO';
+
+  @override
+  String get nutri2_back => 'Voltar';
+
+  @override
+  String nutri2_toast_saved_added(int count, String meal) {
+    return '$count alimentos adicionados ao $meal';
+  }
 }
