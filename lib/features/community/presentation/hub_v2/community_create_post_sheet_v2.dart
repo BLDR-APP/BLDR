@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:image_picker/image_picker.dart';
 
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_community_v2_components.dart';
 import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
@@ -113,9 +114,6 @@ class _CommunityCreatePostSheetV2State
       }
     });
   }
-
-  void _snack(String text) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
 
   Future<void> _pickWorkout() async {
     final l10n = AppLocalizations.of(context);
@@ -234,7 +232,7 @@ class _CommunityCreatePostSheetV2State
         const <Map<String, dynamic>>[];
     if (!mounted) return;
     if (squads.isEmpty) {
-      _snack(l10n.comm_vis_no_squad);
+      context.toast.info(l10n.comm_vis_no_squad);
       return;
     }
     final squad = await BldrV2Sheet.show<Map<String, dynamic>>(
@@ -275,7 +273,7 @@ class _CommunityCreatePostSheetV2State
       );
       if (!mounted) return;
       if (upload.isFailure) {
-        _snack(upload.failureOrNull!.message);
+        context.toast.error(upload.failureOrNull!.message);
         setState(() => _publishing = false);
         return;
       }
@@ -299,7 +297,8 @@ class _CommunityCreatePostSheetV2State
     );
     if (!mounted) return;
     if (result.isFailure) {
-      _snack(result.failureOrNull?.message ?? l10n.comm_publish_error);
+      context.toast
+          .error(result.failureOrNull?.message ?? l10n.comm_publish_error);
       setState(() => _publishing = false);
       return;
     }

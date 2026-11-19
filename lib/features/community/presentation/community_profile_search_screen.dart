@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_components.dart';
 import 'package:bldr_fitness/features/community/domain/entities/community_post.dart';
@@ -87,8 +88,7 @@ class _SearchState extends State<CommunityProfileSearchScreen> {
       }),
       onFailure: (failure) {
         setState(() => _updating.remove(profile.id));
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(failure.message)));
+        context.toast.error(failure.message);
       },
     );
   }

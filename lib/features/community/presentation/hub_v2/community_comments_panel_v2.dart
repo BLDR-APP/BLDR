@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_community_v2_components.dart';
 import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
@@ -300,13 +301,19 @@ class _CommentsState extends State<CommunityCommentsPanelV2> {
 
   void _notifyCount() => widget.onCountChanged?.call(_count);
 
-  void _message(String value, {VoidCallback? retry}) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(value),
-        action: retry == null
-            ? null
-            : SnackBarAction(label: 'Tentar novamente', onPressed: retry),
-      ));
+  /// Erro sem ação → toast error. Com "Tentar novamente" continua
+  /// SnackBar: o toast compacto só tem ação na variante Desfazer (T5, lista
+  /// de exceções em docs/redesign/TOAST_V2.md).
+  void _message(String value, {VoidCallback? retry}) {
+    if (retry == null) {
+      context.toast.error(value);
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(value),
+      action: SnackBarAction(label: 'Tentar novamente', onPressed: retry),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tabler_icons/flutter_tabler_icons.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_community_v2_components.dart';
 import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
@@ -63,8 +64,11 @@ abstract final class CommunityPostActions {
   static Future<bool> persistReaction(CommunityPost post, String emoji) async =>
       (await _repo.toggleReaction(feedId: post.id, emoji: emoji)).isSuccess;
 
-  static void _snack(BuildContext context, String text) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+  /// Falha → error; sucesso → success (mesmo texto de antes).
+  static void _feedback(BuildContext context, String? failure, String ok) =>
+      failure != null
+          ? context.toast.error(failure)
+          : context.toast.success(ok);
 
   static Future<bool> toggleFollow(
       BuildContext context, String userId, bool following) async {
@@ -72,7 +76,7 @@ abstract final class CommunityPostActions {
         ? await _repo.unfollowUser(userId)
         : await _repo.followUser(userId);
     if (result.isFailure && context.mounted) {
-      _snack(context, result.failureOrNull!.message);
+      context.toast.error(result.failureOrNull!.message);
     }
     return result.isSuccess;
   }
@@ -199,7 +203,7 @@ abstract final class CommunityPostActions {
     if (!context.mounted || text == null) return null;
     final result = await getIt<EditCommunityPost>()(post, text);
     if (!context.mounted) return null;
-    _snack(context, result.failureOrNull?.message ?? l10n.comm_edited);
+    _feedback(context, result.failureOrNull?.message, l10n.comm_edited);
     final updated = result.valueOrNull;
     return updated == null ? null : PostEdited(updated);
   }
@@ -218,7 +222,7 @@ abstract final class CommunityPostActions {
     if (!confirmed) return null;
     final result = await _repo.deletePost(post.id);
     if (!context.mounted) return null;
-    _snack(context, result.failureOrNull?.message ?? l10n.comm_deleted);
+    _feedback(context, result.failureOrNull?.message, l10n.comm_deleted);
     return result.isSuccess ? const PostDeleted() : null;
   }
 
@@ -236,7 +240,7 @@ abstract final class CommunityPostActions {
     if (!confirmed) return null;
     final result = await _repo.blockUser(userId);
     if (!context.mounted) return null;
-    _snack(context, result.failureOrNull?.message ?? l10n.comm_blocked);
+    _feedback(context, result.failureOrNull?.message, l10n.comm_blocked);
     return result.isSuccess ? const AuthorBlocked() : null;
   }
 
@@ -282,7 +286,7 @@ abstract final class CommunityPostActions {
       reason: reason,
     );
     if (context.mounted) {
-      _snack(context, result.failureOrNull?.message ?? l10n.comm_reported);
+      _feedback(context, result.failureOrNull?.message, l10n.comm_reported);
     }
     return null;
   }

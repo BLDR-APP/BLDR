@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:bldr_fitness/core/toast/bldr_toaster.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/design_system/bldr_community_v2_components.dart';
 import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
@@ -57,9 +58,6 @@ class _WorkoutDetailSheetState extends State<WorkoutDetailSheet> {
     });
   }
 
-  void _snack(String text) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
-
   Future<void> _copyWorkout() async {
     final l10n = AppLocalizations.of(context);
     setState(() => _copying = true);
@@ -70,7 +68,7 @@ class _WorkoutDetailSheetState extends State<WorkoutDetailSheet> {
 
     if (_source == 'free' && count >= 3) {
       if (!mounted) return;
-      _snack(l10n.comm_copy_limit);
+      context.toast.warning(l10n.comm_copy_limit);
       setState(() => _copying = false);
       return;
     }
@@ -79,13 +77,13 @@ class _WorkoutDetailSheetState extends State<WorkoutDetailSheet> {
         await _repo.copyWorkout(workoutId: _workoutId, source: _source);
     if (!mounted) return;
     if (result.isFailure) {
-      _snack(result.failureOrNull!.message);
+      context.toast.error(result.failureOrNull!.message);
       setState(() => _copying = false);
       return;
     }
     if (_source == 'free') await prefs.setInt(key, count + 1);
     if (!mounted) return;
-    _snack(l10n.comm_copy_done);
+    context.toast.success(l10n.comm_copy_done);
     Navigator.pop(context);
   }
 
