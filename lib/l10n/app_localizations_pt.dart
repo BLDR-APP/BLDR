@@ -6651,4 +6651,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get toast_dismiss_hint => 'Deslize para cima para dispensar';
+
+  @override
+  String get toast_offline => 'Você está offline';
+
+  @override
+  String get toast_back_online => 'Conexão restabelecida';
 }

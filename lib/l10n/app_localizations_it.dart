@@ -6633,4 +6633,10 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get toast_dismiss_hint => 'Scorri verso l\'alto per chiudere';
+
+  @override
+  String get toast_offline => 'Sei offline';
+
+  @override
+  String get toast_back_online => 'Connessione ripristinata';
 }

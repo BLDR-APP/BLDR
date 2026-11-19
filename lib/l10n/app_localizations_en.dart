@@ -6613,4 +6613,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get toast_dismiss_hint => 'Swipe up to dismiss';
+
+  @override
+  String get toast_offline => 'You are offline';
+
+  @override
+  String get toast_back_online => 'Back online';
 }

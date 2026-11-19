@@ -2881,5 +2881,7 @@
   "comm_squad_sheet_sub": "Scegli come vuoi partecipare a uno Squad.",
   "comm_squad_cancel": "ANNULLA",
   "toast_undo": "Annulla",
-  "toast_dismiss_hint": "Scorri verso l'alto per chiudere"
+  "toast_dismiss_hint": "Scorri verso l'alto per chiudere",
+  "toast_offline": "Sei offline",
+  "toast_back_online": "Connessione ripristinata"
 }

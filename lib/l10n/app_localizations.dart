@@ -11914,6 +11914,18 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Deslize para cima para dispensar'**
   String get toast_dismiss_hint;
+
+  /// No description provided for @toast_offline.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você está offline'**
+  String get toast_offline;
+
+  /// No description provided for @toast_back_online.
+  ///
+  /// In pt, this message translates to:
+  /// **'Conexão restabelecida'**
+  String get toast_back_online;
 }
 
 class _AppLocalizationsDelegate

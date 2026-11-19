@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get_it/get_it.dart';
 import 'package:bldr_fitness/core/toast/toast_controller.dart';
+import 'package:bldr_fitness/core/connectivity/connectivity_repository.dart';
+import 'package:bldr_fitness/core/connectivity/connectivity_plus_repository.dart';
 
 import 'package:bldr_fitness/features/workouts/domain/usecases/week_plan_usecases.dart';
 import 'package:bldr_fitness/core/providers/locale_provider.dart';
@@ -126,6 +128,8 @@ final GetIt getIt = GetIt.instance;
 void setupInjection({Map<String, dynamic> config = const {}}) {
   // --- Core: Toast System v2 (fila global, só in-app) ---
   getIt.registerLazySingleton<ToastController>(ToastController.new);
+  getIt.registerLazySingleton<ConnectivityRepository>(
+      () => ConnectivityPlusRepository());
 
   // --- Feature: Auth (Fase 2 — migrada) ---
   getIt.registerLazySingleton<SupabaseAuthDatasource>(
@@ -263,8 +267,8 @@ void setupInjection({Map<String, dynamic> config = const {}}) {
   getIt.registerFactory(() => GetWeekPlan(getIt<WeeklyPlanRepository>()));
   getIt.registerFactory(() => ApplyWeekAdjustment(
       getIt<WeeklyPlanRepository>(), getIt<ResolveClubAccess>()));
-  getIt.registerFactory(
-      () => UndoWeekAdjustment(getIt<WeeklyPlanRepository>()));
+  getIt
+      .registerFactory(() => UndoWeekAdjustment(getIt<WeeklyPlanRepository>()));
   getIt.registerFactory(
       () => ClearWeekDayOverride(getIt<WeeklyPlanRepository>()));
   getIt.registerFactory(() => UpdatePlanDay(getIt<WeeklyPlanRepository>()));

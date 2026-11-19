@@ -23,6 +23,8 @@ import 'package:bldr_fitness/core/app_export.dart';
 import 'package:bldr_fitness/core/di/injection.dart';
 import 'package:bldr_fitness/core/toast/toast_controller.dart';
 import 'package:bldr_fitness/core/toast/toast_host.dart';
+import 'package:bldr_fitness/core/toast/connectivity_toast_listener.dart';
+import 'package:bldr_fitness/core/connectivity/connectivity_repository.dart';
 import 'package:bldr_fitness/features/integrations/data/live_activity_service.dart';
 import 'package:bldr_fitness/features/integrations/data/watch_service.dart';
 import 'package:bldr_fitness/features/integrations/data/widget_data_service.dart';
@@ -377,7 +379,11 @@ class MyApp extends StatelessWidget {
                   builder: (context, achievements, inner) => ToastHost(
                     controller: getIt<ToastController>(),
                     paused: achievements.hasPending,
-                    child: inner!,
+                    child: ConnectivityToastListener(
+                      repository: getIt<ConnectivityRepository>(),
+                      controller: getIt<ToastController>(),
+                      child: inner!,
+                    ),
                   ),
                   child: AchievementOverlay(
                       child: child ?? const SizedBox.shrink()),
