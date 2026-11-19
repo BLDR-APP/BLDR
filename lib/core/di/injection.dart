@@ -182,6 +182,8 @@ void setupInjection({Map<String, dynamic> config = const {}}) {
   getIt.registerFactory(
       () => SaveMealFromEntries(getIt<FoodCatalogRepository>()));
   getIt.registerFactory(() => AddSavedMealToDiary(getIt<CopyMeal>()));
+  getIt.registerFactory(() => DeleteSavedMeal(getIt<FoodCatalogRepository>()));
+  getIt.registerFactory(() => RestoreSavedMeal(getIt<FoodCatalogRepository>()));
   getIt.registerLazySingleton<CopyMeal>(
       () => CopyMeal(getIt<NutritionDiaryRepository>()));
   getIt.registerLazySingleton<RestoreMealEntry>(

@@ -7394,4 +7394,25 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get cat_int_vegetables => 'Verdure';
+
+  @override
+  String get nutri2_saved_delete => 'ELIMINA PASTO';
+
+  @override
+  String get nutri2_saved_delete_title => 'Eliminare il pasto salvato?';
+
+  @override
+  String nutri2_saved_delete_msg(String name) {
+    return '\"$name\" verrà rimosso dai pasti salvati. Il diario non cambia.';
+  }
+
+  @override
+  String get nutri2_saved_delete_confirm => 'Elimina';
+
+  @override
+  String get nutri2_toast_saved_deleted => 'Pasto salvato eliminato';
+
+  @override
+  String get nutri2_toast_saved_delete_error =>
+      'Impossibile eliminare il pasto';
 }

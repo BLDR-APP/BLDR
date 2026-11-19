@@ -96,6 +96,10 @@ class FoodCatalogRepositoryImpl implements FoodCatalogRepository {
       });
 
   @override
+  Future<Result<void>> deleteSavedMeal(String id) =>
+      _guard(() => _firestore.deleteSavedMeal(id));
+
+  @override
   Future<Result<List<FoodItem>>> recentFoods(String userId, {int limit = 15}) =>
       _guard(() async {
         final rows = await _firestore.recentMeals(userId);

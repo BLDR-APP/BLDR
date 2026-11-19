@@ -72,6 +72,25 @@ class GetSavedMeals {
       _catalog.savedMeals(userId);
 }
 
+class DeleteSavedMeal {
+  final FoodCatalogRepository _catalog;
+  const DeleteSavedMeal(this._catalog);
+
+  Future<Result<void>> call(SavedMeal meal) => meal.id == null
+      ? Future.value(
+          const Result.failure(ValidationFailure('Refeição sem id.')))
+      : _catalog.deleteSavedMeal(meal.id!);
+}
+
+/// Desfaz a exclusão gravando a refeição de novo (novo id, mesmos itens).
+class RestoreSavedMeal {
+  final FoodCatalogRepository _catalog;
+  const RestoreSavedMeal(this._catalog);
+
+  Future<Result<SavedMeal>> call(SavedMeal meal, String userId) =>
+      _catalog.saveMeal(SavedMeal(name: meal.name, items: meal.items), userId);
+}
+
 /// "Salvar como refeição" (N7): guarda os alimentos de uma refeição do
 /// diário com um nome, mantendo as quantidades e os macros totais.
 class SaveMealFromEntries {

@@ -3241,5 +3241,12 @@
   "cat_int_soups": "Sopas e molhos",
   "cat_int_spices": "Temperos e ervas",
   "cat_int_sweets": "Doces",
-  "cat_int_vegetables": "Vegetais"
+  "cat_int_vegetables": "Vegetais",
+  "nutri2_saved_delete": "EXCLUIR REFEIÇÃO",
+  "nutri2_saved_delete_title": "Excluir refeição salva?",
+  "nutri2_saved_delete_msg": "\"{name}\" sairá das suas refeições salvas. O diário não muda.",
+  "@nutri2_saved_delete_msg": {"placeholders": {"name": {"type": "String"}}},
+  "nutri2_saved_delete_confirm": "Excluir",
+  "nutri2_toast_saved_deleted": "Refeição salva excluída",
+  "nutri2_toast_saved_delete_error": "Não foi possível excluir a refeição"
 }

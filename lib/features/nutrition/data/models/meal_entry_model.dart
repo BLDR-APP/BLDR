@@ -5,8 +5,7 @@ import 'package:bldr_fitness/features/nutrition/domain/entities/meal_entry.dart'
 
 /// Conversão MealEntry <-> documentos do Firestore `user_meals`.
 class MealEntryModel {
-  static String dateKey(DateTime date) =>
-      date.toIso8601String().split('T')[0];
+  static String dateKey(DateTime date) => date.toIso8601String().split('T')[0];
 
   static MealEntry fromMap(Map<String, dynamic> map, {String? id}) {
     double read(String key) => (map[key] as num?)?.toDouble() ?? 0.0;

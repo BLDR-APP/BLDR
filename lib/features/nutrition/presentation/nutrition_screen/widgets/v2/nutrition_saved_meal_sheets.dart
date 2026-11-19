@@ -17,6 +17,9 @@ String _kcal(AppLocalizations l, num v) =>
 /// Ação escolhida no "⋯" da refeição expandida.
 enum MealMenuAction { copy, save }
 
+/// Resultado do detalhe (102:319): adicionar, voltar à lista ou excluir.
+enum SavedMealDetailAction { add, back, delete }
+
 /// Refeições salvas (N7): menu do "⋯", salvar com nome, lista (102:318),
 /// detalhe (102:319) e confirmação (102:320).
 abstract final class NutritionSavedMealSheets {
@@ -70,10 +73,12 @@ abstract final class NutritionSavedMealSheets {
     );
   }
 
-  /// Detalhe (102:319). `true` = adicionar ao diário; `false` = voltar.
-  static Future<bool?> detail(BuildContext context, {required SavedMeal meal}) {
+  /// Detalhe (102:319): adicionar, voltar ou excluir (ação destrutiva no
+  /// mesmo estilo de "Remover alimento").
+  static Future<SavedMealDetailAction?> detail(BuildContext context,
+      {required SavedMeal meal}) {
     final l = AppLocalizations.of(context);
-    return BldrV2Sheet.show<bool>(
+    return BldrV2Sheet.show<SavedMealDetailAction>(
       context,
       eyebrow: l.nutri2_saved_detail_eyebrow,
       title: meal.name,
@@ -85,7 +90,7 @@ abstract final class NutritionSavedMealSheets {
             _BackLine(
               text: l.nutri2_saved_detail_sub(
                   meal.description, meal.items.length),
-              onBack: () => Navigator.pop(ctx, false),
+              onBack: () => Navigator.pop(ctx, SavedMealDetailAction.back),
             ),
             const SizedBox(height: 14),
             _SummaryCard(totals: meal.totals),
@@ -122,7 +127,18 @@ abstract final class NutritionSavedMealSheets {
             const SizedBox(height: 24),
             BldrNutritionCta(
               label: l.nutri2_saved_add,
-              onTap: () => Navigator.pop(ctx, true),
+              onTap: () => Navigator.pop(ctx, SavedMealDetailAction.add),
+            ),
+            Center(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => Navigator.pop(ctx, SavedMealDetailAction.delete),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: Text(l.nutri2_saved_delete,
+                      style: BldrNutritionTextV2.removeCta),
+                ),
+              ),
             ),
           ],
         ),

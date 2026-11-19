@@ -13288,6 +13288,42 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Vegetais'**
   String get cat_int_vegetables;
+
+  /// No description provided for @nutri2_saved_delete.
+  ///
+  /// In pt, this message translates to:
+  /// **'EXCLUIR REFEIÇÃO'**
+  String get nutri2_saved_delete;
+
+  /// No description provided for @nutri2_saved_delete_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir refeição salva?'**
+  String get nutri2_saved_delete_title;
+
+  /// No description provided for @nutri2_saved_delete_msg.
+  ///
+  /// In pt, this message translates to:
+  /// **'\"{name}\" sairá das suas refeições salvas. O diário não muda.'**
+  String nutri2_saved_delete_msg(String name);
+
+  /// No description provided for @nutri2_saved_delete_confirm.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir'**
+  String get nutri2_saved_delete_confirm;
+
+  /// No description provided for @nutri2_toast_saved_deleted.
+  ///
+  /// In pt, this message translates to:
+  /// **'Refeição salva excluída'**
+  String get nutri2_toast_saved_deleted;
+
+  /// No description provided for @nutri2_toast_saved_delete_error.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível excluir a refeição'**
+  String get nutri2_toast_saved_delete_error;
 }
 
 class _AppLocalizationsDelegate

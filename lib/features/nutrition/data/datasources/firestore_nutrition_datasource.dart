@@ -76,6 +76,17 @@ class FirestoreNutritionDatasource {
     return {...doc.data()!, 'id': doc.id};
   }
 
+  /// Exclui uma refeição salva. Confere `type == 'meal'` antes de apagar,
+  /// para nunca remover um alimento favorito por engano.
+  Future<void> deleteSavedMeal(String id) async {
+    final ref = _db.collection('user_favorites').doc(id);
+    final doc = await ref.get();
+    if (doc.data()?['type'] != 'meal') {
+      throw StateError('Documento não é uma refeição salva.');
+    }
+    await ref.delete();
+  }
+
   /// Últimos registros do diário, para montar a lista de "recentes".
   Future<List<Map<String, dynamic>>> recentMeals(String userId,
       {int limit = 50}) async {

@@ -7413,4 +7413,25 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get cat_int_vegetables => 'Vegetais';
+
+  @override
+  String get nutri2_saved_delete => 'EXCLUIR REFEIÇÃO';
+
+  @override
+  String get nutri2_saved_delete_title => 'Excluir refeição salva?';
+
+  @override
+  String nutri2_saved_delete_msg(String name) {
+    return '\"$name\" sairá das suas refeições salvas. O diário não muda.';
+  }
+
+  @override
+  String get nutri2_saved_delete_confirm => 'Excluir';
+
+  @override
+  String get nutri2_toast_saved_deleted => 'Refeição salva excluída';
+
+  @override
+  String get nutri2_toast_saved_delete_error =>
+      'Não foi possível excluir a refeição';
 }

@@ -3110,5 +3110,11 @@
   "cat_int_soups": "Zuppe e salse",
   "cat_int_spices": "Spezie ed erbe",
   "cat_int_sweets": "Dolci",
-  "cat_int_vegetables": "Verdure"
+  "cat_int_vegetables": "Verdure",
+  "nutri2_saved_delete": "ELIMINA PASTO",
+  "nutri2_saved_delete_title": "Eliminare il pasto salvato?",
+  "nutri2_saved_delete_msg": "\"{name}\" verrà rimosso dai pasti salvati. Il diario non cambia.",
+  "nutri2_saved_delete_confirm": "Elimina",
+  "nutri2_toast_saved_deleted": "Pasto salvato eliminato",
+  "nutri2_toast_saved_delete_error": "Impossibile eliminare il pasto"
 }

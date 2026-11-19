@@ -24,4 +24,7 @@ abstract class FoodCatalogRepository {
   Future<Result<List<SavedMeal>>> savedMeals(String userId);
 
   Future<Result<SavedMeal>> saveMeal(SavedMeal meal, String userId);
+
+  /// Remove só o documento `type: 'meal'` dessa refeição.
+  Future<Result<void>> deleteSavedMeal(String id);
 }

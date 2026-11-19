@@ -3110,5 +3110,11 @@
   "cat_int_soups": "Soups and sauces",
   "cat_int_spices": "Spices and herbs",
   "cat_int_sweets": "Sweets",
-  "cat_int_vegetables": "Vegetables"
+  "cat_int_vegetables": "Vegetables",
+  "nutri2_saved_delete": "DELETE MEAL",
+  "nutri2_saved_delete_title": "Delete saved meal?",
+  "nutri2_saved_delete_msg": "\"{name}\" will be removed from your saved meals. Your diary is not affected.",
+  "nutri2_saved_delete_confirm": "Delete",
+  "nutri2_toast_saved_deleted": "Saved meal deleted",
+  "nutri2_toast_saved_delete_error": "Could not delete the meal"
 }

@@ -14,6 +14,7 @@ import 'package:bldr_fitness/features/auth/domain/usecases/auth_usecases.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/daily_nutrition_summary.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/meal_entry.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/nutrition_goals.dart';
+import 'package:bldr_fitness/features/nutrition/domain/entities/saved_meal.dart';
 import 'package:bldr_fitness/features/nutrition/domain/usecases/nutrition_usecases.dart';
 import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/achievements/domain/usecases/achievement_usecases.dart';
@@ -396,10 +397,14 @@ class _NutritionScreenState extends State<NutritionScreen> {
           load: () async =>
               (await getIt<GetSavedMeals>()(uid)).valueOrNull ?? const []));
       if (meal == null || !mounted) return;
-      final go = await _overlay(
+      final action = await _overlay(
           () => NutritionSavedMealSheets.detail(context, meal: meal));
-      if (go == null || !mounted) return;
-      if (!go) continue; // ‹ volta para a lista
+      if (action == null || !mounted) return;
+      if (action == SavedMealDetailAction.back) continue; // ‹ volta
+      if (action == SavedMealDetailAction.delete) {
+        await _deleteSavedMeal(meal, uid);
+        continue; // volta para a lista atualizada
+      }
       final dest = await _overlay(() =>
           NutritionSavedMealSheets.confirm(context, meal: meal, initial: slot));
       if (dest == null || !mounted) return;
@@ -417,6 +422,33 @@ class _NutritionScreenState extends State<NutritionScreen> {
       await _afterFoodLogged(uid, date);
       return;
     }
+  }
+
+  /// Excluir refeição salva: confirmação, apaga só o doc `type: 'meal'`,
+  /// toast com Desfazer (regrava a refeição).
+  Future<void> _deleteSavedMeal(SavedMeal meal, String uid) async {
+    final l = AppLocalizations.of(context);
+    final ok = await _overlay(() => BldrV2ConfirmDialog.show(
+          context,
+          title: l.nutri2_saved_delete_title,
+          message: l.nutri2_saved_delete_msg(meal.name),
+          confirmLabel: l.nutri2_saved_delete_confirm,
+          cancelLabel: l.common_cancel,
+          destructive: true,
+        ));
+    if (ok != true || !mounted) return;
+    final r = await getIt<DeleteSavedMeal>()(meal);
+    if (!mounted) return;
+    if (r.isFailure) {
+      context.toast.error(l.nutri2_toast_saved_delete_error);
+      return;
+    }
+    context.toast.undo(l.nutri2_toast_saved_deleted, onUndo: () async {
+      final back = await getIt<RestoreSavedMeal>()(meal, uid);
+      if (back.isFailure && mounted) {
+        context.toast.error(l.nutri2_toast_save_error);
+      }
+    });
   }
 
   /// N5: Copiar refeição (destino → revisão → grava → sucesso).

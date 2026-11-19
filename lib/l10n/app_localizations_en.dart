@@ -7372,4 +7372,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cat_int_vegetables => 'Vegetables';
+
+  @override
+  String get nutri2_saved_delete => 'DELETE MEAL';
+
+  @override
+  String get nutri2_saved_delete_title => 'Delete saved meal?';
+
+  @override
+  String nutri2_saved_delete_msg(String name) {
+    return '\"$name\" will be removed from your saved meals. Your diary is not affected.';
+  }
+
+  @override
+  String get nutri2_saved_delete_confirm => 'Delete';
+
+  @override
+  String get nutri2_toast_saved_deleted => 'Saved meal deleted';
+
+  @override
+  String get nutri2_toast_saved_delete_error => 'Could not delete the meal';
 }

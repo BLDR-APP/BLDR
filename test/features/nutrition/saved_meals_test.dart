@@ -24,6 +24,13 @@ class _FakeCatalog implements FoodCatalogRepository {
   @override
   Future<Result<List<SavedMeal>>> savedMeals(String userId) async =>
       Result.success(saved);
+  final deleted = <String>[];
+  @override
+  Future<Result<void>> deleteSavedMeal(String id) async {
+    deleted.add(id);
+    return const Result.success(null);
+  }
+
   @override
   noSuchMethod(Invocation i) => throw UnimplementedError();
 }
@@ -94,5 +101,24 @@ void main() {
 
   test('FoodItem não é afetado (sanidade)', () {
     expect(const FoodItem(name: 'a').caloriesPer100g, 0);
+  });
+
+  test('excluir refeição salva usa o id; sem id falha', () async {
+    final cat = _FakeCatalog();
+    const meal = SavedMeal(id: 'm1', name: 'X', items: []);
+    expect((await DeleteSavedMeal(cat)(meal)).isSuccess, isTrue);
+    expect(cat.deleted, ['m1']);
+    expect((await DeleteSavedMeal(cat)(const SavedMeal(name: 'Y', items: [])))
+        .failureOrNull, isA<ValidationFailure>());
+  });
+
+  test('desfazer regrava a refeição com novo id e mesmos itens', () async {
+    final cat = _FakeCatalog();
+    const meal = SavedMeal(id: 'old', name: 'Almoço', items: [
+      SavedMealItem(foodName: 'Arroz', quantityGrams: 150, macros: MacroNutrients.zero),
+    ]);
+    final r = await RestoreSavedMeal(cat)(meal, 'u');
+    expect(r.valueOrNull!.id, isNot('old'));
+    expect(r.valueOrNull!.items.single.foodName, 'Arroz');
   });
 }
