@@ -43,6 +43,12 @@ class FirestoreNutritionDatasource {
     return _withIds(snapshot);
   }
 
+  /// Regra única dos leitores de `user_favorites`: refeição salva
+  /// (`type: 'meal'`) nunca vira alimento. Docs antigos sem `type` passam.
+  static List<Map<String, dynamic>> foodsOnly(
+          List<Map<String, dynamic>> docs) =>
+      docs.where((d) => d['type'] != 'meal').toList();
+
   /// Alimentos favoritos. Ignora as refeições salvas (`type: 'meal'`),
   /// que moram na mesma coleção (N7).
   Future<List<Map<String, dynamic>>> favorites(String userId) async {
@@ -51,7 +57,7 @@ class FirestoreNutritionDatasource {
         .where('user_id', isEqualTo: userId)
         .orderBy('name')
         .get();
-    return _withIds(snapshot).where((d) => d['type'] != 'meal').toList();
+    return foodsOnly(_withIds(snapshot));
   }
 
   /// Refeições salvas: só igualdades (`user_id`, `type`) — sem índice
