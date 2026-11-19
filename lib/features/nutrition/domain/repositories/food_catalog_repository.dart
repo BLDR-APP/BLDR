@@ -4,7 +4,7 @@ import 'package:bldr_fitness/features/nutrition/domain/entities/saved_meal.dart'
 
 /// Catálogo de alimentos (Firestore `alimentos` + favoritos/recentes do usuário).
 abstract class FoodCatalogRepository {
-  /// Busca por prefixo de nome (a base grava nomes em CAIXA ALTA).
+  /// Busca por nome, sem diferenciar maiúsculas/minúsculas nem acentos.
   Future<Result<List<FoodItem>>> search(String query, {int limit = 20});
 
   Future<Result<List<FoodItem>>> byCategory(String category, {int limit = 30});

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:bldr_fitness/features/nutrition/data/models/meal_entry_model.dart';
+import 'package:bldr_fitness/features/nutrition/domain/services/food_search_matcher.dart';
 
 /// Acesso cru ao Firestore de nutrição (projeto `alimentosDB`).
 /// Coleções: `alimentos`, `user_favorites`, `user_meals`, `user_daily_bonuses`.
@@ -12,19 +13,22 @@ class FirestoreNutritionDatasource {
 
   // --- Catálogo ---
 
+  /// Catálogo em memória (carregado uma vez por sessão; ~600 docs).
+  List<Map<String, dynamic>>? _catalog;
+
+  Future<List<Map<String, dynamic>>> _loadCatalog() async =>
+      _catalog ??= _withIds(await _db.collection('alimentos').get());
+
+  /// Busca no app, sem diferenciar maiúsculas/minúsculas nem acentos
+  /// ([FoodSearchMatcher]). Os nomes gravados são de caixa mista.
   Future<List<Map<String, dynamic>>> searchFoods(String query,
       {int limit = 20}) async {
-    if (query.isEmpty) return [];
-    final startQuery = query.toUpperCase();
-    final endQuery = '$startQuery\uf8ff';
-
-    final snapshot = await _db
-        .collection('alimentos')
-        .where('name', isGreaterThanOrEqualTo: startQuery)
-        .where('name', isLessThan: endQuery)
-        .limit(limit)
-        .get();
-    return _withIds(snapshot);
+    if (query.trim().isEmpty) return [];
+    final all = await _loadCatalog();
+    final idx = FoodSearchMatcher.match(
+        [for (final d in all) '${d['name'] ?? ''}'], query,
+        limit: limit);
+    return [for (final i in idx) all[i]];
   }
 
   Future<List<Map<String, dynamic>>> foodsByCategory(String category,
