@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:bldr_fitness/features/nutrition/domain/entities/food_country.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/food_item.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/macro_nutrients.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/meal_entry.dart';
@@ -16,11 +17,18 @@ const _oats = FoodItem(
     proteinPer100g: 13,
     carbsPer100g: 67,
     fatPer100g: 7);
+final _searched = <FoodCountry>[];
+FoodCountry _saved = FoodCountry.br;
 final _catalog = AddFoodCatalog(
-  search: (_) async => [_oats],
-  byCategory: (_) async => [_oats],
+  search: (_, c) async {
+    _searched.add(c);
+    return [_oats];
+  },
+  byCategory: (_, __) async => [_oats],
   recents: () async => [_oats],
   favorites: () async => const [],
+  country: () async => _saved,
+  saveCountry: (c) async => _saved = c,
 );
 
 Future<T?> _open<T>(WidgetTester t, Future<T?> Function(BuildContext) open,
@@ -130,5 +138,30 @@ void main() {
       await t.tap(find.text('ADICIONAR ALIMENTO'));
     });
     expect(r?.grams, 200);
+  });
+
+  testWidgets('seletor de país: Itália em breve; trocar afeta a busca',
+      (t) async {
+    _saved = FoodCountry.br;
+    _searched.clear();
+    await _open(t, (c) => NutritionAddFoodSheet.show(c, catalog: _catalog),
+        (t) async {
+      await t.tap(find.text('🇧🇷'));
+      await t.pumpAndSettle();
+      expect(find.text('BANCO DE ALIMENTOS'), findsOneWidget);
+      await t.tap(find.text('Itália'));
+      await t.pumpAndSettle();
+      expect(_saved, FoodCountry.br); // desabilitada
+      await t.tap(find.text('Estados Unidos'));
+      await t.pumpAndSettle();
+      expect(_saved, FoodCountry.us);
+      // Categorias dos EUA no carrossel.
+      expect(find.text('VEGETAIS'), findsOneWidget);
+      await t.enterText(find.byType(TextField), 'beans');
+      await t.pump(const Duration(milliseconds: 400));
+      await t.pumpAndSettle();
+      await t.tap(find.text('Aveia'));
+    });
+    expect(_searched.last, FoodCountry.us);
   });
 }

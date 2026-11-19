@@ -13,18 +13,20 @@ class FirestoreNutritionDatasource {
 
   // --- Catálogo ---
 
-  /// Catálogo em memória (carregado uma vez por sessão; ~600 docs).
-  List<Map<String, dynamic>>? _catalog;
+  /// Catálogos em memória por coleção (carregados uma vez por sessão).
+  final Map<String, List<Map<String, dynamic>>> _catalogs = {};
 
-  Future<List<Map<String, dynamic>>> _loadCatalog() async =>
-      _catalog ??= _withIds(await _db.collection('alimentos').get());
+  Future<List<Map<String, dynamic>>> _loadCatalog(String collection) async =>
+      _catalogs[collection] ??=
+          _withIds(await _db.collection(collection).get());
 
   /// Busca no app, sem diferenciar maiúsculas/minúsculas nem acentos
-  /// ([FoodSearchMatcher]). Os nomes gravados são de caixa mista.
+  /// ([FoodSearchMatcher]). [collection]: `alimentos` (BR), `alimentos_us`,
+  /// `alimentos_ca`.
   Future<List<Map<String, dynamic>>> searchFoods(String query,
-      {int limit = 20}) async {
+      {int limit = 20, String collection = 'alimentos'}) async {
     if (query.trim().isEmpty) return [];
-    final all = await _loadCatalog();
+    final all = await _loadCatalog(collection);
     final idx = FoodSearchMatcher.match(
         [for (final d in all) '${d['name'] ?? ''}'], query,
         limit: limit);
@@ -32,9 +34,9 @@ class FirestoreNutritionDatasource {
   }
 
   Future<List<Map<String, dynamic>>> foodsByCategory(String category,
-      {int limit = 30}) async {
+      {int limit = 30, String collection = 'alimentos'}) async {
     final snapshot = await _db
-        .collection('alimentos')
+        .collection(collection)
         .where('category', isEqualTo: category)
         .limit(limit)
         .get();

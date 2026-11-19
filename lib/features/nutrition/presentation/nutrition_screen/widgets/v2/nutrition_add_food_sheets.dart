@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import 'package:bldr_fitness/design_system/bldr_nutrition_v2_components.dart';
 import 'package:bldr_fitness/design_system/bldr_v2_sheet.dart';
+import 'package:bldr_fitness/features/nutrition/domain/entities/food_country.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/food_item.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/meal_entry.dart';
 import 'package:bldr_fitness/features/nutrition/presentation/nutrition_screen/widgets/v2/nutrition_hub_sections.dart';
@@ -15,15 +16,23 @@ import 'package:bldr_fitness/theme/bldr_tokens.dart';
 
 /// Fonte de dados do sheet de adicionar (a tela injeta os casos de uso).
 class AddFoodCatalog {
-  final Future<List<FoodItem>> Function(String query) search;
-  final Future<List<FoodItem>> Function(String category) byCategory;
+  final Future<List<FoodItem>> Function(String query, FoodCountry country)
+      search;
+  final Future<List<FoodItem>> Function(String category, FoodCountry country)
+      byCategory;
   final Future<List<FoodItem>> Function() recents;
   final Future<List<FoodItem>> Function() favorites;
+
+  /// País do banco (N8): leitura e escolha manual (afeta só novas buscas).
+  final Future<FoodCountry> Function() country;
+  final Future<void> Function(FoodCountry country) saveCountry;
   const AddFoodCatalog({
     required this.search,
     required this.byCategory,
     required this.recents,
     required this.favorites,
+    required this.country,
+    required this.saveCountry,
   });
 }
 
@@ -80,6 +89,69 @@ class NutritionFoodCategory {
         'MOLHOS, TEMPEROS E CONDIMENTOS', (l) => l.nutrition_cat_sauces),
     NutritionFoodCategory('SUPLEMENTOS', (l) => l.nutrition_cat_supplements),
   ];
+
+  static NutritionFoodCategory _c(
+          String v, String Function(AppLocalizations) l) =>
+      NutritionFoodCategory(v, l);
+
+  /// EUA (`alimentos_us`): valores gravados, por volume de itens.
+  static final us = <NutritionFoodCategory>[
+    _c('VEGETABLES AND VEGETABLE PRODUCTS', (l) => l.cat_int_vegetables),
+    _c('DAIRY AND EGG PRODUCTS', (l) => l.cat_int_dairy),
+    _c('FRUITS AND FRUIT JUICES', (l) => l.cat_int_fruits),
+    _c('BAKED PRODUCTS', (l) => l.cat_int_baked),
+    _c('FINFISH AND SHELLFISH PRODUCTS', (l) => l.cat_int_fish),
+    _c('LEGUMES AND LEGUME PRODUCTS', (l) => l.cat_int_legumes),
+    _c('BEVERAGES', (l) => l.cat_int_beverages),
+    _c('CEREAL GRAINS AND PASTA', (l) => l.cat_int_grains),
+    _c('NUT AND SEED PRODUCTS', (l) => l.cat_int_nuts),
+    _c('BEEF PRODUCTS', (l) => l.cat_int_beef),
+    _c('POULTRY PRODUCTS', (l) => l.cat_int_poultry),
+    _c('FATS AND OILS', (l) => l.cat_int_fats),
+    _c('SWEETS', (l) => l.cat_int_sweets),
+    _c('SNACKS', (l) => l.cat_int_snacks),
+    _c('FAST FOODS', (l) => l.cat_int_fastfood),
+    _c('PORK PRODUCTS', (l) => l.cat_int_pork),
+    _c('SAUSAGES AND LUNCHEON MEATS', (l) => l.cat_int_sausages),
+    _c('SOUPS, SAUCES, AND GRAVIES', (l) => l.cat_int_soups),
+    _c('BREAKFAST CEREALS', (l) => l.cat_int_breakfast),
+    _c('MEALS, ENTREES, AND SIDE DISHES', (l) => l.cat_int_meals),
+    _c('LAMB, VEAL, AND GAME PRODUCTS', (l) => l.cat_int_lamb),
+    _c('SPICES AND HERBS', (l) => l.cat_int_spices),
+  ];
+
+  /// Canadá (`alimentos_ca`): alguns nomes gravados diferem dos EUA.
+  static final ca = <NutritionFoodCategory>[
+    _c('VEGETABLES AND VEGETABLE PRODUCTS', (l) => l.cat_int_vegetables),
+    _c('FRUITS AND FRUIT JUICES', (l) => l.cat_int_fruits),
+    _c('DAIRY AND EGG PRODUCTS', (l) => l.cat_int_dairy),
+    _c('BAKED PRODUCTS', (l) => l.cat_int_baked),
+    _c('FINFISH AND SHELLFISH PRODUCTS', (l) => l.cat_int_fish),
+    _c('NUTS AND SEEDS', (l) => l.cat_int_nuts),
+    _c('LEGUMES AND LEGUME PRODUCTS', (l) => l.cat_int_legumes),
+    _c('BEVERAGES', (l) => l.cat_int_beverages),
+    _c('CEREALS, GRAINS AND PASTA', (l) => l.cat_int_grains),
+    _c('FATS AND OILS', (l) => l.cat_int_fats),
+    _c('SWEETS', (l) => l.cat_int_sweets),
+    _c('PORK PRODUCTS', (l) => l.cat_int_pork),
+    _c('POULTRY PRODUCTS', (l) => l.cat_int_poultry),
+    _c('MIXED DISHES', (l) => l.cat_int_mixed),
+    _c('SNACKS', (l) => l.cat_int_snacks),
+    _c('BEEF PRODUCTS', (l) => l.cat_int_beef),
+    _c('FAST FOODS', (l) => l.cat_int_fastfood),
+    _c('SAUSAGES AND LUNCHEON MEATS', (l) => l.cat_int_sausages),
+    _c('SOUPS, SAUCES AND GRAVIES', (l) => l.cat_int_soups),
+    _c('SPICES AND HERBS', (l) => l.cat_int_spices),
+    _c('BREAKFAST CEREALS', (l) => l.cat_int_breakfast),
+    _c('LAMB, VEAL AND GAME', (l) => l.cat_int_lamb),
+  ];
+
+  /// Brasil mantém as 16 categorias de sempre.
+  static List<NutritionFoodCategory> forCountry(FoodCountry c) => switch (c) {
+        FoodCountry.us => us,
+        FoodCountry.ca => ca,
+        _ => all,
+      };
 }
 
 String _n(num v) => '${v.round()}';
@@ -219,6 +291,8 @@ class _AddFoodBodyState extends State<_AddFoodBody> {
   List<FoodItem> _recents = const [];
   List<FoodItem>? _results;
   bool _loading = false;
+  FoodCountry _country = FoodCountry.br;
+  bool _pickerOpen = false;
 
   @override
   void initState() {
@@ -226,7 +300,123 @@ class _AddFoodBodyState extends State<_AddFoodBody> {
     widget.catalog.recents().then((r) {
       if (mounted) setState(() => _recents = r);
     });
+    widget.catalog.country().then((c) {
+      if (mounted) setState(() => _country = c);
+    });
   }
+
+  /// Troca o banco: limpa busca/categoria (só novas buscas mudam).
+  Future<void> _setCountry(FoodCountry c) async {
+    if (!c.available) return;
+    final changed = c != _country;
+    setState(() {
+      _pickerOpen = false;
+      if (changed) {
+        _country = c;
+        _category = null;
+        _results = null;
+        _query.clear();
+      }
+    });
+    if (changed) await widget.catalog.saveCountry(c);
+  }
+
+  String _countryName(AppLocalizations l, FoodCountry c) => switch (c) {
+        FoodCountry.br => l.nutri2_country_br,
+        FoodCountry.us => l.nutri2_country_us,
+        FoodCountry.ca => l.nutri2_country_ca,
+        FoodCountry.it => l.nutri2_country_it,
+      };
+
+  Widget _countryButton(AppLocalizations l) => Semantics(
+        button: true,
+        label: l.nutri2_country_a11y(_countryName(l, _country)),
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => setState(() => _pickerOpen = !_pickerOpen),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 46, minWidth: 54),
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: BldrNutritionColorsV2.gold),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(_country.flag, style: const TextStyle(fontSize: 15)),
+                Icon(
+                    _pickerOpen
+                        ? TablerIcons.chevron_up
+                        : TablerIcons.chevron_down,
+                    size: 18,
+                    color: BldrNutritionColorsV2.text),
+              ],
+            ),
+          ),
+        ),
+      );
+
+  Widget _countryPanel(AppLocalizations l) => Container(
+        padding: const EdgeInsets.fromLTRB(12, 14, 12, 10),
+        decoration: BoxDecoration(
+          color: BldrNutritionColorsV2.chipActiveBg,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: BldrNutritionColorsV2.gold),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 6, bottom: 8),
+              child: Text(l.nutri2_country_title,
+                  style: BldrNutritionTextV2.countryTitle),
+            ),
+            for (final c in FoodCountry.values)
+              Semantics(
+                button: true,
+                selected: c == _country,
+                enabled: c.available,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: c.available ? () => _setCountry(c) : null,
+                  child: Opacity(
+                    opacity: c.available ? 1 : 0.45,
+                    child: Container(
+                      constraints: const BoxConstraints(minHeight: 47),
+                      margin: const EdgeInsets.only(bottom: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: c == _country
+                            ? Border.all(color: BldrNutritionColorsV2.gold)
+                            : null,
+                      ),
+                      child: Row(children: [
+                        Text(c.flag, style: const TextStyle(fontSize: 18)),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: Text(_countryName(l, c),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: BldrNutritionTextV2.countryName),
+                        ),
+                        if (!c.available)
+                          Text(l.nutri2_coming_soon,
+                              style: BldrNutritionTextV2.soon)
+                        else if (c == _country)
+                          const Icon(TablerIcons.check,
+                              size: 16,
+                              color: BldrNutritionColorsV2.goldBright),
+                      ]),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
 
   @override
   void dispose() {
@@ -248,7 +438,7 @@ class _AddFoodBodyState extends State<_AddFoodBody> {
         return;
       }
       setState(() => _loading = true);
-      final r = await widget.catalog.search(text);
+      final r = await widget.catalog.search(text, _country);
       if (mounted && _query.text.trim() == text) {
         setState(() {
           _results = r;
@@ -260,7 +450,7 @@ class _AddFoodBodyState extends State<_AddFoodBody> {
 
   Future<void> _loadCategory(NutritionFoodCategory c) async {
     setState(() => _loading = true);
-    final r = await widget.catalog.byCategory(c.firestoreValue);
+    final r = await widget.catalog.byCategory(c.firestoreValue, _country);
     if (mounted && _category == c) {
       setState(() {
         _results = r;
@@ -374,10 +564,20 @@ class _AddFoodBodyState extends State<_AddFoodBody> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SearchField(
-            controller: _query,
-            hint: l.nutri2_search_hint,
-            onChanged: _onQuery),
+        Row(children: [
+          Expanded(
+            child: _SearchField(
+                controller: _query,
+                hint: l.nutri2_search_hint,
+                onChanged: _onQuery),
+          ),
+          const SizedBox(width: 10),
+          _countryButton(l),
+        ]),
+        if (_pickerOpen) ...[
+          const SizedBox(height: 6),
+          _countryPanel(l),
+        ],
         const SizedBox(height: 16),
         LayoutBuilder(builder: (context, c) {
           final scale = MediaQuery.textScalerOf(context).scale(1);
@@ -432,7 +632,7 @@ class _AddFoodBodyState extends State<_AddFoodBody> {
               children: [
                 _catChip(l.nutri2_cat_all, _category == null,
                     () => _selectCategory(null)),
-                for (final cat in NutritionFoodCategory.all)
+                for (final cat in NutritionFoodCategory.forCountry(_country))
                   _catChip(cat.label(l).toUpperCase(), _category == cat,
                       () => _selectCategory(cat)),
               ],

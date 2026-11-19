@@ -21,6 +21,7 @@ import 'package:bldr_fitness/features/nutrition/data/datasources/supabase_xp_dat
 import 'package:bldr_fitness/features/nutrition/data/models/food_item_model.dart';
 import 'package:bldr_fitness/features/nutrition/data/models/meal_entry_model.dart';
 import 'package:bldr_fitness/features/nutrition/data/models/saved_meal_model.dart';
+import 'package:bldr_fitness/features/nutrition/domain/entities/food_country.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/saved_meal.dart';
 
 /// Converte exceções de Firestore/Supabase/rede em [Failure].
@@ -49,17 +50,20 @@ class FoodCatalogRepositoryImpl implements FoodCatalogRepository {
   FoodCatalogRepositoryImpl(this._firestore);
 
   @override
-  Future<Result<List<FoodItem>>> search(String query, {int limit = 20}) =>
+  Future<Result<List<FoodItem>>> search(String query,
+          {int limit = 20, FoodCountry country = FoodCountry.br}) =>
       _guard(() async {
-        final rows = await _firestore.searchFoods(query, limit: limit);
+        final rows = await _firestore.searchFoods(query,
+            limit: limit, collection: country.collection ?? 'alimentos');
         return rows.map((r) => FoodItemModel.fromMap(r)).toList();
       });
 
   @override
   Future<Result<List<FoodItem>>> byCategory(String category,
-          {int limit = 30}) =>
+          {int limit = 30, FoodCountry country = FoodCountry.br}) =>
       _guard(() async {
-        final rows = await _firestore.foodsByCategory(category, limit: limit);
+        final rows = await _firestore.foodsByCategory(category,
+            limit: limit, collection: country.collection ?? 'alimentos');
         return rows.map((r) => FoodItemModel.fromMap(r)).toList();
       });
 

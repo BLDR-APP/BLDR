@@ -7305,4 +7305,93 @@ class AppLocalizationsIt extends AppLocalizations {
   String nutri2_qty_kcal(String qty, String kcal) {
     return '$qty · $kcal kcal';
   }
+
+  @override
+  String get nutri2_country_title => 'BANCA DATI ALIMENTI';
+
+  @override
+  String get nutri2_country_br => 'Brasile';
+
+  @override
+  String get nutri2_country_us => 'Stati Uniti';
+
+  @override
+  String get nutri2_country_ca => 'Canada';
+
+  @override
+  String get nutri2_country_it => 'Italia';
+
+  @override
+  String nutri2_country_a11y(String country) {
+    return 'Banca dati: $country';
+  }
+
+  @override
+  String get cat_int_baked => 'Prodotti da forno';
+
+  @override
+  String get cat_int_beef => 'Manzo';
+
+  @override
+  String get cat_int_beverages => 'Bevande';
+
+  @override
+  String get cat_int_breakfast => 'Cereali per colazione';
+
+  @override
+  String get cat_int_grains => 'Cereali e pasta';
+
+  @override
+  String get cat_int_dairy => 'Latticini e uova';
+
+  @override
+  String get cat_int_fastfood => 'Fast food';
+
+  @override
+  String get cat_int_fats => 'Grassi e oli';
+
+  @override
+  String get cat_int_fish => 'Pesce e frutti di mare';
+
+  @override
+  String get cat_int_fruits => 'Frutta e succhi';
+
+  @override
+  String get cat_int_lamb => 'Agnello, vitello e selvaggina';
+
+  @override
+  String get cat_int_legumes => 'Legumi';
+
+  @override
+  String get cat_int_meals => 'Piatti e contorni';
+
+  @override
+  String get cat_int_mixed => 'Piatti misti';
+
+  @override
+  String get cat_int_nuts => 'Frutta secca e semi';
+
+  @override
+  String get cat_int_pork => 'Maiale';
+
+  @override
+  String get cat_int_poultry => 'Pollame';
+
+  @override
+  String get cat_int_sausages => 'Salumi e affettati';
+
+  @override
+  String get cat_int_snacks => 'Snack';
+
+  @override
+  String get cat_int_soups => 'Zuppe e salse';
+
+  @override
+  String get cat_int_spices => 'Spezie ed erbe';
+
+  @override
+  String get cat_int_sweets => 'Dolci';
+
+  @override
+  String get cat_int_vegetables => 'Verdure';
 }

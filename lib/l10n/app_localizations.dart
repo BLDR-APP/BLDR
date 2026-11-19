@@ -13114,6 +13114,180 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'{qty} · {kcal} kcal'**
   String nutri2_qty_kcal(String qty, String kcal);
+
+  /// No description provided for @nutri2_country_title.
+  ///
+  /// In pt, this message translates to:
+  /// **'BANCO DE ALIMENTOS'**
+  String get nutri2_country_title;
+
+  /// No description provided for @nutri2_country_br.
+  ///
+  /// In pt, this message translates to:
+  /// **'Brasil'**
+  String get nutri2_country_br;
+
+  /// No description provided for @nutri2_country_us.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estados Unidos'**
+  String get nutri2_country_us;
+
+  /// No description provided for @nutri2_country_ca.
+  ///
+  /// In pt, this message translates to:
+  /// **'Canadá'**
+  String get nutri2_country_ca;
+
+  /// No description provided for @nutri2_country_it.
+  ///
+  /// In pt, this message translates to:
+  /// **'Itália'**
+  String get nutri2_country_it;
+
+  /// No description provided for @nutri2_country_a11y.
+  ///
+  /// In pt, this message translates to:
+  /// **'Banco de alimentos: {country}'**
+  String nutri2_country_a11y(String country);
+
+  /// No description provided for @cat_int_baked.
+  ///
+  /// In pt, this message translates to:
+  /// **'Panificados'**
+  String get cat_int_baked;
+
+  /// No description provided for @cat_int_beef.
+  ///
+  /// In pt, this message translates to:
+  /// **'Carne bovina'**
+  String get cat_int_beef;
+
+  /// No description provided for @cat_int_beverages.
+  ///
+  /// In pt, this message translates to:
+  /// **'Bebidas'**
+  String get cat_int_beverages;
+
+  /// No description provided for @cat_int_breakfast.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cereais matinais'**
+  String get cat_int_breakfast;
+
+  /// No description provided for @cat_int_grains.
+  ///
+  /// In pt, this message translates to:
+  /// **'Grãos e massas'**
+  String get cat_int_grains;
+
+  /// No description provided for @cat_int_dairy.
+  ///
+  /// In pt, this message translates to:
+  /// **'Laticínios e ovos'**
+  String get cat_int_dairy;
+
+  /// No description provided for @cat_int_fastfood.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fast food'**
+  String get cat_int_fastfood;
+
+  /// No description provided for @cat_int_fats.
+  ///
+  /// In pt, this message translates to:
+  /// **'Gorduras e óleos'**
+  String get cat_int_fats;
+
+  /// No description provided for @cat_int_fish.
+  ///
+  /// In pt, this message translates to:
+  /// **'Peixes e frutos do mar'**
+  String get cat_int_fish;
+
+  /// No description provided for @cat_int_fruits.
+  ///
+  /// In pt, this message translates to:
+  /// **'Frutas e sucos'**
+  String get cat_int_fruits;
+
+  /// No description provided for @cat_int_lamb.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cordeiro, vitela e caça'**
+  String get cat_int_lamb;
+
+  /// No description provided for @cat_int_legumes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Leguminosas'**
+  String get cat_int_legumes;
+
+  /// No description provided for @cat_int_meals.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pratos e acompanhamentos'**
+  String get cat_int_meals;
+
+  /// No description provided for @cat_int_mixed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pratos mistos'**
+  String get cat_int_mixed;
+
+  /// No description provided for @cat_int_nuts.
+  ///
+  /// In pt, this message translates to:
+  /// **'Oleaginosas e sementes'**
+  String get cat_int_nuts;
+
+  /// No description provided for @cat_int_pork.
+  ///
+  /// In pt, this message translates to:
+  /// **'Carne suína'**
+  String get cat_int_pork;
+
+  /// No description provided for @cat_int_poultry.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aves'**
+  String get cat_int_poultry;
+
+  /// No description provided for @cat_int_sausages.
+  ///
+  /// In pt, this message translates to:
+  /// **'Embutidos e frios'**
+  String get cat_int_sausages;
+
+  /// No description provided for @cat_int_snacks.
+  ///
+  /// In pt, this message translates to:
+  /// **'Petiscos'**
+  String get cat_int_snacks;
+
+  /// No description provided for @cat_int_soups.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sopas e molhos'**
+  String get cat_int_soups;
+
+  /// No description provided for @cat_int_spices.
+  ///
+  /// In pt, this message translates to:
+  /// **'Temperos e ervas'**
+  String get cat_int_spices;
+
+  /// No description provided for @cat_int_sweets.
+  ///
+  /// In pt, this message translates to:
+  /// **'Doces'**
+  String get cat_int_sweets;
+
+  /// No description provided for @cat_int_vegetables.
+  ///
+  /// In pt, this message translates to:
+  /// **'Vegetais'**
+  String get cat_int_vegetables;
 }
 
 class _AppLocalizationsDelegate

@@ -7283,4 +7283,93 @@ class AppLocalizationsEn extends AppLocalizations {
   String nutri2_qty_kcal(String qty, String kcal) {
     return '$qty · $kcal kcal';
   }
+
+  @override
+  String get nutri2_country_title => 'FOOD DATABASE';
+
+  @override
+  String get nutri2_country_br => 'Brazil';
+
+  @override
+  String get nutri2_country_us => 'United States';
+
+  @override
+  String get nutri2_country_ca => 'Canada';
+
+  @override
+  String get nutri2_country_it => 'Italy';
+
+  @override
+  String nutri2_country_a11y(String country) {
+    return 'Food database: $country';
+  }
+
+  @override
+  String get cat_int_baked => 'Baked products';
+
+  @override
+  String get cat_int_beef => 'Beef';
+
+  @override
+  String get cat_int_beverages => 'Beverages';
+
+  @override
+  String get cat_int_breakfast => 'Breakfast cereals';
+
+  @override
+  String get cat_int_grains => 'Grains and pasta';
+
+  @override
+  String get cat_int_dairy => 'Dairy and eggs';
+
+  @override
+  String get cat_int_fastfood => 'Fast food';
+
+  @override
+  String get cat_int_fats => 'Fats and oils';
+
+  @override
+  String get cat_int_fish => 'Fish and seafood';
+
+  @override
+  String get cat_int_fruits => 'Fruits and juices';
+
+  @override
+  String get cat_int_lamb => 'Lamb, veal and game';
+
+  @override
+  String get cat_int_legumes => 'Legumes';
+
+  @override
+  String get cat_int_meals => 'Meals and sides';
+
+  @override
+  String get cat_int_mixed => 'Mixed dishes';
+
+  @override
+  String get cat_int_nuts => 'Nuts and seeds';
+
+  @override
+  String get cat_int_pork => 'Pork';
+
+  @override
+  String get cat_int_poultry => 'Poultry';
+
+  @override
+  String get cat_int_sausages => 'Sausages and cold cuts';
+
+  @override
+  String get cat_int_snacks => 'Snacks';
+
+  @override
+  String get cat_int_soups => 'Soups and sauces';
+
+  @override
+  String get cat_int_spices => 'Spices and herbs';
+
+  @override
+  String get cat_int_sweets => 'Sweets';
+
+  @override
+  String get cat_int_vegetables => 'Vegetables';
 }

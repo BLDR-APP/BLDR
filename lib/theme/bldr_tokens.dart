@@ -1626,6 +1626,7 @@ abstract final class BldrNutritionColorsV2 {
   // Refeições salvas (102:318/319/320)
   static const savedCard = Color(0xFF1F1F1F);
   static const savedMuted = Color(0xFF9E9E9E);
+  static const countryMuted = Color(0xFFA7A8AD);
 }
 
 abstract final class BldrNutritionTextV2 {
@@ -1748,6 +1749,10 @@ abstract final class BldrNutritionTextV2 {
   static final savedFood = _s(BldrTextV2.s12, _m, _w); // 12
   static final savedFoodMeta = _s(BldrTextV2.s11, _m, _sm); // 10
   static final savedBack = _s(BldrTextV2.s24, _m, _g); // 25 (‹)
+  // Seletor de país (119:261)
+  static final countryTitle =
+      _s(BldrTextV2.s11, _sb, BldrNutritionColorsV2.countryMuted); // 11
+  static final countryName = _s(BldrTextV2.s15, _sb, _t); // 14
 }
 
 abstract final class BldrNutritionV2 {

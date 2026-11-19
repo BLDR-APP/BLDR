@@ -24,7 +24,17 @@ class FoodItemModel {
       fatPer100g: read('fat_per_100g'),
       sodiumPer100g: read('sodium_per_100g', 'sodium'),
       fiberPer100g: read('fiber_per_100g', 'fiber'),
-      addedSugarPer100g: read('added_sugar_per_100g', 'added_sugar'),
+      // Açúcar: adicionado (favoritos), `added_sugars` (base BR) ou, nos
+      // EUA/Canadá, só o total `sugars_per_100g` (aproximação aprovada).
+      addedSugarPer100g: [
+            'added_sugar_per_100g',
+            'added_sugars',
+            'added_sugar',
+            'sugars_per_100g',
+          ]
+              .map((k) => (map[k] as num?)?.toDouble())
+              .firstWhere((v) => v != null, orElse: () => 0.0) ??
+          0.0,
       isLiquid: map['unit'] == 'ml',
       unitWeight: (map['unit_weight'] as num?)?.toDouble(),
       unitDescription: map['unit_description'] as String?,

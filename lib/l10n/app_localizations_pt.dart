@@ -7324,4 +7324,93 @@ class AppLocalizationsPt extends AppLocalizations {
   String nutri2_qty_kcal(String qty, String kcal) {
     return '$qty · $kcal kcal';
   }
+
+  @override
+  String get nutri2_country_title => 'BANCO DE ALIMENTOS';
+
+  @override
+  String get nutri2_country_br => 'Brasil';
+
+  @override
+  String get nutri2_country_us => 'Estados Unidos';
+
+  @override
+  String get nutri2_country_ca => 'Canadá';
+
+  @override
+  String get nutri2_country_it => 'Itália';
+
+  @override
+  String nutri2_country_a11y(String country) {
+    return 'Banco de alimentos: $country';
+  }
+
+  @override
+  String get cat_int_baked => 'Panificados';
+
+  @override
+  String get cat_int_beef => 'Carne bovina';
+
+  @override
+  String get cat_int_beverages => 'Bebidas';
+
+  @override
+  String get cat_int_breakfast => 'Cereais matinais';
+
+  @override
+  String get cat_int_grains => 'Grãos e massas';
+
+  @override
+  String get cat_int_dairy => 'Laticínios e ovos';
+
+  @override
+  String get cat_int_fastfood => 'Fast food';
+
+  @override
+  String get cat_int_fats => 'Gorduras e óleos';
+
+  @override
+  String get cat_int_fish => 'Peixes e frutos do mar';
+
+  @override
+  String get cat_int_fruits => 'Frutas e sucos';
+
+  @override
+  String get cat_int_lamb => 'Cordeiro, vitela e caça';
+
+  @override
+  String get cat_int_legumes => 'Leguminosas';
+
+  @override
+  String get cat_int_meals => 'Pratos e acompanhamentos';
+
+  @override
+  String get cat_int_mixed => 'Pratos mistos';
+
+  @override
+  String get cat_int_nuts => 'Oleaginosas e sementes';
+
+  @override
+  String get cat_int_pork => 'Carne suína';
+
+  @override
+  String get cat_int_poultry => 'Aves';
+
+  @override
+  String get cat_int_sausages => 'Embutidos e frios';
+
+  @override
+  String get cat_int_snacks => 'Petiscos';
+
+  @override
+  String get cat_int_soups => 'Sopas e molhos';
+
+  @override
+  String get cat_int_spices => 'Temperos e ervas';
+
+  @override
+  String get cat_int_sweets => 'Doces';
+
+  @override
+  String get cat_int_vegetables => 'Vegetais';
 }

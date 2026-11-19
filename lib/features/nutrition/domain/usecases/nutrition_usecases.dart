@@ -3,7 +3,9 @@ import 'package:bldr_fitness/core/errors/result.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/daily_nutrition_summary.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/food_item.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/meal_entry.dart';
+import 'package:bldr_fitness/features/nutrition/domain/entities/food_country.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/saved_meal.dart';
+import 'package:bldr_fitness/features/nutrition/domain/repositories/food_country_repository.dart';
 import 'package:bldr_fitness/features/nutrition/domain/services/iqd_calculator.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/nutrition_goals.dart';
 import 'package:bldr_fitness/features/nutrition/domain/entities/user_goals.dart';
@@ -18,16 +20,32 @@ class SearchFoods {
   final FoodCatalogRepository _catalog;
   const SearchFoods(this._catalog);
 
-  Future<Result<List<FoodItem>>> call(String query, {int limit = 20}) =>
-      _catalog.search(query, limit: limit);
+  Future<Result<List<FoodItem>>> call(String query,
+          {int limit = 20, FoodCountry country = FoodCountry.br}) =>
+      _catalog.search(query, limit: limit, country: country);
 }
 
 class GetCategoryFoods {
   final FoodCatalogRepository _catalog;
   const GetCategoryFoods(this._catalog);
 
-  Future<Result<List<FoodItem>>> call(String category, {int limit = 30}) =>
-      _catalog.byCategory(category, limit: limit);
+  Future<Result<List<FoodItem>>> call(String category,
+          {int limit = 30, FoodCountry country = FoodCountry.br}) =>
+      _catalog.byCategory(category, limit: limit, country: country);
+}
+
+/// País do banco de alimentos (N8): escolha salva ou região do aparelho.
+class GetFoodCountry {
+  final FoodCountryRepository _repo;
+  const GetFoodCountry(this._repo);
+  Future<FoodCountry> call() => _repo.current();
+}
+
+/// Salva a escolha manual. Afeta só novas buscas, não o diário.
+class SetFoodCountry {
+  final FoodCountryRepository _repo;
+  const SetFoodCountry(this._repo);
+  Future<void> call(FoodCountry country) => _repo.save(country);
 }
 
 class GetFavoriteFoods {

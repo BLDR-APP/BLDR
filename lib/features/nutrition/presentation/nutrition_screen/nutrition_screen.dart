@@ -148,8 +148,11 @@ class _NutritionScreenState extends State<NutritionScreen> {
     Future<List<FoodItem>> unwrap(Future<Result<List<FoodItem>>> f) async =>
         (await f).valueOrNull ?? const [];
     return AddFoodCatalog(
-      search: (q) => unwrap(getIt<SearchFoods>()(q)),
-      byCategory: (c) => unwrap(getIt<GetCategoryFoods>()(c)),
+      search: (q, country) => unwrap(getIt<SearchFoods>()(q, country: country)),
+      byCategory: (c, country) =>
+          unwrap(getIt<GetCategoryFoods>()(c, country: country)),
+      country: () => getIt<GetFoodCountry>()(),
+      saveCountry: (c) => getIt<SetFoodCountry>()(c),
       recents: () async =>
           uid == null ? const [] : unwrap(getIt<GetRecentFoods>()(uid)),
       favorites: () async =>
